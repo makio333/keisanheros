@@ -1464,10 +1464,10 @@ function showScreen(id){
   $(id).classList.add('active');
   updateHud();
 
-  // タイトル画面ではメニューを隠す（ゲームセッション開始前のため）
+  // セーブデータを読み込んでいない間はメニューを隠す（「きょてんに もどる」がGを前提とするため）
   const menuContainer = $('menu-container');
   if (menuContainer) {
-    menuContainer.classList.toggle('hidden', id === 'screen-title');
+    menuContainer.classList.toggle('hidden', id === 'screen-title' || !G);
     $('menu-dropdown').classList.add('hidden');
   }
 
@@ -1479,6 +1479,8 @@ function showScreen(id){
   // 画面ごとのBGM。バトルはステージBGM、自分の部屋は専用BGM、
   // それいがいは（個別に BGM 設定していない画面もふくめ）ぜんぶ 拠点BGMを流す
   if (SM.initialized) SM.playBGM(bgmKeyForScreen(id));
+
+  if (typeof checkTimeLimit === 'function') checkTimeLimit();
 }
 
 function bgmKeyForScreen(id){
@@ -2813,7 +2815,7 @@ function showLoadSaveScreen(){
     const btn = document.createElement('button');
     btn.className = 'btn btn-primary';
     btn.textContent = 'つづける';
-    btn.onclick = () => { if (loadSlot(slot.key)) showHome(); };
+    btn.onclick = () => { if (loadSlot(slot.key)) { startTimeLimitSession(slot.key); showHome(); } };
     row.appendChild(btn);
     list.appendChild(row);
   }
@@ -3963,7 +3965,8 @@ function bindEvents(){
   };
   $('btn-new-save-back').onclick = () => showScreen('screen-title');
   $('btn-new-save-start').onclick = () => {
-    createSaveSlot($('new-save-name').value);
+    const key = createSaveSlot($('new-save-name').value);
+    startTimeLimitSession(key);
     showHome();
   };
   $('new-save-name').addEventListener('keydown', (e) => {
@@ -4045,9 +4048,16 @@ function showAdmin() {
   $('admin-list-view').classList.remove('hidden');
   $('admin-edit-view').classList.add('hidden');
   renderAdminList();
+  renderAdminTimeLimitList();
+  checkTimeLimit();
+  const goldBtn = $('btn-admin-get-gold');
+  if (goldBtn) goldBtn.classList.toggle('hidden', !(currentSlotKey && G));
 }
 
-$('btn-admin-back').onclick = showHome;
+$('btn-admin-back').onclick = () => {
+  if (currentSlotKey && G) showHome();
+  else showScreen('screen-title');
+};
 $('admin-category-select').onchange = renderAdminList;
 
 function renderAdminList() {
@@ -4187,6 +4197,225 @@ $('btn-admin-reset').onclick = () => {
   renderAdminList();
 };
 
+/* ==========================================================
+   じかんせいげん（セーブデータごとの プレイ時間の管理）＋ アナログ時計
+   ========================================================== */
+const TIME_LIMIT_KEY = 'typing_rpg_timelimit_v2'; // { [slotKey]: {enabled, minutes} }
+const TIME_LIMIT_SESSION_KEY = 'typing_rpg_timelimit_session_v1'; // { [slotKey]: セッションしゅうりょうtimestamp }
+
+function getAllTimeLimitSettings(){
+  try {
+    const raw = localStorage.getItem(TIME_LIMIT_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch(e){ return {}; }
+}
+function saveAllTimeLimitSettings(map){
+  localStorage.setItem(TIME_LIMIT_KEY, JSON.stringify(map));
+}
+function getTimeLimitForSlot(slotKey){
+  const all = getAllTimeLimitSettings();
+  return all[slotKey] || { enabled: false, minutes: 30 };
+}
+function setTimeLimitForSlot(slotKey, settings){
+  const all = getAllTimeLimitSettings();
+  all[slotKey] = settings;
+  saveAllTimeLimitSettings(all);
+}
+
+function getAllTimeLimitSessions(){
+  try {
+    const raw = localStorage.getItem(TIME_LIMIT_SESSION_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch(e){ return {}; }
+}
+function saveAllTimeLimitSessions(map){
+  localStorage.setItem(TIME_LIMIT_SESSION_KEY, JSON.stringify(map));
+}
+/* セーブデータを 読み込んだ（あそびはじめた）タイミングで呼ぶ。じかんせいげんが
+   ゆうこうなら、その時点から せっていぶんの 分数だけ カウントダウンする
+   セッションしゅうりょう時刻を あたらしく セットする */
+function startTimeLimitSession(slotKey){
+  if (!slotKey) return;
+  const settings = getTimeLimitForSlot(slotKey);
+  const sessions = getAllTimeLimitSessions();
+  if (settings.enabled && settings.minutes > 0) {
+    sessions[slotKey] = Date.now() + settings.minutes * 60000;
+  } else {
+    delete sessions[slotKey];
+  }
+  saveAllTimeLimitSessions(sessions);
+}
+function getSessionEndForSlot(slotKey){
+  if (!slotKey) return null;
+  return getAllTimeLimitSessions()[slotKey] || null;
+}
+function isSlotPastTimeLimit(slotKey){
+  if (!slotKey) return false;
+  const settings = getTimeLimitForSlot(slotKey);
+  if (!settings.enabled) return false;
+  const endAt = getSessionEndForSlot(slotKey);
+  if (!endAt) return false;
+  return Date.now() >= endAt;
+}
+
+function buildClockTicks(){
+  const g = $('clock-ticks');
+  if (!g || g.childElementCount > 0) return;
+  for (let i = 0; i < 12; i++){
+    const deg = i * 30;
+    const major = i % 3 === 0;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', '50');
+    line.setAttribute('y1', major ? '6' : '9');
+    line.setAttribute('x2', '50');
+    line.setAttribute('y2', '14');
+    line.setAttribute('class', 'clock-tick');
+    line.setAttribute('transform', `rotate(${deg} 50 50)`);
+    if (major) line.style.strokeWidth = '2.6';
+    g.appendChild(line);
+  }
+}
+
+function updateAnalogClock(){
+  const now = new Date();
+  const h = now.getHours() % 12;
+  const m = now.getMinutes();
+  const s = now.getSeconds();
+
+  const hourDeg = h * 30 + m * 0.5;
+  const minuteDeg = m * 6 + s * 0.1;
+  const secondDeg = s * 6;
+
+  const hourHand = $('clock-hand-hour');
+  const minuteHand = $('clock-hand-minute');
+  const secondHand = $('clock-hand-second');
+  if (hourHand) hourHand.style.transform = `rotate(${hourDeg}deg)`;
+  if (minuteHand) minuteHand.style.transform = `rotate(${minuteDeg}deg)`;
+  if (secondHand) secondHand.style.transform = `rotate(${secondDeg}deg)`;
+
+  const digital = $('clock-digital-time');
+  if (digital) digital.textContent = `${String(now.getHours()).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+
+  const endMarker = $('clock-end-marker');
+  const endLabel = $('clock-end-label');
+  const settings = currentSlotKey ? getTimeLimitForSlot(currentSlotKey) : null;
+  const endAt = currentSlotKey ? getSessionEndForSlot(currentSlotKey) : null;
+  if (settings && settings.enabled && endAt) {
+    const endDate = new Date(endAt);
+    const eh = endDate.getHours();
+    const em = endDate.getMinutes();
+    const endDeg = (eh % 12) * 30 + em * 0.5;
+    if (endMarker) {
+      endMarker.style.transform = `rotate(${endDeg}deg)`;
+      endMarker.classList.remove('hidden');
+    }
+    if (endLabel) {
+      endLabel.textContent = `🔚 ${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')} まで`;
+      endLabel.classList.remove('hidden');
+    }
+  } else {
+    if (endMarker) endMarker.classList.add('hidden');
+    if (endLabel) endLabel.classList.add('hidden');
+  }
+}
+
+function checkTimeLimit(){
+  const overlay = $('time-limit-overlay');
+  if (!overlay) return;
+  const adminScreenActive = $('screen-admin') && $('screen-admin').classList.contains('active');
+  if (currentSlotKey && isSlotPastTimeLimit(currentSlotKey) && !adminScreenActive) {
+    overlay.classList.remove('hidden');
+  } else {
+    overlay.classList.add('hidden');
+  }
+}
+
+function updateAdminTimeLimitBulkCount(){
+  const count = document.querySelectorAll('.admin-timelimit-select:checked').length;
+  const countEl = $('admin-timelimit-bulk-count');
+  if (countEl) countEl.textContent = count;
+}
+
+function renderAdminTimeLimitList(){
+  const listEl = $('admin-timelimit-slot-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  const slots = listSaveSlots();
+  if (slots.length === 0) {
+    listEl.innerHTML = '<div class="flavor">セーブデータが ありません。</div>';
+    updateAdminTimeLimitBulkCount();
+    return;
+  }
+  for (const slot of slots) {
+    const settings = getTimeLimitForSlot(slot.key);
+    const row = document.createElement('div');
+    row.className = 'inventory-item admin-timelimit-row';
+    row.dataset.slotKey = slot.key;
+    row.innerHTML = `
+      <div style="display:flex; align-items:center; gap:10px; flex:1;">
+        <input type="checkbox" class="admin-timelimit-select" title="せんたく">
+        <div style="flex:1;">
+          <strong>${slot.name}</strong> <span class="tag" style="margin-left:6px;">Lv${slot.lvl}</span>
+          <div class="admin-timelimit-row-controls" style="display:flex; align-items:center; gap:8px; margin-top:6px; flex-wrap:wrap;">
+            <label style="display:flex; align-items:center; gap:4px; font-size:12px;">
+              <input type="checkbox" class="admin-timelimit-row-enabled" ${settings.enabled ? 'checked' : ''}>ゆうこう
+            </label>
+            <input type="number" class="admin-time-input admin-timelimit-row-minutes" min="1" value="${settings.minutes || 30}">分
+            <button class="btn good admin-timelimit-row-save" style="padding:6px 10px; font-size:12px; width:auto;">ほぞん</button>
+            <small class="admin-timelimit-row-status">${settings.enabled ? settings.minutes + '分に せっていちゅう' : 'オフ'}</small>
+          </div>
+        </div>
+      </div>
+    `;
+    row.querySelector('.admin-timelimit-select').onchange = updateAdminTimeLimitBulkCount;
+    row.querySelector('.admin-timelimit-row-save').onclick = () => {
+      const enabled = row.querySelector('.admin-timelimit-row-enabled').checked;
+      const minutes = Math.max(1, parseInt(row.querySelector('.admin-timelimit-row-minutes').value) || 30);
+      setTimeLimitForSlot(slot.key, { enabled, minutes });
+      row.querySelector('.admin-timelimit-row-status').textContent = enabled ? `${minutes}分に せっていちゅう` : 'オフ';
+      updateAnalogClock();
+      checkTimeLimit();
+    };
+    listEl.appendChild(row);
+  }
+  updateAdminTimeLimitBulkCount();
+}
+
+function initTimeLimitFeature(){
+  buildClockTicks();
+  updateAnalogClock();
+  checkTimeLimit();
+  setInterval(() => { updateAnalogClock(); checkTimeLimit(); }, 1000);
+
+  const bulkApplyBtn = $('btn-admin-timelimit-bulk-apply');
+  if (bulkApplyBtn) {
+    bulkApplyBtn.onclick = () => {
+      const selectedKeys = Array.from(document.querySelectorAll('.admin-timelimit-select:checked'))
+        .map(cb => cb.closest('.admin-timelimit-row').dataset.slotKey);
+      if (selectedKeys.length === 0) {
+        alert('セーブデータを 1つ以上 えらんでください。');
+        return;
+      }
+      const enabled = $('admin-timelimit-bulk-enabled').checked;
+      const minutes = Math.max(1, parseInt($('admin-timelimit-bulk-minutes').value) || 30);
+      for (const key of selectedKeys) {
+        setTimeLimitForSlot(key, { enabled, minutes });
+      }
+      renderAdminTimeLimitList();
+      updateAnalogClock();
+      checkTimeLimit();
+    };
+  }
+
+  const overlayAdminBtn = $('btn-time-limit-admin');
+  if (overlayAdminBtn) {
+    overlayAdminBtn.onclick = () => {
+      $('time-limit-overlay').classList.add('hidden');
+      showAdmin();
+    };
+  }
+}
+
 let initDone = false;
 function init(){
   if (initDone) return; // init()が二重に呼ばれてもミュートボタンの二重登録を防ぐ
@@ -4196,6 +4425,7 @@ function init(){
   migrateLegacySaveIfNeeded();
   if (listSaveSlots().length > 0) $('btn-continue').classList.remove('hidden');
   showScreen('screen-title');
+  initTimeLimitFeature();
 
   // ミュートボタンのセットアップ
   let muteBtn = $('btn-mute');

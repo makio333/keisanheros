@@ -107,6 +107,107 @@
   z-index: 99999;
 }
 
+/* ===== アナログ時計（じかんせいげん表示） ===== */
+.analog-clock-widget {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--panel-bg);
+  border: 3px solid var(--panel-border);
+  border-radius: 16px;
+  padding: 8px 10px 6px;
+  box-shadow: var(--shadow);
+}
+.analog-clock-svg { width: 62px; height: 62px; display:block; }
+.clock-dial { fill: var(--card-bg); stroke: var(--panel-border); stroke-width: 3; }
+.clock-tick { stroke: var(--text-light); stroke-width: 1.6; }
+.clock-hand { transform-origin: 50px 50px; stroke-linecap: round; }
+.clock-hand-hour { stroke: var(--text); stroke-width: 4.2; }
+.clock-hand-minute { stroke: var(--text); stroke-width: 2.6; }
+.clock-hand-second { stroke: var(--hp); stroke-width: 1.1; }
+.clock-end-marker {
+  stroke: var(--hp);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  transform-origin: 50px 50px;
+}
+.clock-center { fill: var(--accent); }
+.clock-digital { font-size: 12px; font-weight: 700; color: var(--text); letter-spacing: 0.5px; }
+.clock-end-label { font-size: 10px; font-weight: 700; color: var(--hp); white-space: nowrap; }
+
+/* ===== じかんせいげん オーバーレイ ===== */
+.time-limit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: rgba(10, 8, 20, 0.94);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.time-limit-panel {
+  background: var(--panel-bg);
+  border: 3px solid var(--panel-border);
+  box-shadow: 0 0 0 3px var(--panel-border-dark), var(--shadow);
+  border-radius: var(--border-radius);
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 380px;
+}
+.time-limit-icon { font-size: 56px; margin-bottom: 10px; }
+.time-limit-panel h2 { margin-bottom: 10px; }
+.time-limit-panel .btn { margin-top: 18px; }
+
+/* ===== 管理者設定：じかんせいげん ===== */
+.admin-timelimit-section {
+  background: var(--card-bg);
+  border: 2px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.admin-checkbox-row { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
+.admin-checkbox-row input[type="checkbox"] { width: 20px; height: 20px; }
+.admin-time-input {
+  padding: 10px 14px; background: var(--card-bg); color: var(--text);
+  border: 2px solid var(--panel-border); border-radius: 10px;
+  font-family: var(--pixel-font); font-size: 14px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.admin-timelimit-bulk {
+  background: rgba(0,0,0,0.2);
+  border: 2px dashed var(--panel-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.admin-timelimit-row-controls input[type="checkbox"] { width: 16px; height: 16px; }
+.admin-timelimit-row .admin-timelimit-select { width: 20px; height: 20px; flex-shrink: 0; }
+.admin-timelimit-row-minutes { width: 80px; }
+.admin-timelimit-row-status { color: var(--text-light); }
+
+/* ===== タイトル画面：かんりしゃせってい ボタン ===== */
+.btn-admin-title {
+  display: block;
+  opacity: 0.75;
+  font-size: 12px;
+  padding: 8px 14px;
+  background: rgba(0,0,0,0.25);
+}
+.btn-admin-title:hover { opacity: 1; }
+
 .menu-button {
   width: 80px;
   height: 80px;

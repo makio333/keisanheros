@@ -7,16 +7,38 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=55">
+<link rel="stylesheet" href="style.css?v=57">
 </head>
 <body>
 <button id="btn-mute" class="mute-button" title="BGM/SE をミュート">🔊</button>
+
+<div id="analog-clock-widget" class="analog-clock-widget">
+  <svg id="analog-clock-svg" class="analog-clock-svg" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="47" class="clock-dial"></circle>
+    <g id="clock-ticks"></g>
+    <line id="clock-end-marker" class="clock-end-marker hidden" x1="50" y1="50" x2="50" y2="10"></line>
+    <line id="clock-hand-hour" class="clock-hand clock-hand-hour" x1="50" y1="50" x2="50" y2="28"></line>
+    <line id="clock-hand-minute" class="clock-hand clock-hand-minute" x1="50" y1="50" x2="50" y2="16"></line>
+    <line id="clock-hand-second" class="clock-hand clock-hand-second" x1="50" y1="50" x2="50" y2="12"></line>
+    <circle cx="50" cy="50" r="3.2" class="clock-center"></circle>
+  </svg>
+  <div id="clock-digital-time" class="clock-digital">00:00</div>
+  <div id="clock-end-label" class="clock-end-label hidden">🔚 --:-- まで</div>
+</div>
+
+<div id="time-limit-overlay" class="time-limit-overlay hidden">
+  <div class="time-limit-panel">
+    <div class="time-limit-icon">⏰</div>
+    <h2>きょうは ここまで！</h2>
+    <p id="time-limit-message" class="flavor">また あした あそぼうね。</p>
+    <button id="btn-time-limit-admin" class="btn">保護者の方はこちら（かんりしゃせってい）</button>
+  </div>
+</div>
 
 <div id="menu-container" class="menu-container">
   <button id="btn-menu" class="menu-button" title="メニュー">☰</button>
   <div id="menu-dropdown" class="menu-dropdown hidden">
     <button id="btn-menu-home" class="btn">きょてんに もどる</button>
-    <button id="btn-goto-admin" class="btn">かんりしゃせってい</button>
   </div>
 </div>
 
@@ -32,6 +54,7 @@
           <button id="btn-continue" class="btn hidden">ぼうけんを つづける</button>
           <button id="btn-newgame" class="btn">あたらしく はじめる</button>
         </div>
+        <button id="btn-goto-admin" class="btn btn-admin-title" style="max-width:320px; margin:14px auto 0;">⚙ かんりしゃせってい</button>
         <p class="hint">※にゅうりょくは すべて はんかく（ぜんかくは じどうへんかん）</p>
       </div>
     </section>
@@ -423,7 +446,24 @@
       <div class="panel">
         <h2>＊かんりしゃせってい＊</h2>
         <p class="flavor">敵のステータスや見た目を変更できます。</p>
-        
+
+        <div id="admin-timelimit-section" class="admin-timelimit-section">
+          <h3>⏰ じかんせいげん（セーブデータごと）</h3>
+          <p class="flavor" style="margin-bottom:4px;">セーブデータごとに あそべる時間（分）を せっていできます。「つづきから」よみこむたびに、その分数から カウントダウンが スタートします。</p>
+
+          <div class="admin-timelimit-bulk">
+            <label class="admin-checkbox-row">
+              <input type="checkbox" id="admin-timelimit-bulk-enabled">
+              <span>じかんせいげんを ゆうこうにする</span>
+            </label>
+            <label>プレイじかん（分）</label>
+            <input type="number" id="admin-timelimit-bulk-minutes" class="admin-time-input" min="1" value="30">
+            <button id="btn-admin-timelimit-bulk-apply" class="btn good" style="margin-top:6px;">✅ せんたくした セーブに まとめて てきよう（<span id="admin-timelimit-bulk-count">0</span>件）</button>
+          </div>
+
+          <div id="admin-timelimit-slot-list" class="inventory-list" style="margin-top:12px;"></div>
+        </div>
+
         <div id="admin-list-view">
           <h3>敵リスト</h3>
           <select id="admin-category-select" class="admin-select">
@@ -437,7 +477,7 @@
           </select>
           <div id="admin-enemy-list" class="inventory-list" style="margin-top:10px;"></div>
           <button id="btn-admin-get-gold" class="btn" style="margin-top:10px; background-color: var(--atb); color: var(--text);">💰 10,000ゴールド獲得</button>
-          <button id="btn-admin-back" class="btn" style="margin-top:10px;">きょてんに もどる</button>
+          <button id="btn-admin-back" class="btn" style="margin-top:10px;">もどる</button>
         </div>
 
         <div id="admin-edit-view" class="hidden">
@@ -468,6 +508,6 @@
   </main>
 </div>
 <div id="print-sheet"></div>
-<script src="game.js?v=73"></script>
+<script src="game.js?v=75"></script>
 </body>
 </html>
