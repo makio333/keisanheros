@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=57">
+<link rel="stylesheet" href="style.css?v=60">
 </head>
 <body>
 <button id="btn-mute" class="mute-button" title="BGM/SE をミュート">🔊</button>
@@ -32,6 +32,20 @@
     <h2>きょうは ここまで！</h2>
     <p id="time-limit-message" class="flavor">また あした あそぼうね。</p>
     <button id="btn-time-limit-admin" class="btn">保護者の方はこちら（かんりしゃせってい）</button>
+  </div>
+</div>
+
+<div id="admin-password-overlay" class="admin-password-overlay hidden">
+  <div class="admin-password-panel">
+    <div class="admin-password-icon">🔒</div>
+    <h2>かんりしゃせってい</h2>
+    <p class="flavor">保護者の方は、きょうの日づけ４けたを にゅうりょくしてください。<br><small>（例：8月4日 → 0804）</small></p>
+    <input type="password" id="admin-password-input" inputmode="numeric" pattern="[0-9]*" maxlength="4" class="challenge-input admin-password-input" placeholder="＊＊＊＊">
+    <p id="admin-password-error" class="admin-password-error"></p>
+    <div class="menu-grid" style="max-width:280px; margin:10px auto 0;">
+      <button id="btn-admin-password-submit" class="btn btn-primary">けってい</button>
+      <button id="btn-admin-password-cancel" class="btn">キャンセル</button>
+    </div>
   </div>
 </div>
 
@@ -296,6 +310,7 @@
         <h2>＊ぶきや＊</h2>
         <p class="flavor">ゴールドで ぶき・ぼうぐを かおう！</p>
         <div class="gold-badge"><span class="gold-badge-icon">💰</span><span id="weapon-shop-gold" class="gold-badge-num">0</span><span class="gold-badge-unit">G</span></div>
+        <div id="weapon-shop-tabs" class="shop-tabs"></div>
         <div id="weapon-shop-list" class="item-card-grid"></div>
         <button id="btn-weapon-shop-back" class="btn">もどる</button>
       </div>
@@ -508,6 +523,6 @@
   </main>
 </div>
 <div id="print-sheet"></div>
-<script src="game.js?v=75"></script>
+<script src="game.js?v=78"></script>
 </body>
 </html>

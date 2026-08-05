@@ -693,12 +693,22 @@ const ENEMIES_PER_STAGE = 10;
    { stageMode:true, areaId, stageIndex(0〜6・ボスはnull), isBoss, bossPhase(ボスのみ),
      stageKillCount(いまの ステージで たおした 数、0〜ENEMIES_PER_STAGE-1) } */
 function enterAreaStage(areaId, stageIndex){
-  explore = { stageMode:true, areaId, stageIndex, isBoss:false, stageKillCount:0, sessionDrops: [], sessionGold: 0 };
+  explore = { stageMode:true, areaId, stageIndex, isBoss:false, stageKillCount:0, sessionDrops: [], sessionGold: 0, stageDrops: [], stageGold: 0, stageExp: 0 };
   startBattle(false);
 }
 function enterAreaBoss(areaId){
-  explore = { stageMode:true, areaId, stageIndex:null, isBoss:true, bossPhase:1, sessionDrops: [], sessionGold: 0 };
+  explore = { stageMode:true, areaId, stageIndex:null, isBoss:true, bossPhase:1, sessionDrops: [], sessionGold: 0, stageDrops: [], stageGold: 0, stageExp: 0 };
   startBattle(false);
+}
+
+/* エリアIDから、そのエリアの 各ステージ（1-1など）の クリアかいすう配列（0〜3、★の数）を とりだす。
+   まだ 記録が なければ、ステージ数ぶんの 0で うめて つくる */
+function getStageClearCounts(areaId){
+  if (!G.stageClearCounts) G.stageClearCounts = {};
+  if (!G.stageClearCounts[areaId]){
+    G.stageClearCounts[areaId] = AREA_STAGES[areaId].stages.map(() => 0);
+  }
+  return G.stageClearCounts[areaId];
 }
 
 function generateStageEnemy(areaId, stageIndex, isBoss){
@@ -771,86 +781,67 @@ function isAreaUnlocked(areaId){
    けいさんじたいは generateProblem() と おなじ数字づくりを つかい、
    ものがたりの文章で つつむだけ
    ========================================================== */
-const WORD_PROBLEM_TEMPLATES = {
-  add1: [
-    (a, b) => `むらの ひろばに ぼうけんしゃが ${a}にん いた。そこへ ${b}にん やってきた。ぜんぶで なんにんに なった？`,
-    (a, b) => `くだものやで りんごを ${a}こ、みかんを ${b}こ うっていた。くだものは あわせて なんこ？`,
+/* サブクエストを たのんでくる むらびとたち（1クエスト＝おなじ人物から 3問） */
+const QUEST_NPCS = [
+  { name:'むらびとトム', emoji:'👨‍🌾' },
+  { name:'しょうにんリナ', emoji:'👩‍💼' },
+  { name:'ろうけんじゃ ゴンド', emoji:'🧙' },
+  { name:'パンやのサラ', emoji:'👩‍🍳' },
+  { name:'かじやのケン', emoji:'🧑‍🔧' },
+  { name:'つりびとダン', emoji:'🎣' },
+];
+
+/* 1クエスト＝1えんざんファミリー（add/sub/mul/div）につき、
+   「はじめに→つぎに→さいごに」と ものがたりが つづく 3問セット。
+   おなじ場面・おなじ人物からの たのみごとが すすんでいく ようす を えがく */
+const STORY_ARCS = {
+  add: [
+    { title:'おまつりの じゅんび', parts: [
+      (a, b) => `「おまつりの やたいを てつだってほしいんだ。はじめに りんごを ${a}こ ならべたよ。あとから ${b}こ ついかしたんだ。りんごは ぜんぶで なんこに なる？」`,
+      (a, b) => `「つぎは おだんごだよ。${a}こ よういしたら、とんやから さらに ${b}こ とどいたんだ。だんごは ぜんぶで なんこに なる？」`,
+      (a, b) => `「さいごに ちょうちんを ${a}こ かざったよ。となりの むらからも ${b}こ とどいたんだ。ちょうちんは ぜんぶで なんこに なる？」`,
+    ]},
+    { title:'ひっこしの てつだい', parts: [
+      (a, b) => `「ひっこしを てつだって！ はじめに 本を ${a}さつ はこにつめたら、たなおくから まだ ${b}さつ 見つかったんだ。本は ぜんぶで なんさつ ある？」`,
+      (a, b) => `「つぎは しょっきだよ。${a}こ つつんだあと、おくの たなから ${b}こ 見つかったんだ。しょっきは ぜんぶで なんこに なる？」`,
+      (a, b) => `「さいごに ふくを ${a}まい たたんだら、せんたくから ${b}まい もどってきたんだ。ふくは ぜんぶで なんまいに なる？」`,
+    ]},
   ],
-  add2: [
-    (a, b) => `どうぐやに ポーションが ${a}こ あった。あたらしく ${b}こ しいれた。ぜんぶで なんこに なった？`,
-    (a, b) => `つりで さかなを ${a}びき つった。ともだちから ${b}びき もらった。ぜんぶで なんびきに なった？`,
+  sub: [
+    { title:'ぼうけんの じゅんびひん', parts: [
+      (a, b) => `「たびの じゅんびを てつだって。かごに りんごが ${a}こ あったけど、あさごはんで ${b}こ たべたんだ。のこりは なんこに なる？」`,
+      (a, b) => `「つぎは ポーションだよ。${a}こ あったけど、テストで ${b}こ つかったんだ。のこりは なんこに なる？」`,
+      (a, b) => `「さいごに たいまつだよ。${a}ぽん あったけど、どうくつの れんしゅうで ${b}ぽん つかいきったんだ。のこりは なんぽんに なる？」`,
+    ]},
+    { title:'とうぞくが でた さわぎ', parts: [
+      (a, b) => `「たいへんだ、とうぞくが でたんだ！ たからばこに きんかが ${a}まい あったのに、${b}まい ぬすまれてしまった。のこりは なんまいに なる？」`,
+      (a, b) => `「つぎは そうこだよ。パンが ${a}こ あったのに、${b}こ もっていかれたんだ。のこりは なんこに なる？」`,
+      (a, b) => `「さいごに ぶきだよ。やが ${a}ぽん あったのに、${b}ぽん もちさられたんだ。のこりは なんぽんに なる？」`,
+    ]},
   ],
-  add3: [
-    (a, b) => `ぼうえきしょうが きんかを ${a}まい もっていた。きょう ${b}まい かせいだ。ぜんぶで なんまいに なった？`,
-    (a, b) => `むらの こどもたちが どんぐりを ${a}こ あつめた。あとから ${b}こ みつけた。ぜんぶで なんこ？`,
+  mul: [
+    { title:'いちばの しこみ', parts: [
+      (a, b) => `「いちばの しこみを てつだって。はこが ${b}はこ あって、どの はこにも りんごが ${a}こずつ はいっているよ。りんごは ぜんぶで なんこに なる？」`,
+      (a, b) => `「つぎは パンだよ。かごが ${b}こ あって、どの かごにも パンが ${a}こずつ はいっているよ。パンは ぜんぶで なんこに なる？」`,
+      (a, b) => `「さいごに たるだよ。にだいしゃが ${b}だい あって、どの にだいしゃにも たるが ${a}こずつ のっているよ。たるは ぜんぶで なんこに なる？」`,
+    ]},
+    { title:'へいしの しゅつどう', parts: [
+      (a, b) => `「とりでの しらせを つたえたい。ぶたいが ${b}たい あって、どの ぶたいにも へいしが ${a}にんずつ いるよ。へいしは ぜんいんで なんにんに なる？」`,
+      (a, b) => `「つぎは うまだよ。うまやが ${b}とう あって、どの うまやにも うまが ${a}とうずつ いるよ。うまは ぜんぶで なんとうに なる？」`,
+      (a, b) => `「さいごに たてだよ。たなが ${b}だん あって、どの だんにも たてが ${a}まいずつ たてかけてあるよ。たては ぜんぶで なんまいに なる？」`,
+    ]},
   ],
-  add4: [
-    (a, b) => `たびの しょうにんが ぎんかを ${a}まい もっていた。しごとで ${b}まい もらった。ぜんぶで なんまいに なった？`,
-    (a, b) => `はたけで にんじんが ${a}ぽん とれた。となりの はたけでも ${b}ぽん とれた。あわせて なんぽん？`,
-  ],
-  add5: [
-    (a, b) => `とうぞくたいじの ほうしゅうで きんかを ${a}まい、べつの クエストで ${b}まい てにいれた。ぜんぶで なんまい？`,
-    (a, b) => `とりでに へいしが ${a}にん いた。おうえんの へいしが ${b}にん きた。ぜんぶで なんにんに なった？`,
-  ],
-  sub1: [
-    (a, b) => `かごに りんごが ${a}こ あった。${b}こ たべた。のこりは なんこ？`,
-    (a, b) => `ぼうけんしゃが ${a}にん いたが、${b}にんが きゅうけいに いった。のこりは なんにん？`,
-  ],
-  sub2: [
-    (a, b) => `ポーションが ${a}こ あった。たたかいで ${b}こ つかった。のこりは なんこ？`,
-    (a, b) => `むらに ${a}にん いた ぼうけんしゃの うち ${b}にんが たびに でた。のこりは なんにん？`,
-  ],
-  sub3: [
-    (a, b) => `きんかが ${a}まい あった。かいもので ${b}まい つかった。のこりは なんまい？`,
-    (a, b) => `たいまつが ${a}ぽん あった。どうくつで ${b}ぽん つかいきった。のこりは なんぽん？`,
-  ],
-  sub4: [
-    (a, b) => `しょうにんが ぎんかを ${a}まい もっていた。ぶきやで ${b}まい つかった。のこりは なんまい？`,
-    (a, b) => `むらに たるが ${a}こ あった。おまつりで ${b}こ つかった。のこりは なんこ？`,
-  ],
-  sub5: [
-    (a, b) => `とりでに ${a}にんの へいしが いた。たたかいで ${b}にんが きずついて さがった。のこりは なんにん？`,
-    (a, b) => `たからばこに きんかが ${a}まい あった。とうぞくに ${b}まい ぬすまれた。のこりは なんまい？`,
-  ],
-  mul1: [
-    (a, b) => `ぼうけんしゃが ${b}にん いて、ひとり ${a}こずつ ポーションを もっている。ポーションは ぜんぶで なんこ？`,
-    (a, b) => `はこが ${b}はこ あり、どの はこにも りんごが ${a}こずつ はいっている。りんごは ぜんぶで なんこ？`,
-  ],
-  mul2: [
-    (a, b) => `テーブルが ${b}つ あり、どのテーブルにも いすが ${a}きゃくずつ ある。いすは ぜんぶで なんきゃく？`,
-    (a, b) => `ぼうけんしゃチームが ${b}チーム あり、どのチームも ${a}にんずつ いる。ぜんいんで なんにん？`,
-  ],
-  mul3: [
-    (a, b) => `たなが ${b}だん あり、どの だんにも 本が ${a}さつずつ ならんでいる。本は ぜんぶで なんさつ？`,
-    (a, b) => `はたけが ${b}くかく あり、どの くかくにも やさいが ${a}こずつ とれた。やさいは ぜんぶで なんこ？`,
-  ],
-  mul4: [
-    (a, b) => `ふねが ${b}そう あり、どの ふねにも たからが ${a}こずつ つまれている。たからは ぜんぶで なんこ？`,
-    (a, b) => `むらが ${b}つ あり、どの むらにも けんしが ${a}にんずつ いる。けんしは ぜんぶで なんにん？`,
-  ],
-  mul5: [
-    (a, b) => `しろに へやが ${b}へや あり、どの へやにも きんかが ${a}まいずつ おいてある。きんかは ぜんぶで なんまい？`,
-    (a, b) => `たいが ${b}たい あり、どの たいにも ぼうけんしゃが ${a}にんずつ いる。ぜんいんで なんにん？`,
-  ],
-  div1: [
-    (a, b) => `くだものが ${a}こ ある。${b}にんの ぼうけんしゃで きっちり わけると、ひとり なんこ もらえる？`,
-    (a, b) => `きんかが ${a}まい ある。${b}この チームに おなじ かずずつ わけると、1チームは なんまいに なる？`,
-  ],
-  div2: [
-    (a, b) => `ポーションが ${a}こ ある。${b}にんの なかまで きっちり わけると、ひとり なんこずつ もらえる？`,
-    (a, b) => `パンが ${a}こ ある。${b}この かごに おなじ かずずつ いれると、1かごに なんこ はいる？`,
-  ],
-  div3: [
-    (a, b) => `やが ${a}ぽん ある。${b}にんの いてで きっちり わけると、ひとり なんぽん もらえる？`,
-    (a, b) => `たまごが ${a}こ ある。${b}この はこに おなじ かずずつ いれると、1はこに なんこ はいる？`,
-  ],
-  div4: [
-    (a, b) => `たからの コインが ${a}まい ある。${b}にんの なかまで きっちり わけると、ひとり なんまい もらえる？`,
-    (a, b) => `まきばに ひつじが ${a}とう いる。${b}この さくに おなじ かずずつ わけると、1さくに なんとう はいる？`,
-  ],
-  div5: [
-    (a, b) => `ほうせきが ${a}こ ある。${b}この たからばこに おなじ かずずつ わけると、1つの はこに なんこ はいる？`,
-    (a, b) => `きんかが ${a}まい ある。${b}にんの ぼうけんしゃで きっちり わけると、ひとり なんまい もらえる？`,
+  div: [
+    { title:'たからの わけまえ', parts: [
+      (a, b) => `「たからを みんなで わけたいんだ。ほうせきが ${a}こ あって、${b}にんの なかまで きっちり わけると、ひとり なんこ もらえる？」`,
+      (a, b) => `「つぎは きんかだよ。ぜんぶで ${a}まい あって、${b}この チームに おなじ かずずつ わけると、1チームは なんまいに なる？」`,
+      (a, b) => `「さいごに ほうせきばこだよ。ちゅうみが ${a}こ あって、${b}この はこに おなじ かずずつ いれると、1つの はこに なんこ はいる？」`,
+    ]},
+    { title:'えんかいの じゅんび', parts: [
+      (a, b) => `「むらの えんかいを てつだって。たまごが ${a}こ あって、${b}この かごに おなじ かずずつ いれると、1かごに なんこ はいる？」`,
+      (a, b) => `「つぎは おさらだよ。おさらが ${a}まい あって、${b}この テーブルに おなじ かずずつ くばると、1テーブルに なんまい おける？」`,
+      (a, b) => `「さいごに いすだよ。いすが ${a}きゃく あって、${b}この へやに おなじ かずずつ わけると、1つの へやに なんきゃく はいる？」`,
+    ]},
   ],
 };
 
@@ -865,12 +856,18 @@ function unlockedWordFamilies(){
   return families;
 }
 
-function generateWordProblem(){
+/* 1クエスト＝おなじ人物から、おなじ ものがたりの ながれで 3問。
+   3問とも おなじ えんざんファミリー・おなじ なんいどで そろえる */
+function generateStoryQuest(){
   const family = pick(unlockedWordFamilies());
+  const arc = pick(STORY_ARCS[family]);
+  const npc = pick(QUEST_NPCS);
   const tier = `${family}${rnd(1, 5)}`;
-  const p = generateProblem(tier);
-  const tpl = pick(WORD_PROBLEM_TEMPLATES[tier]);
-  return { ...p, text: tpl(p.a, p.b), isWordProblem: true, uid: G.nextUid++ };
+  const parts = arc.parts.map(tpl => {
+    const p = generateProblem(tier);
+    return { ...p, text: tpl(p.a, p.b), isWordProblem: true };
+  });
+  return { uid: G.nextUid++, npc, title: arc.title, tier, parts, partIndex: 0 };
 }
 
 function questRewardFor(tier){
@@ -1239,6 +1236,7 @@ function newGameState(name){
     skills: {}, // id → {progress, mastered}
     clears: { tower:false, dungeon:false, crypt:false, bandit:false },
     clearCounts: { tower:0, dungeon:0, crypt:0, bandit:0 }, // ステージの クリアかいすう（0〜3、★の数）
+    stageClearCounts: {}, // 新ステージ制（1-1など個別ステージ）ごとの クリアかいすう（areaId → [0〜3, ...]）
     rescued: [],
     printSheetCodes: {}, // skillId → プリントした もんだいの こたえから つくった あんごう
     questBoard: [], // サブクエストボードに ならんでいる ぶんしょうだい
@@ -1335,6 +1333,7 @@ function loadSlot(key){
       G.clearCounts = {};
       for (const z of ['tower', 'dungeon', 'crypt', 'bandit']) G.clearCounts[z] = G.clears[z] ? 3 : 0;
     }
+    if (!G.stageClearCounts) G.stageClearCounts = {};
     if (!G.questBoard) G.questBoard = [];
     currentSlotKey = key;
     return true;
@@ -2310,6 +2309,14 @@ function winBattle(){
     if (!explore.sessionGold) explore.sessionGold = 0;
     explore.sessionDrops.push(...drops);
     explore.sessionGold += gold;
+    if (explore.stageMode){
+      if (!explore.stageDrops) explore.stageDrops = [];
+      if (!explore.stageGold) explore.stageGold = 0;
+      if (!explore.stageExp) explore.stageExp = 0;
+      explore.stageDrops.push(...drops);
+      explore.stageGold += gold;
+      explore.stageExp += e.exp;
+    }
   }
 
   // レベルアップ
@@ -2338,7 +2345,11 @@ function winBattle(){
       const stageIndex = explore.stageIndex;
       showKillProgressPopup(fromCount, toCount, ENEMIES_PER_STAGE, () => {
         if (stageCleared){
-          showStageClearOverlay(AREA_STAGES[areaId], stageIndex,
+          const counts = getStageClearCounts(areaId);
+          counts[stageIndex] = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, (counts[stageIndex] || 0) + 1);
+          const stageRewards = { drops: explore.stageDrops || [], gold: explore.stageGold || 0, exp: explore.stageExp || 0 };
+          save();
+          showStageClearOverlay(AREA_STAGES[areaId], stageIndex, stageRewards,
             () => nextStage(),
             () => { explore = null; showStageSelectNew(areaId); });
         } else {
@@ -2627,14 +2638,14 @@ function generateDropsSummaryHtml(drops, gold) {
   if (!drops || drops.length === 0 && (!gold || gold === 0)) return '';
   let html = '<div class="run-drops-summary" style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.2); padding-top:10px;">';
   html += '<h4 style="margin-bottom:10px; color:var(--accent);">【今回のたんさくで てにいれたもの】</h4>';
-  if (gold > 0) html += `<div>🪙 ${gold} ゴールド</div>`;
+  if (gold > 0) html += `<div class="drop-reward-row">🪙 ${gold} ゴールド</div>`;
   drops.forEach(d => {
     if (d.kind === 'equip') {
-      html += `<div>${iconHtml(d.icon, 24)} <span class="rarity-${d.rarity}">${rarityLabelHtml(d.rarity)} ${d.name}</span></div>`;
+      html += `<div class="drop-reward-row">${iconHtml(d.icon, 24)} <span class="rarity-${d.rarity}">${rarityLabelHtml(d.rarity)} ${d.name}</span></div>`;
     } else if (d.kind === 'blueprint') {
-      html += `<div>📜 ${d.name}</div>`;
+      html += `<div class="drop-reward-row">${iconHtml(d.icon, 24)} ${d.name}</div>`;
     } else {
-      html += `<div>${d.icon} ${d.name}</div>`;
+      html += `<div class="drop-reward-row">${iconHtml(d.icon, 24)} ${d.name}</div>`;
     }
   });
   html += '</div>';
@@ -2725,7 +2736,7 @@ function showKillProgressPopup(fromCount, toCount, total, onDone){
 /* 1ステージぶん（ENEMIES_PER_STAGE たい）を たおしたら、そのまま つぎの ステージへ
    すすまず、ここで いったん 止めて えらばせる：ステージせんたくに もどるか、
    すぐ つぎの ステージへ すすむか */
-function showStageClearOverlay(area, stageIndex, onNext, onBackToSelect){
+function showStageClearOverlay(area, stageIndex, stageRewards, onNext, onBackToSelect){
   document.querySelector('.stage-clear-overlay')?.remove();
   if (SM.initialized) SM.play('se_clear');
 
@@ -2741,6 +2752,7 @@ function showStageClearOverlay(area, stageIndex, onNext, onBackToSelect){
   panel.className = 'panel stage-clear-panel';
   panel.innerHTML = `
     <h2>${area.name} ステージ${stageIndex + 1}／${area.stages.length} クリア！</h2>
+    ${stageClearRewardsHtml(stageRewards)}
     <p class="flavor">つぎの ステージへ すすみますか？　それとも ステージせんたくに もどりますか？</p>
     <div class="stage-clear-actions">
       <button class="btn" id="btn-stage-clear-back">ステージせんたくへ もどる</button>
@@ -2752,6 +2764,33 @@ function showStageClearOverlay(area, stageIndex, onNext, onBackToSelect){
 
   $('btn-stage-clear-back').onclick = () => { overlay.remove(); onBackToSelect(); };
   $('btn-stage-clear-next').onclick = () => { overlay.remove(); onNext(); };
+}
+
+/* ステージクリア画面で見せる、そのステージで てにいれた けいけんち／ゴールド／アイテムの一覧 */
+function stageClearRewardsHtml(rewards){
+  if (!rewards) return '';
+  const { drops, gold, exp } = rewards;
+  let html = '<div class="stage-clear-rewards">';
+  html += '<h4>【このステージで てにいれたもの】</h4>';
+  html += '<div class="stage-clear-rewards-summary">';
+  html += `<span>✨ けいけんち ${exp || 0}</span>`;
+  html += `<span>🪙 ${gold || 0} ゴールド</span>`;
+  html += '</div>';
+  if (drops && drops.length){
+    html += '<div class="stage-clear-rewards-items">';
+    drops.forEach(d => {
+      if (d.kind === 'equip'){
+        html += `<div class="stage-clear-reward-row drop-reward-row">${iconHtml(d.icon, 22)} <span class="rarity-${d.rarity}">${rarityLabelHtml(d.rarity)} ${d.name}</span></div>`;
+      } else if (d.kind === 'blueprint'){
+        html += `<div class="stage-clear-reward-row drop-reward-row">${iconHtml(d.icon, 22)} ${d.name}</div>`;
+      } else {
+        html += `<div class="stage-clear-reward-row drop-reward-row">${iconHtml(d.icon, 22)} ${d.name}</div>`;
+      }
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
 }
 
 /* 新ステージシステムの エリア制覇。報酬・救助イベントは 既存の zoneCleared() を
@@ -2771,6 +2810,9 @@ function nextStage(){
   if (explore.stageKillCount >= ENEMIES_PER_STAGE){
     explore.stageIndex++;
     explore.stageKillCount = 0;
+    explore.stageDrops = [];
+    explore.stageGold = 0;
+    explore.stageExp = 0;
     if (explore.stageIndex >= area.stages.length){
       explore.isBoss = true;
       explore.stageIndex = null;
@@ -2890,18 +2932,35 @@ function showStageSelectNew(areaId){
   title.className = 'hotspot-tag stage-vertical-title';
   title.textContent = `＊${area.name}（${area.opLabel}）＊`;
   container.appendChild(title);
+  const stageCounts = getStageClearCounts(areaId);
   area.stages.forEach((stage, idx) => {
     const row = document.createElement('button');
     row.className = 'stage-select-row';
-    row.innerHTML = `<span class="stage-select-num">${areaNum}-${idx + 1}</span><span class="stage-select-name">${stage.name}</span>`;
+    row.innerHTML = `<span class="stage-select-num">${areaNum}-${idx + 1}</span><span class="stage-select-name">${stage.name}</span>${stageClearStatusHtml(stageCounts[idx] || 0)}`;
     row.onclick = () => enterAreaStage(areaId, idx);
     container.appendChild(row);
   });
   const bossRow = document.createElement('button');
   bossRow.className = 'stage-select-row stage-select-boss-row';
-  bossRow.innerHTML = `<span class="stage-select-num">${areaNum}-B</span><span class="stage-select-name">👹 ${area.bossName}</span>`;
+  const bossStars = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, G.clearCounts[area.rewardZone] || 0);
+  bossRow.innerHTML = `<span class="stage-select-num">${areaNum}-B</span><span class="stage-select-name">👹 ${area.bossName}</span>${stageClearStatusHtml(bossStars)}`;
   bossRow.onclick = () => enterAreaBoss(areaId);
   container.appendChild(bossRow);
+}
+
+/* ステージ一覧の1行ぶんに つける、クリア状況の表示。
+   1回でも クリアしていれば「CLEAR!」（きいろ）を、くりかえしクリアで ★が たまり、
+   ★★★（さいだい）に なったら「CLEAR!」が にじ色に かがやく */
+function stageClearStatusHtml(stars){
+  const cleared = stars > 0;
+  const maxed = stars >= STAGE_STARS_TO_UNLOCK_NEXT;
+  const starsHtml = '★'.repeat(stars) + '☆'.repeat(STAGE_STARS_TO_UNLOCK_NEXT - stars);
+  return `
+    <span class="stage-select-status">
+      ${cleared ? `<span class="stage-clear-tag${maxed ? ' stage-clear-tag-rainbow' : ''}">CLEAR!</span>` : ''}
+      <span class="stage-select-stars">${starsHtml}</span>
+    </span>
+  `;
 }
 
 function showGrassSubstage(){
@@ -2928,7 +2987,9 @@ const QUEST_BOARD_SIZE = 3;
 
 function ensureQuestBoard(){
   if (!G.questBoard) G.questBoard = [];
-  while (G.questBoard.length < QUEST_BOARD_SIZE) G.questBoard.push(generateWordProblem());
+  // ふるいセーブに のこった 1問だけの クエスト（parts が ない）は はきかえる
+  G.questBoard = G.questBoard.filter(q => q && Array.isArray(q.parts));
+  while (G.questBoard.length < QUEST_BOARD_SIZE) G.questBoard.push(generateStoryQuest());
 }
 
 function showQuestBoard(){
@@ -2937,11 +2998,18 @@ function showQuestBoard(){
   const list = $('quest-board-list');
   list.innerHTML = '';
   for (const q of G.questBoard){
+    const part = q.parts[q.partIndex];
     const row = document.createElement('div');
-    row.className = 'inv-row';
+    row.className = 'inv-row quest-board-row';
     row.innerHTML = `<div class="info">
-      <span class="tag">🧮${OP_LABELS[q.tier]}</span>
-      <div class="desc quest-text">${q.text}</div>
+      <div class="quest-npc-line">
+        <span class="quest-npc-emoji">${q.npc.emoji}</span>
+        <span class="quest-npc-name">${q.npc.name}</span>
+        <span class="tag">🧮${OP_LABELS[q.tier]}</span>
+        <span class="tag quest-progress-tag">${q.partIndex + 1}／${q.parts.length}問め</span>
+      </div>
+      <div class="quest-title">＊${q.title}＊</div>
+      <div class="desc quest-text">${part.text}</div>
     </div>`;
     const btnGroup = document.createElement('div');
     btnGroup.className = 'skill-row-btns';
@@ -2960,7 +3028,7 @@ function showQuestBoard(){
   }
 }
 
-/* クエスト依頼者からの お礼のセリフ（ランダム） */
+/* クエスト依頼者からの お礼のセリフ（3問すべて こたえおわった とき） */
 const QUEST_THANKS_LINES = [
   'たすかったよ、ほんとうに ありがとう！',
   'さすが ぼうけんしゃだ！ たすかった！',
@@ -2968,19 +3036,26 @@ const QUEST_THANKS_LINES = [
   'これで あんしんして くらせるよ。ありがとう！',
   'おかげで たすかった！ おれい するね！',
 ];
+/* まだ とちゅうの ときの セリフ（1〜2問め こたえた とき） */
+const QUEST_CONTINUE_LINES = [
+  'ありがとう！ でも まだ たのみたいことが あるんだ…',
+  'たすかったよ。じつは もうひとつ おねがいが あって…',
+  'いいちょうしだね！ つぎも たのめるかな？',
+  'その ちょうしで、もうすこし てつだってほしいんだ。',
+];
 
 /* サブクエストの クリア演出：NPCの おれいセリフ＋ごほうび
    （ゴールド・けいけんちが じっさいの HUDの ばしょへ とんでいく） */
-function showQuestRewardToast(gold, exp, onDone){
+function showQuestRewardToast(gold, exp, npc, completed, onDone){
   showHome();
   document.querySelector('.quest-reward-overlay')?.remove();
   const overlay = document.createElement('div');
   overlay.className = 'quest-reward-overlay';
   overlay.innerHTML = `
     <div class="quest-reward-card">
-      <div class="quest-reward-badge">✅ クエストクリア！</div>
-      <div class="quest-reward-npc">🧑‍🌾</div>
-      <div class="quest-reward-line">${pick(QUEST_THANKS_LINES)}</div>
+      <div class="quest-reward-badge">${completed ? '✅ クエストクリア！' : '📖 つづく…'}</div>
+      <div class="quest-reward-npc">${npc.emoji}</div>
+      <div class="quest-reward-line">${completed ? pick(QUEST_THANKS_LINES) : pick(QUEST_CONTINUE_LINES)}</div>
       <div class="quest-reward-chips">
         <div class="quest-reward-chip gold" id="quest-reward-chip-gold">💰 +${gold}</div>
         <div class="quest-reward-chip exp" id="quest-reward-chip-exp">✨ +${exp}</div>
@@ -3029,23 +3104,31 @@ function flyRewardChip(fromEl, toEl){
 }
 
 function startQuestChallenge(q){
+  const part = q.parts[q.partIndex];
   showScreen('screen-training');
   $('btn-training-quit').textContent = 'やめる';
-  $('training-title').textContent = 'サブクエスト';
-  $('training-progress').textContent = 'むらの みんなから たのまれた もんだいに こたえよう！';
+  $('training-title').textContent = `サブクエスト：${q.npc.name}`;
+  $('training-progress').textContent = `＊${q.title}＊（${q.partIndex + 1}／${q.parts.length}問め）`;
   startChallenge($('training-challenge'),
-    { problem:q, timeLimit:problemTimeLimit(q.tier) + 6000, prompt:'ぶんしょうを よんで こたえよう！' },
+    { problem:part, timeLimit:problemTimeLimit(q.tier) + 6000, prompt:'ぶんしょうを よんで こたえよう！' },
     (res) => {
       destroyChallenge();
       if (res.success){
         hitTrainingDummy();
         const reward = questRewardFor(q.tier);
-        G.player.gold += reward.gold;
-        const { leveledUp, lvlBefore, pointsGained, maxHpBefore, maxMpBefore } = grantExp(reward.exp);
-        const idx = G.questBoard.findIndex(x => x.uid === q.uid);
-        if (idx >= 0) G.questBoard[idx] = generateWordProblem();
+        q.partIndex++;
+        const completed = q.partIndex >= q.parts.length;
+        // 3問すべて こたえおわったら、クリアボーナスを うわのせする
+        const totalGold = reward.gold + (completed ? Math.round(reward.gold * 0.5) : 0);
+        const totalExp = reward.exp + (completed ? Math.round(reward.exp * 0.5) : 0);
+        G.player.gold += totalGold;
+        const { leveledUp, lvlBefore, pointsGained, maxHpBefore, maxMpBefore } = grantExp(totalExp);
+        if (completed){
+          const idx = G.questBoard.findIndex(x => x.uid === q.uid);
+          if (idx >= 0) G.questBoard[idx] = generateStoryQuest();
+        }
         save();
-        showQuestRewardToast(reward.gold, reward.exp, () => {
+        showQuestRewardToast(totalGold, totalExp, q.npc, completed, () => {
           if (leveledUp){
             const unlockedSkills = SKILL_DB.filter(s => (s.reqLvl || 1) > lvlBefore && (s.reqLvl || 1) <= G.player.lvl);
             showLevelUpModal({
@@ -3057,21 +3140,27 @@ function startQuestChallenge(q){
           }
         });
       } else {
-        trainingDone(`ざんねん…こたえが ちがったみたい（せいかいは ${q.answer}）。もういちど ちょうせんしよう。`);
+        trainingDone(`ざんねん…こたえが ちがったみたい（せいかいは ${part.answer}）。もういちど ちょうせんしよう。`);
       }
     });
 }
 
+/* サブクエストは 3問セットぶん まとめて 1まいの A4に おさまるよう、
+   1問ずつを コンパクトな もんだい行＋こたえ欄で ならべる */
 function printQuestSheet(q){
+  const rows = q.parts.map((part, i) => `
+    <div class="p-row" style="font-size:16px; align-items:flex-start;">
+      <span class="p-num">${i + 1}</span>
+      <span class="p-expr" style="white-space:normal;">${part.text}</span>
+    </div>
+    <div class="p-row"><span class="p-num">こたえ</span><span class="p-blank"></span></div>
+  `).join('');
   $('print-sheet').innerHTML = `
-    <h1>サブクエスト：むらびとの たのみごと</h1>
-    <div class="p-sub">えんざん：${OP_LABELS[q.tier]}</div>
+    <h1>サブクエスト：${q.npc.name}の たのみごと</h1>
+    <div class="p-sub">＊${q.title}＊／えんざん：${OP_LABELS[q.tier]}</div>
     <div class="p-meta"><span>なまえ：</span><span>にちづけ：</span></div>
     <div class="p-sheet" style="grid-template-columns:1fr;">
-      <div class="p-row" style="font-size:20px; align-items:flex-start;">
-        <span class="p-expr" style="white-space:normal;">${q.text}</span>
-      </div>
-      <div class="p-row"><span class="p-num">こたえ</span><span class="p-blank"></span></div>
+      ${rows}
     </div>
   `;
   window.print();
@@ -3242,13 +3331,42 @@ function costBarHtml(used, cap){
 
 /* ==========================================================
    武器屋（ゴールドで そうびを こうにゅう）
+   タブ（全て／武器／防具／アクセサリー）で 一覧を きりかえられる
    ========================================================== */
+const WEAPON_SHOP_TABS = [
+  { key:'all', label:'全て' },
+  { key:'weapon', label:'武器' },
+  { key:'armor', label:'防具' },
+  { key:'accessory', label:'アクセサリー' },
+];
+let weaponShopFilter = 'all';
+
 function showWeaponShop(){
   showScreen('screen-weapon-shop');
+  renderWeaponShopTabs();
+  renderWeaponShopList();
+}
+
+function renderWeaponShopTabs(){
+  const tabs = $('weapon-shop-tabs');
+  tabs.innerHTML = WEAPON_SHOP_TABS.map(t =>
+    `<button class="shop-tab-btn${t.key === weaponShopFilter ? ' active' : ''}" data-slot="${t.key}">${t.label}</button>`
+  ).join('');
+  tabs.querySelectorAll('.shop-tab-btn').forEach(btn => {
+    btn.onclick = () => {
+      weaponShopFilter = btn.dataset.slot;
+      renderWeaponShopTabs();
+      renderWeaponShopList();
+    };
+  });
+}
+
+function renderWeaponShopList(){
   $('weapon-shop-gold').textContent = G.player.gold;
   const list = $('weapon-shop-list');
   list.innerHTML = '';
-  for (const db of EQUIP_DB){
+  const items = weaponShopFilter === 'all' ? EQUIP_DB : EQUIP_DB.filter(db => db.slot === weaponShopFilter);
+  for (const db of items){
     const stat = calcEquipStat(db.stat, 1);
     const statText = Object.entries(stat).map(([k, v]) => `${statName(k)}+${v}`).join(' ');
     const owned = G.ownedEquips.some(o => o.id === db.id);
@@ -3996,7 +4114,7 @@ function bindEvents(){
   $('substage-card-bandit').onclick = () => enterZone('bandit');
   $('btn-grass-substage-back').onclick = showStageSelect;
 
-  $('btn-goto-admin').onclick = showAdmin;
+  $('btn-goto-admin').onclick = () => requestAdminAccess(showAdmin);
 
   $('btn-status-back').onclick = showHome;
   $('btn-status-confirm').onclick = confirmStatusAllocation;
@@ -4381,6 +4499,63 @@ function renderAdminTimeLimitList(){
   updateAdminTimeLimitBulkCount();
 }
 
+/* ==========================================================
+   かんりしゃせってい パスワードゲート（きょうの日づけ4けた：MMDD）
+   ========================================================== */
+function computeTodayPasscode(){
+  const now = new Date();
+  return String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
+}
+
+let adminAccessGrantedCallback = null;
+
+/* パスワードにゅうりょくモーダルを表示し、せいかいしたら onSuccess を呼ぶ */
+function requestAdminAccess(onSuccess){
+  const overlay = $('admin-password-overlay');
+  const input = $('admin-password-input');
+  const errorEl = $('admin-password-error');
+  if (!overlay || !input) { onSuccess(); return; }
+  adminAccessGrantedCallback = onSuccess;
+  input.value = '';
+  if (errorEl) errorEl.textContent = '';
+  overlay.classList.remove('hidden');
+  setTimeout(() => input.focus(), 50);
+}
+
+function closeAdminPasswordModal(){
+  const overlay = $('admin-password-overlay');
+  if (overlay) overlay.classList.add('hidden');
+  adminAccessGrantedCallback = null;
+}
+
+function submitAdminPassword(){
+  const input = $('admin-password-input');
+  const errorEl = $('admin-password-error');
+  if (!input) return;
+  if (input.value === computeTodayPasscode()) {
+    const cb = adminAccessGrantedCallback;
+    closeAdminPasswordModal();
+    if (cb) cb();
+  } else {
+    if (errorEl) errorEl.textContent = 'パスワードが ちがいます。';
+    input.value = '';
+    input.focus();
+  }
+}
+
+function initAdminPasswordGate(){
+  const submitBtn = $('btn-admin-password-submit');
+  const cancelBtn = $('btn-admin-password-cancel');
+  const input = $('admin-password-input');
+  if (submitBtn) submitBtn.onclick = submitAdminPassword;
+  if (cancelBtn) cancelBtn.onclick = closeAdminPasswordModal;
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitAdminPassword();
+    });
+  }
+}
+
 function initTimeLimitFeature(){
   buildClockTicks();
   updateAnalogClock();
@@ -4410,8 +4585,10 @@ function initTimeLimitFeature(){
   const overlayAdminBtn = $('btn-time-limit-admin');
   if (overlayAdminBtn) {
     overlayAdminBtn.onclick = () => {
-      $('time-limit-overlay').classList.add('hidden');
-      showAdmin();
+      requestAdminAccess(() => {
+        $('time-limit-overlay').classList.add('hidden');
+        showAdmin();
+      });
     };
   }
 }
@@ -4426,6 +4603,7 @@ function init(){
   if (listSaveSlots().length > 0) $('btn-continue').classList.remove('hidden');
   showScreen('screen-title');
   initTimeLimitFeature();
+  initAdminPasswordGate();
 
   // ミュートボタンのセットアップ
   let muteBtn = $('btn-mute');

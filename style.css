@@ -164,6 +164,38 @@
 .time-limit-panel h2 { margin-bottom: 10px; }
 .time-limit-panel .btn { margin-top: 18px; }
 
+/* ===== かんりしゃせってい パスワードにゅうりょく ===== */
+.admin-password-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000000;
+  background: rgba(10, 8, 20, 0.94);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.admin-password-panel {
+  background: var(--panel-bg);
+  border: 3px solid var(--panel-border);
+  box-shadow: 0 0 0 3px var(--panel-border-dark), var(--shadow);
+  border-radius: var(--border-radius);
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 360px;
+}
+.admin-password-icon { font-size: 48px; margin-bottom: 10px; }
+.admin-password-panel h2 { margin-bottom: 10px; }
+.admin-password-input {
+  max-width: 200px;
+  margin: 14px auto 4px;
+  display: block;
+  text-align: center;
+  font-size: 28px;
+  letter-spacing: 10px;
+}
+.admin-password-error { color: var(--bad); min-height: 18px; font-size: 13px; font-weight: 700; }
+
 /* ===== 管理者設定：じかんせいげん ===== */
 .admin-timelimit-section {
   background: var(--card-bg);
@@ -800,6 +832,13 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 .inv-row .quest-text { color:var(--text); font-size:13px; line-height:1.8; margin-top:4px; }
 .inv-row .btn { width:auto; margin:0; padding:6px 14px; font-size:14px; }
 
+.quest-board-row { align-items: flex-start; }
+.quest-npc-line { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.quest-npc-emoji { font-size:18px; }
+.quest-npc-name { font-weight:700; color: var(--accent); font-size:13px; }
+.quest-progress-tag { color: var(--good); }
+.quest-title { font-size:12px; color: var(--text-light); margin-top:2px; }
+
 .equip-stat-bars { display:flex; flex-direction:column; gap:3px; margin-top:6px; }
 .equip-stat-row { display:flex; align-items:center; gap:6px; }
 .equip-stat-label { flex-shrink:0; display:flex; align-items:center; }
@@ -1144,7 +1183,45 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 .stage-select-row:hover .stage-select-num, .stage-select-row:focus .stage-select-num { color: #1a1626; text-shadow:none; }
 .stage-select-name {
   font-size: 12px; line-height: 1.3;
+  flex: 1 1 auto;
 }
+.stage-select-status {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  margin-left: auto;
+  padding-left: 8px;
+}
+.stage-clear-tag {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #ffd23f;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.7);
+  white-space: nowrap;
+}
+.stage-clear-tag-rainbow {
+  background: linear-gradient(90deg, #ff5c5c, #ffb347, #ffe066, #6bd66b, #4fd1e8, #7e8bff, #b26bff, #ff5c5c);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  animation: stage-clear-rainbow 2.2s linear infinite;
+}
+@keyframes stage-clear-rainbow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+.stage-select-stars {
+  font-size: 12px;
+  color: #ffd23f;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.7);
+  white-space: nowrap;
+}
+.stage-select-row:hover .stage-select-stars, .stage-select-row:focus .stage-select-stars { color: #1a1626; text-shadow:none; }
 .stage-select-boss-row {
   background: rgba(70, 20, 30, 0.88);
   border-color: var(--bad);
@@ -1458,6 +1535,18 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 .stage-clear-panel { width: min(440px, 90vw); text-align: center; animation: levelup-panel-in 0.4s 0.15s cubic-bezier(0.34,1.56,0.64,1) both; }
 .stage-clear-actions { display: flex; gap: 10px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
 .stage-clear-actions .btn { width: auto; padding: 10px 16px; }
+.stage-clear-rewards {
+  margin: 14px 0;
+  padding: 10px 14px;
+  border-top: 1px solid rgba(255,255,255,0.2);
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  text-align: left;
+}
+.stage-clear-rewards h4 { color: var(--accent); margin-bottom: 8px; font-size: 13px; text-align:center; }
+.stage-clear-rewards-summary { display: flex; justify-content: center; gap: 18px; font-size: 13px; margin-bottom: 6px; }
+.stage-clear-rewards-items { display: flex; flex-direction: column; gap: 4px; max-height: 140px; overflow-y: auto; }
+.stage-clear-reward-row { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.drop-reward-row { display: flex; align-items: center; gap: 6px; }
 
 /* ===== レベルアップ演出 ===== */
 .levelup-overlay {
@@ -1626,6 +1715,31 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 
 /* ショップの item-card（アイコン＋名前＋ねだん＋かうボタン） */
 .item-card-grid { align-content: start; }
+.shop-tabs {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 10px 0 4px;
+}
+.shop-tab-btn {
+  font-family: var(--pixel-font);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  background: rgba(20, 16, 34, 0.88);
+  border: 2px solid var(--panel-border);
+  border-radius: 999px;
+  padding: 6px 16px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.15s;
+}
+.shop-tab-btn:hover { transform: scale(1.05); }
+.shop-tab-btn.active {
+  background: var(--accent);
+  color: #1a1626;
+  box-shadow: 0 4px 12px rgba(255,207,77,0.45);
+}
 .item-card.shop-card { justify-content: flex-start; padding: 14px 10px; }
 .shop-card-desc { font-size:11px; color:var(--text-light); }
 .shop-card-stat { font-size:13px; font-weight:700; color:var(--accent); display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:4px 10px; }
