@@ -3165,17 +3165,19 @@ function printMetaHtml(){
    1問ずつを コンパクトな もんだい行＋こたえ欄で ならべる */
 function printQuestSheet(q){
   const rows = q.parts.map((part, i) => `
-    <div class="p-row" style="font-size:16px; align-items:flex-start;">
-      <span class="p-num">${i + 1}</span>
-      <span class="p-expr" style="white-space:normal;">${part.text}</span>
+    <div class="quest-print-block">
+      <div class="p-row quest-print-question">
+        <span class="p-num quest-print-num">${i + 1}</span>
+        <span class="p-expr" style="white-space:normal;">${part.text}</span>
+      </div>
+      <div class="p-row quest-print-answer"><span class="p-num">こたえ</span><span class="p-blank"></span></div>
     </div>
-    <div class="p-row" style="font-size:16px; padding-top:0;"><span class="p-num">こたえ</span><span class="p-blank"></span></div>
   `).join('');
   $('print-sheet').innerHTML = `
-    <h1>サブクエスト：${q.npc.name}の たのみごと</h1>
-    <div class="p-sub">＊${q.title}＊／えんざん：${OP_LABELS[q.tier]}</div>
+    <h1 style="font-size:34px;">サブクエスト：${q.npc.name}の たのみごと</h1>
+    <div class="p-sub" style="font-size:19px; margin-bottom:26px;">＊${q.title}＊／えんざん：${OP_LABELS[q.tier]}</div>
     ${printMetaHtml()}
-    <div class="p-sheet" style="grid-template-columns:1fr;">
+    <div class="p-sheet" style="grid-template-columns:1fr; margin-top:12px;">
       ${rows}
     </div>
   `;
