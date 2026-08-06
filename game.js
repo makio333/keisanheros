@@ -4752,6 +4752,16 @@ function init(){
       showHome();
     }
   };
+
+  $('btn-menu-save-title').onclick = () => {
+    menuDropdown.classList.add('hidden');
+    if (battle && !battle.over) endBattleLoop();
+    if (trainingSkill) { destroyChallenge(); trainingSkill = null; }
+    explore = null;
+    save();
+    if (listSaveSlots().length > 0) $('btn-continue').classList.remove('hidden');
+    showScreen('screen-title');
+  };
 }
 
 // DOMがロードされたら実行
