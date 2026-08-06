@@ -3145,6 +3145,22 @@ function startQuestChallenge(q){
     });
 }
 
+/* プリントの上部にいれる「なまえ／にちづけ」らん。
+   なまえの空らんは 長めにして 書きやすく、にちづけは「＿＿月＿＿日（＿＿ようび）」の
+   べつべつの空らんにし、幼い子でも読めるよう 月・日・曜日に ルビをふる */
+function printMetaHtml(){
+  return `
+    <div class="p-meta">
+      <span class="p-meta-name">なまえ：</span>
+      <span class="p-meta-date">
+        <span class="p-meta-blank-sm"></span><ruby>月<rt>がつ</rt></ruby>
+        <span class="p-meta-blank-sm"></span><ruby>日<rt>にち</rt></ruby>
+        （<span class="p-meta-blank-sm"></span><ruby>曜日<rt>ようび</rt></ruby>）
+      </span>
+    </div>
+  `;
+}
+
 /* サブクエストは 3問セットぶん まとめて 1まいの A4に おさまるよう、
    1問ずつを コンパクトな もんだい行＋こたえ欄で ならべる */
 function printQuestSheet(q){
@@ -3153,12 +3169,12 @@ function printQuestSheet(q){
       <span class="p-num">${i + 1}</span>
       <span class="p-expr" style="white-space:normal;">${part.text}</span>
     </div>
-    <div class="p-row"><span class="p-num">こたえ</span><span class="p-blank"></span></div>
+    <div class="p-row" style="font-size:16px; padding-top:0;"><span class="p-num">こたえ</span><span class="p-blank"></span></div>
   `).join('');
   $('print-sheet').innerHTML = `
     <h1>サブクエスト：${q.npc.name}の たのみごと</h1>
     <div class="p-sub">＊${q.title}＊／えんざん：${OP_LABELS[q.tier]}</div>
-    <div class="p-meta"><span>なまえ：</span><span>にちづけ：</span></div>
+    ${printMetaHtml()}
     <div class="p-sheet" style="grid-template-columns:1fr;">
       ${rows}
     </div>
@@ -3633,7 +3649,7 @@ function printTrainingSheet(s){
   $('print-sheet').innerHTML = `
     ${titleHtml}
     <div class="p-sub" style="margin-top: 10px;">えんざん：${OP_LABELS[tier]}／ぜんぶで ${count}もん</div>
-    <div class="p-meta"><span>なまえ：</span><span>にちづけ：</span></div>
+    ${printMetaHtml()}
     <div class="p-sheet">${rows}</div>
     <div class="p-code-section">
       <div class="p-code-title">🔑 あんごうを つくろう！</div>
@@ -3737,7 +3753,7 @@ function printBlueprintSheet(bp){
   $('print-sheet').innerHTML = `
     <h1>古代装備の せっけいず：${bp.name}</h1>
     <div class="p-sub">えんざん：${OP_LABELS[bp.tier]}／ぜんぶで ${count}もん／「${equipDb.name}」を かいどく！</div>
-    <div class="p-meta"><span>なまえ：</span><span>にちづけ：</span></div>
+    ${printMetaHtml()}
     <div class="p-sheet">${rows}</div>
     <div class="p-code-section">
       <div class="p-code-title">🔑 あんごうを つくろう！</div>
