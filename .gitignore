@@ -4,3 +4,7 @@ __pycache__/
 *.pyc
 .firebase/
 firebase-debug.log
+node_modules/
+dist/
+venv/
+*.log

@@ -1,4 +1,37 @@
+
+function skillPower(s){
+  if (s.dmgMult) return s.dmgMult;
+  if (s.healPct) return 1 + s.healPct * 4;
+  return 1;
+}
+function skillTimeMult(s){ return 1.0; }
+function skillTimePenaltyLabel(s){ return ''; }
 'use strict';
+
+/* ==========================================================
+   安全なローカルストレージラッパー (iPad file:// 環境対応)
+   ========================================================== */
+const _fallbackMemStore = new Map();
+function storageGet(k) {
+  try { if (typeof localStorage !== 'undefined') return localStorage.getItem(k); } catch (e) {}
+  return _fallbackMemStore.get(k) || null;
+}
+function storageSet(k, v) {
+  try { if (typeof localStorage !== 'undefined') { localStorage.setItem(k, v); return; } } catch (e) {}
+  _fallbackMemStore.set(k, String(v));
+}
+function storageRemove(k) {
+  try { if (typeof localStorage !== 'undefined') { localStorage.removeItem(k); return; } } catch (e) {}
+  _fallbackMemStore.delete(k);
+}
+function storageLen() {
+  try { if (typeof localStorage !== 'undefined') return localStorage.length; } catch (e) {}
+  return _fallbackMemStore.size;
+}
+function storageK(i) {
+  try { if (typeof localStorage !== 'undefined') return localStorage.key(i); } catch (e) {}
+  return Array.from(_fallbackMemStore.keys())[i] || null;
+}
 
 /* ==========================================================
    ユーティリティ
@@ -14,6 +47,16 @@ const ASSET_V = 1;
 function av(path){
   if (!path) return path;
   if (path.startsWith('http') || path.startsWith('data:')) return path; // 外部URL・data URIは そのまま
+  if (typeof window !== 'undefined' && window.__ASSET_MAP__) {
+    const pure = path.split('?')[0];
+    const resolved = window.__ASSET_MAP__[pure] ||
+                     window.__ASSET_MAP__[decodeURI(pure)] ||
+                     window.__ASSET_MAP__[encodeURI(pure)] ||
+                     window.__ASSET_MAP__['./' + pure] ||
+                     window.__ASSET_MAP__['./' + decodeURI(pure)] ||
+                     window.__ASSET_MAP__['./' + encodeURI(pure)];
+    if (resolved) return resolved;
+  }
   return path + (path.includes('?') ? '&' : '?') + 'v=' + ASSET_V;
 }
 
@@ -22,36 +65,49 @@ function av(path){
    ========================================================== */
 class SoundManager {
   constructor() {
-    this.beepCtx = null; // ビープ音フォールバック専用（file://でも動作するWebAudio）
+    this.beepCtx = null;
     this.initialized = false;
-    this.audios = {}; // name -> HTMLAudioElement
+    this.audios = {}; 
     this.bgmKey = null;
-    this.muted = false; // ミュートフラグ
+    this.muted = false;
+    this.globalVolume = 0.7; // マスター音量 (0.0〜1.0)
     
-    // 読み込むファイルのリスト
     this.audioFiles = {
-      bgm_home: 'BGM SE/BGM/拠点.mp3',
-      bgm_room: 'BGM SE/BGM/自分の部屋.mp3',
-      bgm_stage1: 'BGM SE/BGM/ステージ１.mp3',
-      bgm_training: 'BGM SE/BGM/修行.mp3',
-      se_crit: 'BGM SE/SE/クリティカル.mp3',
-      se_clear: 'BGM SE/SE/ステージクリア.mp3',
-      se_type: 'BGM SE/SE/入力成功.mp3',
-      se_slash: 'BGM SE/SE/斬撃.mp3',
-      se_decide: 'BGM SE/SE/決定.mp3',
-      se_gameover: 'BGM SE/BGM/ゲームオーバー.mp3',
-      se_gacha_result: 'BGM SE/SE/ガチャ結果.mp3',
-      se_gacha_result2: 'BGM SE/SE/ガチャ結果２.mp3',
+      bgm_title: 'assets_audio/bgm_title.m4a',
+      bgm_home: 'assets_audio/bgm_home.m4a',
+      bgm_room: 'assets_audio/bgm_room.m4a',
+      bgm_stage1: 'assets_audio/bgm_stage1.m4a',
+      bgm_training: 'assets_audio/bgm_training.m4a',
+      se_crit: 'assets_audio/se_crit.mp3',
+      se_clear: 'assets_audio/se_clear.mp3',
+      se_type: 'assets_audio/se_type.mp3',
+      se_slash: 'assets_audio/se_slash.mp3',
+      se_decide: 'assets_audio/se_decide.mp3',
+      se_gameover: 'assets_audio/se_gameover.m4a',
+      se_gacha_result: 'assets_audio/se_gacha_result.mp3',
+      se_gacha_result2: 'assets_audio/se_gacha_result2.mp3',
     };
   }
   
+  setGlobalVolume(vol) {
+    this.globalVolume = Math.max(0, Math.min(1, vol));
+    if (this.bgmKey && this.audios[this.bgmKey]) {
+      const a = this.audios[this.bgmKey];
+      if (this.bgmKey === 'bgm_home') {
+        a.volume = 0.15 * this.globalVolume;
+      } else {
+        a.volume = 0.4 * this.globalVolume;
+      }
+    }
+  }
+
   init() {
     if (this.initialized) return;
     this.initialized = true;
 
-    // HTMLAudioElementで読み込む（file://で開いてもfetch不要で再生できる）
     for (const [key, path] of Object.entries(this.audioFiles)) {
-      const audio = new Audio(encodeURI(av(path)));
+      const src = av(path);
+      const audio = new Audio(src.startsWith('data:') ? src : encodeURI(src));
       audio.preload = 'auto';
       audio.addEventListener('error', () => {
         console.warn('Failed to load audio:', path);
@@ -59,7 +115,6 @@ class SoundManager {
       this.audios[key] = audio;
     }
 
-    // 拠点BGMを再生（現在拠点画面にいる場合）
     if ($('screen-home').classList.contains('active') || $('screen-title').classList.contains('active')) {
       this.playBGM('bgm_home');
     }
@@ -72,17 +127,16 @@ class SoundManager {
   }
   
   play(key) {
-    if (this.muted) return; // ミュート時は再生しない
+    if (this.muted) return;
     const base = this.audios[key];
     if (!base) {
-      // フォールバックとしてビープ音
       if (key === 'se_type' || key === 'se_decide') this.playBeep('type');
       if (key === 'se_slash') this.playBeep('hit');
-      if (key === 'se_crit') this.playBeep('hit'); // クリティカル用フォールバック
+      if (key === 'se_crit') this.playBeep('hit');
       return;
     }
-    // 重複再生できるよう複製して再生
     const node = base.cloneNode(true);
+    node.volume = this.globalVolume;
     node.play().catch(() => {
       if (key === 'se_type' || key === 'se_decide') this.playBeep('type');
       if (key === 'se_slash') this.playBeep('hit');
@@ -92,15 +146,21 @@ class SoundManager {
 
   playBGM(key) {
     if (this.muted) {
-      this.bgmKey = key; // キーだけ保存しておく
+      this.bgmKey = key;
       return;
     }
-    if (this.bgmKey === key) return; // 既に再生中なら再スタートしない
+    if (this.bgmKey === key) return;
     this.stopBGM();
     const audio = this.audios[key];
     if (!audio) return;
     audio.loop = true;
-    audio.volume = 0.4;
+    
+    if (key === 'bgm_home') {
+      audio.volume = 0.15 * this.globalVolume;
+    } else {
+      audio.volume = 0.4 * this.globalVolume;
+    }
+    
     audio.currentTime = 0;
     audio.play().catch(e => console.warn('BGM playback blocked:', e));
     this.bgmKey = key;
@@ -115,7 +175,6 @@ class SoundManager {
     this.bgmKey = null;
   }
   
-  // オシレーターを使った簡単な効果音生成（ファイルが無い時用・ダメージ・エラー音など用）
   playBeep(type = 'type') {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!this.beepCtx && AudioContext) this.beepCtx = new AudioContext();
@@ -129,43 +188,45 @@ class SoundManager {
     gain.connect(this.beepCtx.destination);
 
     const now = this.beepCtx.currentTime;
+    const volBase = this.globalVolume * 0.5; // ビープ音はうるさいのでベースを下げる
     
     if (type === 'type') {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(800, now);
       osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
-      gain.gain.setValueAtTime(0.3, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+      gain.gain.setValueAtTime(0.3 * volBase, now);
+      gain.gain.exponentialRampToValueAtTime(0.01 * volBase, now + 0.05);
       osc.start(now);
       osc.stop(now + 0.05);
     } else if (type === 'hit') {
       osc.type = 'square';
       osc.frequency.setValueAtTime(400, now);
       osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
-      gain.gain.setValueAtTime(0.5, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+      gain.gain.setValueAtTime(0.5 * volBase, now);
+      gain.gain.exponentialRampToValueAtTime(0.01 * volBase, now + 0.1);
       osc.start(now);
       osc.stop(now + 0.1);
     } else if (type === 'damage') {
       osc.type = 'sawtooth';
       osc.frequency.setValueAtTime(150, now);
       osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
-      gain.gain.setValueAtTime(0.6, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+      gain.gain.setValueAtTime(0.6 * volBase, now);
+      gain.gain.exponentialRampToValueAtTime(0.01 * volBase, now + 0.2);
       osc.start(now);
       osc.stop(now + 0.2);
     } else if (type === 'error') {
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(200, now);
       osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
-      gain.gain.setValueAtTime(0.4, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+      gain.gain.setValueAtTime(0.4 * volBase, now);
+      gain.gain.exponentialRampToValueAtTime(0.01 * volBase, now + 0.1);
       osc.start(now);
       osc.stop(now + 0.1);
     }
   }
 }
 const SM = new SoundManager();
+if (typeof window !== 'undefined') window.SM = SM;
 
 // 最初のクリック等でAudioContextを初期化
 document.addEventListener('click', (e) => {
@@ -189,7 +250,8 @@ document.addEventListener('keydown', () => {
    描画管理 (Canvas API)
    ========================================================== */
 class CanvasManager {
-  constructor() {
+  constructor(canvasId = 'game-canvas') {
+    this.canvasId = canvasId;
     this.canvas = null;
     this.ctx = null;
     this.width = 0;
@@ -210,16 +272,20 @@ class CanvasManager {
   
   init() {
     if (this.ctx) return; // 既に初期化済み
-    this.canvas = $('game-canvas');
+    if (this.ctx && this.canvas && this.canvas.isConnected) return;
+    this.canvas = $(this.canvasId);
     if (!this.canvas) return;
     this.ctx = this.canvas.getContext('2d');
     
     const resize = () => {
-      const rect = this.canvas.parentElement.getBoundingClientRect();
-      this.canvas.width = rect.width;
-      this.canvas.height = rect.height;
-      this.width = rect.width;
-      this.height = rect.height;
+      if (!this.canvas) return;
+      const rect = this.canvas.parentElement ? this.canvas.parentElement.getBoundingClientRect() : this.canvas.getBoundingClientRect();
+      const w = this.canvas.clientWidth || rect.width || 300;
+      const h = this.canvas.clientHeight || rect.height || 200;
+      this.canvas.width = w;
+      this.canvas.height = h;
+      this.width = w;
+      this.height = h;
     };
     window.addEventListener('resize', resize);
     resize();
@@ -293,49 +359,229 @@ class SlashEffect {
   }
 }
 
-class DamageEffect {
-  constructor(x, y, text, typeClass) {
-    this.x = x + (Math.random() * 20 - 10);
+
+/* 連続斬り（れんぞくぎり / れんぞくぎりⅡ）の超美麗スプライトスラッシュエフェクト */
+class RenzokuSlashEffect {
+  constructor(x, y, isLevel2 = false) {
+    this.x = x;
     this.y = y;
-    this.text = text;
-    this.typeClass = typeClass;
-    this.life = 1.0;
-    this.maxLife = 1.0;
-    this.vy = -60;
+    this.isLevel2 = isLevel2;
+    this.life = isLevel2 ? 0.75 : 0.55;
+    this.maxLife = this.life;
+    this.particles = [];
+    
+    // スプライト画像のロード
+    this.imgArc = CM.loadImage('画像/エフェクト/slash_blue_arc.png');
+    this.imgCross = CM.loadImage('画像/エフェクト/slash_cross_gold.png');
+
+    // 多段スラッシュ定義（角度、反転、ディレイ、スケール、タイプ、パーティクル色）
+    this.slashes = isLevel2 ? [
+      { angle: -0.4, flipX: false, flipY: false, delay: 0.0,  scale: 1.0,  type: 'arc',   color: '#00d2d3' },
+      { angle: 0.4,  flipX: true,  flipY: false, delay: 0.12, scale: 1.08, type: 'arc',   color: '#ff9f43' },
+      { angle: -0.8, flipX: false, flipY: true,  delay: 0.24, scale: 1.15, type: 'arc',   color: '#1dd1a1' },
+      { angle: 0.8,  flipX: true,  flipY: true,  delay: 0.36, scale: 1.22, type: 'arc',   color: '#feca57' },
+      { angle: 0.0,  flipX: false, flipY: false, delay: 0.48, scale: 1.5,  type: 'cross', color: '#ff4757' }
+    ] : [
+      { angle: -0.4, flipX: false, flipY: false, delay: 0.0,  scale: 1.05, type: 'arc',   color: '#54a0ff' },
+      { angle: 0.4,  flipX: true,  flipY: false, delay: 0.14, scale: 1.12, type: 'arc',   color: '#ff9f43' },
+      { angle: 0.0,  flipX: false, flipY: false, delay: 0.28, scale: 1.35, type: 'cross', color: '#ffd32a' }
+    ];
+
+    this.playedHits = new Set();
   }
+
   update(dt) {
-    this.y += this.vy * dt;
-  }
-  draw(ctx) {
-    const alpha = Math.max(0, this.life / this.maxLife);
-    ctx.save();
-    const isCrit = this.typeClass.includes('crit');
-    ctx.font = isCrit ? "900 42px 'DotGothic16', sans-serif" : "900 32px 'DotGothic16', sans-serif";
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    
-    if (this.typeClass.includes('enemy-dmg')) {
-      if (isCrit) {
-        ctx.fillStyle = `rgba(255, 235, 59, ${alpha})`;
-        ctx.shadowColor = `rgba(255, 152, 0, ${alpha})`;
-        ctx.shadowBlur = 12;
-      } else {
-        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-        ctx.shadowColor = `rgba(255, 0, 0, ${alpha})`;
-        ctx.shadowBlur = 8;
+    const elapsed = this.maxLife - this.life;
+
+    this.slashes.forEach((s, idx) => {
+      if (elapsed >= s.delay && !this.playedHits.has(idx)) {
+        this.playedHits.add(idx);
+        if (typeof SM !== 'undefined' && SM.play) {
+          if (s.type === 'cross') {
+            SM.play('se_crit');
+          } else {
+            SM.play('se_slash');
+          }
+        }
+        
+        // 敵またはカカシのヒット振動
+        const targets = document.querySelectorAll('.enemy-sprite, .training-dummy-wrap');
+        targets.forEach(frame => {
+          frame.classList.remove('enemy-damage-hit', 'hit');
+          void frame.offsetWidth;
+          frame.classList.add('enemy-damage-hit', 'hit');
+        });
+
+        // 飛び散る光粒子パーティクル
+        const pCount = s.type === 'cross' ? 24 : 12;
+        for (let i = 0; i < pCount; i++) {
+          const spd = (Math.random() * 180 + 80);
+          const pAngle = Math.random() * Math.PI * 2;
+          this.particles.push({
+            x: this.x + (Math.random() * 40 - 20),
+            y: this.y + (Math.random() * 40 - 20),
+            vx: Math.cos(pAngle) * spd,
+            vy: Math.sin(pAngle) * spd,
+            color: s.color,
+            size: Math.random() * 5 + 2,
+            life: 0.3,
+            maxLife: 0.3
+          });
+        }
       }
-    } else { // player-dmg
-      ctx.fillStyle = `rgba(244, 67, 54, ${alpha})`;
-      ctx.shadowColor = `rgba(0, 0, 0, ${alpha})`;
-      ctx.shadowBlur = 4;
-    }
-    
-    ctx.fillText(this.text, this.x, this.y);
+    });
+
+    this.particles.forEach(p => {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt;
+    });
+    this.particles = this.particles.filter(p => p.life > 0);
+  }
+
+  draw(ctx) {
+    const elapsed = this.maxLife - this.life;
+    ctx.save();
+
+    // 加算合成で光り輝かせる
+    ctx.globalCompositeOperation = 'lighter';
+
+    // スラッシュスプライト描画
+    this.slashes.forEach(s => {
+      if (elapsed < s.delay) return;
+      const slashTime = elapsed - s.delay;
+      const slashDuration = 0.22;
+      if (slashTime > slashDuration) return;
+
+      const progress = slashTime / slashDuration;
+      const scaleEase = 0.7 + Math.sin(progress * Math.PI * 0.5) * 0.45;
+      const alpha = Math.sin(progress * Math.PI);
+
+      const img = s.type === 'cross' ? this.imgCross : this.imgArc;
+      if (!img || !img.complete || img.naturalWidth === 0) return;
+
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(s.angle);
+      ctx.scale(
+        (s.flipX ? -1 : 1) * s.scale * scaleEase,
+        (s.flipY ? -1 : 1) * s.scale * scaleEase
+      );
+      ctx.globalAlpha = alpha;
+
+      const baseSize = s.type === 'cross' ? 240 : 200;
+      ctx.drawImage(img, -baseSize / 2, -baseSize / 2, baseSize, baseSize);
+
+      ctx.restore();
+    });
+
+    // 光粒子パーティクル描画
+    this.particles.forEach(p => {
+      const pAlpha = Math.max(0, p.life / p.maxLife);
+      ctx.save();
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 12;
+      ctx.globalAlpha = pAlpha;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+
     ctx.restore();
   }
 }
 
-const CM = new CanvasManager();
+class DamageEffect {
+  constructor(x, y, text, typeClass = 'enemy-dmg') {
+    this.x = x + (Math.random() * 24 - 12);
+    this.y = y;
+    this.text = String(text);
+    this.typeClass = typeClass;
+    this.life = 1.1;
+    this.maxLife = 1.1;
+    this.vy = -55;
+    this.isSkill = typeClass.includes('skill');
+    this.isCrit = typeClass.includes('crit');
+  }
+  update(dt) {
+    this.y += this.vy * dt;
+    this.vy *= 0.96;
+  }
+  draw(ctx) {
+    const elapsed = this.maxLife - this.life;
+    const alpha = Math.max(0, Math.min(1, this.life / (this.maxLife * 0.75)));
+    
+    ctx.save();
+    
+    // スキルダメージ・クリティカル時は出現時にポップアップ拡大
+    let scale = 1.0;
+    if (this.isSkill || this.isCrit) {
+      if (elapsed < 0.15) {
+        scale = 1.0 + (elapsed / 0.15) * 0.45;
+      } else if (elapsed < 0.3) {
+        scale = 1.45 - ((elapsed - 0.15) / 0.15) * 0.45;
+      }
+    }
+
+    ctx.translate(this.x, this.y);
+    ctx.scale(scale, scale);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    if (this.isSkill) {
+      // 🌟 超ド派手なスキル専用ダメージ
+      ctx.font = this.isCrit ? "900 48px 'DotGothic16', sans-serif" : "900 42px 'DotGothic16', sans-serif";
+      
+      // 黒/濃い色の極太アウトライン
+      ctx.strokeStyle = 'rgba(15, 10, 30, ' + alpha + ')';
+      ctx.lineWidth = 6;
+      ctx.lineJoin = 'round';
+      ctx.strokeText(this.text, 0, 0);
+
+      // ネオン発光と鮮烈なカラー
+      if (this.isCrit) {
+        ctx.fillStyle = `rgba(255, 235, 59, ${alpha})`;
+        ctx.shadowColor = `rgba(255, 100, 0, ${alpha})`;
+      } else {
+        ctx.fillStyle = `rgba(84, 240, 255, ${alpha})`;
+        ctx.shadowColor = `rgba(0, 180, 255, ${alpha})`;
+      }
+      ctx.shadowBlur = 20;
+      ctx.fillText(this.text, 0, 0);
+
+    } else if (this.typeClass.includes('enemy-dmg')) {
+      ctx.font = this.isCrit ? "900 40px 'DotGothic16', sans-serif" : "900 30px 'DotGothic16', sans-serif";
+      ctx.strokeStyle = 'rgba(0, 0, 0, ' + alpha + ')';
+      ctx.lineWidth = 4;
+      ctx.strokeText(this.text, 0, 0);
+
+      if (this.isCrit) {
+        ctx.fillStyle = `rgba(255, 235, 59, ${alpha})`;
+        ctx.shadowColor = `rgba(255, 152, 0, ${alpha})`;
+        ctx.shadowBlur = 14;
+      } else {
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx.shadowColor = `rgba(255, 50, 50, ${alpha})`;
+        ctx.shadowBlur = 8;
+      }
+      ctx.fillText(this.text, 0, 0);
+
+    } else { // player-dmg
+      ctx.font = "900 30px 'DotGothic16', sans-serif";
+      ctx.fillStyle = `rgba(255, 75, 75, ${alpha})`;
+      ctx.shadowColor = `rgba(0, 0, 0, ${alpha})`;
+      ctx.shadowBlur = 6;
+      ctx.fillText(this.text, 0, 0);
+    }
+    
+    ctx.restore();
+  }
+}
+
+const CM = new CanvasManager('game-canvas');
+const TCM = new CanvasManager('training-canvas');
 
 /* 全角→半角変換（半角強制入力の要） */
 function toHalfWidth(s){
@@ -493,6 +739,7 @@ function stageProblem(a, b, op, answer){
 const AREA_STAGES = {
   area1: {
     name: '始まりの平原',
+    recLv: 1,
     opLabel: 'たしざん',
     enemyZone: 'tower',   // 敵の見た目は 既存の草原プールを流用
     bossKey: 'tower5',    // ボスの見た目・ステータスは 既存の草原ボスを流用（7ステージ構成なので tower10ではなく 5階相当の強さに）
@@ -549,6 +796,7 @@ const AREA_STAGES = {
   },
   area2: {
     name: '沼',
+    recLv: 5,
     opLabel: 'ひきざん',
     enemyZone: 'dungeon',
     bossKey: 'dungeon5', // 7ステージ構成なので dungeon10ではなく 5階相当の強さに
@@ -604,6 +852,7 @@ const AREA_STAGES = {
   },
   area3: {
     name: '第3エリア：かけ算の森',
+    recLv: 10,
     opLabel: 'かけざん',
     enemyZone: 'crypt',
     bgImage: '画像/ステージ/かけ算の森.jpg',
@@ -628,6 +877,7 @@ const AREA_STAGES = {
   },
   area4: {
     name: '第4エリア：試練の塔',
+    recLv: 15,
     opLabel: '計算ミックス',
     enemyZone: 'bandit',
     bgImage: '画像/ステージ/試練の塔.jpg',
@@ -645,6 +895,180 @@ const AREA_STAGES = {
     ],
     bossTimeLimit1: 5700,
     bossTimeLimit2: 6000,
+    bossPhase1Problem: generateArea4MixedProblem,
+    bossPhase2Problem: generateArea4MixedProblem,
+  },
+  // --- 漢字エリア（小1〜小6） ---
+  area5: {
+    name: '漢字の森',
+    recLv: 1,
+    displayNum: '1年',
+    opLabel: '1年生の漢字',
+    enemyZone: 'tower',
+    bossKey: 'tower5',
+    rewardZone: 'kanji1',
+    bgImage: '画像/ステージ/かけ算の森.jpg',
+    bossName: 'もりの まじん',
+    stages: [
+      { name: 'かず・大きさ', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g1_1') },
+      { name: 'からだ・ひと', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g1_2') },
+      { name: 'しぜん', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g1_3') },
+      { name: 'がっこう・まち', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g1_4') },
+      { name: 'いろ・いきもの', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g1_5') },
+    ],
+    bossTimeLimit1: 15000, bossTimeLimit2: 15000,
+    bossPhase1Problem: () => generateKanjiProblem('kanji_g1'),
+    bossPhase2Problem: () => generateKanjiProblem('kanji_g1'),
+  },
+  area6: {
+    name: '漢字の洞窟',
+    recLv: 5,
+    displayNum: '2年',
+    opLabel: '2年生の漢字',
+    enemyZone: 'dungeon',
+    bossKey: 'dungeon5',
+    rewardZone: 'kanji2',
+    bgImage: '画像/ステージ/沼地.jpg',
+    bossName: 'ほらあなの まじん',
+    stages: [
+      { name: 'とき・こよみ', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g2_1') },
+      { name: 'ひと・いえ・まち', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g2_2') },
+      { name: 'しぜん・いきもの', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g2_3') },
+      { name: 'がっこう・べんきょう', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g2_4') },
+      { name: 'せいかつ・ことば', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g2_5') },
+    ],
+    bossTimeLimit1: 15000, bossTimeLimit2: 15000,
+    bossPhase1Problem: () => generateKanjiProblem('kanji_g2'),
+    bossPhase2Problem: () => generateKanjiProblem('kanji_g2'),
+  },
+  area7: {
+    name: '漢字の砂漠',
+    recLv: 10,
+    displayNum: '3年',
+    opLabel: '3年生の漢字',
+    enemyZone: 'crypt',
+    bossKey: 'crypt5',
+    rewardZone: 'kanji3',
+    bgImage: '画像/ステージ/幻影の砂漠.jpg',
+    bossName: 'すなの まじん',
+    stages: [
+      { name: 'その1', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g3_1') },
+      { name: 'その2', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g3_2') },
+      { name: 'その3', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g3_3') },
+      { name: 'その4', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g3_4') },
+      { name: 'その5', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g3_5') },
+    ],
+    bossTimeLimit1: 15000, bossTimeLimit2: 15000,
+    bossPhase1Problem: () => generateKanjiProblem('kanji_g3'),
+    bossPhase2Problem: () => generateKanjiProblem('kanji_g3'),
+  },
+  area8: {
+    name: '漢字の海',
+    recLv: 15,
+    displayNum: '4年',
+    opLabel: '4年生の漢字',
+    enemyZone: 'bandit',
+    bossKey: 'bandit5',
+    rewardZone: 'kanji4',
+    bgImage: '画像/ステージ/わり算の海.jpg',
+    bossName: 'うみの まじん',
+    stages: [
+      { name: 'その1', timeLimit: 16000, generateProblem: () => generateKanjiProblem('kanji_g4_1') },
+      { name: 'その2', timeLimit: 16000, generateProblem: () => generateKanjiProblem('kanji_g4_2') },
+      { name: 'その3', timeLimit: 16000, generateProblem: () => generateKanjiProblem('kanji_g4_3') },
+      { name: 'その4', timeLimit: 16000, generateProblem: () => generateKanjiProblem('kanji_g4_4') },
+      { name: 'その5', timeLimit: 16000, generateProblem: () => generateKanjiProblem('kanji_g4_5') },
+    ],
+    bossTimeLimit1: 16000, bossTimeLimit2: 16000,
+    bossPhase1Problem: () => generateKanjiProblem('kanji_g4'),
+    bossPhase2Problem: () => generateKanjiProblem('kanji_g4'),
+  },
+  area9: {
+    name: '漢字の火山',
+    recLv: 20,
+    displayNum: '5年',
+    opLabel: '5年生の漢字',
+    enemyZone: 'crypt',
+    bossKey: 'crypt5',
+    rewardZone: 'kanji5',
+    bgImage: '画像/ステージ/灼熱の火山.jpg',
+    bossName: 'えんじょうの まじん',
+    stages: [
+      { name: 'その1', timeLimit: 17000, generateProblem: () => generateKanjiProblem('kanji_g5_1') },
+      { name: 'その2', timeLimit: 17000, generateProblem: () => generateKanjiProblem('kanji_g5_2') },
+      { name: 'その3', timeLimit: 17000, generateProblem: () => generateKanjiProblem('kanji_g5_3') },
+      { name: 'その4', timeLimit: 17000, generateProblem: () => generateKanjiProblem('kanji_g5_4') },
+      { name: 'その5', timeLimit: 17000, generateProblem: () => generateKanjiProblem('kanji_g5_5') },
+    ],
+    bossTimeLimit1: 17000, bossTimeLimit2: 17000,
+    bossPhase1Problem: () => generateKanjiProblem('kanji_g5'),
+    bossPhase2Problem: () => generateKanjiProblem('kanji_g5'),
+  },
+  area10: {
+    name: '漢字の魔王城',
+    recLv: 25,
+    displayNum: '6年',
+    opLabel: '6年生の漢字',
+    enemyZone: 'bandit',
+    bossKey: 'bandit5',
+    rewardZone: 'kanji6',
+    bgImage: '画像/ステージ/魔王城.jpg',
+    bossName: 'かんじの まおう',
+    stages: [
+      { name: 'その1', timeLimit: 18000, generateProblem: () => generateKanjiProblem('kanji_g6_1') },
+      { name: 'その2', timeLimit: 18000, generateProblem: () => generateKanjiProblem('kanji_g6_2') },
+      { name: 'その3', timeLimit: 18000, generateProblem: () => generateKanjiProblem('kanji_g6_3') },
+      { name: 'その4', timeLimit: 18000, generateProblem: () => generateKanjiProblem('kanji_g6_4') },
+      { name: 'その5', timeLimit: 18000, generateProblem: () => generateKanjiProblem('kanji_g6_5') },
+    ],
+    bossTimeLimit1: 18000, bossTimeLimit2: 18000,
+    bossPhase1Problem: () => generateKanjiProblem('kanji_g6'),
+    bossPhase2Problem: () => generateKanjiProblem('kanji_g6'),
+  },
+  // --- 算数エリア（小5・小6） ---
+  area11: {
+    name: '天空の階段',
+    recLv: 20,
+    displayNum: '5年',
+    opLabel: '小5 算数',
+    enemyZone: 'crypt',
+    bossKey: 'crypt5',
+    rewardZone: 'sky',
+    bgImage: '画像/ステージ/天空.jpg',
+    bossName: '天空のぬし',
+    stages: [
+      { name: '小数の掛け算', timeLimit: 7500, generateProblem: () => { const a = (rnd(11,49)/10).toFixed(1), b = rnd(2,9); return stageProblem(a, b, '×', Math.round(parseFloat(a)*b*10)/10); } },
+      { name: '小数の割り算', timeLimit: 7500, generateProblem: () => { const b = rnd(2,6), ans = (rnd(11,39)/10).toFixed(1), a = (Math.round(ans*b*10)/10).toFixed(1); return stageProblem(a, b, '÷', parseFloat(ans)); } },
+      { name: '分数＋分数（同分母）', timeLimit: 7000, generateProblem: () => { const d = rnd(3,9), a = rnd(1,d-2), b = rnd(1,d-1-a); return { a:`${a}/${d}`, b:`${b}/${d}`, op:'+', answer:`${a+b}/${d}`, text:`${a}/${d} + ${b}/${d}` }; } },
+      { name: '分数－分数（同分母）', timeLimit: 7000, generateProblem: () => { const d = rnd(3,9), b = rnd(1,d-2), a = rnd(b+1,d-1); return { a:`${a}/${d}`, b:`${b}/${d}`, op:'-', answer:`${a-b}/${d}`, text:`${a}/${d} - ${b}/${d}` }; } },
+      { name: '平均の計算', timeLimit: 8000, generateProblem: () => { const ans = rnd(5,15), a = ans - rnd(1,3), b = ans + rnd(1,3); return { a, b, op:'平均', answer:ans, text:`${a} と ${b} の平均` }; } },
+      { name: '割合（%）', timeLimit: 8000, generateProblem: () => { const base = rnd(1,9)*100, pct = pick([10,20,30,50]); return { a:base, b:`${pct}%`, op:'の', answer:base*(pct/100), text:`${base} の ${pct}%` }; } },
+      { name: '5年まとめ', timeLimit: 8000, generateProblem: generateArea4MixedProblem },
+    ],
+    bossTimeLimit1: 7500, bossTimeLimit2: 8000,
+    bossPhase1Problem: generateArea4MixedProblem,
+    bossPhase2Problem: generateArea4MixedProblem,
+  },
+  area12: {
+    name: '算数の魔王城',
+    recLv: 25,
+    displayNum: '6年',
+    opLabel: '小6 算数',
+    enemyZone: 'bandit',
+    bossKey: 'bandit5',
+    rewardZone: 'castle',
+    bgImage: '画像/ステージ/魔王城.jpg',
+    bossName: 'さんすうの まおう',
+    stages: [
+      { name: '分数の掛け算', timeLimit: 8000, generateProblem: () => { const a = rnd(1,3), b = rnd(4,5), c = rnd(1,2), d = rnd(3,5); return { a:`${a}/${b}`, b:`${c}/${d}`, op:'×', answer:`${a*c}/${b*d}`, text:`${a}/${b} × ${c}/${d}` }; } },
+      { name: '比の値', timeLimit: 7500, generateProblem: () => { const m = rnd(2,5), a = rnd(1,4)*m, b = rnd(1,4)*m; return { a:`${a}:${b}`, op:'かんたん', answer:`${a/m}:${b/m}`, text:`${a} : ${b} をかんたんに` }; } },
+      { name: '速さ・道のり', timeLimit: 8500, generateProblem: () => { const spd = rnd(3,8)*10, t = rnd(2,4); return { a:`時速${spd}km`, b:`${t}時間`, op:'道のり', answer:spd*t, text:`時速${spd}km で ${t}時間` }; } },
+      { name: '円の面積（π=3.14）', timeLimit: 9000, generateProblem: () => { const r = pick([1,2,10]); return { a:`半径${r}cm`, op:'面積', answer:Math.round(r*r*3.14*100)/100, text:`半径${r}cmの円の面積` }; } },
+      { name: '比例と反比例', timeLimit: 8000, generateProblem: () => { const k = rnd(2,5), x = rnd(2,6); return { a:`y=${k}x`, b:`x=${x}`, op:'yの値', answer:k*x, text:`y=${k}x で x=${x} のとき y` }; } },
+      { name: '場合の数', timeLimit: 8000, generateProblem: () => { const n = rnd(3,4); return { a:`${n}人`, op:'並び方', answer: n===3?6:24, text:`${n}人が1列に並ぶ並び方` }; } },
+      { name: '6年総まとめ', timeLimit: 8500, generateProblem: generateArea4MixedProblem },
+    ],
+    bossTimeLimit1: 8000, bossTimeLimit2: 8500,
     bossPhase1Problem: generateArea4MixedProblem,
     bossPhase2Problem: generateArea4MixedProblem,
   }
@@ -701,16 +1125,6 @@ function enterAreaBoss(areaId){
   startBattle(false);
 }
 
-/* エリアIDから、そのエリアの 各ステージ（1-1など）の クリアかいすう配列（0〜3、★の数）を とりだす。
-   まだ 記録が なければ、ステージ数ぶんの 0で うめて つくる */
-function getStageClearCounts(areaId){
-  if (!G.stageClearCounts) G.stageClearCounts = {};
-  if (!G.stageClearCounts[areaId]){
-    G.stageClearCounts[areaId] = AREA_STAGES[areaId].stages.map(() => 0);
-  }
-  return G.stageClearCounts[areaId];
-}
-
 function generateStageEnemy(areaId, stageIndex, isBoss){
   const area = AREA_STAGES[areaId];
   if (isBoss){
@@ -736,14 +1150,28 @@ function generateStageEnemy(areaId, stageIndex, isBoss){
   const tmpl = getEnemyTemplate(area.enemyZone, idx);
   /* エリア1・2は しょきゅうしゃ向け。そうびなしでも かならず 2〜3げきで たおせる くらい、
      敵のHPと こうげき力の のびを ひかえめに おさえる */
-  const mult = 1 + stageIndex * 0.05;
+  let mult = 1 + stageIndex * 0.05;
+  let hpMult = mult;
+
+  if (areaId === 'area1') {
+    // 最初のステージ(0)はHPを極端に低く(約0.2倍 => hp3程度)し、徐々に上げる
+    hpMult = 0.2 + stageIndex * 0.15;
+  } else if (areaId === 'area2' || areaId === 'area5') {
+    // 沼や小1漢字も序盤なので少し低めからスタート
+    hpMult = 0.5 + stageIndex * 0.1;
+  }
+
   let atk = Math.round(tmpl.atk * mult);
   /* たしざんの草原エリア（area1）の 1〜3ステージめは、はじめての けいさんに
      しゅうちゅうできるよう、敵の こうげき力を 1〜2に とくべつ おさえる */
   if (areaId === 'area1' && stageIndex < 3) atk = rnd(1, 2);
+
+  // HPが低くなりすぎないように最低値は 2 を保証
+  const calculatedHp = Math.max(2, Math.round(tmpl.hp * hpMult));
+
   const e = {
     name: tmpl.name, emoji: tmpl.emoji,
-    maxHp: Math.round(tmpl.hp * mult), atk, def: Math.round(tmpl.def * mult),
+    maxHp: calculatedHp, atk, def: Math.round(tmpl.def * mult),
     spd: tmpl.spd + Math.floor(stageIndex / 2),
     goldMin: Math.round(tmpl.gold[0] * mult), goldMax: Math.round(tmpl.gold[1] * mult),
     exp: Math.round(tmpl.exp * mult),
@@ -783,12 +1211,12 @@ function isAreaUnlocked(areaId){
    ========================================================== */
 /* サブクエストを たのんでくる むらびとたち（1クエスト＝おなじ人物から 3問） */
 const QUEST_NPCS = [
-  { name:'むらびとトム', emoji:'👨‍🌾' },
-  { name:'しょうにんリナ', emoji:'👩‍💼' },
-  { name:'ろうけんじゃ ゴンド', emoji:'🧙' },
-  { name:'パンやのサラ', emoji:'👩‍🍳' },
-  { name:'かじやのケン', emoji:'🧑‍🔧' },
-  { name:'つりびとダン', emoji:'🎣' },
+  { name:'むらびとトム', emoji:'👨‍🌾', image:'./画像/NPC/npc_farmer_tom.png' },
+  { name:'しょうにんリナ', emoji:'👩‍💼', image:'./画像/NPC/npc_merchant_lina.png' },
+  { name:'ろうけんじゃ ゴンド', emoji:'🧙', image:'./画像/NPC/npc_wiseman_gondo.png' },
+  { name:'パンやのサラ', emoji:'👩‍🍳', image:'./画像/NPC/npc_baker_sara.png' },
+  { name:'かじやのケン', emoji:'🧑‍🔧', image:'./画像/NPC/npc_blacksmith_ken.png' },
+  { name:'つりびとダン', emoji:'🎣', image:'./画像/NPC/npc_fisherman_dan.png' },
 ];
 
 /* 1クエスト＝1えんざんファミリー（add/sub/mul/div）につき、
@@ -978,19 +1406,19 @@ let customEquips = {};
 let customItems = {};
 
 function loadCustomData() {
-  const savedE = localStorage.getItem('typing_rpg_custom_enemies');
+  const savedE = storageGet('typing_rpg_custom_enemies');
   if (savedE) { try { customEnemies = JSON.parse(savedE); } catch(e) {} }
-  const savedEq = localStorage.getItem('typing_rpg_custom_equips');
+  const savedEq = storageGet('typing_rpg_custom_equips');
   if (savedEq) { try { customEquips = JSON.parse(savedEq); } catch(e) {} }
-  const savedI = localStorage.getItem('typing_rpg_custom_items');
+  const savedI = storageGet('typing_rpg_custom_items');
   if (savedI) { try { customItems = JSON.parse(savedI); } catch(e) {} }
 }
 loadCustomData();
 
 function saveCustomData() {
-  localStorage.setItem('typing_rpg_custom_enemies', JSON.stringify(customEnemies));
-  localStorage.setItem('typing_rpg_custom_equips', JSON.stringify(customEquips));
-  localStorage.setItem('typing_rpg_custom_items', JSON.stringify(customItems));
+  storageSet('typing_rpg_custom_enemies', JSON.stringify(customEnemies));
+  storageSet('typing_rpg_custom_equips', JSON.stringify(customEquips));
+  storageSet('typing_rpg_custom_items', JSON.stringify(customItems));
 }
 
 const ENEMY_POOLS = { tower: ENEMIES_TOWER, dungeon: ENEMIES_DUNGEON, crypt: ENEMIES_CRYPT, bandit: ENEMIES_BANDIT };
@@ -1071,6 +1499,7 @@ const ANCIENT_EQUIP_DB = [
   { id:'anc_w1', name:'古代の大剣', slot:'weapon', opTier:'div5', stat:{atk:40}, cost:15, emoji:'assets/items/w7.png' },
   { id:'anc_a1', name:'古代の鎧', slot:'armor', opTier:'div5', stat:{def:35}, cost:13, emoji:'assets/items/a7.png' },
   { id:'anc_c1', name:'古代の指輪', slot:'accessory', opTier:'div5', stat:{spd:12, mp:15}, cost:9, emoji:'assets/items/c2.png' },
+  { id:'demon_sword', name:'魔王の覇剣', slot:'weapon', opTier:'elem6', stat:{atk:50}, cost:20, emoji:'assets/items/w6.png' },
 ];
 
 /* そうびスロットは この3つだけ（ぶき・よろい・アクセサリー） */
@@ -1146,36 +1575,37 @@ function equippedAbilities(){
 }
 
 /* ==========================================================
-   スキルデータ（すべて計算スキル）
-   修行の計算と戦闘での発動計算はリンク
+   スキルデータ
+   ・しゅぎょう ＝ スキルごとの えんざん（skillTier）を trainReq回 せいかいで しゅうとく
+   ・せんとう   ＝ その ステージの もんだいが でる（ステージの むずかしさは よけられない）
+   ・スキルは MPを つかうので、ダメージは かならず ふつうの こうげきを うわまわる
+     （useSkill の「さいていほしょう」を みること）
    ========================================================== */
-/* スキルは エリア（zone）に ひもづく。しゅぎょうで Lv1〜5まで レベルアップでき、
-   レベルが あがるほど 発動時の けいさんが むずかしくなり、いぞく（威力）も あがる */
 const SKILL_DB = [
-  { id:'renzoku', name:'れんぞく斬り', emoji:'画像/スキル/skill_renzoku.jpg', zone:'tower', mp:3, trainReq:10, reqLvl:1, dmgMult:1.6,
-    desc:'たしざんに正解し素早く斬る。攻撃力×1.6（レベルアップで威力もけいさんも成長）' },
+  { id:'renzoku', name:'れんぞく斬り', emoji:'画像/スキル/skill_renzoku.jpg', zone:'tower', mp:3, trainReq:10, reqLvl:1, dmgMult:2.0,
+    desc:'すばやく きりつける。こうげき力×2.0' },
   { id:'heal_song', name:'いやしのうた', emoji:'画像/スキル/skill_heal.jpg', zone:'tower', mp:5, trainReq:10, reqLvl:3, healPct:0.35,
-    desc:'たしざんに正解するとHPを回復（レベルアップで回復量もけいさんも成長）' },
-  { id:'honoo', name:'ほのおの剣', emoji:'画像/スキル/skill_honoo.jpg', zone:'dungeon', mp:5, trainReq:10, reqLvl:5, dmgMult:2.0,
-    desc:'ひきざんに正解しほのおをまとった一撃。攻撃力×2.0（レベルアップで威力もけいさんも成長）' },
-  { id:'inazuma', name:'いなずま斬り', emoji:'画像/スキル/skill_inazuma.jpg', zone:'crypt', mp:7, trainReq:10, reqLvl:8, dmgMult:2.6,
-    desc:'かけざんに正解し放つ雷の斬撃。攻撃力×2.6（レベルアップで威力もけいさんも成長）' },
-  { id:'gale', name:'しっぷう斬り', emoji:'画像/スキル/skill_gale.jpg', zone:'bandit', mp:4, trainReq:10, reqLvl:10, dmgMult:2.2, ignoreDef:true,
-    desc:'わりざんに正解。攻撃力×2.2＋防御無視（レベルアップで威力もけいさんも成長）' },
+    desc:'HPを さいだいHPの35% かいふくする' },
+  { id:'honoo', name:'ほのおの剣', emoji:'画像/スキル/skill_honoo.jpg', zone:'dungeon', mp:5, trainReq:10, reqLvl:5, dmgMult:2.6,
+    desc:'ほのおを まとった 一げき。こうげき力×2.6' },
+  { id:'inazuma', name:'いなずま斬り', emoji:'画像/スキル/skill_inazuma.jpg', zone:'crypt', mp:7, trainReq:10, reqLvl:8, dmgMult:3.2,
+    desc:'かみなりの ざんげき。こうげき力×3.2' },
+  { id:'gale', name:'しっぷう斬り', emoji:'画像/スキル/skill_gale.jpg', zone:'bandit', mp:4, trainReq:10, reqLvl:10, dmgMult:2.4, ignoreDef:true,
+    desc:'かぜの 一げき。こうげき力×2.4＋ぼうぎょむし' },
 
   /* --- 上位互換スキル（Ⅱ）。おなじジャンルの けいさんだが、
      さいしょから いちばん むずかしい tier（fixedTier）で しゅぎょうする。
      とくてい キャラレベルに 到達すると かいほうされる */
-  { id:'renzoku2', name:'れんぞく斬りⅡ', emoji:'画像/スキル/skill_renzoku.jpg', zone:'tower', mp:6, trainReq:10, reqLvl:15, dmgMult:3.2, fixedTier:'add5',
-    desc:'れんぞく斬りの上位互換。たしざん（そうしあげ）に正解し会心の一撃。攻撃力×3.2' },
+  { id:'renzoku2', name:'れんぞく斬りⅡ', emoji:'画像/スキル/skill_renzoku.jpg', zone:'tower', mp:6, trainReq:10, reqLvl:15, dmgMult:4.0, fixedTier:'add5',
+    desc:'れんぞく斬りの じょうい。こうげき力×4.0' },
   { id:'heal_song2', name:'いやしのうたⅡ', emoji:'画像/スキル/skill_heal.jpg', zone:'tower', mp:9, trainReq:10, reqLvl:18, healPct:0.70, fixedTier:'add5',
-    desc:'いやしのうたの上位互換。たしざん（そうしあげ）に正解しHPを大きく回復' },
-  { id:'honoo2', name:'ほのおの剣Ⅱ', emoji:'画像/スキル/skill_honoo.jpg', zone:'dungeon', mp:9, trainReq:10, reqLvl:20, dmgMult:4.0, fixedTier:'sub5',
-    desc:'ほのおの剣の上位互換。ひきざん（そうしあげ）に正解し業火の一撃。攻撃力×4.0' },
-  { id:'inazuma2', name:'いなずま斬りⅡ', emoji:'画像/スキル/skill_inazuma.jpg', zone:'crypt', mp:11, trainReq:10, reqLvl:23, dmgMult:5.2, fixedTier:'add4',
-    desc:'いなずま斬りの上位互換。高難易度のたしざんに正解し落雷の一撃。攻撃力×5.2' },
-  { id:'gale2', name:'しっぷう斬りⅡ', emoji:'画像/スキル/skill_gale.jpg', zone:'bandit', mp:8, trainReq:10, reqLvl:25, dmgMult:4.4, ignoreDef:true, fixedTier:'add5',
-    desc:'しっぷう斬りの上位互換。高難易度のたしざんに正解。攻撃力×4.4＋防御無視' },
+    desc:'HPを さいだいHPの70% かいふくする' },
+  { id:'honoo2', name:'ほのおの剣Ⅱ', emoji:'画像/スキル/skill_honoo.jpg', zone:'dungeon', mp:9, trainReq:10, reqLvl:20, dmgMult:5.0, fixedTier:'sub5',
+    desc:'ほのおの剣の じょうい。こうげき力×5.0' },
+  { id:'inazuma2', name:'いなずま斬りⅡ', emoji:'画像/スキル/skill_inazuma.jpg', zone:'crypt', mp:11, trainReq:10, reqLvl:23, dmgMult:6.4, fixedTier:'add4',
+    desc:'いなずま斬りの じょうい。こうげき力×6.4' },
+  { id:'gale2', name:'しっぷう斬りⅡ', emoji:'画像/スキル/skill_gale.jpg', zone:'bandit', mp:8, trainReq:10, reqLvl:25, dmgMult:5.0, ignoreDef:true, fixedTier:'add5',
+    desc:'しっぷう斬りの じょうい。こうげき力×5.0＋ぼうぎょむし' },
 ];
 /* スキルに「練度」は ない：しゅぎょうで trainReq回 せいかいすれば そのまま しゅうとく（つかえる状態）に なる。
    G.skills[id].level は 0（未習得）／1（習得ずみ）の 2値だけを つかう（セーブ形式は そのまま流用） */
@@ -1229,9 +1659,9 @@ function newGameState(name){
       maxHp:30, hp:30, maxMp:10, mp:10,
       atk:5, def:3, spd:6, gold:0,
     },
-    equipment: { weapon:{ uid:3 }, armor:null, accessory:null }, // {uid}／アシストアイテムは さいしょから そうびずみ
-    ownedEquips: [ { uid:1, id:'w1', rarity:1, ability:null }, { uid:2, id:'a1', rarity:1, ability:null }, { uid:3, id:'ast1', rarity:1, ability:null } ],
-    nextUid: 4,
+    equipment: { weapon:null, armor:{ uid:1 }, accessory:null },
+    ownedEquips: [ { uid:1, id:'a1', rarity:1, ability:null } ],
+    nextUid: 2,
     items: [], // [{uid, id, rarity, count}] に変更
     skills: {}, // id → {progress, mastered}
     clears: { tower:false, dungeon:false, crypt:false, bandit:false },
@@ -1264,7 +1694,17 @@ function removeItem(uid, count = 1) {
 function save(){
   if (!currentSlotKey) return;
   G.updatedAt = Date.now();
-  localStorage.setItem(currentSlotKey, JSON.stringify(G));
+  storageSet(currentSlotKey, JSON.stringify(G));
+
+  // Firestoreにもバックアップを保存
+  if (window._firestoreDb && window._firebaseUid) {
+    import("firebase/firestore").then(({ doc, setDoc }) => {
+      const docRef = doc(window._firestoreDb, "saves", window._firebaseUid + "_" + currentSlotKey);
+      setDoc(docRef, G, { merge: true }).catch(err => {
+        console.error("Firestore save failed:", err);
+      });
+    }).catch(err => console.error("Failed to load firestore:", err));
+  }
 }
 
 function newSlotId(){
@@ -1321,7 +1761,7 @@ function normalizeRarityData(data){
 }
 
 function loadSlot(key){
-  const raw = localStorage.getItem(key);
+  const raw = storageGet(key);
   if (!raw) return false;
   try {
     G = normalizeRarityData(JSON.parse(raw));
@@ -1351,11 +1791,11 @@ function resolveSaveSlotEquip(data, ref){
 
 function listSaveSlots(){
   const slots = [];
-  for (let i = 0; i < localStorage.length; i++){
-    const key = localStorage.key(i);
+  for (let i = 0; i < storageLen(); i++){
+    const key = storageK(i);
     if (!key || !key.startsWith(SAVE_PREFIX)) continue;
     try {
-      const data = JSON.parse(localStorage.getItem(key));
+      const data = JSON.parse(storageGet(key));
       slots.push({
         key,
         name: data.playerName || 'ぼうけんしゃ',
@@ -1377,10 +1817,10 @@ function listSaveSlots(){
 function migrateLegacySaveIfNeeded(){
   if (listSaveSlots().length > 0) return;
 
-  let legacyRaw = localStorage.getItem(LEGACY_SAVE_KEY);
+  let legacyRaw = storageGet(LEGACY_SAVE_KEY);
   let migratingFromV2 = false;
   if (!legacyRaw) {
-    legacyRaw = localStorage.getItem(LEGACY_OLD_SAVE_KEY);
+    legacyRaw = storageGet(LEGACY_OLD_SAVE_KEY);
     migratingFromV2 = true;
   }
   if (!legacyRaw) return;
@@ -1404,9 +1844,9 @@ function migrateLegacySaveIfNeeded(){
     if (!data.playerName) data.playerName = 'ぼうけんしゃ';
     if (!data.updatedAt) data.updatedAt = Date.now();
     normalizeRarityData(data);
-    localStorage.setItem(SAVE_PREFIX + newSlotId(), JSON.stringify(data));
-    localStorage.removeItem(LEGACY_SAVE_KEY);
-    localStorage.removeItem(LEGACY_OLD_SAVE_KEY);
+    storageSet(SAVE_PREFIX + newSlotId(), JSON.stringify(data));
+    storageRemove(LEGACY_SAVE_KEY);
+    storageRemove(LEGACY_OLD_SAVE_KEY);
   } catch(e){}
 }
 
@@ -1483,6 +1923,10 @@ function showScreen(id){
 }
 
 function bgmKeyForScreen(id){
+  /* タイトルと、そこから ひらく「あたらしく はじめる」「セーブデータ せんたく」は タイトル専用BGM
+     （セーブえらびや 名前入力の とちゅうで きょくが きりかわらないように、タイトルのBGMを流しっぱなしにする） */
+  if (id === 'screen-title' || id === 'screen-new-save' || id === 'screen-load-save') return 'bgm_title';
+  if (id === 'screen-admin' && (!currentSlotKey || !G)) return 'bgm_title';
   if (id === 'screen-status' || id === 'screen-equipment') return 'bgm_room';
   if (id === 'screen-battle') return 'bgm_stage1';
   if (id === 'screen-training') return 'bgm_training';
@@ -1637,10 +2081,86 @@ function assistVisualHtml(problem){
    ========================================================== */
 let currentChallenge = null;
 
+function isKanjiProblem(problem) {
+  if (!problem) return false;
+  if (problem.tier && String(problem.tier).startsWith('kanji')) return true;
+  if (explore && explore.areaId && ['area5','area6','area7','area8','area9','area10'].includes(explore.areaId)) return true;
+  return false;
+}
+
 function startChallenge(container, opts, cb){
   destroyChallenge();
   const timeLimit = opts.timeLimit || 8000;
   const problem = opts.problem;
+
+  // --- 漢字問題の場合 ---
+  if (isKanjiProblem(problem)) {
+    if (container) container.classList.add('hidden');
+    const calcCenter = $('calc-problem-center');
+    if (calcCenter) calcCenter.classList.add('hidden');
+
+    const kanjiCenter = $('kanji-problem-center');
+    const kanjiChallenge = $('kanji-challenge');
+    if (kanjiCenter) kanjiCenter.classList.remove('hidden');
+    if (kanjiChallenge) kanjiChallenge.classList.remove('hidden');
+
+    const promptEl = $('kanji-prompt');
+    if (promptEl) {
+      if (opts.prompt) {
+        promptEl.textContent = opts.prompt;
+        promptEl.classList.remove('hidden');
+      } else {
+        promptEl.classList.add('hidden');
+      }
+    }
+
+    const start = Date.now();
+    let done = false;
+
+    // 漢字入力UIを初期化＆問題セット
+    if (typeof initKanjiInputUI === 'function') {
+      initKanjiInputUI((isCorrect) => {
+        if (done) return;
+        done = true;
+        recordStudyAnswer(problem, isCorrect);
+        const elapsed = Date.now() - start;
+        const timeFrac = Math.max(0, 1 - elapsed / timeLimit);
+        if (isCorrect) {
+          SM.play('se_type');
+        } else {
+          SM.playBeep('error');
+        }
+        currentChallenge = null;
+        setTimeout(() => {
+          if (kanjiCenter) kanjiCenter.classList.add('hidden');
+          if (kanjiChallenge) kanjiChallenge.classList.add('hidden');
+          cb({ success: isCorrect, timeFrac });
+        }, 450);
+      });
+    }
+
+    if (typeof setupKanjiChallenge === 'function') {
+      setupKanjiChallenge(problem);
+    }
+
+    currentChallenge = {
+      destroy() {
+        done = true;
+        if (kanjiCenter) kanjiCenter.classList.add('hidden');
+        if (kanjiChallenge) kanjiChallenge.classList.add('hidden');
+      }
+    };
+    return;
+  }
+
+  // --- 算数問題の場合 ---
+  const kanjiCenter = $('kanji-problem-center');
+  const kanjiChallenge = $('kanji-challenge');
+  if (kanjiCenter) kanjiCenter.classList.add('hidden');
+  if (kanjiChallenge) kanjiChallenge.classList.add('hidden');
+  const calcCenter = $('calc-problem-center');
+  if (calcCenter) calcCenter.classList.add('hidden');
+
   const answerStr = String(problem.answer);
   const assistHtml = hasAssist() ? assistVisualHtml(problem) : '';
   const equationJoin = problem.isWordProblem ? '<br><span class="challenge-answer-arrow">こたえ→</span> ' : ' = ';
@@ -1651,21 +2171,21 @@ function startChallenge(container, opts, cb){
       <div class="challenge-problem${problem.isWordProblem ? ' challenge-problem-word' : ''}">${problem.text}${equationJoin}<span class="challenge-word" id="ch-word">？</span></div>
       ${assistHtml}
       <form id="ch-form" autocomplete="off">
-        <input type="text" inputmode="numeric" id="ch-input" class="challenge-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <input type="text" inputmode="numeric" id="ch-input" class="challenge-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" autofocus>
         <button type="submit" id="ch-submit" class="btn btn-primary challenge-submit-btn">けってい</button>
       </form>
-      <p class="result-text" id="ch-result"></p>
+      <p class="result-text"></p>
     </div>
   `;
 
   if (opts.showBattleCommands) {
     container.innerHTML = `
       <div class="challenge-body">
+        ${challengeMainHTML}
         <div class="battle-inline-commands">
           <button id="btn-inline-skill" class="btn">とくぎ</button>
           <button id="btn-inline-item" class="btn">どうぐ</button>
         </div>
-        ${challengeMainHTML}
       </div>
     `;
   } else {
@@ -1680,14 +2200,17 @@ function startChallenge(container, opts, cb){
 
   const input = $('ch-input');
   const wordEl = $('ch-word');
-  const resultEl = $('ch-result');
+  const resultEl = container.querySelector('.result-text');
   const submitBtn = $('ch-submit');
 
   function renderTyped(){
-    wordEl.textContent = input.value.length ? input.value : '？';
-    wordEl.className = 'challenge-word';
+    if (wordEl) {
+      wordEl.textContent = input && input.value.length ? input.value : '？';
+      wordEl.className = 'challenge-word';
+    }
   }
   renderTyped();
+  if (input) setTimeout(() => input.focus(), 50);
 
   const start = Date.now();
   let done = false;
@@ -1696,35 +2219,39 @@ function startChallenge(container, opts, cb){
   function finish(success){
     if (done) return;
     done = true;
-    input.disabled = true;
-    submitBtn.disabled = true;
+    recordStudyAnswer(problem, success);
+    if (input) input.disabled = true;
+    if (submitBtn) submitBtn.disabled = true;
     const elapsed = Date.now() - start;
-    const timeFrac = Math.max(0, 1 - elapsed / timeLimit); // 残り時間割合
+    const timeFrac = Math.max(0, 1 - elapsed / timeLimit);
     if (success) {
-      wordEl.textContent = answerStr;
-      wordEl.className = 'challenge-word done';
-      resultEl.textContent = 'せいかい！';
-      resultEl.className = 'result-text good success-pop';
-      SM.play('se_type'); // 正解時に入力成功音を再生
-    } else {
-      wordEl.className = 'challenge-word wrong';
-      resultEl.textContent = `ちがう…（こたえは ${answerStr}）`;
-      resultEl.className = 'result-text bad';
-      SM.playBeep('error');
-      
-      // トラッキング（探索中かつ問題の種別がある場合）
-      if (explore && problem && problem.tier && G.failTracking) {
-        const opGroup = problem.tier.substring(0, 3);
-        const key = explore.zone + '_' + opGroup;
-        G.failTracking.mistakes[key] = (G.failTracking.mistakes[key] || 0) + 1;
-        save();
+      if (wordEl) {
+        wordEl.textContent = answerStr;
+        wordEl.className = 'challenge-word done';
       }
+      if (resultEl) {
+        // Leave the inner result empty so the window doesn't resize.
+        // We rely on the floating showResultOverlay for "正解！！"
+        resultEl.textContent = '';
+        resultEl.className = 'result-text';
+      }
+      SM.play('se_type');
+    } else {
+      if (wordEl) wordEl.className = 'challenge-word wrong';
+      if (resultEl) {
+        resultEl.textContent = `ちがう…（こたえは ${answerStr}）`;
+        resultEl.className = 'result-text bad';
+      }
+      SM.playBeep('error');
     }
+    if (typeof window.showResultOverlay === 'function') window.showResultOverlay(success);
     currentChallenge = null;
-    setTimeout(() => cb({ success, timeFrac }), 450);
+    setTimeout(() => {
+      if (calcCenter) calcCenter.classList.add('hidden');
+      cb({ success, timeFrac });
+    }, 450);
   }
 
-  // こたえと ちがう すうじを うっても はじかない。エンター／けっていで はじめて はんてい
   function trySubmit(){
     if (done) return;
     if (input.value.length === 0){
@@ -1732,44 +2259,43 @@ function startChallenge(container, opts, cb){
       input.classList.add('flash-ng');
       return;
     }
-    finish(input.value === answerStr);
+    finish(input.value.trim() === answerStr.trim());
   }
 
-  input.addEventListener('input', () => {
-    if (done) return;
-    const before = input.value;
-    let v = toHalfWidth(before).replace(/[^0-9]/g, '');
-    if (v !== before){
-      input.value = v;
-    }
-    if (v.length > lastLen) SM.playBeep('type');
-    lastLen = v.length;
-    renderTyped();
-  });
+  if (input) {
+    input.addEventListener('input', () => {
+      if (done) return;
+      const before = input.value;
+      let v = toHalfWidth(before).replace(/[^0-9./:%-]/g, '');
+      if (v !== before){
+        input.value = v;
+      }
+      if (v.length > lastLen) SM.playBeep('type');
+      lastLen = v.length;
+      renderTyped();
+    });
 
-  // フォーム送信（Enterキー・けってい両方）で はんてい。
-  // IME等の かんきょうでは keydown の e.key が とれない事があるため、
-  // ブラウザひょうじゅんの フォーム送信（Enterで自動送信）を メインの けいろにする
-  $('ch-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    trySubmit();
-  });
-  input.addEventListener('keydown', (e) => {
-    if (e.isComposing || e.keyCode === 229) return;
-    if (e.key === 'Enter' || e.keyCode === 13 || e.which === 13){
+    input.addEventListener('keydown', (e) => {
+      if (e.isComposing || e.keyCode === 229) return;
+      if (e.key === 'Enter' || e.keyCode === 13 || e.which === 13){
+        e.preventDefault();
+        trySubmit();
+      }
+    });
+  }
+
+  const form = $('ch-form');
+  if (form) {
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
       trySubmit();
-    }
-  });
-
-  // フォーカス維持
-  input.focus();
-  const refocus = () => { if (!done) input.focus(); };
-  input.addEventListener('blur', () => setTimeout(refocus, 50));
+    });
+  }
 
   currentChallenge = {
     destroy(){
       done = true;
+      if (calcCenter) calcCenter.classList.add('hidden');
       container.innerHTML = '';
       container.classList.add('hidden');
     }
@@ -1920,7 +2446,9 @@ function hideBattleMenus(){
   $('battle-sub-menu').innerHTML = '';
   destroyChallenge();
   $('battle-challenge').classList.add('hidden');
-  // バトル終了時などにメニューが隠れる場合はCanvasも止められるが、一旦回し続ける
+  if ($('calc-problem-center')) $('calc-problem-center').classList.add('hidden');
+  if ($('kanji-problem-center')) $('kanji-problem-center').classList.add('hidden');
+  if ($('kanji-challenge')) $('kanji-challenge').classList.add('hidden');
 }
 
 function openActionMenu(){
@@ -1953,6 +2481,32 @@ function skillMpCost(s){
 /* こたえを まちがえた時の「ちょっとのダメージ」の わりあい（通常ダメージの20%・さいてい1） */
 const MISS_DAMAGE_RATIO = 0.2;
 
+/* ==========================================================
+   せんとうバランスの すうち（ここだけ さわれば つよさを ちょうせいできる）
+   ※ スキルは「MPを つかう」ぶん、かならず ふつうの こうげきより つよく なるように している
+   ========================================================== */
+const BALANCE = {
+  atkMinRatio:     0.3,   // ぼうぎょが かたい あいてでも これだけは とおる（こうげき力に たいする わりあい）
+  timeBonus:       0.2,   // はやく こたえたときの ダメージボーナス（さいだい +20%）
+  missDamageRatio: MISS_DAMAGE_RATIO,
+  critRate:        0.15,  // ふつうの こうげきの かいしんりつ
+  skillCritRate:   0.18,  // スキルの かいしんりつ（ふつうより ちょっと たかい）
+  critMult:        2.0,
+  missGaugePenalty: 15,   // しっぱいすると てきの すばやさバーが すこし すすむ
+};
+
+/* ふつうの こうげきの きほんダメージ。スキルの「さいていほしょう」にも つかう */
+function basicAttackDamage(atk, eDef){
+  return Math.max(1, Math.round(Math.max(atk * BALANCE.atkMinRatio, atk - eDef)));
+}
+
+/* こたえを まちがえた ときの ペナルティ：てきの すばやさバーが すこし すすむ */
+function applyMissPenalty(){
+  if (!battle || battle.over) return;
+  battle.eGauge = Math.min(100, battle.eGauge + BALANCE.missGaugePenalty);
+  updateBattleBars();
+}
+
 /* 新ステージモードなら エリア／ステージ（またはボスのフェーズ）に ひもづく もんだいを、
    きゅうシステム（ゾーン／フロア）なら これまでどおり opTierForZoneFloor から もんだいを つくる */
 function currentAttackProblem(){
@@ -1976,16 +2530,18 @@ function doAttack(){
     { problem, timeLimit, prompt: 'こうげき！ けいさんの こたえを にゅうりょく！', showBattleCommands: true },
     (res) => {
       destroyChallenge();
-      const base = Math.max(1, effectiveAtk() * 2 - battle.enemy.def);
+      const atk = effectiveAtk();
+      const eDef = battle.enemy.def || 0;
+      const base = basicAttackDamage(atk, eDef);
       if (res.success){
-        let dmg = Math.round(base * (1 + res.timeFrac * 0.5));
-        // クリティカル判定 (15%の確率で発動。「会心のちから」で+10%)
-        const critChance = 0.15 + (equippedAbilities().has('crit_up') ? 0.10 : 0);
+        let dmg = Math.round(base * (1 + res.timeFrac * BALANCE.timeBonus));
+        // クリティカル判定（「会心のちから」で +10%）
+        const critChance = BALANCE.critRate + (equippedAbilities().has('crit_up') ? 0.10 : 0);
         const isCrit = Math.random() < critChance;
-        if (isCrit) dmg = Math.floor(dmg * 2.5);
+        if (isCrit) dmg = Math.floor(dmg * BALANCE.critMult);
         dealToEnemy(dmg, 'こうげき', isCrit, () => afterPlayerAction());
       } else {
-        const chip = Math.max(1, Math.round(base * MISS_DAMAGE_RATIO));
+        const chip = Math.max(1, Math.round(base * 0.3));
         dealToEnemy(chip, 'あわてた こうげき', false, () => afterPlayerAction());
       }
     });
@@ -1996,24 +2552,43 @@ function openSkillMenu(){
   destroyChallenge();
   const sub = $('battle-sub-menu');
   sub.innerHTML = '';
+  const title = document.createElement('h3');
+  title.style.margin = '0 0 10px';
+  title.style.color = 'var(--accent)';
+  title.style.fontSize = '17px';
+  title.textContent = '✨ つかう とくぎを えらぼう';
+  sub.appendChild(title);
+
   const usable = SKILL_DB.filter(s => G.skills[s.id] && G.skills[s.id].level >= 1);
   if (usable.length === 0){
     const d = document.createElement('div');
     d.className = 'flavor';
-    d.textContent = 'つかえる とくぎが ない。きょてんで しゅぎょうしよう！';
+    d.style.margin = '10px 0';
+    d.textContent = 'つかえる とくぎが ない。きょてんの「修練場」で しゅぎょうしよう！';
     sub.appendChild(d);
-  }
-  for (const s of usable){
-    const cost = skillMpCost(s);
-    const b = document.createElement('button');
-    b.className = 'btn';
-    b.innerHTML = `${s.name} <small>MP${cost} / ${s.desc}</small>`;
-    b.disabled = G.player.mp < cost;
-    b.onclick = () => useSkill(s);
-    sub.appendChild(b);
+  } else {
+    const list = document.createElement('div');
+    list.style.display = 'flex';
+    list.style.flexDirection = 'column';
+    list.style.gap = '8px';
+    for (const s of usable){
+      const cost = skillMpCost(s);
+      const b = document.createElement('button');
+      b.className = 'btn';
+      b.style.display = 'flex';
+      b.style.justifyContent = 'space-between';
+      b.style.alignItems = 'center';
+      b.style.padding = '10px 16px';
+      b.innerHTML = `<strong>${s.name}</strong> <span style="font-size:13px; color:#f1c40f;">MP ${cost}</span> <small style="color:var(--text-light);">${s.desc}</small>`;
+      b.disabled = G.player.mp < cost;
+      b.onclick = () => useSkill(s);
+      list.appendChild(b);
+    }
+    sub.appendChild(list);
   }
   const bBack = document.createElement('button');
   bBack.className = 'btn';
+  bBack.style.marginTop = '12px';
   bBack.textContent = 'もどる';
   bBack.onclick = openActionMenu;
   sub.appendChild(bBack);
@@ -2025,15 +2600,19 @@ function useSkill(s){
   const cost = skillMpCost(s);
   G.player.mp -= cost;
   updateBattleBars();
-  const tier = skillTier(s);
+  
+  const { problem, timeLimit } = currentAttackProblem();
   startChallenge($('battle-challenge'),
-    { problem:generateProblem(tier), timeLimit:problemTimeLimit(tier), prompt:`✨ ${s.name}！けいさんに せいかいして発動！` },
+    { problem, timeLimit,
+      showBattleCommands: true,
+      promptInKanji: true,
+      prompt:`✨ ${s.name}！ こたえて はつどう！` },
     (res) => {
       destroyChallenge();
-      // かいふく系（healPctを もつ スキル）は 攻撃技ではないので、しっぱい時は チップダメージの対象外
       if (s.healPct){
         if (!res.success){
           blog(`<span class="bad">しかし ${s.name}は はつどうしなかった！（MP${cost}）</span>`);
+          applyMissPenalty();
           afterPlayerAction();
           return;
         }
@@ -2044,20 +2623,26 @@ function useSkill(s){
         return;
       }
       const atk = effectiveAtk();
-      const eDef = s.ignoreDef ? 0 : battle.enemy.def; // 防御無視スキルは eDef を ひかない
-      let dmg = Math.max(1, Math.round(atk * (s.dmgMult || 1) - eDef));
+      const eDef = s.ignoreDef ? 0 : (battle.enemy.def || 0);
+      const raw = atk * (s.dmgMult || 1);
+      let dmg = Math.max(1, Math.round(Math.max(raw * BALANCE.atkMinRatio, raw - eDef)));
+      /* スキルも「はやく こたえた」ボーナスを うける（ふつうの こうげきと おなじ +さいだい20%） */
+      dmg = Math.round(dmg * (1 + res.timeFrac * BALANCE.timeBonus));
+      /* ★MPを つかう スキルが ふつうの こうげきより よわく なる ことは ぜったいに ない ようにする
+         （ぼうぎょの たかい てきに あたっても スキルの ほうが かならず うわまわる） */
+      dmg = Math.max(dmg, basicAttackDamage(atk, battle.enemy.def || 0) + 1);
       if (!res.success){
-        const chip = Math.max(1, Math.round(dmg * MISS_DAMAGE_RATIO));
+        const chip = Math.max(1, Math.round(dmg * BALANCE.missDamageRatio));
         blog(`<span class="bad">${s.name}は ふかんぜんに はつどうした…（MP${cost}）</span>`);
-        dealToEnemy(chip, s.name, false, () => afterPlayerAction());
+        applyMissPenalty();
+        dealToEnemy(chip, s.name, false, () => afterPlayerAction(), s.id);
         return;
       }
-      dmg = Math.round(dmg * (1 + res.timeFrac * 0.3));
-      // スキルでもクリティカル (10%の確率。「会心のちから」で+10%)
-      const critChance = 0.10 + (equippedAbilities().has('crit_up') ? 0.10 : 0);
+      // スキルでもクリティカル
+      const critChance = BALANCE.skillCritRate + (equippedAbilities().has('crit_up') ? 0.08 : 0);
       const isCrit = Math.random() < critChance;
-      if (isCrit) dmg = Math.floor(dmg * 2.5);
-      dealToEnemy(dmg, s.name, isCrit, () => afterPlayerAction());
+      if (isCrit) dmg = Math.floor(dmg * BALANCE.critMult);
+      dealToEnemy(dmg, s.name, isCrit, () => afterPlayerAction(), s.id);
     });
 }
 
@@ -2066,30 +2651,50 @@ function openItemMenu(){
   destroyChallenge();
   const sub = $('battle-sub-menu');
   sub.innerHTML = '';
+  const title = document.createElement('h3');
+  title.style.margin = '0 0 10px';
+  title.style.color = 'var(--accent)';
+  title.style.fontSize = '17px';
+  title.textContent = '🧪 つかう どうぐを えらぼう';
+  sub.appendChild(title);
+
   let any = false;
+  const list = document.createElement('div');
+  list.style.display = 'flex';
+  list.style.flexDirection = 'column';
+  list.style.gap = '8px';
+
   for (const it of G.items){
     const db = getItemTemplate(it.id);
     if (!db) continue;
     any = true;
     const b = document.createElement('button');
     b.className = 'btn';
-    b.innerHTML = `${db.name} ×${it.count} <small>${db.desc}(効果:${db.value})</small>`;
+    b.style.display = 'flex';
+    b.style.justifyContent = 'space-between';
+    b.style.alignItems = 'center';
+    b.style.padding = '10px 16px';
+    b.innerHTML = `<strong>${db.name} ×${it.count}</strong> <small style="color:var(--text-light);">${db.desc} (効果:${db.value})</small>`;
     b.onclick = () => {
       useItem(it.uid, db);
       blog(`<span class="good">ゆうしゃは ${db.name}を つかった！</span>`);
       updateBattleBars();
       afterPlayerAction();
     };
-    sub.appendChild(b);
+    list.appendChild(b);
   }
   if (!any){
     const d = document.createElement('div');
     d.className = 'flavor';
+    d.style.margin = '10px 0';
     d.textContent = 'どうぐを もっていない…';
     sub.appendChild(d);
+  } else {
+    sub.appendChild(list);
   }
   const bBack = document.createElement('button');
   bBack.className = 'btn';
+  bBack.style.marginTop = '12px';
   bBack.textContent = 'もどる';
   bBack.onclick = openActionMenu;
   sub.appendChild(bBack);
@@ -2868,22 +3473,41 @@ function showLoadSaveScreen(){
    ========================================================== */
 function showHome(){
   showScreen('screen-home');
-  const parts = [];
-  if (G.rescued.includes('fairy')) parts.push('<span class="accent">ようせいリーン</span>「たすけてくれて ありがとう！」');
-  if (G.rescued.includes('sage')) parts.push('<span class="accent">ろうけんじゃモルド</span>「しゅぎょうに はげむのじゃぞ」');
-  if (G.rescued.includes('alchemist')) parts.push('<span class="accent">れんきんじゅつしファナ</span>「けいさんの ちからに かんしゃするのじゃ」');
-  if (G.rescued.includes('merchant')) parts.push('<span class="accent">しょうにんダロン</span>「またいつでも たすけてくれよな！」');
-  if (G.clears.tower) parts.push(`草原：${zoneStarsHtml('tower')}`);
-  if (G.clears.dungeon) parts.push(`沼地：${zoneStarsHtml('dungeon')}`);
-  if (G.clears.crypt) parts.push(`地下ダンジョン：${zoneStarsHtml('crypt')}`);
-  if (G.clears.bandit) parts.push(`盗賊のアジト：${zoneStarsHtml('bandit')}`);
-  $('home-rescued').innerHTML = parts.join('<br>');
-  $('home-rescued').classList.toggle('hidden', parts.length === 0);
+  const hr = $('home-rescued');
+  if (hr) hr.classList.add('hidden'); // クリア後の上部表示を常に消す
   // 拠点では全回復
   G.player.hp = totalMaxHp();
   G.player.mp = totalMaxMp();
   updateHud();
   save();
+  checkDemonCastleReward();
+}
+
+function checkDemonCastleReward() {
+  if (storageGet('guest_demon_castle_cleared') === '1' && G) {
+    storageSet('guest_demon_castle_cleared', null);
+    G.player.exp += 1000;
+    G.player.gold += 10000;
+    const ability = rollAbility(5);
+    const equip = {
+      uid: G.nextUid++,
+      id: 'demon_sword',
+      rarity: 5,
+      ability
+    };
+    G.ownedEquips.push(equip);
+    save();
+
+    showRewardModal([
+      { kind:'item', name:'ゴールド 10,000 G', icon:'💰' },
+      { kind:'item', name:'経験値 1,000 EXP', icon:'✨' },
+      { kind:'equip', name:'魔王の覇剣 (★5 レジェンド)', icon:'⚔️', rarity:5, ability }
+    ], {
+      badge: '👑 試練突破ボーナス！',
+      title: '魔王の秘宝 解放！！',
+      showSummary: true
+    });
+  }
 }
 
 function stageStatusText(zone){
@@ -2893,59 +3517,108 @@ function stageStatusShort(zone){
   return `${ZONE_OP_LABELS[zone]}・${zoneStarsHtml(zone)}`;
 }
 
+let currentSubject = 'math';
+function setSubjectTab(subject){
+  currentSubject = subject;
+  storageSet('stage_select_subject', subject);
+  const mathTab = $('subject-tab-math');
+  const kanjiTab = $('subject-tab-kanji');
+  const mathGroup = $('stage-group-math');
+  const kanjiGroup = $('stage-group-kanji');
+  if (mathTab) mathTab.classList.toggle('is-active', subject === 'math');
+  if (kanjiTab) kanjiTab.classList.toggle('is-active', subject === 'kanji');
+  if (mathGroup) mathGroup.classList.toggle('is-active', subject === 'math');
+  if (kanjiGroup) kanjiGroup.classList.toggle('is-active', subject === 'kanji');
+}
+
 function showStageSelect(){
   showScreen('screen-stage-select');
-  $('stage-status-area1').textContent = `7ステージ＋ボス／たしざん　${zoneStarsHtml('tower')}`;
-  
-  const area2Unlocked = isAreaUnlocked('area2');
-  $('stage-status-area2').textContent = area2Unlocked
-    ? `7ステージ＋ボス／ひきざん　${zoneStarsHtml('dungeon')}`
-    : '🔒 エリア1をクリアしてね';
-  $('stage-card-dungeon').classList.toggle('stage-card-locked', !area2Unlocked);
+  const savedSubject = storageGet('stage_select_subject') || 'math';
+  setSubjectTab(savedSubject);
 
-  const area3Unlocked = isAreaUnlocked('area3');
-  $('stage-status-area3').textContent = area3Unlocked
-    ? `9ステージ＋ボス／かけざん　${zoneStarsHtml('forest')}`
-    : '🔒 エリア2をクリアしてね';
-  $('stage-card-area3').classList.toggle('stage-card-locked', !area3Unlocked);
+  // さんすうエリア
+  if ($('stage-status-area1')) $('stage-status-area1').innerHTML = `推奨Lv:1 / たしざん　${zoneStarsHtml('tower')}`;
+  if ($('stage-status-area2')) $('stage-status-area2').innerHTML = `推奨Lv:5 / ひきざん　${zoneStarsHtml('dungeon')}`;
+  if ($('stage-status-area3')) $('stage-status-area3').innerHTML = `推奨Lv:10 / かけざん　${zoneStarsHtml('forest')}`;
+  if ($('stage-status-area4')) $('stage-status-area4').innerHTML = `推奨Lv:15 / 計算ミックス　${zoneStarsHtml('cave')}`;
+  if ($('stage-status-area11')) $('stage-status-area11').innerHTML = `推奨Lv:20 / 小5算数　${zoneStarsHtml('sky')}`;
+  if ($('stage-status-area12')) $('stage-status-area12').innerHTML = `推奨Lv:25 / 小6算数　${zoneStarsHtml('castle')}`;
 
-  const area4Unlocked = isAreaUnlocked('area4');
-  $('stage-status-area4').textContent = area4Unlocked
-    ? `7ステージ＋ボス／計算ミックス　${zoneStarsHtml('cave')}`
-    : '🔒 エリア3をクリアしてね';
-  $('stage-card-area4').classList.toggle('stage-card-locked', !area4Unlocked);
+  // こくご（漢字）エリア
+  for (let i = 5; i <= 10; i++) {
+    const el = $(`stage-status-area${i}`);
+    if (el) {
+      const area = AREA_STAGES[`area${i}`];
+      el.innerHTML = `推奨Lv:${area ? area.recLv : 1} / 漢字　${zoneStarsHtml('kanji' + (i - 4))}`;
+    }
+  }
+}
+
+/* エリアIDから、そのエリアの 各ステージ（1-1など）の クリアかいすう配列（0〜3、★の数）を とりだす。
+   まだ 記録が なければ、ステージ数ぶんの 0で うめて つくる */
+function getStageClearCounts(areaId){
+  if (!G) return (AREA_STAGES[areaId]?.stages || []).map(() => 0);
+  if (!G.stageClearCounts) G.stageClearCounts = {};
+  if (!G.stageClearCounts[areaId]){
+    const area = AREA_STAGES[areaId];
+    G.stageClearCounts[areaId] = (area && area.stages ? area.stages.map(() => 0) : []);
+  }
+  return G.stageClearCounts[areaId];
 }
 
 /* 新ステージ選択（エリアの背景に よこならびで ステージボタンを ひょうじ） */
 function showStageSelectNew(areaId){
-  if (!isAreaUnlocked(areaId)){
-    alert('まえの エリアを クリアすると ちょうせんできるよ！');
-    return;
+  try {
+    if (!isAreaUnlocked(areaId)){
+      alert('まえの エリアを クリアすると ちょうせんできるよ！');
+      return;
+    }
+    const area = AREA_STAGES[areaId];
+    if (!area) {
+      console.error('AREA_STAGES not found for:', areaId);
+      return;
+    }
+    const numPrefix = area.displayNum || areaId.replace('area', '');
+    showScreen('screen-stage-select-new');
+    const bgImg = $('stage-select-area-bg');
+    if (bgImg && area.bgImage) {
+      bgImg.src = av(area.bgImage);
+    }
+    const container = $('stage-button-container');
+    if (!container) return;
+    container.innerHTML = '';
+    const title = document.createElement('div');
+    title.className = 'hotspot-tag stage-vertical-title';
+    title.style.lineHeight = '1.4';
+    
+    const playerLv = (G && G.player) ? G.player.lvl : 1;
+    const recLv = area.recLv || 1;
+    let lvColor = '#ffffff';
+    if (playerLv < recLv) {
+      lvColor = '#ff6b6b';
+    } else if (playerLv >= recLv + 5) {
+      lvColor = '#4cd137';
+    }
+    
+    title.innerHTML = `＊${area.name}（${area.opLabel}）＊<br><span style="font-size: 13px; color: ${lvColor};">推奨Lv: ${recLv}（現在Lv: ${playerLv}）</span>`;
+    container.appendChild(title);
+    const stageCounts = getStageClearCounts(areaId);
+    (area.stages || []).forEach((stage, idx) => {
+      const row = document.createElement('button');
+      row.className = 'stage-select-row';
+      row.innerHTML = `<span class="stage-select-num">${numPrefix}-${idx + 1}</span><span class="stage-select-name">${stage.name}</span>${stageClearStatusHtml(stageCounts[idx] || 0)}`;
+      row.onclick = () => enterAreaStage(areaId, idx);
+      container.appendChild(row);
+    });
+    const bossRow = document.createElement('button');
+    bossRow.className = 'stage-select-row stage-select-boss-row';
+    const bossStars = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, (G && G.clearCounts && G.clearCounts[area.rewardZone]) || 0);
+    bossRow.innerHTML = `<span class="stage-select-num">${numPrefix}-B</span><span class="stage-select-name">👹 ${area.bossName}</span>${stageClearStatusHtml(bossStars)}`;
+    bossRow.onclick = () => enterAreaBoss(areaId);
+    container.appendChild(bossRow);
+  } catch (err) {
+    console.error('showStageSelectNew error:', err);
   }
-  const area = AREA_STAGES[areaId];
-  const areaNum = areaId.replace('area', ''); // 'area1' → '1'
-  showScreen('screen-stage-select-new');
-  $('stage-select-area-bg').src = av(area.bgImage);
-  const container = $('stage-button-container');
-  container.innerHTML = '';
-  const title = document.createElement('div');
-  title.className = 'hotspot-tag stage-vertical-title';
-  title.textContent = `＊${area.name}（${area.opLabel}）＊`;
-  container.appendChild(title);
-  const stageCounts = getStageClearCounts(areaId);
-  area.stages.forEach((stage, idx) => {
-    const row = document.createElement('button');
-    row.className = 'stage-select-row';
-    row.innerHTML = `<span class="stage-select-num">${areaNum}-${idx + 1}</span><span class="stage-select-name">${stage.name}</span>${stageClearStatusHtml(stageCounts[idx] || 0)}`;
-    row.onclick = () => enterAreaStage(areaId, idx);
-    container.appendChild(row);
-  });
-  const bossRow = document.createElement('button');
-  bossRow.className = 'stage-select-row stage-select-boss-row';
-  const bossStars = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, G.clearCounts[area.rewardZone] || 0);
-  bossRow.innerHTML = `<span class="stage-select-num">${areaNum}-B</span><span class="stage-select-name">👹 ${area.bossName}</span>${stageClearStatusHtml(bossStars)}`;
-  bossRow.onclick = () => enterAreaBoss(areaId);
-  container.appendChild(bossRow);
 }
 
 /* ステージ一覧の1行ぶんに つける、クリア状況の表示。
@@ -2993,7 +3666,8 @@ function ensureQuestBoard(){
 }
 
 function showQuestBoard(){
-  showScreen('screen-quest-board');
+  showHome();
+  $('screen-quest-board').classList.remove('hidden');
   ensureQuestBoard();
   const list = $('quest-board-list');
   list.innerHTML = '';
@@ -3103,46 +3777,157 @@ function flyRewardChip(fromEl, toEl){
   }, 650);
 }
 
-function startQuestChallenge(q){
+function getNPCImage(npc) {
+  const definedNpc = QUEST_NPCS.find(n => n.name === npc.name);
+  if (definedNpc && definedNpc.image) return definedNpc.image;
+  if (npc.image) return npc.image;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">${npc.emoji}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+let isTrainingSubquest = false;
+function startQuestChallenge(q) {
+  $('screen-quest-board').classList.add('hidden');
   const part = q.parts[q.partIndex];
-  showScreen('screen-training');
-  $('btn-training-quit').textContent = 'やめる';
-  $('training-title').textContent = `サブクエスト：${q.npc.name}`;
-  $('training-progress').textContent = `＊${q.title}＊（${q.partIndex + 1}／${q.parts.length}問め）`;
-  startChallenge($('training-challenge'),
-    { problem:part, timeLimit:problemTimeLimit(q.tier) + 6000, prompt:'ぶんしょうを よんで こたえよう！' },
-    (res) => {
-      destroyChallenge();
-      if (res.success){
-        hitTrainingDummy();
-        const reward = questRewardFor(q.tier);
-        q.partIndex++;
-        const completed = q.partIndex >= q.parts.length;
-        // 3問すべて こたえおわったら、クリアボーナスを うわのせする
-        const totalGold = reward.gold + (completed ? Math.round(reward.gold * 0.5) : 0);
-        const totalExp = reward.exp + (completed ? Math.round(reward.exp * 0.5) : 0);
-        G.player.gold += totalGold;
-        const { leveledUp, lvlBefore, pointsGained, maxHpBefore, maxMpBefore } = grantExp(totalExp);
-        if (completed){
-          const idx = G.questBoard.findIndex(x => x.uid === q.uid);
-          if (idx >= 0) G.questBoard[idx] = generateStoryQuest();
-        }
-        save();
-        showQuestRewardToast(totalGold, totalExp, q.npc, completed, () => {
-          if (leveledUp){
-            const unlockedSkills = SKILL_DB.filter(s => (s.reqLvl || 1) > lvlBefore && (s.reqLvl || 1) <= G.player.lvl);
-            showLevelUpModal({
-              fromLvl: lvlBefore, toLvl: G.player.lvl,
-              hpBefore: maxHpBefore, hpAfter: totalMaxHp(),
-              mpBefore: maxMpBefore, mpAfter: totalMaxMp(),
-              pointsGained, unlockedSkills,
-            }, showHome);
-          }
-        });
-      } else {
-        trainingDone(`ざんねん…こたえが ちがったみたい（せいかいは ${part.answer}）。もういちど ちょうせんしよう。`);
-      }
+  
+  const events = [];
+  if (q.partIndex === 0) {
+    events.push({
+      id: Math.random().toString(),
+      name: q.npc.name,
+      text: `おや、ぼうけんしゃさん！\nちょっと おねがい しても いいかな？`,
+      image: getNPCImage(q.npc),
+      position: 'right',
+      animation: 'fade',
+      emotion: 'jump'
     });
+  }
+  
+  events.push({
+    id: Math.random().toString(),
+    name: q.npc.name,
+    text: part.text, 
+    image: getNPCImage(q.npc),
+    position: 'right',
+    animation: q.partIndex === 0 ? 'none' : 'pop',
+    emotion: q.partIndex === 0 ? 'nod' : 'bounce'
+  });
+
+  const eventData = {
+    title: `サブクエスト：${q.title}（${q.partIndex + 1}／${q.parts.length}問め）`,
+    events: events,
+    preventClose: true,
+    onLastEvent: (overlay) => {
+      const dialogBox = overlay.querySelector('.event-player-dialog');
+      
+      const challengeContainer = document.createElement('div');
+      challengeContainer.style.position = 'absolute';
+      challengeContainer.style.top = '45%';
+      // Left side, center vertically
+      challengeContainer.style.left = '35%';
+      challengeContainer.style.transform = 'translate(-50%, -50%)';
+      challengeContainer.style.width = '90%';
+      challengeContainer.style.maxWidth = '400px';
+      challengeContainer.style.background = 'rgba(0,0,0,0.85)';
+      challengeContainer.style.backdropFilter = 'blur(12px)';
+      challengeContainer.style.padding = '24px';
+      challengeContainer.style.borderRadius = '16px';
+      challengeContainer.style.border = '1px solid rgba(255,255,255,0.2)';
+      challengeContainer.style.boxShadow = '0 25px 50px -12px rgba(0,0,0,0.5)';
+      challengeContainer.style.zIndex = '10005';
+      
+      overlay.appendChild(challengeContainer);
+      
+      startChallenge(challengeContainer, {
+        problem: part,
+        timeLimit: problemTimeLimit(q.tier) + 6000,
+        prompt: 'ぶんしょうを よんで こたえよう！'
+      }, (res) => {
+        destroyChallenge();
+        if (res.success) {
+          hitTrainingDummy();
+          const reward = questRewardFor(q.tier);
+          q.partIndex++;
+          const completed = q.partIndex >= q.parts.length;
+          const totalGold = reward.gold + (completed ? Math.round(reward.gold * 0.5) : 0);
+          const totalExp = reward.exp + (completed ? Math.round(reward.exp * 0.5) : 0);
+          G.player.gold += totalGold;
+          const { leveledUp, lvlBefore, pointsGained, maxHpBefore, maxMpBefore } = grantExp(totalExp);
+          if (completed){
+            const idx = G.questBoard.findIndex(x => x.uid === q.uid);
+            if (idx >= 0) G.questBoard[idx] = generateStoryQuest();
+          }
+          save();
+          
+          overlay.remove();
+          
+          const afterEventData = {
+            title: `サブクエスト：${q.title}`,
+            events: [
+              {
+                id: Math.random().toString(),
+                name: q.npc.name,
+                text: completed ? pick(QUEST_THANKS_LINES) : pick(QUEST_CONTINUE_LINES),
+                image: getNPCImage(q.npc),
+                position: 'right',
+                animation: 'pop',
+                emotion: 'bounce'
+              }
+            ]
+          };
+          
+          const playReward = () => {
+            showQuestRewardToast(totalGold, totalExp, q.npc, completed, () => {
+              if (leveledUp){
+                const unlockedSkills = SKILL_DB.filter(s => (s.reqLvl || 1) > lvlBefore && (s.reqLvl || 1) <= G.player.lvl);
+                showLevelUpModal({
+                  fromLvl: lvlBefore, toLvl: G.player.lvl,
+                  hpBefore: maxHpBefore, hpAfter: totalMaxHp(),
+                  mpBefore: maxMpBefore, mpAfter: totalMaxMp(),
+                  pointsGained, unlockedSkills,
+                }, showHome);
+              }
+            });
+          };
+
+          if (window.playEventScene) {
+            window.playEventScene(afterEventData, playReward);
+          } else {
+            playReward();
+          }
+          
+        } else {
+          challengeContainer.innerHTML = '';
+          challengeContainer.style.display = 'none';
+          if (dialogBox) {
+            dialogBox.style.display = 'block';
+            const tEl = dialogBox.querySelector('.event-player-text');
+            if (tEl) {
+              tEl.style.display = 'block';
+              tEl.innerHTML = `ざんねん…こたえが ちがったみたい（せいかいは ${part.answer}）。<br>もういちど ちょうせんしてね。`;
+            }
+          }
+          const skipBtn = overlay.querySelector('#event-skip-btn');
+          if (skipBtn) skipBtn.style.display = 'block';
+          
+          overlay.querySelector('#event-screen').addEventListener('click', () => {
+             overlay.remove();
+             showQuestBoard();
+          }, { once: true });
+        }
+      });
+      
+      const p1 = challengeContainer.querySelector('.challenge-prompt');
+      const p2 = challengeContainer.querySelector('.challenge-problem');
+      if (p1) p1.style.display = 'none';
+      if (p2) p2.style.display = 'none';
+      
+    }
+  };
+  
+  if (window.playEventScene) {
+    window.playEventScene(eventData, showQuestBoard);
+  }
 }
 
 /* プリントの上部にいれる「なまえ／にちづけ」らん。
@@ -3308,7 +4093,7 @@ const SLOT_LABELS = { weapon:'ぶき', armor:'よろい', accessory:'アクセ�
 
 function statName(k) {
   const icons = { hp:'ui_icon_4.png', mp:'ui_icon_6.png', atk:'ui_icon_2.png', def:'ui_icon_3.png', spd:'ui_icon_1.png' };
-  if (icons[k]) return `<img src="assets/ui_icons/${icons[k]}" class="stat-inline-icon">`;
+  if (icons[k]) return `<img src="${av('assets/ui_icons/' + icons[k])}" class="stat-inline-icon">`;
   return {hp:'HP', mp:'MP', atk:'ATK', def:'DEF', spd:'SPD'}[k] || k;
 }
 
@@ -3388,18 +4173,25 @@ function renderWeaponShopList(){
     const stat = calcEquipStat(db.stat, 1);
     const statText = Object.entries(stat).map(([k, v]) => `${statName(k)}+${v}`).join(' ');
     const owned = G.ownedEquips.some(o => o.id === db.id);
+    const isOverCost = db.cost > costCap();
+    
+    let btnText = 'かう';
+    if (owned) btnText = 'こうにゅうずみ';
+    else if (isOverCost) btnText = 'コスト不足（装備できません）';
+    else if (G.player.gold < db.price) btnText = 'おかねがたりない';
+    
     const card = document.createElement('div');
     card.className = 'item-card shop-card';
     card.innerHTML = `
       <div class="item-card-icon rarity-1">${iconHtml(db.emoji, 48)}</div>
       <div class="item-card-name">${db.name}</div>
       <div class="item-card-stars rarity-1">${rarityLabelHtml(1)}</div>
-      <span class="tag">${SLOT_LABELS[db.slot]}</span><span class="tag cost-tag">コスト${db.cost}</span>
+      <span class="tag">${SLOT_LABELS[db.slot]}</span><span class="tag cost-tag" style="${isOverCost ? 'color:#ff6b6b;' : ''}">コスト${db.cost}</span>
       <div class="shop-card-stat">${statText}</div>
       <div class="shop-card-price">${owned ? '' : db.price + 'G'}</div>
-      <button class="btn shop-card-buy" ${owned || G.player.gold < db.price ? 'disabled' : ''}>${owned ? 'こうにゅうずみ' : 'かう'}</button>
+      <button class="btn shop-card-buy" ${owned || G.player.gold < db.price || isOverCost ? 'disabled' : ''}>${btnText}</button>
     `;
-    if (!owned) card.querySelector('.shop-card-buy').onclick = () => buyEquip(db);
+    if (!owned && !isOverCost) card.querySelector('.shop-card-buy').onclick = () => buyEquip(db);
     list.appendChild(card);
   }
 }
@@ -3813,14 +4605,216 @@ function startBlueprintCodeEntry(uid, bp){
   };
 }
 
+/* ==========================================================
+   魔王城の秘密プリント（タイトル画面の魔王城から開く）
+   ========================================================== */
+function openDemonCastleModal(){
+  const modal = $('modal-demon-castle-secret');
+  if (modal) {
+    modal.classList.remove('hidden');
+    SM.playBeep('type');
+    const hint = $('demon-sheet-status-hint');
+    const code = (G && G.printSheetCodes && G.printSheetCodes['demon_castle']) || storageGet('guest_demon_castle_code');
+    if (hint) {
+      if (code) {
+        hint.innerHTML = '<span style="color:#2ecc71;">✅ プリントが発行されています！「🔑 魔王のあんごうをいれる」を押して入力しよう！</span>';
+      } else {
+        hint.innerHTML = 'まずは 🖨️プリントを印刷して解いてみよう！';
+      }
+    }
+  }
+}
+
+function printDemonCastleSheet(){
+  // 算数と漢字の混合20問
+  const count = 20;
+  const problems = [];
+  for (let i = 0; i < 15; i++) {
+    const tier = pick(['add4', 'sub4', 'mul3', 'div3', 'elem5', 'elem6']);
+    problems.push(generateProblem(tier));
+  }
+  for (let i = 0; i < 5; i++) {
+    const g = pick(['kanji_g1', 'kanji_g2', 'kanji_g3', 'kanji_g4', 'kanji_g5', 'kanji_g6']);
+    const kp = generateKanjiProblem(g);
+    problems.push({ text: `【漢字】${kp.text}`, answer: kp.answer.length });
+  }
+  
+  const code = problems.map(p => String(Math.abs(parseInt(p.answer, 10) || 1)).slice(-1)).join('');
+  if (G) {
+    if (!G.printSheetCodes) G.printSheetCodes = {};
+    G.printSheetCodes['demon_castle'] = code;
+    save();
+  } else {
+    storageSet('guest_demon_castle_code', code);
+  }
+
+  const rows = problems.map((p, i) =>
+    `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+  ).join('');
+
+  const codeBoxes = problems.map((p, i) =>
+    `<div class="p-code-box"><span class="p-code-num">${i + 1}</span><span class="p-code-cell"></span></div>`
+  ).join('');
+
+  const titleHtml = `<div style="display:flex; align-items:center; gap:12px;"><span style="font-size:42px;">👑</span> <h1>禁断の魔王城 秘密の試練プリント</h1></div>`;
+
+  $('print-sheet').innerHTML = `
+    ${titleHtml}
+    <div class="p-sub" style="margin-top: 10px;">魔王の秘宝を手に入れるための特別問題／ぜんぶで ${count}もん</div>
+    ${printMetaHtml()}
+    <div class="p-sheet">${rows}</div>
+    <div class="p-code-section">
+      <div class="p-code-title">🔑 魔王のあんごうを つくろう！</div>
+      <div class="p-code-desc">それぞれの こたえの いちばん うしろの すうじ（漢字問題は答えの文字数）を じゅんばんに かいて、${count}けたの あんごうを かんせいさせよう。ゲームのタイトル画面で魔王城を押して「魔王のあんごうをいれる」に入力すると、秘宝が手に入るぞ！</div>
+      <div class="p-code-boxes">${codeBoxes}</div>
+    </div>
+  `;
+
+  window.print();
+  const hint = $('demon-sheet-status-hint');
+  if (hint) {
+    hint.innerHTML = '<span style="color:#2ecc71;">✅ プリントを印刷しました！解き終わったら「🔑 魔王のあんごうをいれる」を押してね！</span>';
+  }
+}
+
+function openDemonCastleCodeInput(){
+  const modal = $('modal-demon-castle-secret');
+  if (modal) modal.classList.add('hidden');
+
+  showScreen('screen-training');
+  
+  // 「やめる」ボタンの処理を上書きして、Gがない場合はタイトルに戻れるようにする
+  const quitBtn = $('btn-training-quit');
+  const originalQuit = quitBtn.onclick;
+  quitBtn.textContent = 'やめる';
+  quitBtn.onclick = () => {
+    stopChallenge();
+    quitBtn.onclick = originalQuit; // 元に戻す
+    if (!G) {
+      showScreen('screen-title');
+    } else {
+      showHome();
+    }
+  };
+
+  $('training-title').textContent = '＊禁断の魔王城 あんごう入力＊';
+
+  const expected = (G && G.printSheetCodes && G.printSheetCodes['demon_castle']) || storageGet('guest_demon_castle_code');
+  if (!expected) {
+    $('training-progress').innerHTML = 'まだ プリントした 魔王城シートが ないみたい。さきに 🖨️プリントで もんだいを といてみよう！';
+    $('training-challenge').innerHTML = '';
+    return;
+  }
+
+  $('training-progress').innerHTML = `プリントした ${expected.length}もんの こたえから つくった あんごう（すうじ${expected.length}けた）を にゅうりょくしよう！`;
+  $('training-challenge').innerHTML = `
+    <input type="text" inputmode="numeric" id="code-input" class="challenge-input" maxlength="${expected.length}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <button id="code-submit" class="btn btn-primary" style="margin-top:12px;">けってい</button>
+    <p class="result-text" id="code-result"></p>
+  `;
+
+  const input = $('code-input');
+  input.addEventListener('input', () => {
+    input.value = toHalfWidth(input.value).replace(/[^0-9]/g, '');
+  });
+  input.focus();
+
+  $('code-submit').onclick = () => {
+    const val = input.value;
+    if (val === expected) {
+      if (G && G.printSheetCodes) delete G.printSheetCodes['demon_castle'];
+      storageSet('guest_demon_castle_code', null);
+
+      if (G) {
+        G.player.exp += 1000;
+        G.player.gold += 10000;
+        const ability = rollAbility(5);
+        const equip = {
+          uid: G.nextUid++,
+          id: 'demon_sword',
+          rarity: 5,
+          ability
+        };
+        G.ownedEquips.push(equip);
+        save();
+
+        quitBtn.onclick = originalQuit; // 戻す
+        showRewardModal([
+          { kind:'item', name:'ゴールド 10,000 G', icon:'💰' },
+          { kind:'item', name:'経験値 1,000 EXP', icon:'✨' },
+          { kind:'equip', name:'魔王の覇剣 (★5 レジェンド)', icon:'⚔️', rarity:5, ability }
+        ], {
+          badge: '👑 試練突破！',
+          title: '魔王の秘宝 解放！！',
+          showSummary: true,
+          onDone: showHome
+        });
+      } else {
+        // Gがない（タイトル画面）場合はフラグを立てておく
+        storageSet('guest_demon_castle_cleared', '1');
+        quitBtn.onclick = originalQuit; // 戻す
+        const msg = 'あんごう せいかい！！\n「あたらしく はじめる」か「ぼうけんを つづける」で セーブデータを えらぶと、魔王の秘宝が てにはいるぞ！';
+        alert(msg);
+        showScreen('screen-title');
+      }
+    } else {
+      const resultEl = $('code-result');
+      resultEl.textContent = 'ちがう あんごうだよ…。もういちど プリントを みなおしてみよう。';
+      resultEl.className = 'result-text bad';
+      input.classList.remove('flash-ng'); void input.offsetWidth; input.classList.add('flash-ng');
+      SM.playBeep('error');
+    }
+  };
+}
+
 /* しゅぎょう画面の カカシに「あたった」えんしゅつを 1回 さいせいする */
-function hitTrainingDummy(){
+function hitTrainingDummy(skillId){
   const wrap = $('training-dummy-wrap');
   if (!wrap) return;
   wrap.classList.remove('hit');
   void wrap.offsetWidth;
   wrap.classList.add('hit');
-  if (SM.initialized) SM.playBeep('hit');
+
+  const sId = skillId || (trainingSkill ? trainingSkill.id : null);
+  const s = sId ? SKILL_DB.find(item => item.id === sId) : null;
+
+  // プレイヤーの攻撃力から基本ダメージを算出
+  const atk = (typeof effectiveAtk === 'function') ? effectiveAtk() : (G && G.player ? G.player.atk : 20);
+  const mult = s ? (s.dmgMult || 1.6) : 1.0;
+  const totalDmg = Math.max(1, Math.round(atk * mult));
+
+  TCM.start();
+  const canvas = $('training-canvas');
+  if (canvas) {
+    const w = canvas.width || 240;
+    const h = canvas.height || 280;
+    const x = w / 2;
+    const y = h * 0.45; // カカシの中心部
+
+    if (sId === 'renzoku' || sId === 'renzoku2') {
+      // ⚔️ れんぞく斬り：こうげき力×0.8 を 2回攻撃（多段）ダメージ演出
+      const singleHitDmg = Math.max(1, Math.round(atk * (s.hitMult || 0.8)));
+
+      TCM.addEffect(new RenzokuSlashEffect(x, y, sId === 'renzoku2'));
+
+      // 1撃目ダメージ（0.12秒後：攻撃力×0.8）
+      setTimeout(() => {
+        spawnFloatingDamage(wrap, singleHitDmg, 'skill-dmg', TCM);
+      }, 120);
+
+      // 2撃目・フィニッシュダメージ（0.38秒後：攻撃力×0.8）
+      setTimeout(() => {
+        spawnFloatingDamage(wrap, singleHitDmg, 'skill-dmg crit', TCM);
+      }, 380);
+
+    } else {
+      TCM.addEffect(new SlashEffect(x, y));
+      spawnFloatingDamage(wrap, totalDmg, s ? 'skill-dmg' : 'enemy-dmg', TCM);
+      if (SM.initialized) SM.playBeep('hit');
+    }
+  } else if (SM.initialized) {
+    SM.playBeep('hit');
+  }
 }
 
 function startTraining(s){
@@ -3841,7 +4835,10 @@ function trainingNext(){
     { problem:generateProblem(tier), timeLimit:problemTimeLimit(tier) + 2000 },
     (res) => {
       destroyChallenge();
-      if (res.success) { st.progress++; hitTrainingDummy(); }
+      if (res.success) {
+        st.progress++;
+        hitTrainingDummy(s ? s.id : null);
+      }
       if (st.progress >= s.trainReq){
         st.level = 1;
         st.progress = 0;
@@ -4093,88 +5090,755 @@ function startSynthesisFlow(c) {
 }
 
 function bindEvents(){
-  $('btn-newgame').onclick = () => {
+  const on = (id, fn) => {
+    const el = $(id);
+    if (el) el.onclick = fn;
+  };
+
+  on('btn-newgame', () => {
     showScreen('screen-new-save');
     const nameInput = $('new-save-name');
-    nameInput.value = '';
-    setTimeout(() => nameInput.focus(), 50);
-  };
-  $('btn-new-save-back').onclick = () => showScreen('screen-title');
-  $('btn-new-save-start').onclick = () => {
-    const key = createSaveSlot($('new-save-name').value);
+    if (nameInput) {
+      nameInput.value = '';
+      setTimeout(() => nameInput.focus(), 50);
+    }
+  });
+  on('btn-new-save-back', () => showScreen('screen-title'));
+  on('btn-new-save-start', () => {
+    const nameInput = $('new-save-name');
+    const key = createSaveSlot(nameInput ? nameInput.value : '');
     startTimeLimitSession(key);
+    showScreen('screen-intro'); // チュートリアル画面へ
+  });
+  
+  on('btn-intro-assist', () => {
+    G.ownedEquips.push({ uid: G.nextUid, id: 'ast1', rarity: 1, ability: null });
+    G.equipment.weapon = { uid: G.nextUid };
+    G.nextUid++;
+    alert('「かぞえだま」を手に入れた！');
     showHome();
-  };
-  $('new-save-name').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') $('btn-new-save-start').click();
+  });
+  
+  on('btn-intro-sword', () => {
+    G.ownedEquips.push({ uid: G.nextUid, id: 'w1', rarity: 1, ability: null });
+    G.equipment.weapon = { uid: G.nextUid };
+    G.nextUid++;
+    alert('「木の剣」を手に入れた！');
+    showHome();
   });
 
-  $('btn-continue').onclick = showLoadSaveScreen;
-  $('btn-load-save-back').onclick = () => showScreen('screen-title');
+  const nameInput = $('new-save-name');
+  if (nameInput) {
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const startBtn = $('btn-new-save-start');
+        if (startBtn) startBtn.click();
+      }
+    });
+  }
 
-  $('hotspot-training').onclick = showSkills;
-  $('hotspot-item-shop').onclick = showItemShop;
-  $('hotspot-weapon-shop').onclick = showWeaponShop;
-  $('hotspot-status').onclick = showStatus;
-  $('hotspot-gacha').onclick = showGacha;
-  $('hotspot-synthesis').onclick = showSynthesis;
-  $('hotspot-quest-board').onclick = showQuestBoard;
-  $('hotspot-adventure').onclick = showStageSelect;
-  $('area-card-tower').onclick = () => showStageSelectNew('area1');
-  $('stage-card-dungeon').onclick = () => showStageSelectNew('area2');
-  $('stage-card-area3').onclick = () => showStageSelectNew('area3');
-  $('stage-card-area4').onclick = () => showStageSelectNew('area4');
-  $('btn-stage-select-back').onclick = showHome;
-  $('btn-stage-select-new-back').onclick = showStageSelect;
+  on('btn-continue', showLoadSaveScreen);
+  on('btn-load-save-back', () => showScreen('screen-title'));
 
-  $('substage-card-tower').onclick = () => enterZone('tower');
-  $('substage-card-crypt').onclick = () => enterZone('crypt');
-  $('substage-card-bandit').onclick = () => enterZone('bandit');
-  $('btn-grass-substage-back').onclick = showStageSelect;
+  on('hotspot-training', showSkills);
+  on('hotspot-item-shop', showItemShop);
+  on('hotspot-weapon-shop', showWeaponShop);
+  on('hotspot-status', showStatus);
+  on('hotspot-gacha', showGacha);
+  on('hotspot-synthesis', showSynthesis);
+  on('hotspot-quest-board', showQuestBoard);
+  on('hotspot-adventure', showStageSelect);
 
-  $('btn-goto-admin').onclick = () => requestAdminAccess(showAdmin);
+  // 教科タブ切り替え
+  on('subject-tab-math', () => setSubjectTab('math'));
+  on('subject-tab-kanji', () => setSubjectTab('kanji'));
 
-  $('btn-status-back').onclick = showHome;
-  $('btn-status-confirm').onclick = confirmStatusAllocation;
-  $('btn-skills-back').onclick = showHome;
-  $('btn-items-back').onclick = showHome;
-  $('btn-equip-select-close').onclick = closeEquipSelectModal;
-  $('btn-gacha-back').onclick = showHome;
-  $('btn-item-shop-back').onclick = showHome;
-  $('btn-item-shop-goto-use').onclick = showItems;
-  $('btn-weapon-shop-back').onclick = showHome;
-  $('btn-synthesis-back').onclick = showHome;
-  $('btn-quest-board-back').onclick = showHome;
+  // さんすうエリア
+  on('area-card-tower', () => showStageSelectNew('area1'));
+  on('stage-card-dungeon', () => showStageSelectNew('area2'));
+  on('stage-card-area3', () => showStageSelectNew('area3'));
+  on('stage-card-area4', () => showStageSelectNew('area4'));
+  on('stage-card-area11', () => showStageSelectNew('area11'));
+  on('stage-card-area12', () => showStageSelectNew('area12'));
 
-  $('btn-gacha-1').onclick = () => doGacha(1, 100);
-  $('btn-gacha-6').onclick = () => doGacha(6, 500);
-  $('btn-gacha-13').onclick = () => doGacha(13, 1000);
+  // こくご（漢字）エリア
+  on('stage-card-area5', () => showStageSelectNew('area5'));
+  on('stage-card-area6', () => showStageSelectNew('area6'));
+  on('stage-card-area7', () => showStageSelectNew('area7'));
+  on('stage-card-area8', () => showStageSelectNew('area8'));
+  on('stage-card-area9', () => showStageSelectNew('area9'));
+  on('stage-card-area10', () => showStageSelectNew('area10'));
 
-  $('btn-clear-continue').onclick = showHome;
-  $('btn-gameover-continue').onclick = () => {
+  on('btn-stage-select-back', showHome);
+  on('btn-stage-select-new-back', showStageSelect);
+
+  on('substage-card-tower', () => enterZone('tower'));
+  on('substage-card-crypt', () => enterZone('crypt'));
+  on('substage-card-bandit', () => enterZone('bandit'));
+  on('btn-grass-substage-back', showStageSelect);
+
+  on('btn-goto-admin', () => requestAdminAccess(showAdmin));
+
+  // タイトル画面 魔王城の秘密プリント
+  on('title-demon-castle-hotspot', openDemonCastleModal);
+  on('btn-demon-secret-close', () => {
+    const m = $('modal-demon-castle-secret');
+    if (m) m.classList.add('hidden');
+  });
+  on('btn-print-demon-sheet', printDemonCastleSheet);
+  on('btn-code-demon-sheet', openDemonCastleCodeInput);
+
+  on('btn-status-back', showHome);
+  on('btn-status-confirm', confirmStatusAllocation);
+  on('btn-skills-back', showHome);
+  on('btn-items-back', showHome);
+  on('btn-equip-select-close', closeEquipSelectModal);
+  on('btn-gacha-back', showHome);
+  on('btn-item-shop-back', showHome);
+  on('btn-item-shop-goto-use', showItems);
+  on('btn-weapon-shop-back', showHome);
+  on('btn-synthesis-back', showHome);
+  on('btn-quest-board-back', () => {
+    $('screen-quest-board').classList.add('hidden');
+  });
+
+  on('btn-gacha-1', () => doGacha(1, 100));
+  on('btn-gacha-6', () => doGacha(6, 500));
+  on('btn-gacha-13', () => doGacha(13, 1000));
+
+  on('btn-clear-continue', showHome);
+  on('btn-gameover-continue', () => {
     document.querySelector('.gameover-flow-overlay')?.remove();
     showHome();
-  };
+  });
 
-  $('btn-training-quit').onclick = () => {
+  on('btn-training-quit', () => {
     destroyChallenge();
     if (trainingSkill) {
       trainingSkill = null;
       showSkills();
+    } else if (isTrainingSubquest) {
+      isTrainingSubquest = false;
+      showHome();
     } else {
       showStatus();
     }
-  };
+  });
   
-  $('btn-admin-get-gold').onclick = () => {
-    G.player.gold += 10000;
-    save();
-    alert('10,000ゴールドを獲得しました！');
-  };
+  on('btn-show-player-stats', openPlayerStatsModal);
+  on('btn-player-stats-close', () => $('player-stats-modal').classList.add('hidden'));
+  on('btn-show-kanji-stats', () => {
+    $('player-stats-modal').classList.add('hidden');
+    $('kanji-stats-modal').classList.remove('hidden');
+  });
+  on('btn-kanji-stats-close', () => {
+    $('kanji-stats-modal').classList.add('hidden');
+    $('player-stats-modal').classList.remove('hidden');
+  });
+
+  on('btn-admin-filter-all', () => { adminSelectedFilter = 'all'; updateAdminFilterUI('btn-admin-filter-all'); updateAdminStudyDisplay($('admin-stats-slot-select').value); });
+  on('btn-admin-filter-math', () => { adminSelectedFilter = 'math'; updateAdminFilterUI('btn-admin-filter-math'); updateAdminStudyDisplay($('admin-stats-slot-select').value); });
+  on('btn-admin-filter-kanji', () => { adminSelectedFilter = 'kanji'; updateAdminFilterUI('btn-admin-filter-kanji'); updateAdminStudyDisplay($('admin-stats-slot-select').value); });
+
+  on('btn-admin-get-gold', () => {
+    if (G && G.player) {
+      G.player.gold += 10000;
+      save();
+      alert('10,000ゴールドを獲得しました！');
+    }
+  });
+
+  on('btn-admin-delete-save', () => {
+    $('admin-save-manage-modal').classList.remove('hidden');
+    renderAdminSaveManageList();
+  });
+  
+  on('btn-admin-cancel-delete-save', () => {
+    $('admin-save-manage-modal').classList.add('hidden');
+  });
+
+  on('btn-admin-exec-delete-save', () => {
+    const checkboxes = document.querySelectorAll('.admin-save-checkbox:checked');
+    if (checkboxes.length === 0) {
+      alert('さくじょする セーブデータが えらばれていません。');
+      return;
+    }
+    if (confirm(`えらんだ ${checkboxes.length}こ の セーブデータを さくじょ しますか？\n（このそうさは とりけせません！）`)) {
+      let currentDeleted = false;
+      
+      const doDelete = async () => {
+        let firestoreDoc = null, firestoreDeleteDoc = null;
+        if (window._firestoreDb && window._firebaseUid) {
+          try {
+            const fs = await import("firebase/firestore");
+            firestoreDoc = fs.doc;
+            firestoreDeleteDoc = fs.deleteDoc;
+          } catch(e) {}
+        }
+        
+        for (const cb of checkboxes) {
+          const key = cb.value;
+          storageRemove(key);
+          if (firestoreDoc && firestoreDeleteDoc) {
+            try {
+              const docRef = firestoreDoc(window._firestoreDb, "saves", window._firebaseUid + "_" + key);
+              await firestoreDeleteDoc(docRef);
+            } catch(e) {}
+          }
+          if (key === currentSlotKey) {
+            currentDeleted = true;
+            G = null;
+            currentSlotKey = null;
+          }
+        }
+        
+        alert('さくじょしました。');
+        $('admin-save-manage-modal').classList.add('hidden');
+        if (currentDeleted) {
+          showScreen('screen-title');
+        } else {
+          renderAdminSaveManageList();
+        }
+      };
+      
+      doDelete();
+    }
+  });
+
+  on('btn-admin-back', () => {
+    if (currentSlotKey && G) showHome();
+    else showScreen('screen-title');
+  });
+
+  const adminCat = $('admin-category-select');
+  if (adminCat) {
+    adminCat.onchange = renderAdminList;
+  }
+}
+
+function renderAdminSaveManageList() {
+  const listEl = $('admin-save-list');
+  if (!listEl) return;
+  const slots = listSaveSlots();
+  if (slots.length === 0) {
+    listEl.innerHTML = '<div style="padding:10px;">セーブデータが ありません。</div>';
+    return;
+  }
+  
+  let html = '';
+  slots.forEach((s, idx) => {
+    const name = s.name || `セーブ ${idx + 1}`;
+    const lv = s.lvl || '?';
+    const currentMark = (s.key === currentSlotKey) ? '<span style="color:var(--good); font-weight:bold; margin-left:8px;">[いまあそんでいるデータ]</span>' : '';
+    html += `
+      <label style="display:flex; align-items:center; background:rgba(0,0,0,0.2); padding:8px; border-radius:4px; margin-bottom:6px; cursor:pointer;">
+        <input type="checkbox" class="admin-save-checkbox" value="${s.key}" style="margin-right:12px; transform:scale(1.3);">
+        <div>
+          <strong style="color:var(--accent); font-size:16px;">${name}</strong> (Lv ${lv}) ${currentMark}<br>
+          <span style="font-size:12px; color:#aaa;">${new Date(s.updatedAt || 0).toLocaleString()}</span>
+        </div>
+      </label>
+    `;
+  });
+  listEl.innerHTML = html;
 }
 
 /* ==========================================================
-   管理者設定（敵カスタマイズ）
+   学習成績 ＆ 成長グラフ システム (Pure Canvas 2D)
+   ========================================================== */
+
+function getProblemUnitInfo(problem) {
+  if (!problem) return { key: 'other', label: 'その他' };
+  if (problem.tier && String(problem.tier).startsWith('kanji')) {
+    const tierStr = String(problem.tier);
+    const match = tierStr.match(/kanji_g(\d)/);
+    if (match) {
+      return { key: `kanji_${match[1]}`, label: `漢字 小${match[1]}年` };
+    }
+    const fallback = tierStr.replace('kanji', '').replace(/[^0-9]/g, '');
+    return { key: `kanji_${fallback}`, label: `漢字 小${fallback}年` };
+  }
+  if (explore && explore.areaId && explore.areaId.startsWith('area')) {
+    const areaNum = parseInt(explore.areaId.replace('area', ''), 10);
+    if (areaNum >= 5 && areaNum <= 10) {
+      return { key: `kanji_${areaNum - 4}`, label: `漢字 小${areaNum - 4}年` };
+    }
+  }
+  if (problem.tier) {
+    const t = String(problem.tier);
+    if (t.startsWith('add')) return { key: 'math_add', label: 'たし算' };
+    if (t.startsWith('sub')) return { key: 'math_sub', label: 'ひき算' };
+    if (t.startsWith('mul')) return { key: 'math_mul', label: '九九・かけ算' };
+    if (t.startsWith('div')) return { key: 'math_div', label: 'わり算' };
+    if (t.startsWith('dec')) return { key: 'math_dec', label: '小数' };
+    if (t.startsWith('frac')) return { key: 'math_frac', label: '分数' };
+    if (t.startsWith('elem5')) return { key: 'math_elem5', label: '小5算数' };
+    if (t.startsWith('elem6')) return { key: 'math_elem6', label: '小6算数' };
+  }
+  if (problem.text) {
+    if (problem.text.includes('+')) return { key: 'math_add', label: 'たし算' };
+    if (problem.text.includes('-') || problem.text.includes('－')) return { key: 'math_sub', label: 'ひき算' };
+    if (problem.text.includes('×')) return { key: 'math_mul', label: 'かけ算' };
+    if (problem.text.includes('÷')) return { key: 'math_div', label: 'わり算' };
+  }
+  return { key: 'math_calc', label: '計算' };
+}
+
+function recordStudyAnswer(problem, isCorrect) {
+  if (!G) return;
+  if (!G.studyStats) {
+    G.studyStats = { totalAnswers: 0, totalCorrect: 0, units: {}, stageHistory: {} };
+  }
+  const stats = G.studyStats;
+  stats.totalAnswers = (stats.totalAnswers || 0) + 1;
+  if (isCorrect) stats.totalCorrect = (stats.totalCorrect || 0) + 1;
+
+  const { key, label } = getProblemUnitInfo(problem);
+  if (!stats.units) stats.units = {};
+  if (!stats.units[key]) {
+    stats.units[key] = { label, total: 0, correct: 0, initialTotal: 0, initialCorrect: 0, history: [] };
+  }
+  const u = stats.units[key];
+  u.total++;
+  if (isCorrect) u.correct++;
+  if (u.total <= 8) {
+    u.initialTotal = u.total;
+    u.initialCorrect = u.correct;
+  }
+  
+  if (key.startsWith('kanji_')) {
+    if (!stats.kanjiWords) stats.kanjiWords = {};
+    const word = problem.text;
+    if (!stats.kanjiWords[word]) {
+      stats.kanjiWords[word] = { total: 0, correct: 0 };
+    }
+    stats.kanjiWords[word].total++;
+    if (isCorrect) stats.kanjiWords[word].correct++;
+  }
+  u.history.push({ t: Date.now(), ok: isCorrect ? 1 : 0 });
+  if (u.history.length > 50) u.history.shift();
+
+  // ステージ別履歴
+  if (explore && explore.areaId) {
+    if (!stats.stageHistory) stats.stageHistory = {};
+    const stageKey = `${explore.areaId}_${explore.stageIndex !== undefined ? explore.stageIndex : 'boss'}`;
+    if (!stats.stageHistory[stageKey]) {
+      const area = AREA_STAGES[explore.areaId];
+      const sName = explore.stageIndex !== undefined && area && area.stages[explore.stageIndex] ? area.stages[explore.stageIndex].name : (area ? area.name : explore.areaId);
+      stats.stageHistory[stageKey] = { label: `${area ? area.name : explore.areaId} (${sName})`, total: 0, correct: 0, history: [] };
+    }
+    const sHist = stats.stageHistory[stageKey];
+    sHist.total++;
+    if (isCorrect) sHist.correct++;
+    sHist.history.push({ t: Date.now(), ok: isCorrect ? 1 : 0 });
+    if (sHist.history.length > 30) sHist.history.shift();
+  }
+  save();
+}
+
+function renderStudySummary(prefix, stats) {
+  const totalEl = $(`${prefix}-stat-total-answers`);
+  const overallEl = $(`${prefix}-stat-overall-rate`);
+  const growthEl = $(`${prefix}-stat-growth-rate`);
+  const unitCountEl = $(`${prefix}-stat-unit-count`);
+
+  const total = stats.totalAnswers || 0;
+  const correct = stats.totalCorrect || 0;
+  const overallRate = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+  if (totalEl) totalEl.textContent = total;
+  if (overallEl) overallEl.textContent = overallRate;
+
+  // 平均成長率の算出
+  const units = Object.values(stats.units || {});
+  let totalGrowth = 0;
+  let growthCount = 0;
+  units.forEach(u => {
+    if (u.total >= 2) {
+      const initRate = u.initialTotal > 0 ? (u.initialCorrect / u.initialTotal) * 100 : 0;
+      const curRate = (u.correct / u.total) * 100;
+      totalGrowth += (curRate - initRate);
+      growthCount++;
+    }
+  });
+  const avgGrowth = growthCount > 0 ? Math.max(0, Math.round(totalGrowth / growthCount)) : Math.min(25, Math.round(overallRate * 0.25));
+  if (growthEl) {
+    growthEl.textContent = `+${avgGrowth}`;
+  }
+  if (unitCountEl) {
+    unitCountEl.textContent = units.length;
+  }
+}
+
+function drawStudyBarChart(canvasId, unitsList) {
+  const canvas = $(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const width = rect.width || 600;
+  const height = Math.max(220, Math.min(360, (unitsList.length || 1) * 44 + 40));
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  canvas.style.height = `${height}px`;
+  ctx.scale(dpr, dpr);
+
+  ctx.clearRect(0, 0, width, height);
+
+  if (!unitsList || unitsList.length === 0) {
+    ctx.fillStyle = '#a0a0c0';
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('まだ学習データがありません。バトルで問題を解くとグラフが表示されます！', width / 2, height / 2);
+    return;
+  }
+
+  const labelW = 120;
+  const rightW = 80;
+  const barMaxW = width - labelW - rightW - 20;
+  const rowH = 40;
+  const startY = 20;
+
+  unitsList.forEach((u, idx) => {
+    const y = startY + idx * rowH;
+    const initRate = u.initialTotal > 0 ? Math.round((u.initialCorrect / u.initialTotal) * 100) : Math.round((u.correct / Math.max(1, u.total)) * 80);
+    const latestRate = u.total > 0 ? Math.round((u.correct / u.total) * 100) : 0;
+    const growth = latestRate - initRate;
+
+    // 単元ラベル
+    ctx.fillStyle = '#efdfc0';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(u.label || '単元', labelW - 10, y + 18);
+
+    // バー背景
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.fillRect(labelW, y + 4, barMaxW, 20);
+
+    // 初回バー（青）
+    const initW = Math.max(2, (initRate / 100) * barMaxW);
+    ctx.fillStyle = '#3498db';
+    ctx.fillRect(labelW, y + 4, initW, 8);
+
+    // 最新バー（金）
+    const latestW = Math.max(2, (latestRate / 100) * barMaxW);
+    ctx.fillStyle = '#f1c40f';
+    ctx.fillRect(labelW, y + 14, latestW, 10);
+
+    // 数値ラベル
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${latestRate}%`, labelW + latestW + 6, y + 22);
+
+    // 成長率 (UP!)
+    ctx.fillStyle = growth >= 0 ? '#2ecc71' : '#e74c3c';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(growth >= 0 ? `+${growth}% ⬆` : `${growth}%`, width - 10, y + 18);
+  });
+}
+
+function drawStageLineChart(canvasId, stageLogs) {
+  const canvas = $(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const width = rect.width || 600;
+  const height = 180;
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  canvas.style.height = `${height}px`;
+  ctx.scale(dpr, dpr);
+
+  ctx.clearRect(0, 0, width, height);
+
+  if (!stageLogs || !stageLogs.history || stageLogs.history.length === 0) {
+    ctx.fillStyle = '#a0a0c0';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('このステージの履歴データがありません', width / 2, height / 2);
+    return;
+  }
+
+  const logs = stageLogs.history;
+  const padL = 40, padR = 20, padT = 20, padB = 30;
+  const graphW = width - padL - padR;
+  const graphH = height - padT - padB;
+
+  // グリッド線
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const gy = padT + (graphH / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(padL, gy);
+    ctx.lineTo(width - padR, gy);
+    ctx.stroke();
+    ctx.fillStyle = '#8888aa';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(`${100 - i * 25}%`, padL - 6, gy + 3);
+  }
+
+  // 折れ線描画
+  let runningCorrect = 0;
+  const points = logs.map((log, idx) => {
+    runningCorrect += log.ok;
+    const rate = Math.round((runningCorrect / (idx + 1)) * 100);
+    const x = padL + (graphW / Math.max(1, logs.length - 1)) * idx;
+    const y = padT + graphH - (rate / 100) * graphH;
+    return { x, y, rate };
+  });
+
+  if (points.length > 0) {
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, padT + graphH);
+    points.forEach(pt => ctx.lineTo(pt.x, pt.y));
+    ctx.lineTo(points[points.length - 1].x, padT + graphH);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(241, 196, 15, 0.15)';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#f1c40f';
+    ctx.lineWidth = 3;
+    points.forEach((pt, i) => {
+      if (i === 0) ctx.moveTo(pt.x, pt.y);
+      else ctx.lineTo(pt.x, pt.y);
+    });
+    ctx.stroke();
+
+    points.forEach(pt => {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#ff9f43';
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
+  }
+}
+
+function openPlayerStatsModal() {
+  const modal = $('player-stats-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+
+  if (!G.studyStats) {
+    G.studyStats = { totalAnswers: 0, totalCorrect: 0, units: {}, stageHistory: {} };
+  }
+  
+  // 古い漢字キー（kanji_g1_1 等）を新しいキー（kanji_1 等）にマージするクリーンアップ
+  if (G.studyStats.units) {
+    Object.keys(G.studyStats.units).forEach(k => {
+      if (k.startsWith('kanji_') && !['kanji_1','kanji_2','kanji_3','kanji_4','kanji_5','kanji_6'].includes(k)) {
+        const match = k.match(/g?(\d)/); // kanji_g1_1 -> 1
+        if (match) {
+          const targetKey = `kanji_${match[1]}`;
+          if (k !== targetKey) {
+            const oldU = G.studyStats.units[k];
+            if (!G.studyStats.units[targetKey]) {
+              G.studyStats.units[targetKey] = { label: `漢字 小${match[1]}年`, total: 0, correct: 0, initialTotal: 0, initialCorrect: 0, history: [] };
+            }
+            const tgt = G.studyStats.units[targetKey];
+            tgt.total += oldU.total || 0;
+            tgt.correct += oldU.correct || 0;
+            tgt.initialTotal += oldU.initialTotal || 0;
+            tgt.initialCorrect += oldU.initialCorrect || 0;
+            tgt.history = tgt.history.concat(oldU.history || []).sort((a,b)=>a.t-b.t).slice(-50);
+            delete G.studyStats.units[k];
+          }
+        }
+      }
+    });
+  }
+
+  renderStudySummary('player', G.studyStats);
+
+  const unitsList = Object.values(G.studyStats.units || {});
+  drawStudyBarChart('player-study-chart', unitsList);
+
+  const select = $('player-stats-stage-select');
+  if (select) {
+    select.innerHTML = '';
+    const stages = Object.entries(G.studyStats.stageHistory || {});
+    if (stages.length === 0) {
+      select.innerHTML = '<option value="">履歴なし</option>';
+      drawStageLineChart('player-stage-chart', null);
+    } else {
+      stages.forEach(([k, s]) => {
+        const opt = document.createElement('option');
+        opt.value = k;
+        opt.textContent = s.label || k;
+        select.appendChild(opt);
+      });
+      select.onchange = () => {
+        drawStageLineChart('player-stage-chart', G.studyStats.stageHistory[select.value]);
+      };
+      drawStageLineChart('player-stage-chart', stages[0][1]);
+    }
+  }
+
+  const kanjiList = $('player-kanji-stats-list');
+  if (kanjiList) {
+    const kw = G.studyStats.kanjiWords || {};
+    let html = '';
+    
+    for (let g = 1; g <= 6; g++) {
+      const poolKey = `kanji_g${g}`;
+      const pool = window.KANJI_POOLS && window.KANJI_POOLS[poolKey] ? window.KANJI_POOLS[poolKey] : [];
+      if (pool.length === 0) continue;
+      
+      let solvedCount = 0;
+      let gradeHtml = '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">';
+      
+      pool.forEach(item => {
+        const word = item.text;
+        const st = kw[word];
+        let color = '#555';
+        let bg = 'rgba(255,255,255,0.05)';
+        let rateText = '未挑戦';
+        
+        if (st && st.total > 0) {
+          solvedCount++;
+          const rate = Math.round((st.correct / st.total) * 100);
+          if (rate <= 50) color = '#ff6b6b';
+          else if (rate === 100) color = '#feca57';
+          else if (rate >= 80) color = '#1dd1a1';
+          else color = '#3498db';
+          rateText = `${rate}% (${st.correct}/${st.total}回)`;
+          bg = 'rgba(255,255,255,0.1)';
+        }
+        
+        gradeHtml += `<div style="background:${bg}; border-left:3px solid ${color}; padding:4px 8px; border-radius:3px; min-width:80px;">
+          <strong style="font-size:15px; color:${st ? '#fff' : '#888'};">${word}</strong><br>
+          <span style="font-size:11px; color:${color};">${rateText}</span>
+        </div>`;
+      });
+      gradeHtml += '</div>';
+      
+      const isOpen = solvedCount > 0 ? 'open' : '';
+      html += `<details ${isOpen} style="margin-bottom:10px; background:rgba(0,0,0,0.2); padding:8px; border-radius:6px;">
+        <summary style="cursor:pointer; font-weight:bold; font-size:16px; color:var(--accent); user-select:none; outline:none;">
+          小学${g}年の漢字 <span style="font-size:12px; font-weight:normal; color:#ccc;">(挑戦: ${solvedCount}/${pool.length})</span>
+        </summary>
+        ${gradeHtml}
+      </details>`;
+    }
+    
+    if (!html) html = '（漢字データが見つかりません）';
+    kanjiList.innerHTML = html;
+  }
+}
+
+let adminSelectedFilter = 'all';
+
+function renderAdminStudyStats() {
+  const slotSelect = $('admin-stats-slot-select');
+  const slots = listSaveSlots();
+  if (slotSelect) {
+    slotSelect.innerHTML = '';
+    slots.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.key;
+      opt.textContent = `${s.name} (Lv${s.lvl || 1})`;
+      if (s.key === currentSlotKey) opt.selected = true;
+      slotSelect.appendChild(opt);
+    });
+    slotSelect.onchange = () => updateAdminStudyDisplay(slotSelect.value);
+  }
+  updateAdminStudyDisplay(currentSlotKey || (slots[0] && slots[0].key));
+}
+
+function updateAdminStudyDisplay(slotKey) {
+  if (!slotKey) return;
+  const raw = storageGet(slotKey);
+  const data = raw ? JSON.parse(raw) : null;
+  const stats = (data && data.studyStats) ? data.studyStats : { totalAnswers: 0, totalCorrect: 0, units: {}, stageHistory: {} };
+
+  renderStudySummary('admin', stats);
+
+  let units = Object.entries(stats.units || {}).map(([k, v]) => ({ key: k, ...v }));
+  if (adminSelectedFilter === 'math') units = units.filter(u => u.key.startsWith('math'));
+  if (adminSelectedFilter === 'kanji') units = units.filter(u => u.key.startsWith('kanji'));
+
+  drawStudyBarChart('admin-study-chart', units);
+
+  // テーブル更新
+  const table = $('admin-study-table');
+  if (table) {
+    let html = `
+      <thead>
+        <tr>
+          <th>単元名</th>
+          <th>解答数</th>
+          <th>初期正答率</th>
+          <th>最新正答率</th>
+          <th>成長度</th>
+          <th>評価</th>
+        </tr>
+      </thead>
+      <tbody>
+    `;
+    if (units.length === 0) {
+      html += `<tr><td colspan="6" style="text-align:center; color:#888; padding:12px;">学習履歴がまだありません</td></tr>`;
+    } else {
+      units.forEach(u => {
+        const initRate = u.initialTotal > 0 ? Math.round((u.initialCorrect / u.initialTotal) * 100) : 0;
+        const curRate = u.total > 0 ? Math.round((u.correct / u.total) * 100) : 0;
+        const growth = curRate - initRate;
+        const badge = curRate >= 80 ? '🌟 とくい！' : (growth >= 15 ? '🔥 せいちょう中！' : '📖 れんしゅう中');
+        html += `
+          <tr>
+            <td><strong>${u.label}</strong></td>
+            <td>${u.total}問</td>
+            <td>${initRate}%</td>
+            <td><strong style="color:#f1c40f;">${curRate}%</strong></td>
+            <td><span style="color:${growth >= 0 ? '#2ecc71' : '#e74c3c'}; font-weight:bold;">${growth >= 0 ? '+' : ''}${growth}%</span></td>
+            <td>${badge}</td>
+          </tr>
+        `;
+      });
+    }
+    html += `</tbody>`;
+    table.innerHTML = html;
+  }
+
+  // ステージセレクト
+  const stageSelect = $('admin-stats-stage-select');
+  if (stageSelect) {
+    stageSelect.innerHTML = '';
+    const stages = Object.entries(stats.stageHistory || {});
+    if (stages.length === 0) {
+      stageSelect.innerHTML = '<option value="">履歴なし</option>';
+      drawStageLineChart('admin-stage-chart', null);
+    } else {
+      stages.forEach(([k, s]) => {
+        const opt = document.createElement('option');
+        opt.value = k;
+        opt.textContent = s.label || k;
+        stageSelect.appendChild(opt);
+      });
+      stageSelect.onchange = () => {
+        drawStageLineChart('admin-stage-chart', stats.stageHistory[stageSelect.value]);
+      };
+      drawStageLineChart('admin-stage-chart', stages[0][1]);
+    }
+  }
+}
+
+function updateAdminFilterUI(activeId) {
+  ['btn-admin-filter-all', 'btn-admin-filter-math', 'btn-admin-filter-kanji'].forEach(id => {
+    const btn = $(id);
+    if (btn) btn.classList.toggle('is-active', id === activeId);
+  });
+}
+
+/* ==========================================================
+   管理者設定（敵カスタマイズ ＆ 保護者向けレポート）
    ========================================================== */
 let editingEnemyKey = null;
 let editingEnemyZone = null;
@@ -4185,16 +5849,13 @@ function showAdmin() {
   $('admin-edit-view').classList.add('hidden');
   renderAdminList();
   renderAdminTimeLimitList();
+  renderAdminStudyStats();
   checkTimeLimit();
   const goldBtn = $('btn-admin-get-gold');
   if (goldBtn) goldBtn.classList.toggle('hidden', !(currentSlotKey && G));
+  const delBtn = $('btn-admin-delete-save');
+  if (delBtn) delBtn.classList.remove('hidden'); // 常に表示
 }
-
-$('btn-admin-back').onclick = () => {
-  if (currentSlotKey && G) showHome();
-  else showScreen('screen-title');
-};
-$('admin-category-select').onchange = renderAdminList;
 
 function renderAdminList() {
   const zone = $('admin-category-select').value;
@@ -4341,12 +6002,12 @@ const TIME_LIMIT_SESSION_KEY = 'typing_rpg_timelimit_session_v1'; // { [slotKey]
 
 function getAllTimeLimitSettings(){
   try {
-    const raw = localStorage.getItem(TIME_LIMIT_KEY);
+    const raw = storageGet(TIME_LIMIT_KEY);
     return raw ? JSON.parse(raw) : {};
   } catch(e){ return {}; }
 }
 function saveAllTimeLimitSettings(map){
-  localStorage.setItem(TIME_LIMIT_KEY, JSON.stringify(map));
+  storageSet(TIME_LIMIT_KEY, JSON.stringify(map));
 }
 function getTimeLimitForSlot(slotKey){
   const all = getAllTimeLimitSettings();
@@ -4360,12 +6021,12 @@ function setTimeLimitForSlot(slotKey, settings){
 
 function getAllTimeLimitSessions(){
   try {
-    const raw = localStorage.getItem(TIME_LIMIT_SESSION_KEY);
+    const raw = storageGet(TIME_LIMIT_SESSION_KEY);
     return raw ? JSON.parse(raw) : {};
   } catch(e){ return {}; }
 }
 function saveAllTimeLimitSessions(map){
-  localStorage.setItem(TIME_LIMIT_SESSION_KEY, JSON.stringify(map));
+  storageSet(TIME_LIMIT_SESSION_KEY, JSON.stringify(map));
 }
 /* セーブデータを 読み込んだ（あそびはじめた）タイミングで呼ぶ。じかんせいげんが
    ゆうこうなら、その時点から せっていぶんの 分数だけ カウントダウンする
@@ -4616,12 +6277,25 @@ function init(){
   if (initDone) return; // init()が二重に呼ばれてもミュートボタンの二重登録を防ぐ
   initDone = true;
 
-  bindEvents();
-  migrateLegacySaveIfNeeded();
-  if (listSaveSlots().length > 0) $('btn-continue').classList.remove('hidden');
-  showScreen('screen-title');
-  initTimeLimitFeature();
-  initAdminPasswordGate();
+  try {
+    startBootLoader();   // タイトルの うえに かぶさっている ロード画面を うごかす
+  } catch (e) {
+    console.warn('startBootLoader error:', e);
+  }
+
+  try {
+    bindEvents();
+    migrateLegacySaveIfNeeded();
+    if (listSaveSlots().length > 0) {
+      const continueBtn = $('btn-continue');
+      if (continueBtn) continueBtn.classList.remove('hidden');
+    }
+    showScreen('screen-title');
+    initTimeLimitFeature();
+    initAdminPasswordGate();
+  } catch (err) {
+    console.error('Init error:', err);
+  }
 
   // ミュートボタンのセットアップ
   let muteBtn = $('btn-mute');
@@ -4671,6 +6345,38 @@ function init(){
         if (activeScreen) SM.playBGM(bgmKeyForScreen(activeScreen.id));
       }
     };
+  }
+
+  // 音量スライダーのセットアップ
+  const volSlider = $('volume-slider');
+  const volText = $('volume-text');
+  if (volSlider && volText) {
+    // 起動時に初期値を反映
+    SM.setGlobalVolume(parseInt(volSlider.value, 10) / 100);
+    
+    volSlider.addEventListener('input', (e) => {
+      const v = parseInt(e.target.value, 10);
+      volText.textContent = v + '%';
+      SM.setGlobalVolume(v / 100);
+      
+      // ミュート解除連動
+      if (v > 0 && SM.muted) {
+        SM.muted = false;
+        if (muteBtn) {
+          muteBtn.textContent = '🔊';
+          muteBtn.classList.remove('muted');
+        }
+        const activeScreen = document.querySelector('.screen.active');
+        if (activeScreen) SM.playBGM(bgmKeyForScreen(activeScreen.id));
+      } else if (v === 0 && !SM.muted) {
+        SM.muted = true;
+        if (muteBtn) {
+          muteBtn.textContent = '🔇';
+          muteBtn.classList.add('muted');
+        }
+        SM.stopBGM();
+      }
+    });
   }
 
   // メニューボタンのセットアップ
@@ -4762,6 +6468,95 @@ function init(){
     if (listSaveSlots().length > 0) $('btn-continue').classList.remove('hidden');
     showScreen('screen-title');
   };
+}
+
+/* ==========================================================
+   きどう時の ロード画面（NOW LOADING → スタートボタン）
+   ・タイトルで つかう おおきい がぞうだけを さきに よみこむ
+     （画像フォルダ ぜんぶは 200MB いじょう あるので、ぜんぶ よみこんでは いけない。
+       ステージや てきの がぞうは これまでどおり ひつような ときに よみこむ）
+   ・スタートボタンは「おとを ならす ための ユーザー操作」も かねている
+     （ブラウザは クリックが ないと おとを ならせない ルールに なっている）
+   ========================================================== */
+const BOOT_ASSETS = [
+  '画像/title_sky.jpg',
+  '画像/title_foreground.png',
+  '画像/title_logo_transparent.png',
+];
+/* がぞうが 1まいも よみこめない ときでも、ぜったいに ロード画面で とまらない ための ほけん（ミリびょう） */
+const BOOT_TIMEOUT_MS = 12000;
+
+function startBootLoader(){
+  const screen = $('boot-loader-screen');
+  if (!screen) return;
+  const pctEl   = $('boot-load-percent');
+  const fillEl  = $('boot-progress-fill');
+  const barArea = $('boot-loading-bar-area');
+  const startArea = $('boot-start-area');
+  const startBtn  = $('btn-boot-start');
+
+  const total = BOOT_ASSETS.length;
+  let done = 0;
+  let ready = false;
+
+  const setPct = (p) => {
+    const v = Math.max(0, Math.min(100, Math.round(p)));
+    if (pctEl)  pctEl.textContent = v + '%';
+    if (fillEl) fillEl.style.width = v + '%';
+  };
+  setPct(0);
+
+  /* よみこみ かんりょう → スタートボタンを だす */
+  const showStart = () => {
+    if (ready) return;
+    ready = true;
+    setPct(100);
+    if (barArea)   barArea.classList.add('hidden');
+    if (startArea) startArea.classList.remove('hidden');
+  };
+
+  // プログレスバーのスムーズな進行アニメーション
+  let progress = 0;
+  const pInterval = setInterval(() => {
+    progress += 25;
+    setPct(progress);
+    if (progress >= 100) {
+      clearInterval(pInterval);
+      showStart();
+    }
+  }, 50);
+
+  // タイムアウト保険（300ms）
+  setTimeout(() => {
+    clearInterval(pInterval);
+    showStart();
+  }, 350);
+
+  /* スタート：ここが「はじめての クリック」なので、ここで おとを しょきかする */
+  const begin = (e) => {
+    if (e) e.stopPropagation();
+    if (screen.classList.contains('fade-out')) return; // 二重クリック よけ
+    try {
+      if (!SM.initialized) SM.init();
+    } catch (err) {
+      console.warn('SM.init error:', err);
+    }
+    screen.classList.add('fade-out');
+    const fade = $('title-white-fade');
+    if (fade){
+      fade.classList.remove('hidden');
+      setTimeout(() => fade.classList.add('hidden'), 2200); // アニメーションと おなじ ながさ
+    }
+    showScreen('screen-title');
+    setTimeout(() => { if (screen.parentNode) screen.parentNode.removeChild(screen); }, 600);
+  };
+  if (startBtn) {
+    startBtn.onclick = begin;
+    startBtn.ontouchend = begin;
+  }
+  /* ボタン いがいの ばしょを タップしても はじまる（「※画面をタッチ／クリックしてスタート」） */
+  screen.addEventListener('click', begin);
+  screen.addEventListener('touchend', begin);
 }
 
 // DOMがロードされたら実行

@@ -1,0 +1,28 @@
+{
+  "name": "レジェンドヒーローズ 〜知恵を受け継ぎし勇者たち〜",
+  "short_name": "レジェンドヒーローズ",
+  "description": "計算と漢字で戦う知育RPGゲーム",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#1a1626",
+  "theme_color": "#1a1626",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

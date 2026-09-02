@@ -1,4 +1,153 @@
-/* ========== けいさんクエスト（ドットRPG風UI） ========== */
+/* ===== タイトル起動時：ホワイトフェードイン演出 ===== */
+.title-white-fade {
+  position: fixed;
+  inset: 0;
+  background: #ffffff;
+  z-index: 9999999;
+  pointer-events: none;
+  opacity: 1;
+  animation: titleWhiteFade 2.2s cubic-bezier(0.25, 0.9, 0.4, 1) forwards;
+}
+
+@keyframes titleWhiteFade {
+  0% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* ===== ゲーム起動時 ロード画面 ＆ スタートボタン ===== */
+.boot-loader-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 10000000;
+  background: radial-gradient(circle at center, #1c1530 0%, #0c0915 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+  user-select: none;
+}
+
+.boot-loader-screen.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.boot-loader-content {
+  text-align: center;
+  padding: 30px 20px;
+  max-width: 440px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.boot-loader-logo-area {
+  margin-bottom: 8px;
+}
+
+.boot-loader-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 2px;
+  text-shadow: 0 0 16px rgba(255, 207, 77, 0.6), 2px 2px 0 #000;
+}
+
+.boot-loader-sub {
+  font-size: 13px;
+  color: var(--text-light);
+  margin-top: 6px;
+  letter-spacing: 1px;
+}
+
+/* プログレスバー */
+.boot-loading-bar-area {
+  width: 100%;
+  max-width: 320px;
+}
+
+.boot-loading-text {
+  font-size: 13px;
+  color: var(--text-light);
+  margin-bottom: 8px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.boot-progress-track {
+  width: 100%;
+  height: 14px;
+  background: #141021;
+  border: 2px solid var(--panel-border);
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 2px;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
+}
+
+.boot-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffe08a 0%, #ffa63f 50%, #ff7b25 100%);
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(255, 166, 63, 0.8);
+  transition: width 0.15s ease-out;
+}
+
+/* スタートボタン */
+.boot-start-area {
+  width: 100%;
+  animation: bootStartAppear 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes bootStartAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.btn-boot-start {
+  font-size: 18px !important;
+  padding: 16px 24px !important;
+  max-width: 360px;
+  margin: 0 auto !important;
+  box-shadow: 0 6px 24px rgba(255, 166, 63, 0.6) !important;
+  animation: bootBtnPulse 1.8s infinite ease-in-out;
+  cursor: pointer;
+}
+
+@keyframes bootBtnPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 6px 20px rgba(255, 166, 63, 0.5);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 8px 30px rgba(255, 207, 77, 0.85);
+  }
+}
+
+.boot-start-hint {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 12px;
+  opacity: 0.85;
+}
 
 * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -20,7 +169,7 @@
   --card-bg: #241f3a;
   --border-radius: 18px;
   --shadow: 0 10px 28px rgba(0,0,0,0.4);
-  --pixel-font: 'DotGothic16', 'M PLUS Rounded 1c', sans-serif;
+  --pixel-font: 'DotGothic16', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'M PLUS Rounded 1c', Meiryo, sans-serif;
 
   /* そうびレアリティ5段階：ノーマル(青)／レア(緑)／激レア(黄)／超激レア(赤)／レジェンド(紫＋虹) */
   --rarity-1: #4da6ff;
@@ -46,6 +195,19 @@
     padding:6mm;
   }
   #print-sheet h1 { font-size:26px; margin-bottom:6px; }
+  /* タイトルの ところに ステージの ヘッダー画像。
+     せの ひくい おびに して、20もん でも A4 1まいに おさまるように する */
+  #print-sheet .p-header { position:relative; margin-bottom:6px; }
+  #print-sheet .p-banner {
+    display:block; width:100%; height:56px; object-fit:cover; object-position:center 35%;
+    border:1.5px solid #222; border-radius:6px;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
+  #print-sheet .p-banner-title {
+    position:absolute; left:10px; bottom:6px; margin:0;
+    color:#fff; font-size:24px;
+    text-shadow:-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
+  }
   #print-sheet .p-sub { font-size:15px; color:#555; margin-bottom:16px; }
   #print-sheet .p-meta { display:flex; align-items:flex-end; flex-wrap:wrap; gap:40px; font-size:16px; margin-bottom:18px; }
   #print-sheet .p-meta-name { border-bottom:1px solid #222; padding:0 160px 4px 4px; }
@@ -57,11 +219,17 @@
   #print-sheet .p-row { font-size:24px; display:flex; align-items:baseline; gap:12px; padding:6px 0; border-bottom:1px dotted #aaa; }
   #print-sheet .p-num { width:auto; min-width:34px; color:#888; font-size:16px; white-space:nowrap; }
   #print-sheet .p-expr { white-space:nowrap; }
+  #print-sheet .p-kanji { font-size:22px; font-weight:700; }
+  /* かきとり：よみを 小さめに だし、漢字を かく らんを ひろく とる */
+  #print-sheet .p-yomi { font-size:15px; color:#333; min-width:96px; }
+  #print-sheet .p-row-write { padding:9px 0; }
+  #print-sheet .p-blank-write { height:1.5em; min-width:120px; }
+  #print-sheet .p-code-hint { margin-top:4px; font-size:9px; line-height:1.5; }
   #print-sheet .p-blank { flex:1; border-bottom:1px solid #222; min-width:70px; height:1.1em; }
 
-  #print-sheet .p-code-section { margin-top:20px; padding-top:12px; border-top:2px solid #222; }
+  #print-sheet .p-code-section { margin-top:14px; padding-top:10px; border-top:2px solid #222; }
   #print-sheet .p-code-title { font-size:18px; font-weight:700; margin-bottom:6px; }
-  #print-sheet .p-code-desc { font-size:12px; color:#555; margin-bottom:10px; line-height:1.5; }
+  #print-sheet .p-code-desc { font-size:12px; color:#555; margin-bottom:8px; line-height:1.45; }
   #print-sheet .p-code-boxes { display:flex; flex-wrap:wrap; gap:8px; }
   #print-sheet .p-code-box { display:flex; flex-direction:column; align-items:center; gap:4px; }
   #print-sheet .p-code-num { font-size:11px; color:#888; }
@@ -81,10 +249,107 @@
   #print-sheet .quest-print-answer .p-blank { height:1.4em; }
 }
 
-.mute-button {
+/* ===== 音量コントロール & ミュートボタン ===== */
+.volume-control-container {
   position: fixed;
   bottom: 20px;
   right: 20px;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.volume-slider-popup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(42, 34, 66, 0.96) 0%, rgba(22, 17, 38, 0.98) 100%);
+  border: 2.5px solid var(--panel-border);
+  border-radius: 30px;
+  padding: 10px 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(18px) scale(0.95);
+  transition: opacity 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  white-space: nowrap;
+}
+
+/* ホバー時 または フォーカス時 または アクティブ時にスライド表示 */
+.volume-control-container:hover .volume-slider-popup,
+.volume-control-container:focus-within .volume-slider-popup,
+.volume-slider-popup:hover,
+.volume-slider-popup.is-active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0) scale(1);
+}
+
+.volume-icon-indicator {
+  font-size: 22px;
+  user-select: none;
+  line-height: 1;
+}
+
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 130px;
+  height: 10px;
+  border-radius: 5px;
+  background: #1b152d;
+  outline: none;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.7), 0 1px 0 rgba(255,255,255,0.1);
+  cursor: pointer;
+  margin: 0;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffe08a 0%, #ffa63f 100%);
+  border: 2px solid #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(255, 166, 63, 0.7);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.volume-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 12px rgba(255, 200, 80, 0.9);
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffe08a 0%, #ffa63f 100%);
+  border: 2px solid #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(255, 166, 63, 0.7);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.volume-text {
+  font-family: var(--pixel-font);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 48px;
+  text-align: right;
+  user-select: none;
+  text-shadow: 1px 1px 0 #000;
+  letter-spacing: 0.5px;
+}
+
+.mute-button {
+  position: relative;
   width: 80px;
   height: 80px;
   border-radius: 50%;
@@ -92,7 +357,6 @@
   border: 3px solid var(--panel-border);
   font-size: 45px;
   cursor: pointer;
-  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -100,16 +364,17 @@
   transition: all 0.2s ease;
   padding: 0;
   font-weight: bold;
+  flex-shrink: 0;
 }
 
 .mute-button:hover {
-  transform: scale(1.15);
+  transform: scale(1.1);
   border-color: #fff;
   box-shadow: 0 10px 28px rgba(255,166,63,0.6), inset 0 1px 0 rgba(255,255,255,0.6);
 }
 
 .mute-button:active {
-  transform: scale(0.9);
+  transform: scale(0.92);
 }
 
 .mute-button.muted {
@@ -129,7 +394,7 @@
 .analog-clock-widget {
   position: fixed;
   top: 16px;
-  left: 16px;
+  right: 16px;
   z-index: 99999;
   display: flex;
   flex-direction: column;
@@ -213,6 +478,104 @@
   letter-spacing: 10px;
 }
 .admin-password-error { color: var(--bad); min-height: 18px; font-size: 13px; font-weight: 700; }
+
+/* ===== 音声自動再生ブロック時の許可・再生ポップアップ ===== */
+.audio-permission-popup {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100000;
+  max-width: 440px;
+  width: calc(100% - 32px);
+  animation: audioPopupSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.audio-permission-popup.hidden {
+  display: none !important;
+}
+
+.audio-permission-panel {
+  background: linear-gradient(135deg, rgba(42, 34, 66, 0.98) 0%, rgba(20, 16, 35, 0.98) 100%);
+  border: 3px solid var(--panel-border);
+  border-radius: var(--border-radius);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), 0 0 0 3px var(--panel-border-dark), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  padding: 18px 20px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.audio-permission-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.audio-permission-icon {
+  font-size: 26px;
+  animation: audioPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes audioPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+}
+
+.audio-permission-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--accent);
+  text-shadow: 1px 1px 0 #000;
+}
+
+.audio-permission-msg {
+  font-size: 13px;
+  color: var(--text-light);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.audio-play-btn {
+  font-size: 16px !important;
+  padding: 12px 18px !important;
+  margin-bottom: 12px !important;
+  box-shadow: 0 4px 16px rgba(255, 166, 63, 0.6) !important;
+  animation: btnGlow 1.8s infinite ease-in-out;
+}
+
+@keyframes btnGlow {
+  0%, 100% { box-shadow: 0 4px 16px rgba(255, 166, 63, 0.5); }
+  50% { box-shadow: 0 6px 24px rgba(255, 200, 80, 0.85); }
+}
+
+.audio-perm-note {
+  margin-top: 6px;
+  text-align: left;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px dashed rgba(239, 227, 192, 0.35);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 11.5px;
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
+.audio-perm-note strong {
+  color: var(--accent);
+}
+
+@keyframes audioPopupSlide {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
 
 /* ===== 管理者設定：じかんせいげん ===== */
 .admin-timelimit-section {
@@ -302,15 +665,38 @@
 
 .menu-dropdown .btn { margin: 0; }
 
-html, body { height:100%; }
+html, body {
+  height: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: auto;
+  user-select: auto;
+  touch-action: auto;
+}
 body {
   background: linear-gradient(135deg, #1a1626 0%, #2b2140 100%);
   background-attachment: fixed;
   color: var(--text);
   font-family: var(--pixel-font);
-  display:flex; flex-direction:column; align-items:center;
-  line-height:1.7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.7;
   image-rendering: pixelated;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  box-sizing: border-box;
 }
 
 #app { width:100%; max-width:none; padding:0; }
@@ -360,38 +746,256 @@ body {
 .hud-bar-text { font-size:12px; min-width:56px; text-align:right; color: var(--text-light); }
 
 /* screens */
-.screen { display:none; animation: fadeIn 0.3s ease-out; }
-.screen.active { display:block; }
-#screen-load-save.active {
-  display: flex;
+.screen {
+  display: none !important;
+  animation: fadeIn 0.3s ease-out;
+  width: 100%;
+}
+.screen.active {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* ===== タイトル・セーブ画面の動く青空＆パノラマ背景 ===== */
+#screen-title,
+#screen-load-save,
+#screen-new-save {
+  position: relative;
+  overflow: hidden;
+  background: #38a1db;
+  animation: none !important;
+}
+
+#screen-title:not(.active),
+#screen-load-save:not(.active),
+#screen-new-save:not(.active) {
+  display: none !important;
+}
+
+/* 奥の青空＆流れる雲レイヤー（横へゆっくりシームレススクロール） */
+#screen-title::before,
+#screen-load-save::before,
+#screen-new-save::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background: url('./画像/title_sky.jpg') repeat-x top left;
+  background-size: 50% 100%;
+  animation: titleSkyMove 90s linear infinite;
+  z-index: 1;
+  pointer-events: none;
+}
+
+@keyframes titleSkyMove {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+/* 前景地形レイヤー（城・村・草原・山脈・魔王城：空透過PNG） */
+#screen-title::after,
+#screen-load-save::after,
+#screen-new-save::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('./画像/title_foreground.png') center/cover no-repeat;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* コンテンツ（ロゴ・メニュー・パネル等）は最前面（z-index: 3） */
+#screen-title > *,
+#screen-load-save > *,
+#screen-new-save > * {
+  position: relative;
+  z-index: 3;
+}
+
+#screen-title.active,
+#screen-load-save.active,
+#screen-new-save.active {
+  display: flex !important;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-image: url('画像/bg_save.jpg');
-  background-size: cover;
-  background-position: center;
   min-height: 100vh;
   width: 100%;
 }
-#screen-load-save .panel {
+#screen-load-save .panel,
+#screen-new-save .panel {
   max-width: 600px;
   width: 90%;
   margin: 0 auto;
+  animation: panelPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes panelPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
 #screen-home.active,
+#screen-battle.active,
 #screen-grass-substage.active,
 #screen-stage-select-new.active {
-  display: flex;
+  display: flex !important;
   flex-direction: column;
+  width: 100%;
+  height: 100vh;
   min-height: 100vh;
 }
 
-.panel { padding:24px 28px; }
-.title-panel { text-align:center; padding:20px 20px; background: transparent !important; border: none !important; box-shadow: none !important; }
-#screen-title { background: url('画像/title_bg.jpg') center/cover no-repeat; }
-#screen-title.active { display: flex; flex-direction: column; justify-content: center; min-height: 100vh; }
+.panel {
+  width: 94%;
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 24px 28px;
+}
+.title-panel {
+  width: auto;
+  max-width: 600px;
+  text-align: center;
+  padding: 20px 20px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* ===== タイトルロゴ演出 & キラリ光エフェクト ===== */
+.title-logo-wrapper {
+  position: relative;
+  display: inline-block;
+  max-width: 80%;
+  width: 500px;
+  margin: 0 auto 20px;
+}
+
+.title-logo-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 4px 14px rgba(0,0,0,0.85));
+  animation: titleLogoPopIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes titleLogoPopIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.88) translateY(-8px);
+  }
+  70% {
+    transform: scale(1.02) translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* キラッ！光る星（四芒星スパークル） */
+.title-sparkle {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  transform: scale(0) rotate(0deg);
+}
+
+.title-sparkle::before,
+.title-sparkle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, #ffffff 15%, #ffeaa7 45%, #fdcb6e 75%, rgba(255,234,167,0) 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 10px #fff, 0 0 20px #ffd700;
+}
+
+.title-sparkle::before {
+  width: 100%;
+  height: 6px;
+}
+
+.title-sparkle::after {
+  width: 6px;
+  height: 100%;
+}
+
+/* 剣の先端（上部中央）: 起動後0.4秒で真っ先にキラッ！ */
+.sparkle-sword-tip {
+  top: 5%;
+  left: 50%;
+  margin-left: -18px;
+  width: 36px;
+  height: 36px;
+  animation: sparkleGlint 3.2s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s infinite;
+}
+
+/* 右上の角（翼・盾の右上）: 起動後0.7秒でキラッ！ */
+.sparkle-top-right {
+  top: 16%;
+  right: 11%;
+  width: 32px;
+  height: 32px;
+  animation: sparkleGlint 3.2s cubic-bezier(0.2, 0.8, 0.2, 1) 0.7s infinite;
+}
+
+/* 左上の角（翼の左上）: 起動後1.0秒でキラッ！ */
+.sparkle-top-left {
+  top: 20%;
+  left: 13%;
+  width: 28px;
+  height: 28px;
+  animation: sparkleGlint 3.6s cubic-bezier(0.2, 0.8, 0.2, 1) 1.0s infinite;
+}
+
+/* 文字の角（右下の「ズ」の角）: 起動後1.3秒でキラッ！ */
+.sparkle-corner-z {
+  bottom: 22%;
+  right: 8%;
+  width: 30px;
+  height: 30px;
+  animation: sparkleGlint 3.4s cubic-bezier(0.2, 0.8, 0.2, 1) 1.3s infinite;
+}
+
+@keyframes sparkleGlint {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+  12% {
+    opacity: 1;
+    transform: scale(1.4) rotate(45deg);
+  }
+  24% {
+    opacity: 0.9;
+    transform: scale(1.1) rotate(90deg);
+  }
+  36% {
+    opacity: 0;
+    transform: scale(0) rotate(135deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0) rotate(135deg);
+  }
+}
 h1 { font-size:30px; margin-bottom:12px; color: var(--accent); letter-spacing:1px; text-shadow: 2px 2px 0 #000; }
 h2 { font-size:19px; margin-bottom:16px; color: var(--accent); border-bottom: 2px dashed rgba(239,227,192,0.3); padding-bottom: 8px; text-shadow: 1px 1px 0 #000; }
 h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
@@ -464,14 +1068,53 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 .log-box .accent { color:var(--accent); font-weight:700; }
 
 /* ===== バトル ===== */
-.battle-wrap { display:flex; flex-direction:column; gap:8px; }
-.battle-top { display:flex; flex-direction:column; gap:4px; align-items:center; }
-.status-window { width:100%; max-width:800px; font-size:13px; padding:8px 16px; margin: 0 auto; display: flex; flex-direction: column; gap: 4px; }
+/* バトル画面は かならず 1画面に おさめる（たてに スクロールさせない）。
+   あまった たかさは てき の エリア（.battle-field）が すいちょうする */
+.battle-wrap { display:flex; flex-direction:column; gap:8px; position: relative; height: 100vh; overflow: hidden; }
+.battle-top { display:flex; flex-direction:row; gap:8px; align-items:flex-start; justify-content:flex-end; width:100%; padding: 8px; box-sizing: border-box; }
+.status-window { position: fixed; top: 66px; left: 16px; font-size:12px; padding:8px 12px; margin: 0; display: flex; flex-direction: column; gap: 3px; z-index: 99998; min-width: 90px; max-width: 200px; }
 .status-line { display:flex; align-items:baseline; gap:8px; font-size:14px; font-weight:700; width: 100%; margin-bottom: 2px; }
 .status-line span:last-child { color: var(--accent); font-size:12px; }
+/* ステージ名は 画面 ひだり上の ちいさな スペースに コンパクトに おさめる。
+   1ぎょうめ＝エリア名、2ぎょうめ＝ステージ・たいめ（時計は みぎ上） */
 .floor-window {
-  font-size:16px; font-weight:700; color:white; text-shadow:1px 1px 3px rgba(0,0,0,0.8);
-  white-space:nowrap; margin-bottom: 4px;
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1px;
+  font-weight: 700;
+  color: var(--text);
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.85);
+  padding: 5px 10px;
+  margin: 0;
+  max-width: 230px;
+  text-align: left;
+  line-height: 1.25;
+  background: var(--panel-bg);
+  border: 2px solid var(--panel-border);
+  box-shadow: 0 0 0 2px var(--panel-border-dark), var(--shadow);
+  border-radius: 10px;
+}
+.floor-title-main {
+  font-size: 11px;
+  color: var(--accent);
+  max-width: 210px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.floor-title-sub {
+  font-size: 10px;
+  color: var(--text);
+  max-width: 210px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 #floor-num { display:inline-block; }
 .battle-atb-compare, .command-window, .challenge-area {
@@ -493,6 +1136,10 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   display: flex;
   flex-direction: column;
   gap: 6px;
+  width: min(540px, 90vw) !important;
+  max-width: 540px !important;
+  margin: 0 auto !important;
+  box-sizing: border-box;
 }
 .atb-compare-row { display:flex; align-items:center; gap:8px; }
 .atb-compare-label {
@@ -514,15 +1161,16 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   overflow: hidden;
 }
 .battle-field {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   position: relative;
   display: flex;
   align-items: stretch;
   gap: 10px;
   padding:14px 10px 10px;
-  min-height:220px;
   border-radius: 10px;
   background: none;
+  overflow: hidden;
 }
 /* バトル中のウィンドウを半透明にして、背景を画面いっぱいに見せる */
 #screen-battle .status-window,
@@ -547,14 +1195,20 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   flex:1;
   text-align:center;
   min-width:0;
+  min-height:0;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
 }
+/* てき の 絵は 400px を じょうげんに、画面の たかさに あわせて ちいさくなる */
 .enemy-sprite {
-  width:400px; height:400px; margin:0 auto;
-  font-size:300px; line-height:1.1;
+  flex: 0 1 400px;
+  width:auto; height:auto; min-height:0;
+  aspect-ratio: 1 / 1;
+  max-width:100%;
+  margin:0 auto;
+  font-size:min(300px, 30vh); line-height:1.1;
   display:flex; align-items:center; justify-content:center;
   filter: drop-shadow(0 8px 12px rgba(0,0,0,0.15));
   transition: transform 0.2s;
@@ -584,6 +1238,173 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 }
 .enemy-bars { width:200px; margin:8px auto 0; display:flex; flex-direction:column; gap:5px; }
 .enemy-bars .stat-bar { flex:none; height:10px; }
+
+/* ===== バトル画面の いちを 固定する =====
+   もんだいの ウィンドウが 出ていても いなくても、
+   てき・ATBゲージ・もんだいウィンドウ・ログの いちと 大きさが かわらないようにする。
+   （てき の エリアの たかさを こていし、下の ものは 画面の 下ばしに はりつける） */
+#screen-battle .battle-field { flex: 0 0 auto; height: 46vh; }
+#screen-battle .enemy-sprite {
+  flex: 0 0 auto;
+  width: min(320px, 30vh);
+  height: min(320px, 30vh);
+}
+/* transform では まんなかに よせない。
+   transform が つくと、中の position:fixed（けっかの 文字）が
+   画面ではなく このウィンドウを きじゅんに なってしまうため */
+#screen-battle #battle-challenge,
+#screen-battle #battle-sub-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 88px;
+  width: min(600px, 92vw);
+  max-width: none;
+  margin: 0 auto;
+  z-index: 20;
+  box-sizing: border-box;
+}
+/* ==========================================================
+   けいさんバトルの ウィンドウ配置
+   「もんだいは まんなか・テンキーは みぎ」に わける。
+/* けいさんバトルの まど：ATBゲージの直下に中央配置 */
+#screen-battle #battle-challenge {
+  position: relative;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  width: min(560px, 92vw);
+  margin: 10px auto 0;
+  z-index: 20;
+  text-align: center;
+  background: rgba(22, 18, 34, 0.85);
+  backdrop-filter: blur(8px);
+  border: 3px solid var(--panel-border);
+  border-radius: 14px;
+  padding: 14px 18px;
+  box-sizing: border-box;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+#screen-battle #battle-challenge.hidden {
+  display: none !important;
+}
+
+/* せまい画面（スマホ・たて）：みぎに よせる はばが ないので、
+   テンキーは したに よこはば いっぱい、もんだいは その うえに おく。
+   ATBゲージが かくれないように、てきの エリアを すこし ちぢめる。 */
+@media (max-width: 820px) {
+  #screen-battle #battle-challenge:not(.hidden) {
+    top: auto;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    width: auto;
+    height: min(40vh, 340px);
+  }
+  #screen-battle:has(#battle-challenge:not(.hidden)) #calc-problem-center {
+    width: auto;
+    margin: 8px 8px 0;
+  }
+  #screen-battle:has(#battle-challenge:not(.hidden)) .battle-field { height: 22vh; }
+  #screen-battle:has(#battle-challenge:not(.hidden)) .enemy-sprite {
+    width: min(180px, 17vh);
+    height: min(180px, 17vh);
+  }
+  /* とくぎ／どうぐ は 時計の した・ステータスまどの みぎの あきに よこならびで */
+  #screen-battle:has(#battle-challenge:not(.hidden)) .battle-side-commands {
+    bottom: auto;
+    top: 130px;
+    left: auto;
+    right: 8px;
+    flex-direction: row;
+  }
+}
+/* スマホを よこに した とき：はばは あるので PCと おなじ「みぎに テンキー」に もどす */
+@media (max-width: 820px) and (max-height: 520px) {
+  #screen-battle #battle-challenge:not(.hidden) {
+    top: 8px;
+    right: 104px;
+    left: auto;
+    bottom: auto;
+    width: min(300px, 34vw);
+    height: auto;
+  }
+  body.calc-pad-open .menu-button,
+  body.calc-pad-open .mute-button,
+  body.calc-pad-open .volume-control-container { display: none; }
+  #screen-battle:has(#battle-challenge:not(.hidden)) #calc-problem-center .challenge-prompt,
+  #screen-battle:has(#battle-challenge:not(.hidden)) #calc-problem-center .assist-visual {
+    display: none;
+  }
+  #screen-battle:has(#battle-challenge:not(.hidden)) .battle-field { height: 26vh; }
+  #screen-battle:has(#battle-challenge:not(.hidden)) .battle-side-commands {
+    top: auto;
+    bottom: 46px;
+    left: 8px;
+    right: auto;
+    flex-direction: column;
+  }
+}
+
+#screen-battle #battle-log {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  z-index: 5;
+}
+
+/* ステージ正答率バッジ スタイル */
+.stage-rate-badge {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-weight: 700;
+  margin-left: auto;
+  margin-right: 6px;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.stage-rate-badge.rate-high {
+  background: rgba(85, 239, 196, 0.2);
+  color: #55efc4;
+  border: 1px solid #55efc4;
+}
+.stage-rate-badge.rate-mid {
+  background: rgba(255, 207, 77, 0.2);
+  color: #ffd166;
+  border: 1px solid #ffd166;
+}
+.stage-rate-badge.rate-low {
+  background: rgba(255, 118, 117, 0.2);
+  color: #ff7675;
+  border: 1px solid #ff7675;
+}
+
+/* とくぎ／どうぐ は もんだいウィンドウの そとがわ（ひだり）に ならべる */
+.battle-side-commands {
+  position: absolute;
+  bottom: 88px;
+  right: calc(50% + min(300px, 46vw) + 10px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 21;
+}
+.battle-side-commands .btn {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 14px;
+  width: 84px;
+  flex: none;
+}
+/* ウィンドウの よこに スペースが ない画面では ひだり下に よせる */
+@media (max-width: 860px) {
+  .battle-side-commands { right: auto; left: 8px; }
+}
 
 .shake { animation:shake .35s cubic-bezier(.36,.07,.19,.97) both; }
 @keyframes shake { 
@@ -682,19 +1503,104 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   display:inline-block;
   font-size:1em; letter-spacing:3px; font-weight:700;
 }
-.challenge-problem-word .challenge-word { font-size:26px; color:var(--accent); }
-.challenge-word.done { color:var(--good); }
-.challenge-word.wrong { color:var(--bad); }
+#ch-form {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 12px auto 0;
+  max-width: 440px;
+  width: 100%;
+}
 .challenge-input {
-  width:90%; max-width:320px; padding:8px 16px; font-size:20px; text-align:center; font-weight:700;
-  background: var(--card-bg); color: var(--text);
-  border: 3px solid var(--panel-border); border-radius: 10px;
-  font-family: var(--pixel-font); outline:none;
+  flex: 1;
+  width: auto;
+  max-width: 280px;
+  height: 48px;
+  padding: 0 16px;
+  font-size: 24px;
+  text-align: center;
+  font-weight: 700;
+  background: var(--card-bg);
+  color: var(--text);
+  border: 3px solid var(--panel-border);
+  border-radius: 10px;
+  font-family: var(--pixel-font);
+  outline: none;
+  box-sizing: border-box;
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
   transition: border-color 0.2s;
 }
 .challenge-input:focus { border-color: var(--accent); }
 .challenge-input.flash-ng { border-color:var(--bad); animation:shake .3s; }
+.challenge-submit-btn {
+  flex-shrink: 0;
+  min-width: 105px;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 0 16px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+/* ===== けいさん用テンキー =====
+   OSの キーボードを ださずに、小数点「.」・分数「/」・「あまり」まで うてるようにする。
+   ついかキーは エリアが きょかした ときだけ ならぶ（1年・2年は すうじだけ） */
+.calc-pad {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  max-width: 320px;
+  margin: 10px auto 0;
+}
+.calc-key {
+  font-family: var(--pixel-font);
+  font-size: 24px; font-weight: 700; line-height: 1;
+  color: var(--text);
+  background: var(--card-bg);
+  border: 3px solid var(--panel-border);
+  border-radius: 10px;
+  padding: 12px 0;
+  cursor: pointer;
+  box-shadow: 0 3px 0 rgba(0,0,0,0.45);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.calc-key:active {
+  transform: translateY(3px);
+  box-shadow: none;
+  background: var(--accent);
+  color: #14101f;
+}
+/* 「けす」「.」「/」「あまり」は すうじと 見た目を かえて まちがえにくく */
+.calc-key-del { background: rgba(120,60,60,0.45); font-size:16px; }
+.calc-key-op  { background: rgba(60,80,120,0.55); color: var(--accent); }
+/* 「あまり」は 3文字 あるので 文字を ちいさく */
+.calc-key-op { font-size: 20px; }
+.calc-key[data-key="あまり"] { font-size: 15px; letter-spacing:-1px; }
+.calc-key-blank {
+  border: none; background: none; box-shadow: none; cursor: default;
+}
+/* スマホでは キーを 小さめに して、いちばん下の れつが
+   右下の うかんでいる メニューボタンに かぶらないように する */
+@media (max-width: 640px) {
+  .calc-pad { gap:5px; max-width:300px; }
+  .calc-key { font-size:19px; padding:9px 0; }
+  .calc-key-del { font-size:14px; }
+  .calc-key-op { font-size:17px; }
+  .calc-key[data-key="あまり"] { font-size:13px; }
+  /* テンキーの みぎ下の キーと かさなるので、こたえを うっている あいだは
+     うかんでいる メニューボタンを ひっこめる */
+  /* テンキーの キーに かぶるので、うかんでいる ボタンは しまっておく */
+  body.calc-pad-open .menu-button,
+  body.calc-pad-open .mute-button { display:none; }
+}
 
 /* ===== おたすけ（アシスト）ビジュアル：まるの絵で もんだいを かしか ===== */
 .assist-visual { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px; margin:4px 0 10px; }
@@ -712,6 +1618,42 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   padding: 10px 24px;
 }
 .ime-warn { color:var(--bad); font-size:12px; margin-top:8px; min-height:18px; font-weight:700; }
+/* こたえの けっか（せいかい！／ちがう…）は ウィンドウの 手前に かさねて 出す。
+   ウィンドウの 中に いれると 文字の ぶんだけ 高さが かわって、ウィンドウが ずれてしまうため */
+.result-overlay-layer {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* ATBゲージに かぶらないよう、まんなかより すこし うえに 出す */
+  padding-bottom: 20vh;
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: 200;
+}
+.result-overlay-layer .result-text {
+  min-height: 0;
+  margin: 0;
+  width: auto;
+  max-width: 92vw;
+  display: block;
+  font-weight: 900;
+  letter-spacing: 3px;
+  line-height: 1.2;
+  /* ぼかしの ひかりだと よみにくいので、黒の 8ほうこう フチどりで くっきり見せる */
+  text-shadow:
+    -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000,
+     0 -3px 0 #000,  0 3px 0 #000, -3px 0 0 #000, 3px 0 0 #000,
+     0 4px 8px rgba(0,0,0,0.85);
+}
+.result-overlay-layer .result-text.good { font-size: clamp(44px, 6.5vw, 88px); }
+.result-overlay-layer .result-text.bad { font-size: clamp(20px, 2.8vw, 34px); }
+.result-overlay-layer .result-text.success-pop {
+  margin: 0;
+  min-height: 0;
+  opacity: 1;
+}
 .result-text {
   min-height:20px;
   margin-top:6px;
@@ -837,6 +1779,10 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 .cost-block.filled { background: var(--accent); box-shadow: 2px 2px 0 rgba(0,0,0,0.35), 0 0 6px rgba(255,207,77,0.6); }
 .tag.cost-tag { color:var(--accent); border-color:rgba(255,207,77,0.4); }
 .tag.cost-tag-over { color:var(--bad); border-color:rgba(255,92,92,0.5); }
+/* そうびの おもさ（つよい そうびは すばやさが さがる） */
+.tag.weight-tag { color:#c9a6ff; border-color:rgba(201,166,255,0.45); }
+/* おもさで マイナスに なった すばやさの バー */
+.stat-bar-fill.equip-stat-minus { background: var(--bad); }
 .inventory-list { display:flex; flex-direction:column; gap:8px; max-height:350px; overflow-y:auto; padding-right:6px; }
 /* scrollbar styles */
 .inventory-list::-webkit-scrollbar { width: 6px; }
@@ -991,19 +1937,68 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   position: absolute;
   left: 14px;
   bottom: 14px;
-  z-index: 20;
+  z-index: 50;
   display: flex;
-  align-items: stretch;
+  align-items: flex-end;
   gap: 8px;
   max-width: 90%;
 }
 .town-status-overlay {
-  width: 240px;
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  width: 220px;
   max-width: 100%;
   font-size: 11px;
   padding: 8px 10px;
   flex: 0 0 auto;
+  transition: all 0.25s ease;
+  background: var(--panel-bg);
 }
+
+.status-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.btn-status-toggle {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  color: var(--accent);
+  font-size: 10px;
+  padding: 2px 6px;
+  cursor: pointer;
+  line-height: 1;
+  font-family: var(--pixel-font);
+  transition: all 0.15s ease;
+}
+
+.btn-status-toggle:hover {
+  background: rgba(255, 255, 255, 0.28);
+  color: #fff;
+  transform: scale(1.1);
+}
+
+/* 最小化（折りたたみ）時のスタイル */
+.town-status-overlay.minimized {
+  width: auto;
+  min-width: 140px;
+  padding: 6px 10px;
+}
+
+.town-status-overlay.minimized .stat-bar-wrap,
+.town-status-overlay.minimized .gold-badge {
+  display: none !important;
+}
+
+.town-status-overlay.minimized .status-header-row {
+  margin-bottom: 0;
+}
+
 .town-status-overlay .status-line { font-size: 12px; margin-bottom: 2px; }
 .town-status-overlay .stat-bar-wrap { margin: 3px 0; gap: 5px; }
 .town-status-overlay .stat-label { font-size: 10px; width: 18px; }
@@ -1152,6 +2147,85 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 }
 .stage-card-locked:hover { transform:none; }
 
+/* ===== きょうかタブ（さんすう / こくご を わけて ひょうじ） ===== */
+:root {
+  --subject-math: #6ea8ff;   /* さんすう＝あお */
+  --subject-kanji: #ff8fa3;  /* こくご＝ももいろ */
+}
+.subject-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 16px 0 14px;
+}
+.subject-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 6px 8px;
+  font-family: var(--pixel-font);
+  color: var(--text-light);
+  background: rgba(20, 16, 34, 0.75);
+  border: 3px solid var(--panel-border-dark);
+  border-radius: var(--border-radius);
+  box-shadow: 0 3px 0 rgba(0,0,0,0.45);
+  cursor: pointer;
+  transition: none;
+}
+/* えらんでいない ほうも「おせるボタン」だと わかるよう きょうかの いろで ふちどる */
+.subject-tab-math  { border-color: var(--subject-math);  color: var(--subject-math); }
+.subject-tab-kanji { border-color: var(--subject-kanji); color: var(--subject-kanji); }
+.subject-tab-icon { font-size: 24px; line-height: 1; }
+.subject-tab-label { font-size: 17px; font-weight: 700; }
+.subject-tab-sub { font-size: 11px; color: var(--text-light); }
+.subject-tab:hover { transform: translate(1px,1px); box-shadow: 0 1px 0 rgba(0,0,0,0.45); }
+.subject-tab-math.is-active {
+  color: #14101f;
+  background: var(--subject-math);
+  border-color: var(--panel-border);
+  box-shadow: 0 0 0 3px var(--panel-border-dark), 0 3px 0 rgba(0,0,0,0.45);
+}
+.subject-tab-kanji.is-active {
+  color: #14101f;
+  background: var(--subject-kanji);
+  border-color: var(--panel-border);
+  box-shadow: 0 0 0 3px var(--panel-border-dark), 0 3px 0 rgba(0,0,0,0.45);
+}
+.subject-tab.is-active .subject-tab-sub { color: rgba(20,16,31,0.75); }
+/* スマホでは 右上の とけいと かさならないよう タブを すこし したへ */
+@media (max-width: 640px) {
+  .subject-tabs { margin-top: 46px; }
+}
+
+/* エリアの まとまり（タブで きりかえ） */
+.stage-group { display: none; }
+.stage-group.is-active { display: block; }
+.stage-group-note {
+  font-family: var(--pixel-font);
+  font-size: 12px;
+  color: var(--text-light);
+  text-align: center;
+  margin-bottom: 4px;
+}
+/* きょうかごとに カードの ふちの いろを かえて ひとめで わかるように */
+.stage-group-math .stage-card  { border-color: var(--subject-math); }
+.stage-group-kanji .stage-card { border-color: var(--subject-kanji); }
+.stage-card-badge {
+  position: absolute;
+  top: 10px; left: 12px;
+  z-index: 1;
+  font-family: var(--pixel-font);
+  font-size: 12px;
+  font-weight: 700;
+  color: #14101f;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 2px solid var(--panel-border-dark);
+}
+.stage-group-math .stage-card-badge  { background: var(--subject-math); }
+.stage-group-kanji .stage-card-badge { background: var(--subject-kanji); }
+
 /* ===== 新ステージ選択（全画面エリア背景 + うえから したへ ならぶ ステージリスト） ===== */
 .stage-vertical-list {
   position: absolute;
@@ -1173,6 +2247,48 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   font-size: 14px;
   margin-bottom: 4px;
 }
+/* ステージの 行＋よこの 🖨️（れんしゅうプリント）ボタン */
+.stage-select-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+.stage-select-line .stage-select-row {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+.stage-print-btn {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--panel-border);
+  background: rgba(20, 16, 34, 0.88);
+  color: var(--text);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.45);
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.stage-print-btn:hover, .stage-print-btn:focus {
+  background: var(--accent);
+  outline: none;
+  transform: scale(1.08);
+  box-shadow: 0 6px 18px rgba(255,207,77,0.45);
+}
+.stage-print-spacer { flex: 0 0 auto; width: 40px; }
+
+/* プリントメニュー（🖨️プリントする／🔑あんごうを いれる） */
+.stage-print-menu {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
 .stage-select-row {
   display: flex;
   align-items: center;
@@ -1527,16 +2643,21 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   position: fixed; inset: 0; width: 100vw; height: 100vh;
   background: rgba(20, 16, 6, 0.7);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 18px;
+  gap: 14px;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow: hidden;
   z-index: 10500;
   animation: levelup-overlay-in 0.25s ease-out;
 }
+/* タイトルは オーバーレイの ながれの なかに おく。
+   position:fixed で 「top:200px に おちてくる」ように して いたが、
+   ごほうびの まどが 大きく なると そこに かぶるので、
+   たてならびの 1つめの ぶひんに して かならず まどの うえに くるようにした */
 .stage-clear-flow-overlay {
-  position: fixed;
-  top: -200px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: clamp(44px, 11vw, 100px);
+  flex: 0 0 auto;
+  max-width: 92vw;
+  font-size: clamp(30px, 7vw, 76px);
   font-weight: 900;
   color: #FFD23F;
   text-shadow:
@@ -1546,15 +2667,18 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
     4px 4px 0 rgba(0,0,0,0.6),
     0 0 30px rgba(255,210,63,0.8),
     0 0 50px rgba(255,210,63,0.4);
-  animation: gameover-fall 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-  z-index: 10501;
+  animation: stage-clear-title-drop 0.75s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
   text-align: center;
-  line-height: 1;
+  line-height: 1.1;
   pointer-events: none;
-  letter-spacing: 6px;
-  white-space: nowrap;
+  letter-spacing: 4px;
 }
-.stage-clear-panel { width: min(440px, 90vw); text-align: center; animation: levelup-panel-in 0.4s 0.15s cubic-bezier(0.34,1.56,0.64,1) both; }
+@keyframes stage-clear-title-drop {
+  0%   { opacity: 0; transform: translateY(-160px) scale(0.8); }
+  55%  { opacity: 1; transform: translateY(0) scale(1.08); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.stage-clear-panel { width: min(520px, 92vw); max-height: calc(100vh - 150px); overflow-y: auto; text-align: center; animation: levelup-panel-in 0.4s 0.15s cubic-bezier(0.34,1.56,0.64,1) both; }
 .stage-clear-actions { display: flex; gap: 10px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
 .stage-clear-actions .btn { width: auto; padding: 10px 16px; }
 .stage-clear-rewards {
@@ -1569,6 +2693,190 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 .stage-clear-rewards-items { display: flex; flex-direction: column; gap: 4px; max-height: 140px; overflow-y: auto; }
 .stage-clear-reward-row { display: flex; align-items: center; gap: 6px; font-size: 12px; }
 .drop-reward-row { display: flex; align-items: center; gap: 6px; }
+
+/* ===== あんごうを うつ キーボード（しゅぎょう画面） ===== */
+.stage-print-group { margin-bottom: 14px; }
+.stage-print-group + .stage-print-group { border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 12px; }
+.stage-print-group-title { font-size: 13px; color: var(--accent); margin-bottom: 6px; }
+.stage-print-group-title .flavor { font-size: 11px; margin-left: 6px; }
+
+.code-back-btn { width: auto; margin: 8px auto 0; padding: 6px 14px; font-size: 12px; display: block; }
+.code-pad { margin: 10px auto 0; }
+/* 五十音は バトルと おなじ ならび（たて＝あいうえお）。
+   1画面に おさめる ため、だくおんの ひょうは よこに ならべる */
+.code-pad-kana {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 100%;
+}
+.code-pad-kana .kana-grid {
+  flex: none;
+  grid-template-rows: repeat(5, 34px);
+  gap: 4px;
+  margin: 0;
+}
+.code-pad-kana .kana-grid:first-child { grid-template-columns: repeat(10, 34px); }
+.code-pad-kana .kana-grid:last-child  { grid-template-columns: repeat(6, 34px); }
+.code-pad-kanji {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 520px;
+}
+.code-pad-kanji .key-btn { width: 44px; height: 44px; font-size: 22px; }
+.code-pad .key-btn { font-size: 16px; }
+
+/* キーボードを だしている あいだは カカシの 絵を しまう（1画面に おさめる ため） */
+#screen-training:has(.code-pad) .training-dummy-wrap { display: none; }
+/* どんな 画面でも 「けってい」に とどくように、パネルは スクロールできる */
+#screen-training .panel { max-height: calc(100vh - 24px); overflow-y: auto; }
+
+@media (max-width: 700px) {
+  .code-pad-kana { flex-direction: column; align-items: center; width: 100%; }
+  .code-pad-kana .kana-grid { grid-template-rows: repeat(5, 30px); gap: 3px; }
+  .code-pad-kana .kana-grid:first-child { grid-template-columns: repeat(10, minmax(0, 1fr)); width: 100%; }
+  .code-pad-kana .kana-grid:last-child  { grid-template-columns: repeat(6, minmax(0, 1fr)); width: 62%; margin-top: 6px; }
+  .code-pad .key-btn { font-size: 13px; }
+  .code-pad-kanji .key-btn { width: 38px; height: 38px; font-size: 19px; }
+}
+
+/* ===== ごほうびの みせかた（大きく・うれしく） ===== */
+.reward-showcase { margin: 14px 0 6px; }
+.reward-headline { color: var(--accent); margin-bottom: 10px; font-size: 13px; text-align: center; }
+.reward-big-row {
+  display: flex;
+  justify-content: center;
+  gap: clamp(14px, 5vw, 34px);
+  flex-wrap: wrap;
+}
+.reward-big {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 118px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 2px solid rgba(255, 255, 255, 0.18);
+}
+.reward-big-icon { font-size: clamp(20px, 4vw, 26px); line-height: 1; }
+.reward-big-num {
+  font-family: var(--pixel-font);
+  font-size: clamp(34px, 8vw, 54px);
+  font-weight: 900;
+  line-height: 1.05;
+  color: #FFD23F;
+  text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000,
+               0 0 18px rgba(255, 210, 63, 0.75);
+  transition: transform 0.12s;
+}
+.reward-big-exp .reward-big-num { color: #9dff8a; text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0 0 18px rgba(157,255,138,0.7); }
+.reward-big-label { font-size: 12px; color: var(--text); opacity: 0.9; }
+.reward-num-done { animation: reward-num-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes reward-num-pop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+.reward-items {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 14px;
+  /* ポンと でる ときに 1.18ばい に なるので、きられないよう はみ出しは ゆるす */
+  padding: 6px 2px;
+  overflow: visible;
+}
+.reward-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  width: 104px;
+  min-height: 96px;
+  padding: 8px 4px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  opacity: 0;
+  transform: scale(0.4) translateY(10px);
+}
+.reward-item-in { animation: reward-item-pop 0.44s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+@keyframes reward-item-pop {
+  0%   { opacity: 0; transform: scale(0.4) translateY(10px); }
+  60%  { opacity: 1; transform: scale(1.18) translateY(0); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.reward-item-icon { font-size: 34px; line-height: 1; }
+.reward-item-icon img { width: 44px; height: 44px; image-rendering: pixelated; }
+.reward-item-name { font-size: 10px; line-height: 1.25; text-align: center; word-break: break-word; }
+
+/* キラキラ（すうじが かぞえおわった しゅんかんに とぶ） */
+.reward-spark-layer { position: fixed; inset: 0; pointer-events: none; z-index: 10600; overflow: hidden; }
+.reward-spark {
+  position: absolute;
+  width: 8px; height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: #FFD23F;
+  box-shadow: 0 0 8px rgba(255, 210, 63, 0.9);
+  animation: reward-spark-fly 0.7s ease-out forwards;
+}
+@keyframes reward-spark-fly {
+  0%   { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.2); }
+}
+
+/* かみふぶき */
+.reward-confetti {
+  position: absolute;
+  top: -20px;
+  width: 9px; height: 14px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 10502;
+  animation: reward-confetti-fall linear forwards;
+}
+@keyframes reward-confetti-fall {
+  0%   { opacity: 0; transform: translateY(0) rotate(0deg); }
+  10%  { opacity: 1; }
+  100% { opacity: 0.9; transform: translateY(105vh) rotate(var(--spin)); }
+}
+
+/* うごきを へらす せっていの ひとには えんしゅつを ひかえめに */
+@media (prefers-reduced-motion: reduce) {
+  .reward-confetti, .reward-spark { display: none; }
+  .reward-item { opacity: 1; transform: none; }
+}
+
+/* うかんでいる ☰／🔊 は ごほうびの まどに かぶるので、あいだ だけ しまう
+   （とけいは 保護者むけの じかん表示なので だしたまま。そのぶん 下の
+     メディアクエリで ごほうびの まどを とけいの したから ならべる） */
+body:has(.stage-clear-overlay) .menu-button,
+body:has(.stage-clear-overlay) .mute-button,
+body:has(.stage-clear-overlay) .volume-control-container { display: none; }
+
+/* せまい画面：とけい（たかさ120pxまで）の したから ならべ、
+   ごほうびの ふだも 小さくして スクロールなしで おさまるように する */
+@media (max-width: 480px) {
+  .stage-clear-overlay { justify-content: flex-start; padding-top: 126px; }
+  .stage-clear-flow-overlay { font-size: clamp(26px, 7vw, 44px); letter-spacing: 2px; }
+  .stage-clear-panel { max-height: calc(100vh - 200px); padding: 12px; }
+  .reward-showcase { margin: 10px 0 4px; }
+  .reward-big { min-width: 92px; padding: 6px 10px; }
+  .reward-big-num { font-size: clamp(30px, 9vw, 44px); }
+  .reward-items { gap: 8px; margin-top: 10px; }
+  .reward-item { width: 78px; min-height: 82px; padding: 6px 3px; }
+  .reward-item-icon img { width: 34px; height: 34px; }
+  .reward-item-name { font-size: 9px; }
+}
 
 /* ===== レベルアップ演出 ===== */
 .levelup-overlay {
@@ -1800,9 +3108,7 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 
 /* しゅぎょう画面：修行場の背景＋カカシ（攻撃用ダミー） */
 #screen-training {
-  background:
-    radial-gradient(circle at 82% 10%, rgba(255,247,210,0.95) 0%, rgba(255,247,210,0.5) 7%, transparent 8%),
-    linear-gradient(to bottom, #7ec8e3 0%, #bfe3ef 30%, #cfe9c4 46%, #9bc97c 62%, #6e9c52 100%);
+  background: url('./画像/bg_training.jpg') center/cover no-repeat;
 }
 #screen-training.active {
   display: flex;
@@ -1845,12 +3151,21 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 .training-dummy-wrap.hit .training-hit-burst {
   animation: dummy-hit-burst 0.5s ease-out;
 }
+.training-canvas {
+  position: absolute;
+  top: -40px;
+  left: -50px;
+  width: calc(100% + 100px);
+  height: calc(100% + 80px);
+  pointer-events: none;
+  z-index: 10;
+}
 @keyframes dummy-hit {
-  0%   { transform: rotate(0deg) scale(1); filter: drop-shadow(0 6px 8px rgba(0,0,0,0.35)) brightness(1); }
-  20%  { transform: rotate(-8deg) scale(1.05); filter: drop-shadow(0 6px 8px rgba(0,0,0,0.35)) brightness(1.9); }
+  0%   { transform: rotate(0deg) scale(1); }
+  20%  { transform: rotate(-8deg) scale(1.06); filter: drop-shadow(0 0 12px rgba(255, 200, 50, 0.8)); }
   45%  { transform: rotate(7deg) scale(1.03); }
   70%  { transform: rotate(-4deg) scale(1.01); }
-  100% { transform: rotate(0deg) scale(1); filter: drop-shadow(0 6px 8px rgba(0,0,0,0.35)) brightness(1); }
+  100% { transform: rotate(0deg) scale(1); filter: drop-shadow(0 6px 8px rgba(0,0,0,0.4)); }
 }
 @keyframes dummy-hit-burst {
   0%   { opacity:0; transform: translate(-50%, -50%) scale(0.4); }
@@ -1914,3 +3229,755 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   flex-direction: column;
 }
 .modal-panel h3 { margin-top: 0; margin-bottom: 15px; }
+
+#screen-battle #battle-sub-menu {
+  position: relative;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  width: min(560px, 92vw);
+  max-width: 560px;
+  margin: 10px auto 0;
+  z-index: 50;
+  text-align: center;
+  background: rgba(22, 18, 34, 0.95);
+  backdrop-filter: blur(10px);
+  border: 3px solid var(--panel-border);
+  border-radius: 14px;
+  padding: 14px 18px;
+  box-sizing: border-box;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.75);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#screen-battle #battle-sub-menu.hidden {
+  display: none !important;
+}
+
+
+.battle-inline-commands {
+  position: absolute;
+  left: 16px;
+  bottom: 20px;
+  background: var(--panel-bg);
+  border: 3px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: var(--shadow);
+  z-index: 60;
+}
+
+/* ===== 学習成績・成長グラフ スタイル ===== */
+.study-stats-modal-panel {
+  max-width: 780px !important;
+  width: 95% !important;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+.study-stats-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.study-stats-header h2 {
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.study-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.study-summary-card {
+  background: rgba(16, 12, 28, 0.85);
+  border: 2px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  text-align: center;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);
+}
+
+.study-card-label {
+  font-size: 11px;
+  color: var(--text-light);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.study-card-val-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+}
+
+.study-card-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.1;
+}
+
+.study-card-value.highlight-up {
+  color: #55efc4;
+  text-shadow: 0 0 10px rgba(85, 239, 196, 0.5);
+}
+
+.study-card-unit {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.study-chart-section {
+  background: rgba(16, 12, 28, 0.7);
+  border: 2px solid var(--panel-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 14px;
+}
+
+.study-section-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.btn-filter {
+  font-size: 11px !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: var(--text-light) !important;
+  border: 1px solid var(--panel-border) !important;
+  cursor: pointer;
+}
+
+.btn-filter.is-active {
+  background: var(--accent) !important;
+  color: #1a1626 !important;
+  font-weight: 700 !important;
+}
+
+.study-chart-container {
+  width: 100%;
+  overflow-x: auto;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.study-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+/* 詳細データテーブル */
+.study-table-wrap {
+  max-height: 280px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+}
+
+.study-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+}
+
+.study-data-table th {
+  background: rgba(30, 24, 48, 0.95);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 8px 10px;
+  color: var(--accent);
+  border-bottom: 2px solid var(--panel-border);
+  font-size: 11px;
+}
+
+.study-data-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(239, 227, 192, 0.15);
+  color: var(--text);
+}
+
+.study-data-table tr:hover td {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.badge-growth {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.badge-growth.up {
+  background: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+  border: 1px solid #2ecc71;
+}
+
+.badge-growth.steady {
+  background: rgba(241, 196, 15, 0.2);
+  color: #f1c40f;
+  border: 1px solid #f1c40f;
+}
+
+.badge-growth.need-practice {
+  background: rgba(231, 76, 60, 0.2);
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+}
+
+.title-demon-castle-hotspot {
+  position: absolute !important;
+  right: 13% !important;
+  top: 15% !important;
+  width: 22vw !important;
+  max-width: 250px;
+  height: 25vh !important;
+  max-height: 200px;
+  cursor: pointer !important;
+  z-index: 100 !important;
+  pointer-events: auto !important;
+  background: transparent !important;
+  touch-action: manipulation;
+  border-radius: 20%;
+  transition: all 0.3s ease;
+}
+
+.title-demon-castle-hotspot:hover {
+  background: radial-gradient(circle, rgba(168,85,247,0.4) 0%, rgba(224,86,253,0) 70%) !important;
+  box-shadow: 0 0 30px rgba(168,85,247,0.6);
+  transform: scale(1.05);
+}
+
+/* 魔王城モーダル */
+#modal-demon-castle-secret {
+  position: fixed !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 10000 !important;
+  background: rgba(0, 0, 0, 0.72) !important;
+}
+
+#modal-demon-castle-secret.hidden {
+  display: none !important;
+}
+
+.demon-castle-modal-panel {
+  max-width: 520px !important;
+  width: 92% !important;
+  background: linear-gradient(180deg, rgba(35, 18, 55, 0.96) 0%, rgba(18, 12, 32, 0.98) 100%) !important;
+  border: 3px solid #a29bfe !important;
+  box-shadow: 0 0 35px rgba(168, 85, 247, 0.6) !important;
+  margin: auto !important;
+  animation: panelPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.demon-modal-header {
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.demon-castle-badge {
+  display: inline-block;
+  background: rgba(142, 68, 173, 0.4);
+  color: #e056fd;
+  border: 1px solid #e056fd;
+  border-radius: 20px;
+  padding: 3px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.demon-reward-preview {
+  background: rgba(0, 0, 0, 0.45);
+  border: 2px solid rgba(162, 155, 254, 0.4);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+
+.reward-title {
+  font-size: 12px;
+  color: #ffd166;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.reward-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.reward-badge {
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: #f1f2f6;
+}
+
+.reward-badge.highlight {
+  background: rgba(224, 86, 253, 0.2);
+  border-color: #e056fd;
+  color: #e056fd;
+  font-weight: 700;
+}
+
+
+/* ==========================================================
+   バトル画面の かさなり しゅうせい
+   これまで ステージ名・ステータス・ATBゲージ・とくぎ／どうぐ・ログ・
+   ☰／🔊ボタンが たがいに かさなって いた。
+   かんがえかた：
+   ・ひだり上の「ステージ名」と「ステータス」は 1本の たて列に して、
+     ぜったいに かさならない ようにする（top:66px の きめうちを やめる）
+   ・はばが たりない ときは ATBゲージを その よこに にがす
+   ・スマホ（たて）では ひだり列を「うかせる」のを やめて、
+     ふつうに 上から ならべる（うかせる よゆうが ないため）
+   ・とくぎ／どうぐ は もんだいの 上に かさねず、下に よこならび
+   ・ログと ☰／🔊 は もんだいウィンドウの そとに だす
+   ========================================================== */
+
+/* --- ひだり上：ステージ名 → ステータス の たて1列 -------------------- */
+#screen-battle .battle-top {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  width: auto;
+  max-width: 230px;
+  padding: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 8px;
+  z-index: 99999;
+}
+#screen-battle .battle-top > .floor-window,
+#screen-battle .battle-top > .status-window {
+  position: static;
+  top: auto;
+  left: auto;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* --- ATBゲージ：ひだりの列の 下に もぐらない ように よこへ にがす ---- */
+/* まんなかぞろえの 540px が ひだり列（16+230+12＝258px）と かさなり
+   はじめるのは 1056px から。それより せまい ときは 左よせに きりかえる */
+@media (max-width: 1060px) {
+  #screen-battle .battle-atb-compare {
+    width: auto !important;
+    max-width: 540px !important;
+    margin-left: 258px !important;
+    margin-right: 12px !important;
+  }
+}
+@media (max-width: 900px) {
+  #screen-battle .battle-top { max-width: 190px; }
+  #screen-battle .battle-atb-compare { margin-left: 214px !important; }
+}
+
+/* --- 算数の問題ウィンドウ（ATBゲージ直下に配置） --- */
+#screen-battle #calc-problem-center {
+  display: block;
+}
+#screen-battle #calc-problem-center.hidden {
+  display: none !important;
+}
+
+/* --- とくぎ／どうぐ：もんだいの 上に かさねず、下に よこならび -------- */
+#screen-battle .challenge-body {
+  display: flex;
+  flex-direction: column;
+}
+#screen-battle .challenge-body > .challenge-main { order: 1; }
+#screen-battle .challenge-body > .battle-inline-commands {
+  order: 2;
+  position: static;
+  left: auto;
+  bottom: auto;
+  flex-direction: row;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+#screen-battle .battle-inline-commands .btn {
+  width: auto;
+  min-width: 96px;
+  margin: 0;
+}
+
+/* --- せまい画面：うかせるのを やめて、ぜんぶ 上から ならべる ---------- */
+/* うかせた ままだと 画面はばの はんぶんを ふさいで、てき も ATBゲージも
+   その 下に かくれて しまう。せまい画面では
+   「ステージ名 → ステータス → てき → ATB → ログ → もんだい」を
+   ふつうの たてならびに して、あまった たかさを てきの エリアに あげる。
+   きめうちの すうじ（top:66px / bottom:88px など）を つかわないので、
+   もんだいウィンドウが 何行に なっても かさならない。 */
+@media (max-width: 820px) {
+  #screen-battle .battle-top {
+    position: static;
+    max-width: none;
+    width: 100%;
+    padding: 8px 116px 0 8px;   /* みぎは 時計の ぶん あける */
+    box-sizing: border-box;
+    gap: 6px;
+    z-index: auto;
+    flex: 0 0 auto;
+  }
+  #screen-battle .battle-atb-compare {
+    margin-left: 8px !important;
+    margin-right: 8px !important;
+    width: auto !important;
+    flex: 0 0 auto;
+  }
+  /* ステータスは たてに ながいので、HP／MP／けいけんちを よこならびに */
+  #screen-battle .battle-top > .status-window {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 12px;
+  }
+  #screen-battle .battle-top > .status-window > .status-line { width: 100%; margin-bottom: 0; }
+  /* HP・MP を よこならびに して たかさを かせぐ（けいけんちは その下） */
+  #screen-battle .battle-top > .status-window > .stat-bar-wrap {
+    flex: 1 1 calc(50% - 8px);
+    min-width: 0;
+    flex-wrap: nowrap;
+    margin: 2px 0;
+  }
+  #screen-battle .battle-top > .status-window > .stat-bar-wrap > .stat-bar { flex: 1 1 auto; min-width: 0; }
+  /* ステージ名は 小さめに（3行に なっても たかく なりすぎない ように） */
+  #screen-battle .battle-top > .floor-window {
+    font-size: 11px;
+    line-height: 1.2;
+    padding: 4px 8px;
+  }
+
+  /* もんだいウィンドウ・ログを「うかせる」のを やめて ながれの 中に もどす */
+  #screen-battle:has(#battle-challenge:not(.hidden)) #battle-challenge {
+    position: static;
+    width: auto;
+    height: auto;
+    max-height: 52vh;
+    overflow-y: auto;
+    margin: 0 8px 8px;
+    /* たかさが たりない ときは ここが ちぢむ（画面の 下に はみださない ための ほけん） */
+    flex: 0 1 auto;
+    min-height: 0;
+    order: 2;                  /* HTMLでは ログより 先に あるので ならびを いれかえる */
+  }
+  #screen-battle:has(#battle-challenge:not(.hidden)) #battle-log {
+    position: static;
+    width: auto;
+    margin: 0 8px;
+    flex: 0 0 auto;
+    min-height: 0;
+    max-height: 54px;
+    order: 1;                  /* もんだいウィンドウの すぐ うえ */
+    /* せなかが 草原だと 字が よめないので、うすい 下じきを しく */
+    background: rgba(22, 18, 34, 0.55);
+    backdrop-filter: blur(1px);
+    border-radius: 10px;
+    padding: 6px 10px;
+    box-sizing: border-box;
+  }
+  /* あまった たかさは ぜんぶ てきの エリアへ（ここだけが ちぢむ／のびる） */
+  /* flex-basis を 0 に するのが かなめ。auto のままだと てきエリアが
+     じぶんの 大きさを さきに とって、もんだいウィンドウの ほうが つぶれる。
+     0 に すると 「ほかを おいた あまり」だけを もらう */
+  #screen-battle:has(#battle-challenge:not(.hidden)) .battle-field {
+    flex: 1 1 0%;
+    height: auto;
+    min-height: 100px;
+  }
+
+  /* もんだいウィンドウの たかさを かせぐ：
+     ・「こたえ」の 入力らんと「けってい」を よこならびに（1行ぶん せつやく）
+     ・あいさつ文（プロンプト）は 1行に おさまる 大きさに */
+  #screen-battle .challenge-body form {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+  #screen-battle .challenge-body .challenge-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+  }
+  #screen-battle .challenge-body .challenge-submit-btn {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 104px;
+    margin: 0;
+  }
+  #screen-battle .challenge-body .challenge-prompt {
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+  #screen-battle .challenge-body .assist-visual { margin: 2px 0 6px; }
+
+  /* ☰／🔊 は 時計の したに たてならび（下は もんだいウィンドウで うまるため） */
+  body:has(#screen-battle.active) .menu-container {
+    top: 130px; bottom: auto; right: 12px;
+  }
+  body:has(#screen-battle.active) .volume-control-container {
+    top: 186px; bottom: auto; right: 12px;
+  }
+  body:has(#screen-battle.active) .menu-button,
+  body:has(#screen-battle.active) .mute-button {
+    width: 48px; height: 48px; font-size: 24px;
+  }
+}
+
+/* こたえの けっか（せいかい！／ざんねん…）は、なにも でていない ときは
+   ばしょを とらない。からのままだと もんだいウィンドウが 1行ぶん たかくなる */
+#ch-result:empty { display: none; }
+
+/* --- たかさが たりない 画面（よこながの まど・スマホよこ）------------- */
+/* たてに ならべる だけでは もんだいウィンドウが 入りきらないので、
+   ステージ名と ステータスを よこならびに して 上の だんを ひくくする */
+@media (max-width: 820px) and (max-height: 700px) {
+  #screen-battle .battle-top {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  #screen-battle .battle-top > .floor-window {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+  }
+  #screen-battle .battle-top > .status-window {
+    flex: 0 1 250px;
+    width: auto;
+  }
+  #screen-battle:has(#battle-challenge:not(.hidden)) .battle-field { min-height: 70px; }
+  #screen-battle:has(#battle-challenge:not(.hidden)) #battle-log { max-height: 34px; }
+  #screen-battle:has(#battle-challenge:not(.hidden)) .battle-atb-compare { padding: 4px 12px; gap: 3px; }
+  #screen-battle:has(#battle-challenge:not(.hidden)) #battle-challenge { padding: 6px 12px; }
+  #screen-battle .challenge-body .challenge-problem { font-size: 22px; margin-bottom: 4px; }
+}
+
+/* ==========================================================
+   iPad / タブレット向け 画面向き制御（横向き推奨オーバーレイ）
+   ========================================================== */
+#orientation-guard {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, #1c1530 0%, #0c0915 100%);
+  z-index: 99999999;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  text-align: center;
+  padding: 30px;
+  box-sizing: border-box;
+}
+
+#orientation-guard .guard-content {
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+#orientation-guard .rotate-icon {
+  font-size: 64px;
+  animation: rotateDevice 2s infinite ease-in-out;
+}
+
+#orientation-guard h2 {
+  font-size: 24px;
+  color: var(--gold, #ffd700);
+  margin: 0;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
+
+#orientation-guard p {
+  font-size: 15px;
+  color: #ccc;
+  line-height: 1.6;
+  margin: 0;
+}
+
+@keyframes rotateDevice {
+  0% { transform: rotate(0deg); }
+  30% { transform: rotate(-90deg); }
+  70% { transform: rotate(-90deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* 縦向き（portrait）のときに表示 */
+@media screen and (orientation: portrait) {
+  #orientation-guard {
+    display: flex !important;
+  }
+}
+
+/* ==========================================================
+   バーチャルコントローラー (D-Pad & アクションボタン)
+   ========================================================== */
+.virtual-controller {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9000;
+  transition: opacity 0.3s ease;
+}
+
+.virtual-controller.vcontroller-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.virtual-controller * {
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* 十字キー (左下) */
+.vpad-container {
+  position: fixed;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  left: calc(20px + env(safe-area-inset-left));
+  width: 140px;
+  height: 140px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: 4px;
+  background: rgba(15, 12, 28, 0.45);
+  padding: 6px;
+  border-radius: 50%;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+}
+
+.vpad-btn {
+  background: rgba(45, 38, 70, 0.8);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  touch-action: none;
+  transition: background 0.1s, transform 0.1s;
+}
+
+.vpad-btn.active, .vpad-btn:active {
+  background: rgba(255, 215, 0, 0.6);
+  color: #000000;
+  transform: scale(0.92);
+  border-color: #ffd700;
+}
+
+.vpad-up { grid-column: 2; grid-row: 1; border-radius: 12px 12px 4px 4px; }
+.vpad-left { grid-column: 1; grid-row: 2; border-radius: 12px 4px 4px 12px; }
+.vpad-center { grid-column: 2; grid-row: 2; background: rgba(30, 25, 50, 0.5); border-radius: 4px; }
+.vpad-right { grid-column: 3; grid-row: 2; border-radius: 4px 12px 12px 4px; }
+.vpad-down { grid-column: 2; grid-row: 3; border-radius: 4px 4px 12px 12px; }
+
+/* アクションボタン (右下) */
+.vaction-container {
+  position: fixed;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  right: calc(24px + env(safe-area-inset-right));
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.vaction-btn {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  touch-action: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  transition: transform 0.1s, filter 0.1s;
+}
+
+.vaction-a {
+  background: radial-gradient(circle at 30% 30%, #ff5252, #b71c1c);
+  color: #ffffff;
+  border: 2px solid #ff8a80;
+  margin-bottom: 24px; /* Aボタンを少し高めに配置 */
+}
+
+.vaction-b {
+  background: radial-gradient(circle at 30% 30%, #448aff, #1565c0);
+  color: #ffffff;
+  border: 2px solid #82b1ff;
+}
+
+.vaction-btn.active, .vaction-btn:active {
+  transform: scale(0.9);
+  filter: brightness(1.3);
+}
+
+/* トグルボタン */
+.vcontroller-toggle {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top));
+  right: calc(60px + env(safe-area-inset-right));
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(30, 25, 50, 0.75);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 9001;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+

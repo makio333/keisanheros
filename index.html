@@ -2,15 +2,76 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>けいさんクエスト</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=65">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="レジェンドヒーローズ">
+<meta name="theme-color" content="#1a1626">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" type="image/png" href="./icon-192.png">
+<title>レジェンドヒーローズ 〜知恵を受け継ぎし勇者たち〜</title>
+<script>
+  // Service Worker登録（完全オフライン永続キャッシュ）
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('./sw.js').then(function(reg) {
+        console.log('[PWA] ServiceWorker registration successful with scope: ', reg.scope);
+      }, function(err) {
+        console.warn('[PWA] ServiceWorker registration failed: ', err);
+      });
+    });
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-<button id="btn-mute" class="mute-button" title="BGM/SE をミュート">🔊</button>
+<div id="debug-error-banner" style="display:none; position:fixed; top:0; left:0; width:100%; background:rgba(220,20,20,0.95); color:#fff; z-index:9999999999; padding:12px; font-size:14px; box-sizing:border-box; word-break:break-all;"></div>
+<!-- iPad / タブレット用 横向き誘導画面 -->
+<div id="orientation-guard">
+  <div class="guard-content">
+    <div class="rotate-icon">📱 ⤹</div>
+    <h2>がめんを よこむき に してね！</h2>
+    <p>このゲームは よこがめん（ランドスケープ）専用です。<br>iPad／端末を 横向きにして あそんでください。</p>
+  </div>
+</div>
+
+<!-- ゲーム起動時 ロード画面 ＆ スタート画面 -->
+<div id="boot-loader-screen" class="boot-loader-screen">
+  <div class="boot-loader-content">
+    <div class="boot-loader-logo-area">
+      <div class="boot-loader-title">⚔️ LEGEND HEROES ⚔️</div>
+      <div class="boot-loader-sub">〜知恵を受け継ぎし勇者たち〜</div>
+    </div>
+    
+    <!-- ロード中バー -->
+    <div id="boot-loading-bar-area" class="boot-loading-bar-area">
+      <div class="boot-loading-text">NOW LOADING... <span id="boot-load-percent">0%</span></div>
+      <div class="boot-progress-track">
+        <div id="boot-progress-fill" class="boot-progress-fill" style="width: 0%;"></div>
+      </div>
+    </div>
+
+    <!-- ロード完了後に出現するスタートボタン -->
+    <div id="boot-start-area" class="boot-start-area hidden">
+      <button id="btn-boot-start" class="btn btn-primary btn-boot-start">
+        ⚔️ ぼうけんを はじめる（START） ⚔️
+      </button>
+      <p class="boot-start-hint">※画面をタッチ／クリックしてスタート</p>
+    </div>
+  </div>
+</div>
+
+<!-- タイトル起動時 ホワイトフェードイン演出 -->
+<div id="title-white-fade" class="title-white-fade hidden"></div>
+<div id="volume-control-container" class="volume-control-container">
+  <div id="volume-slider-popup" class="volume-slider-popup">
+    <span class="volume-icon-indicator" id="volume-icon-indicator">🔊</span>
+    <input type="range" id="volume-slider" class="volume-slider" min="0" max="100" value="70" step="1" title="おんりょうを ちょうせつ">
+    <span id="volume-text" class="volume-text">70%</span>
+  </div>
+  <button id="btn-mute" class="mute-button" title="BGM/SE をミュート">🔊</button>
+</div>
 
 <div id="analog-clock-widget" class="analog-clock-widget">
   <svg id="analog-clock-svg" class="analog-clock-svg" viewBox="0 0 100 100">
@@ -39,7 +100,7 @@
   <div class="admin-password-panel">
     <div class="admin-password-icon">🔒</div>
     <h2>かんりしゃせってい</h2>
-    <p class="flavor">保護者の方は、きょうの日づけ４けたを にゅうりょくしてください。<br><small>（例：8月4日 → 0804）</small></p>
+    <p class="flavor">パスワードを入力してください。</p>
     <input type="password" id="admin-password-input" inputmode="numeric" pattern="[0-9]*" maxlength="4" class="challenge-input admin-password-input" placeholder="＊＊＊＊">
     <p id="admin-password-error" class="admin-password-error"></p>
     <div class="menu-grid" style="max-width:280px; margin:10px auto 0;">
@@ -63,14 +124,57 @@
 
     <!-- タイトル -->
     <section id="screen-title" class="screen active">
+      <!-- 隠し要素：背景の魔王城をクリックできる透明ホットスポット -->
+      <div id="title-demon-castle-hotspot" class="title-demon-castle-hotspot" title="魔王城"></div>
+
       <div class="panel title-panel">
-        <img src="画像/title_logo_transparent.jpg" alt="けいさんヒーローズ！ ～魔王と謎のダンジョン～" style="max-width: 80%; width: 500px; height: auto; margin-bottom: 20px; mix-blend-mode: screen; filter: drop-shadow(0 0 10px rgba(0,0,0,0.8));">
+        <div class="title-logo-wrapper" id="title-logo-wrapper">
+          <img src="./画像/title_logo_transparent.png" alt="レジェンドヒーローズ 〜知恵を受け継ぎし勇者たち〜" class="title-logo-img">
+          <div class="title-sparkle sparkle-top-right"></div>
+          <div class="title-sparkle sparkle-sword-tip"></div>
+          <div class="title-sparkle sparkle-top-left"></div>
+          <div class="title-sparkle sparkle-corner-z"></div>
+        </div>
         <div class="menu-grid" style="max-width:320px; margin:0 auto;">
           <button id="btn-continue" class="btn hidden">ぼうけんを つづける</button>
           <button id="btn-newgame" class="btn">あたらしく はじめる</button>
         </div>
         <button id="btn-goto-admin" class="btn btn-admin-title" style="max-width:320px; margin:14px auto 0;">⚙ かんりしゃせってい</button>
         <p class="hint">※にゅうりょくは すべて はんかく（ぜんかくは じどうへんかん）</p>
+      </div>
+
+      <!-- 魔王城の秘密プリント モーダル -->
+      <div id="modal-demon-castle-secret" class="modal-overlay hidden">
+        <div class="modal-panel demon-castle-modal-panel">
+          <div class="demon-modal-header">
+            <div class="demon-castle-badge">👑 禁断の魔王城</div>
+            <h2 style="color:#e056fd; text-shadow:0 0 12px rgba(224,86,253,0.7); margin:8px 0 4px;">＊秘密の魔王の力を手に入れる試練＊</h2>
+            <p class="flavor" style="color:#dff9fb; font-size:13px;">魔王城に眠る 秘密のプリント…！<br>紙に印刷して問題を解き、答えから作った【暗号】を入力すると、<strong>魔王の秘宝（超大量の経験値＆ゴールド＆限定装備）</strong>を手に入れられるぞ！</p>
+          </div>
+
+          <div class="demon-modal-content">
+            <div class="demon-reward-preview">
+              <div class="reward-title">🎁 解放される魔王の秘宝</div>
+              <div class="reward-items">
+                <span class="reward-badge">✨ 経験値 +1,000 EXP</span>
+                <span class="reward-badge">💰 ゴールド +10,000 G</span>
+                <span class="reward-badge highlight">⚔️ 秘宝：魔王の覇剣（限定装備）</span>
+              </div>
+            </div>
+
+            <div class="stage-print-menu" style="display:flex; flex-direction:column; gap:10px; margin-top:16px;">
+              <button id="btn-print-demon-sheet" class="btn btn-primary" style="background:linear-gradient(135deg, #8e44ad, #e056fd); border-color:#e056fd; font-size:16px; padding:12px;">
+                🖨️ 秘密の魔王プリントをいんさつする
+              </button>
+              <button id="btn-code-demon-sheet" class="btn" style="background:rgba(40,20,60,0.8); border:2px solid #a29bfe; font-size:15px; padding:10px;">
+                🔑 魔王のあんごうをいれる
+              </button>
+            </div>
+            <p id="demon-sheet-status-hint" class="hint" style="text-align:center; margin-top:10px; color:#a29bfe;">まずは 🖨️プリントを印刷して解いてみよう！</p>
+          </div>
+
+          <button id="btn-demon-secret-close" class="btn" style="margin-top:16px; width:100%;">とじる</button>
+        </div>
       </div>
     </section>
 
@@ -83,6 +187,30 @@
         <div class="menu-grid" style="max-width:320px; margin:0 auto;">
           <button id="btn-new-save-start" class="btn btn-primary">ぼうけんに でる</button>
           <button id="btn-new-save-back" class="btn">もどる</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- チュートリアル（アイテム選択） -->
+    <section id="screen-intro" class="screen">
+      <div class="panel">
+        <h2>＊ぼうけんの はじまり＊</h2>
+        <p class="flavor" style="margin-bottom:20px; font-size:16px;">ようこそ！キミは 世界を救う 勇者だ！<br>さっそく 冒険に 出発しよう！</p>
+        <p class="flavor" style="margin-bottom:20px; font-size:16px; color:var(--accent);">その前に、冒険の役に立つ 道具を ひとつ プレゼントするよ。<br>どちらを 持っていくか えらんでね。</p>
+        
+        <div style="display:flex; gap:20px; justify-content:center; margin:30px 0;">
+          <div class="item-card" style="width:220px; text-align:center; padding:15px; cursor:pointer;" id="btn-intro-assist">
+            <div style="font-size:40px; margin-bottom:10px;">🧮</div>
+            <div style="font-weight:bold; font-size:18px;">かぞえだま</div>
+            <p style="font-size:13px; color:#ccc; margin-top:10px;">ヒントが出るアシストアイテム。<br>計算のサポートをしてくれるよ！</p>
+            <button class="btn good" style="margin-top:15px;">これにする！</button>
+          </div>
+          <div class="item-card" style="width:220px; text-align:center; padding:15px; cursor:pointer;" id="btn-intro-sword">
+            <div style="font-size:40px; margin-bottom:10px;">🗡️</div>
+            <div style="font-weight:bold; font-size:18px;">木の剣</div>
+            <p style="font-size:13px; color:#ccc; margin-top:10px;">攻撃力が上がる ぶき。<br>敵に 与える ダメージが ふえるよ！</p>
+            <button class="btn good" style="margin-top:15px;">これにする！</button>
+          </div>
         </div>
       </div>
     </section>
@@ -101,10 +229,13 @@
       <div id="home-rescued" class="rescued-box hidden"></div>
 
       <div class="town-map" id="town-map">
-        <img src="画像/ステージ/拠点.jpg" class="town-map-img" alt="拠点">
+        <img src="./画像/ステージ/拠点.jpg" class="town-map-img" alt="拠点">
         <div class="town-status-cluster">
           <div class="status-window town-status-overlay" id="home-player-window">
-            <div class="status-line"><span id="home-player-name">ゆうしゃ</span><span id="home-player-lv"></span></div>
+            <div class="status-header-row">
+              <div class="status-line"><span id="home-player-name">ゆうしゃ</span><span id="home-player-lv"></span></div>
+              <button id="btn-toggle-home-status" class="btn-status-toggle" title="ステータスをおりたたむ">➖</button>
+            </div>
             <div class="gold-badge"><span class="gold-badge-icon">💰</span><span id="home-player-gold" class="gold-badge-num">0</span><span class="gold-badge-unit">G</span></div>
             <div class="stat-bar-wrap">
               <span class="stat-label"><img src="assets/ui_icons/ui_icon_4.png" class="stat-inline-icon">HP</span>
@@ -167,24 +298,94 @@
     <section id="screen-stage-select" class="screen">
       <div class="panel">
         <h2>＊ぼうけんの ちを えらぶ＊</h2>
-        <div class="stage-list">
-          <button id="area-card-tower" class="stage-card" style="background-image:url('画像/ステージ/草原.jpg')">
-            <span class="stage-card-name">エリア1 始まりの平原</span>
-            <span class="stage-card-desc" id="stage-status-area1">7ステージ＋ボス／たしざん</span>
+        <!-- きょうかタブ：さんすう と こくご を わけて ひょうじ -->
+        <div class="subject-tabs">
+          <button id="subject-tab-math" class="subject-tab subject-tab-math is-active">
+            <span class="subject-tab-icon">🔢</span>
+            <span class="subject-tab-label">さんすう</span>
+            <span class="subject-tab-sub">1年生〜6年生</span>
           </button>
-          <button id="stage-card-dungeon" class="stage-card" style="background-image:url('画像/ステージ/沼地.jpg')">
-            <span class="stage-card-name">エリア2 沼</span>
-            <span class="stage-card-desc" id="stage-status-area2">7ステージ＋ボス／ひきざん</span>
-          </button>
-          <button id="stage-card-area3" class="stage-card" style="background-image:url('画像/ステージ/かけ算の森.jpg')">
-            <span class="stage-card-name">エリア3 かけ算の森</span>
-            <span class="stage-card-desc" id="stage-status-area3">9ステージ＋ボス／かけざん</span>
-          </button>
-          <button id="stage-card-area4" class="stage-card" style="background-image:url('画像/ステージ/試練の塔.jpg')">
-            <span class="stage-card-name">エリア4 試練の塔</span>
-            <span class="stage-card-desc" id="stage-status-area4">7ステージ＋ボス／計算ミックス</span>
+          <button id="subject-tab-kanji" class="subject-tab subject-tab-kanji">
+            <span class="subject-tab-icon">✏️</span>
+            <span class="subject-tab-label">こくご（かんじ）</span>
+            <span class="subject-tab-sub">1年生〜6年生</span>
           </button>
         </div>
+
+        <!-- さんすうの エリア -->
+        <div id="stage-group-math" class="stage-group stage-group-math is-active">
+          <p class="stage-group-note">1年生から じゅんばんに すすむ みち</p>
+          <div class="stage-list">
+            <button id="area-card-tower" class="stage-card" style="background-image:url('./画像/ステージ/草原.jpg')">
+              <span class="stage-card-badge">1年生</span>
+              <span class="stage-card-name">始まりの平原</span>
+              <span class="stage-card-desc" id="stage-status-area1">7ステージ＋ボス／たしざん・ひきざん</span>
+            </button>
+            <button id="stage-card-dungeon" class="stage-card" style="background-image:url('./画像/ステージ/沼地.jpg')">
+              <span class="stage-card-badge">2年生</span>
+              <span class="stage-card-name">沼</span>
+              <span class="stage-card-desc" id="stage-status-area2">7ステージ＋ボス／ひっさん・九九</span>
+            </button>
+            <button id="stage-card-area3" class="stage-card" style="background-image:url('./画像/ステージ/かけ算の森.jpg')">
+              <span class="stage-card-badge">3年生</span>
+              <span class="stage-card-name">わり算の森</span>
+              <span class="stage-card-desc" id="stage-status-area3">9ステージ＋ボス／わりざん・ひっさん</span>
+            </button>
+            <button id="stage-card-area4" class="stage-card" style="background-image:url('./画像/ステージ/試練の塔.jpg')">
+              <span class="stage-card-badge">4年生</span>
+              <span class="stage-card-name">試練の塔</span>
+              <span class="stage-card-desc" id="stage-status-area4">7ステージ＋ボス／わりざん・小数・分数</span>
+            </button>
+            <button id="stage-card-area11" class="stage-card" style="background-image:url('./画像/ステージ/天空.jpg')">
+              <span class="stage-card-badge">5年生</span>
+              <span class="stage-card-name">天空の階段</span>
+              <span class="stage-card-desc" id="stage-status-area11">7ステージ＋ボス／小数のかけわり・通分</span>
+            </button>
+            <button id="stage-card-area12" class="stage-card" style="background-image:url('./画像/ステージ/魔王城.jpg')">
+              <span class="stage-card-badge">6年生</span>
+              <span class="stage-card-name">算数の魔王城</span>
+              <span class="stage-card-desc" id="stage-status-area12">7ステージ＋ボス／分数のかけわり・比・速さ</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- こくご（かんじ）の エリア -->
+        <div id="stage-group-kanji" class="stage-group stage-group-kanji">
+          <p class="stage-group-note">1年生から じゅんばんに すすむ もう1つの みち</p>
+          <div class="stage-list">
+            <button id="stage-card-area5" class="stage-card" style="background-image:url('./画像/ステージ/かけ算の森.jpg')">
+              <span class="stage-card-badge">1年生</span>
+              <span class="stage-card-name">漢字の森</span>
+              <span class="stage-card-desc" id="stage-status-area5">5ステージ＋ボス／漢字</span>
+            </button>
+            <button id="stage-card-area6" class="stage-card" style="background-image:url('./画像/ステージ/沼地.jpg')">
+              <span class="stage-card-badge">2年生</span>
+              <span class="stage-card-name">漢字の洞窟</span>
+              <span class="stage-card-desc" id="stage-status-area6">5ステージ＋ボス／漢字</span>
+            </button>
+            <button id="stage-card-area7" class="stage-card" style="background-image:url('./画像/ステージ/幻影の砂漠.jpg')">
+              <span class="stage-card-badge">3年生</span>
+              <span class="stage-card-name">漢字の砂漠</span>
+              <span class="stage-card-desc" id="stage-status-area7">5ステージ＋ボス／漢字</span>
+            </button>
+            <button id="stage-card-area8" class="stage-card" style="background-image:url('./画像/ステージ/わり算の海.jpg')">
+              <span class="stage-card-badge">4年生</span>
+              <span class="stage-card-name">漢字の海</span>
+              <span class="stage-card-desc" id="stage-status-area8">5ステージ＋ボス／漢字</span>
+            </button>
+            <button id="stage-card-area9" class="stage-card" style="background-image:url('./画像/ステージ/灼熱の火山.jpg')">
+              <span class="stage-card-badge">5年生</span>
+              <span class="stage-card-name">漢字の火山</span>
+              <span class="stage-card-desc" id="stage-status-area9">5ステージ＋ボス／漢字</span>
+            </button>
+            <button id="stage-card-area10" class="stage-card" style="background-image:url('./画像/ステージ/魔王城.jpg')">
+              <span class="stage-card-badge">6年生</span>
+              <span class="stage-card-name">漢字の魔王城</span>
+              <span class="stage-card-desc" id="stage-status-area10">5ステージ＋ボス／漢字</span>
+            </button>
+          </div>
+        </div>
+
         <button id="btn-stage-select-back" class="btn">きょてんに もどる</button>
       </div>
     </section>
@@ -193,7 +394,7 @@
     <section id="screen-stage-select-new" class="screen">
       <div class="town-map" id="stage-select-map">
         <img id="stage-select-area-bg" class="town-map-img" alt="エリア背景">
-        <button id="btn-stage-select-new-back" class="town-hotspot town-hotspot-back" style="left:14%; top:6%;">
+        <button id="btn-stage-select-new-back" class="town-hotspot town-hotspot-back" style="left:16px; top:16px; transform:none;">
           <span class="hotspot-tag">← エリアせんたくに もどる</span>
         </button>
         <div id="stage-button-container" class="stage-vertical-list"></div>
@@ -203,8 +404,8 @@
     <!-- 草原エリア内 ステージ選択 -->
     <section id="screen-grass-substage" class="screen">
       <div class="town-map" id="grass-substage-map">
-        <img src="画像/ステージ/草原.jpg" class="town-map-img" alt="草原エリア">
-        <button id="btn-grass-substage-back" class="town-hotspot town-hotspot-back" style="left:5%; top:6%;">
+        <img src="./画像/ステージ/草原.jpg" class="town-map-img" alt="草原エリア">
+        <button id="btn-grass-substage-back" class="town-hotspot town-hotspot-back" style="left:16px; top:16px; transform:none;">
           <span class="hotspot-tag">← エリアせんたくに もどる</span>
         </button>
         <button id="substage-card-tower" class="town-hotspot" style="left:54%; top:52%;">
@@ -226,9 +427,9 @@
         <p class="flavor">ゴールドを消費してアイテムや装備を手に入れよう！</p>
         <div class="gold-badge"><span class="gold-badge-icon">💰</span><span id="gacha-current-gold" class="gold-badge-num">0</span><span class="gold-badge-unit">G</span></div>
         <div class="menu-grid">
-          <button id="btn-gacha-1" class="btn">1回引く (100G)</button>
-          <button id="btn-gacha-6" class="btn">6回引く (500G)</button>
-          <button id="btn-gacha-13" class="btn">13回引く (1000G)</button>
+          <button id="btn-gacha-1" class="btn">1回引く (150G)</button>
+          <button id="btn-gacha-6" class="btn">6回引く (750G)</button>
+          <button id="btn-gacha-13" class="btn">13回引く (1400G)</button>
         </div>
         <div id="gacha-results" class="log-box" style="margin-top:15px; min-height:100px;"></div>
         <button id="btn-gacha-back" class="btn" style="margin-top:10px;">もどる</button>
@@ -246,14 +447,14 @@
     </section>
 
     <!-- サブクエストボード（NPCの ぶんしょうだい） -->
-    <section id="screen-quest-board" class="screen">
-      <div class="panel">
+    <div id="screen-quest-board" class="modal-overlay hidden" style="position:fixed; z-index:90;">
+      <div class="modal-panel" style="width:90%; max-width:800px; max-height:80vh; overflow-y:auto;">
         <h2>＊サブクエストボード＊</h2>
         <p class="flavor">むらの みんなから たのまれごとが きている。ぶんしょうを よんで こたえよう！</p>
         <div id="quest-board-list" class="inventory-list"></div>
-        <button id="btn-quest-board-back" class="btn" style="margin-top:10px;">もどる</button>
+        <button id="btn-quest-board-back" class="btn" style="margin-top:10px; width:100%;">もどる</button>
       </div>
-    </section>
+    </div>
 
     <!-- 自分の部屋（ステータス＆装備） -->
     <section id="screen-status" class="screen">
@@ -266,6 +467,8 @@
             <p class="flavor">ポイントを わりふろう。</p>
             <div id="status-list" class="status-list"></div>
             <button id="btn-status-confirm" class="btn btn-primary" style="margin-top:10px;" disabled>けってい</button>
+            <button id="btn-status-respec" class="btn" style="margin-top:8px;">⚖ ふりなおす</button>
+            <p class="hint" id="status-respec-hint">わりふりを やりなおしたい ときは、けいさんに せいかいすると ぜんぶ もどってくるよ。</p>
           </div>
           
           <div class="room-equip-area">
@@ -280,7 +483,69 @@
           </div>
         </div>
         
-        <button id="btn-status-back" class="btn" style="margin-top:20px;">もどる</button>
+        <button id="btn-show-player-stats" class="btn btn-primary" style="margin-top:14px; width:100%; font-size:15px;">📊 ぼうけんの せいせき（せいちょうグラフ）</button>
+        <button id="btn-status-back" class="btn" style="margin-top:10px;">もどる</button>
+
+        <!-- プレイヤー向け成績モーダル -->
+        <div id="player-stats-modal" class="modal-overlay hidden">
+          <div class="modal-panel study-stats-modal-panel">
+            <div class="study-stats-header">
+              <h2>📊 ぼうけんの せいせき ＆ せいちょう</h2>
+              <p class="flavor">いままで べんきょうして つよくなった きろくだよ！</p>
+            </div>
+            
+            <div class="study-summary-cards">
+              <div class="study-summary-card">
+                <span class="study-card-label">といた もんだい</span>
+                <div class="study-card-val-row"><span class="study-card-value" id="player-stat-total-answers">0</span><span class="study-card-unit">もん</span></div>
+              </div>
+              <div class="study-summary-card">
+                <span class="study-card-label">ぜんたい せいとうりつ</span>
+                <div class="study-card-val-row"><span class="study-card-value" id="player-stat-overall-rate">0</span><span class="study-card-unit">%</span></div>
+              </div>
+              <div class="study-summary-card">
+                <span class="study-card-label">せいちょうど (UP!)</span>
+                <div class="study-card-val-row"><span class="study-card-value highlight-up" id="player-stat-growth-rate">+0</span><span class="study-card-unit">%</span></div>
+              </div>
+            </div>
+
+            <div class="study-chart-section">
+              <h3 style="color:var(--accent); margin-bottom:4px;">📈 たんげんべつ せいちょうグラフ</h3>
+              <p class="hint" style="margin-bottom:8px;">青＝さいしょの 正答率 ｜ 金＝いまの 正答率</p>
+              <div class="study-chart-container">
+                <canvas id="player-study-chart" class="study-canvas"></canvas>
+              </div>
+            </div>
+
+            <div class="study-chart-section" style="margin-top:16px;">
+              <div class="study-section-title-row">
+                <h3 style="color:var(--accent); margin:0;">🎯 ステージごとの せいとうりつ</h3>
+                <select id="player-stats-stage-select" class="admin-select" style="max-width:200px; padding:4px 8px; font-size:12px;"></select>
+              </div>
+              <div class="study-chart-container">
+                <canvas id="player-stage-chart" class="study-canvas"></canvas>
+              </div>
+            </div>
+
+            <button id="btn-show-kanji-stats" class="btn" style="margin-top:16px; width:100%;">📝 漢字の せいせき一覧をみる</button>
+
+            <button id="btn-player-stats-close" class="btn btn-primary" style="margin-top:20px; width:100%;">とじる</button>
+          </div>
+        </div>
+
+        <!-- 漢字成績専用モーダル -->
+        <div id="kanji-stats-modal" class="modal-overlay hidden">
+          <div class="modal-panel study-stats-modal-panel" style="max-height:85vh; display:flex; flex-direction:column;">
+            <div class="study-stats-header" style="flex-shrink:0;">
+              <h2>📝 漢字の せいせき一覧</h2>
+              <p class="flavor">漢字の とくい・にがて が わかるよ！</p>
+            </div>
+            <div id="player-kanji-stats-list" style="flex:1; overflow-y:auto; background:rgba(0,0,0,0.3); border-radius:4px; padding:10px; font-size:14px; text-align:left; margin-top:10px;">
+              （まだ 漢字の問題を 解いていません）
+            </div>
+            <button id="btn-kanji-stats-close" class="btn btn-primary" style="margin-top:20px; width:100%; flex-shrink:0;">とじる</button>
+          </div>
+        </div>
 
         <!-- 装備選択モーダル -->
         <div id="equip-select-modal" class="modal-overlay" style="display:none;">
@@ -340,32 +605,9 @@
     <!-- 修行チャレンジ -->
     <section id="screen-training" class="screen">
       <div class="training-dummy-wrap" id="training-dummy-wrap">
-        <svg class="training-dummy-svg" viewBox="0 0 140 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <ellipse cx="70" cy="192" rx="40" ry="8" fill="rgba(0,0,0,0.3)" />
-          <rect x="64" y="86" width="12" height="104" rx="4" fill="#8a5a34" />
-          <g stroke="#c9922f" stroke-width="7" stroke-linecap="round">
-            <line x1="70" y1="100" x2="24" y2="80" />
-            <line x1="70" y1="100" x2="116" y2="80" />
-          </g>
-          <g fill="#ffd76b">
-            <path d="M24 80 l-13 -5 5 10 -11 1 9 8 z" />
-            <path d="M116 80 l13 -5 -5 10 11 1 -9 8 z" />
-          </g>
-          <path d="M40 104 Q70 88 100 104 L102 158 Q70 174 38 158 Z" fill="#d9b26a" stroke="#b6863f" stroke-width="2" />
-          <path d="M52 116 l9 8 M68 112 l8 10 M82 114 l9 8" stroke="#8a642f" stroke-width="2.5" stroke-linecap="round" fill="none" />
-          <rect x="56" y="132" width="11" height="11" fill="#b6863f" transform="rotate(18 61 137)" />
-          <rect x="78" y="140" width="11" height="11" fill="#c9922f" transform="rotate(-14 83 145)" />
-          <circle cx="70" cy="66" r="27" fill="#e8c780" />
-          <path d="M44 66 Q70 46 96 66" fill="none" stroke="#b6863f" stroke-width="2" />
-          <path d="M55 53 l9 9 M64 49 l9 9" stroke="#8a642f" stroke-width="2.5" stroke-linecap="round" fill="none" />
-          <path d="M55 83 l9 -6 M64 87 l9 -6 M73 83 l9 -6" stroke="#8a642f" stroke-width="2.5" stroke-linecap="round" fill="none" />
-          <circle cx="50" cy="72" r="4" fill="#ffb0a0" opacity="0.55" />
-          <circle cx="90" cy="72" r="4" fill="#ffb0a0" opacity="0.55" />
-          <path d="M32 50 Q70 24 108 50 Q98 38 70 34 Q42 38 32 50 Z" fill="#7a5230" />
-          <ellipse cx="70" cy="52" rx="44" ry="10" fill="#8a5a34" />
-          <path d="M32 50 l-11 -3 6 9 -10 0 8 7" fill="#ffd76b" />
-        </svg>
+        <img src="./画像/training_dummy_transparent.png" class="training-dummy-img" alt="修行カカシ" style="max-height: 250px; display: block; margin: 0 auto; filter: drop-shadow(0 6px 8px rgba(0,0,0,0.4));">
         <div class="training-hit-burst" id="training-hit-burst">💥</div>
+        <canvas id="training-canvas" class="training-canvas"></canvas>
       </div>
       <div class="panel">
         <h2 id="training-title">しゅぎょうちゅう</h2>
@@ -420,7 +662,13 @@
         </div>
 
         <div id="battle-sub-menu" class="command-window hidden"></div>
-        
+
+        <!-- とくぎ／どうぐ は もんだいの ウィンドウの そとがわ（ひだり）に おく -->
+        <div id="battle-side-commands" class="battle-side-commands hidden">
+          <button id="btn-inline-skill" class="btn">とくぎ</button>
+          <button id="btn-inline-item" class="btn">どうぐ</button>
+        </div>
+
         <div class="battle-atb-compare">
           <div class="atb-compare-row">
             <span class="atb-compare-label atb-compare-label-player">⚡ <span id="atb-compare-player-name">ゆうしゃ</span></span>
@@ -432,7 +680,32 @@
           </div>
         </div>
 
+        <!-- けいさんの もんだいは 画面の まんなか、テンキーは みぎの まど（#battle-challenge）に だす。
+             この まどの 出し入れは CSS（#battle-challenge が ひらいている あいだだけ 見える） -->
+        <div id="calc-problem-center"></div>
+
         <div id="battle-challenge" class="challenge-area hidden"></div>
+
+        <!-- 漢字入力バトルUI (非表示で追加) -->
+        <!-- お題も 入力らんも ATBゲージの した。五十音ボードだけ みぎに だす -->
+        <div id="kanji-problem-center" class="hidden">
+          <div id="kanji-prompt" class="kanji-prompt hidden"></div>
+          <div class="problem-display">
+            <div id="challenge-problem-text" class="problem-text">漢字</div>
+          </div>
+          <div id="kanji-hint" class="kanji-hint hidden"></div>
+          <div class="input-display">
+            <input type="text" id="challenge-input" placeholder="ひらがなで入力" autocomplete="off" inputmode="text" enterkeyhint="send" readonly>
+            <button id="btn-submit-answer" class="submit-btn">決定</button>
+          </div>
+          <div class="input-mode-toggle">
+            <button id="btn-toggle-input" class="toggle-btn">入力切替：五十音</button>
+          </div>
+        </div>
+
+        <div id="kanji-challenge" class="challenge-area hidden">
+          <div id="software-keyboard" class="software-keyboard"></div>
+        </div>
         
         <div id="battle-log" class="log-box small"></div>
       </div>
@@ -457,11 +730,93 @@
       </div>
     </section>
 
-    <!-- 管理者設定（敵カスタマイズ） -->
+    <!-- 管理者設定（敵カスタマイズ ＆ 保護者向けレポート） -->
     <section id="screen-admin" class="screen">
       <div class="panel">
         <h2>＊かんりしゃせってい＊</h2>
-        <p class="flavor">敵のステータスや見た目を変更できます。</p>
+        <p class="flavor">敵のステータスや見た目の変更、学習成績レポートを確認できます。</p>
+
+        <!-- 保護者向け 学習成績・成長グラフ セクション -->
+        <div id="admin-study-stats-section" class="admin-timelimit-section" style="margin-bottom:24px; border-color:var(--accent); background:rgba(30, 24, 48, 0.95);">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:6px;">
+            <h3 style="color:var(--accent); font-size:18px; margin:0;">📊 学習成績・成長グラフ（保護者向けレポート）</h3>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <label style="font-size:13px; font-weight:bold; color:var(--text-light);">対象セーブデータ:</label>
+              <select id="admin-stats-slot-select" class="admin-select" style="min-width:180px; padding:6px 10px; font-size:13px;"></select>
+            </div>
+          </div>
+          <p class="flavor" style="margin:4px 0 14px;">お子様の単元・ステージごとの解答履歴、最初の正答率と最新の正答率の比較、苦手・得意分野を詳細に可視化します。</p>
+
+          <!-- サマリーカード -->
+          <div class="study-summary-cards">
+            <div class="study-summary-card">
+              <span class="study-card-label">総解答数</span>
+              <div class="study-card-val-row"><span class="study-card-value" id="admin-stat-total-answers">0</span><span class="study-card-unit">問</span></div>
+            </div>
+            <div class="study-summary-card">
+              <span class="study-card-label">総合正答率</span>
+              <div class="study-card-val-row"><span class="study-card-value" id="admin-stat-overall-rate">0</span><span class="study-card-unit">%</span></div>
+            </div>
+            <div class="study-summary-card">
+              <span class="study-card-label">平均成長度 (UP!)</span>
+              <div class="study-card-val-row"><span class="study-card-value highlight-up" id="admin-stat-growth-rate">+0</span><span class="study-card-unit">%</span></div>
+            </div>
+            <div class="study-summary-card">
+              <span class="study-card-label">学習済み単元数</span>
+              <div class="study-card-val-row"><span class="study-card-value" id="admin-stat-unit-count">0</span><span class="study-card-unit">単元</span></div>
+            </div>
+          </div>
+
+          <!-- 単元別 成長比較グラフ -->
+          <div class="study-chart-section">
+            <div class="study-section-title-row">
+              <h4 style="color:var(--accent); margin:0;">📈 単元別 正答率の推移（初回 ➔ 最新）</h4>
+              <div style="display:flex; gap:6px;">
+                <button id="btn-admin-filter-all" class="btn btn-sm btn-filter is-active">すべて</button>
+                <button id="btn-admin-filter-math" class="btn btn-sm btn-filter">さんすう</button>
+                <button id="btn-admin-filter-kanji" class="btn btn-sm btn-filter">こくご(漢字)</button>
+              </div>
+            </div>
+            <p class="hint" style="margin:4px 0 8px;">青バー＝初期の正答率 ｜ 金バー＝最新の正答率 ｜ 右側の数値＝成長率（UP!）</p>
+            <div class="study-chart-container">
+              <canvas id="admin-study-chart" class="study-canvas"></canvas>
+            </div>
+          </div>
+
+          <!-- ステージ別 推移グラフ -->
+          <div class="study-chart-section" style="margin-top:18px;">
+            <div class="study-section-title-row">
+              <h4 style="color:var(--accent); margin:0;">🎯 ステージ・エリア別 正答率推移グラフ</h4>
+              <select id="admin-stats-stage-select" class="admin-select" style="max-width:260px; padding:4px 8px; font-size:12px;"></select>
+            </div>
+            <div class="study-chart-container">
+              <canvas id="admin-stage-chart" class="study-canvas"></canvas>
+            </div>
+          </div>
+
+          <!-- 詳細データテーブル -->
+          <div class="study-table-section" style="margin-top:18px;">
+            <h4 style="color:var(--accent); margin-bottom:8px;">📋 単元・ステージ別 詳細データ一覧</h4>
+            <div class="study-table-wrap">
+              <table class="study-data-table" id="admin-study-table">
+                <thead>
+                  <tr>
+                    <th>教科 / 学年</th>
+                    <th>単元・ステージ名</th>
+                    <th>解答数 (正解)</th>
+                    <th>初回正答率</th>
+                    <th>最新正答率</th>
+                    <th>成長度</th>
+                    <th>ステータス</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-study-table-body">
+                  <tr><td colspan="7" style="text-align:center; padding:16px;">データがありません</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
 
         <div id="admin-timelimit-section" class="admin-timelimit-section">
           <h3>⏰ じかんせいげん（セーブデータごと）</h3>
@@ -480,6 +835,14 @@
           <div id="admin-timelimit-slot-list" class="inventory-list" style="margin-top:12px;"></div>
         </div>
 
+        <!-- エリア別 難易度倍率セクション -->
+        <div id="admin-difficulty-section" style="margin-top:20px;">
+          <h3>⚔️ エリアごとの難易度倍率</h3>
+          <p class="flavor" style="margin-bottom:10px;">ステージの敵のつよさをエリアごとに調整できます。数字が大きいほど敵が強くなります。</p>
+          <div id="admin-difficulty-list" style="display:flex; flex-direction:column; gap:12px;"></div>
+          <button id="btn-admin-difficulty-save" class="btn good" style="margin-top:14px;">✅ 倍率をほぞんする</button>
+        </div>
+
         <div id="admin-list-view">
           <h3>敵リスト</h3>
           <select id="admin-category-select" class="admin-select">
@@ -493,6 +856,7 @@
           </select>
           <div id="admin-enemy-list" class="inventory-list" style="margin-top:10px;"></div>
           <button id="btn-admin-get-gold" class="btn" style="margin-top:10px; background-color: var(--atb); color: var(--text);">💰 10,000ゴールド獲得</button>
+          <button id="btn-admin-delete-save" class="btn bad" style="margin-top:10px;">🗑️ セーブデータを削除する</button>
           <button id="btn-admin-back" class="btn" style="margin-top:10px;">もどる</button>
         </div>
 
@@ -521,9 +885,28 @@
       </div>
     </section>
 
+    <!-- セーブデータ管理モーダル -->
+    <div id="admin-save-manage-modal" class="modal-overlay hidden" style="position:fixed; z-index:99999;">
+      <div class="modal-panel study-stats-modal-panel">
+        <h2>🗑️ セーブデータの さくじょ</h2>
+        <p class="flavor">さくじょする セーブデータを えらんでください。</p>
+        <div id="admin-save-list" class="inventory-list" style="margin-top:10px; max-height:300px; overflow-y:auto; text-align:left;">
+        </div>
+        <div style="display:flex; gap:10px; margin-top:20px;">
+          <button id="btn-admin-exec-delete-save" class="btn bad" style="flex:1;">えらんだデータをさくじょ</button>
+          <button id="btn-admin-cancel-delete-save" class="btn" style="flex:1;">キャンセル</button>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 <div id="print-sheet"></div>
-<script src="game.js?v=81"></script>
+<!-- 演出用レイヤー -->
+<div id="effect-container"></div>
+<div id="result-overlay" class="hidden">
+  <h2 id="result-text"></h2>
+</div>
+<script type="module" src="./main.js"></script>
 </body>
 </html>

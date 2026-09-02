@@ -1,13 +1,16 @@
 {
   "hosting": {
-    "public": ".",
+    "site": "keisanrpg",
+    "public": "dist",
     "ignore": [
       "firebase.json",
-      ".git/**",
       "**/.*",
       "**/node_modules/**",
       "*.py",
       "*.md"
     ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
   }
 }

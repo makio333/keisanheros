@@ -1,0 +1,485 @@
+/* ==========================================
+   漢字入力バトル要素 CSS (kanji_input_style.css)
+   ========================================== */
+
+.hidden {
+  display: none !important;
+}
+
+/* ==========================================
+   漢字チャレンジ パネル
+   バトル画面の みぎがわの あいている スペースに、
+   1画面から はみ出さないように おさめる。
+   うえの 時計（みぎ上）と、したの ☰／🔊 ボタン（bottom:20px〜190px）とは かさならない。
+   ========================================== */
+#screen-battle #kanji-challenge,
+#kanji-challenge {
+  position: fixed;
+  top: 128px;
+  right: 12px;
+  bottom: 200px;
+  width: min(320px, 30vw);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(18, 14, 28, 0.88);
+  backdrop-filter: blur(2px);
+  border: 3px solid #f0c674;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6);
+  z-index: 50;
+  text-align: center;
+}
+#kanji-challenge.hidden { display: none !important; }
+
+/* フリック／物理キーボードの ときは 五十音ボードが いらないので、
+   みぎの パネルごと しまう（入力らんは もんだいの したに あるので こまらない） */
+#screen-battle #kanji-challenge:has(#software-keyboard.hidden),
+#kanji-challenge:has(#software-keyboard.hidden) {
+  display: none !important;
+}
+/* パネルが ない ときは、もんだいと ATBゲージを まんなかに もどす */
+#screen-battle.kanji-battle:has(#software-keyboard.hidden) { --kanji-gutter: auto; }
+
+/* ==========================================
+   お題（漢字）は ATBゲージの すぐ した（ページの ながれの まま）に だす。
+   さんすうの もんだい（#calc-problem-center）と おなじ いち・おなじ みため。
+   入力キーボードは みぎの パネルの ままなので、
+   「といを 見る場所」と「うつ場所」が わかれて 見やすい。
+   ========================================== */
+#kanji-problem-center {
+  width: min(600px, 92vw);
+  margin-top: 10px;
+  margin-left: auto;
+  margin-right: var(--kanji-gutter);
+  z-index: 20;
+  text-align: center;
+  background: rgba(22, 18, 34, 0.55);
+  backdrop-filter: blur(1px);
+  border: 3px solid #f0c674;
+  border-radius: 12px;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.45);
+}
+#kanji-problem-center.hidden { display: none !important; }
+
+/* そとがわの まどが わくに なるので、なかの はこは わくを つけない */
+#kanji-problem-center .problem-display {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+#kanji-problem-center .problem-text {
+  font-size: clamp(28px, 4vw, 56px);
+}
+/* 入力らん・切替ボタンは もんだいの すぐ した に ならべる */
+#kanji-problem-center .input-display {
+  margin: 10px auto 0;
+  max-width: 420px;
+}
+#kanji-problem-center .input-mode-toggle { margin-top: 8px; }
+#kanji-problem-center .input-display input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+  font-size: 18px;
+  padding: 8px 10px;
+  text-align: center;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.45);
+  color: #ffffff;
+  outline: none;
+}
+#kanji-problem-center .input-display input:focus { border-color: #48dbfb; }
+/* スキル発動などの 1行メッセージ（お題の うえ） */
+.kanji-prompt {
+  font-size: 13px;
+  font-weight: bold;
+  color: #ffd93b;
+  text-align: center;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kanji-prompt.hidden { display: none !important; }
+
+/* よみときの ヒント（アシスト装備を そうびしている ときだけ でる） */
+.kanji-hint {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(72, 219, 251, 0.14);
+  border: 1px solid rgba(72, 219, 251, 0.5);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #d8f6ff;
+}
+.kanji-hint.hidden { display: none !important; }
+.kanji-hint-title { color: #48dbfb; margin-right: 4px; }
+.kanji-hint-row { font-size: 13px; }
+.kanji-hint-row b { color: #ffd93b; font-size: 15px; margin: 0 2px; }
+.kanji-hint-sub { font-size: 11px; opacity: 0.85; }
+
+/* 漢字問題表示エリア（はっきり よめるように、ひかりの えんしゅつは つけない） */
+.problem-display {
+  flex: 0 0 auto;
+  display: block;
+  background-color: #23202e;
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin: 0;
+  border: 2px solid #7a7590;
+}
+
+.problem-text {
+  font-size: clamp(22px, 2.6vw, 38px);
+  line-height: 1.15;
+  font-weight: bold;
+  color: #ffffff;
+  text-shadow: none;
+  margin: 0;
+}
+
+/* 入力モード切替ボタン */
+.input-mode-toggle {
+  flex: 0 0 auto;
+  margin: 0;
+  text-align: center;
+}
+
+.toggle-btn {
+  background-color: transparent;
+  color: #48dbfb;
+  border: 1px solid #48dbfb;
+  padding: 3px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1.3;
+  transition: all 0.2s;
+}
+
+.toggle-btn:hover {
+  background-color: #48dbfb;
+  color: #000;
+}
+
+/* 入力欄とボタンの表示領域 */
+.input-display {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#kanji-challenge .input-display input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+  font-size: 16px;
+  padding: 6px 8px;
+  margin: 0;
+  text-align: center;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  outline: none;
+  box-shadow: none;
+}
+#kanji-challenge .input-display input:focus {
+  border-color: #48dbfb;
+}
+
+.submit-btn {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  background-color: #1dd1a1;
+  color: #000;
+  cursor: pointer;
+  transition: transform 0.1s, background-color 0.2s;
+}
+.submit-btn:hover {
+  background-color: #10ac84;
+}
+.submit-btn:active {
+  transform: scale(0.95);
+}
+
+/* ===== 五十音ソフトウェアキーボード ===== */
+.software-keyboard {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+}
+
+/* 1マスずつ たてに ならべて、五十音表と おなじ みため に する */
+.kana-grid {
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.key-btn {
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  line-height: 1;
+  font-size: clamp(11px, 1.15vw, 16px);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 5px;
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.1s, transform 0.1s;
+}
+
+.key-btn:active {
+  background-color: #48dbfb;
+  color: #000;
+  transform: scale(0.9);
+}
+
+.key-btn.key-blank {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.key-btn.key-fn {
+  background-color: rgba(255, 159, 67, 0.35);
+  border-color: rgba(255, 159, 67, 0.6);
+  font-size: clamp(9px, 0.9vw, 12px);
+}
+
+/* ===== 演出用レイヤー ===== */
+#effect-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 100;
+}
+
+#result-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+/* ひかりすぎて よめない ことが ないように、
+   ぼかしの グローは つかわず、くろい ふちどりで はっきり みせる */
+#result-text {
+  font-size: clamp(40px, 6vw, 76px);
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin: 0;
+  text-shadow:
+    -3px -3px 0 #000, 3px -3px 0 #000,
+    -3px  3px 0 #000, 3px  3px 0 #000,
+     0   -3px 0 #000, 0    3px 0 #000,
+    -3px  0   0 #000, 3px  0   0 #000,
+     0    4px 6px rgba(0, 0, 0, 0.85);
+}
+
+.result-correct {
+  color: #ffd93b;
+  animation: resultPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.result-incorrect {
+  color: #c3cbdc;
+  animation: resultShake 0.4s ease-in-out forwards;
+}
+
+@keyframes resultPop {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes resultShake {
+  0% { transform: translateX(0); opacity: 0; }
+  25% { transform: translateX(-10px); opacity: 1; }
+  50% { transform: translateX(10px); }
+  75% { transform: translateX(-10px); }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+/* パーティクルエフェクト */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: explode 0.4s ease-out forwards;
+}
+
+@keyframes explode {
+  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+}
+
+/* せまい画面（スマホ・たて）：パネルを したに よこはば いっぱいで だす。
+   もんだいは ATBゲージの した（ながれの まま）なので、
+   パネルに かくれないよう てきの エリアを ちぢめて ばしょを つくる。 */
+@media (max-width: 820px) {
+  #screen-battle #kanji-challenge,
+  #kanji-challenge {
+    top: auto;
+    right: 8px;
+    left: 8px;
+    bottom: 8px;
+    width: auto;
+    /* 五十音ボード（.kana-grid）は パネルの たかさを 分けあって ならぶので、
+       たかさが「ないようまかせ」だと 0に つぶれて キーが 画面の そとに はみ出す。
+       スマホでは たかさを はっきり きめる。 */
+    height: min(42vh, 350px);
+    max-height: 48vh;
+  }
+  /* スキル発動の 1行メッセージが でる ときは もんだいの まどが たかく なるので、
+     そのぶん 五十音パネルを ひくくして かさならない ように する */
+  #screen-battle:has(#kanji-prompt:not(.hidden)) #kanji-challenge {
+    height: min(38vh, 318px);
+  }
+  /* フリック／物理キーボードの ときは ボードが ないので ないようの たかさに もどす。
+     このとき PC用の ルールが bottom:auto に して しまうので、
+     ここで もういちど した（bottom:8px）に とめておく。
+     top も bottom も auto に なると、fixed なのに もとの ながれの いちに
+     もどって しまい、画面の うえに よこながで でて しまう。 */
+  #screen-battle #kanji-challenge:has(#software-keyboard.hidden),
+  #kanji-challenge:has(#software-keyboard.hidden) {
+    height: auto;
+    top: auto;
+    bottom: 8px;
+  }
+  .problem-text { font-size: clamp(20px, 6vw, 32px); }
+  .key-btn { font-size: clamp(10px, 2.4vw, 15px); }
+  /* うかんでいる ☰／🔊 は 五十音の キーに かぶって おせなく なるので、
+     もんだいを といて いる あいだは しまっておく */
+  body:has(#kanji-challenge:not(.hidden)) .menu-button,
+  body:has(#kanji-challenge:not(.hidden)) .mute-button { display: none; }
+
+  /* もんだいは よこはば いっぱい。ATBゲージは ひだりの ステータスまどを よけて みぎへ */
+  #screen-battle.kanji-battle { --kanji-gutter: auto; }
+  #kanji-problem-center {
+    width: auto;
+    margin: 8px 8px 0;
+  }
+  #kanji-problem-center .problem-text { font-size: clamp(22px, 6.4vw, 36px); }
+  /* たてが みじかいので、もんだいの まどの すきまも つめる */
+  #kanji-problem-center .input-display { margin-top: 6px; }
+  #kanji-problem-center .input-mode-toggle { margin-top: 4px; }
+  .kanji-prompt { font-size: 11px; margin-bottom: 2px; }
+  .kanji-hint { margin-top: 5px; padding: 4px 8px; font-size: 11px; }
+  .kanji-hint-row { font-size: 12px; }
+  #screen-battle.kanji-battle .battle-field { height: 17vh; }
+  #screen-battle.kanji-battle .battle-atb-compare {
+    margin-left: 146px;
+    margin-right: 8px;
+    width: auto;
+    max-width: none;
+  }
+  #screen-battle.kanji-battle .enemy-sprite {
+    width: min(130px, 13vh);
+    height: min(130px, 13vh);
+  }
+  #screen-battle.kanji-battle .battle-side-commands {
+    bottom: auto;
+    top: 130px;
+    left: auto;
+    right: 8px;
+    flex-direction: row;
+  }
+}
+
+/* たかさが ひくい 画面（スマホの よこむき・よこながの ウィンドウ）：
+   よこは ばしょが あるので パネルを みぎに もどし、もんだいと 入力らんは
+   ATBゲージの した（ながれの まま）に おく。
+   ※ はばの じょうけんは つけない。さいきんの スマホは よこむきだと
+     820pxを こえる ものが おおく、そこだけ わりつけが ぬけて しまうため。 */
+@media (max-height: 560px) {
+  #screen-battle #kanji-challenge,
+  #kanji-challenge {
+    top: 6px;
+    right: 104px;
+    left: auto;
+    bottom: auto;
+    width: min(300px, 34vw);
+    height: min(88vh, 340px);
+    max-height: 92vh;
+  }
+  /* フリック／物理キーボードの ときも、ばしょは みぎうえの ままに する
+     （スマホ・たて用の ルールが したに うつして しまうので うわがきする） */
+  #screen-battle #kanji-challenge:has(#software-keyboard.hidden),
+  #kanji-challenge:has(#software-keyboard.hidden) {
+    top: 6px;
+    bottom: auto;
+    height: auto;
+  }
+  /* たてが みじかいので、キーの 文字も たかさに あわせて 小さく（字が かさならないように） */
+  .key-btn { font-size: clamp(9px, 2.4vh, 14px); }
+  .problem-text { font-size: clamp(20px, 6vh, 34px); }
+  /* うかんでいる ☰／🔊 は 五十音の キーに かぶるので しまう */
+  body:has(#kanji-challenge:not(.hidden)) .menu-button,
+  body:has(#kanji-challenge:not(.hidden)) .mute-button { display: none; }
+  #screen-battle.kanji-battle {
+    --kanji-gutter: calc(min(300px, 34vw) + 116px);
+  }
+  #kanji-problem-center {
+    width: auto;
+    margin: 8px var(--kanji-gutter) 0 146px;
+  }
+  #kanji-problem-center .problem-text { font-size: clamp(20px, 6vh, 34px); }
+  /* たてが みじかいので、てきの エリアを おもいきり ちぢめて
+     「もんだい＋入力らん」の ばしょを つくる */
+  #screen-battle.kanji-battle .battle-field { height: 20vh; }
+  #screen-battle.kanji-battle .enemy-sprite {
+    width: min(100px, 22vh);
+    height: min(100px, 22vh);
+  }
+  #kanji-problem-center .input-display { margin-top: 6px; }
+  #kanji-problem-center .input-mode-toggle { margin-top: 4px; }
+  #kanji-problem-center .input-display input { font-size: 15px; padding: 5px 8px; }
+  .kanji-prompt { font-size: 11px; margin-bottom: 2px; }
+  .kanji-hint { margin-top: 5px; padding: 4px 8px; }
+  .kanji-hint-row { font-size: 11px; }
+  #screen-battle.kanji-battle .battle-atb-compare {
+    margin-left: 146px;
+    margin-right: var(--kanji-gutter);
+    /* もとの ルールに はばが きまって いるので、それを といて
+       ひだり・みぎの よはくで はばが きまるように する
+       （といて おかないと みぎの パネルに はみ出す） */
+    width: auto;
+    max-width: none;
+  }
+  #screen-battle.kanji-battle .battle-side-commands {
+    top: auto;
+    bottom: 46px;
+    left: 8px;
+    right: auto;
+    flex-direction: column;
+  }
+}

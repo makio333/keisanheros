@@ -1,0 +1,20 @@
+{
+  "name": "keisanheros",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "vite build && firebase deploy --only hosting"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11",
+    "vite-plugin-singlefile": "^2.0.1"
+  },
+  "dependencies": {
+    "firebase": "^12.18.0"
+  }
+}
