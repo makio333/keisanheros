@@ -4459,37 +4459,78 @@ function openPrintWindow(htmlContent) {
   pw.onload = () => pw.print();
   setTimeout(() => pw.print(), 500);
 }
+/* プリント選択モーダルを表示する（3バリアント選択→印刷・保存） 
+   variants: [{ title, problems, buildHtml, onSelect }] */
+function showPrintChoiceModal(variants) {
+  const modal = document.getElementById('modal-print-choice');
+  const cardsEl = document.getElementById('print-choice-cards');
+  cardsEl.innerHTML = '';
+
+  const labels = ['🅰 Aセット', '🅱 Bセット', '🅲 Cセット'];
+
+  variants.forEach((v, i) => {
+    const card = document.createElement('div');
+    card.style.cssText = 'background:rgba(255,255,255,0.08); border:2px solid #4b6584; border-radius:12px; padding:16px; width:220px; cursor:pointer; transition: border-color 0.2s;';
+    card.onmouseover = () => card.style.borderColor = '#f9ca24';
+    card.onmouseout = () => card.style.borderColor = '#4b6584';
+
+    // プレビュー（最初の4問だけ表示）
+    const previewHtml = v.problems.slice(0, 4).map((p, pi) =>
+      `<div style="font-size:14px; padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.2);">${pi+1}. ${p.text} = ？</div>`
+    ).join('');
+
+    card.innerHTML = `
+      <div style="font-size:18px; font-weight:bold; margin-bottom:10px; color:#f9ca24;">${labels[i]}</div>
+      <div style="font-size:13px; color:#aaa; margin-bottom:10px;">${v.problems.length}問 (${v.opLabel || ''})</div>
+      <div style="margin-bottom:12px;">${previewHtml}<div style="font-size:12px; color:#888; margin-top:4px;">…ほか${Math.max(0, v.problems.length - 4)}問</div></div>
+      <button class="btn btn-primary" style="width:100%; font-size:16px;">🖨️ これを印刷する</button>
+    `;
+
+    card.querySelector('button').onclick = () => {
+      modal.classList.add('hidden');
+      v.onSelect();
+    };
+
+    cardsEl.appendChild(card);
+  });
+
+  modal.classList.remove('hidden');
+}
+window.showPrintChoiceModal = showPrintChoiceModal;
+
 
 function printTrainingSheet(s){
   const count = 10;
   const tier = resolveTrainingTier(s);
-  const problems = [];
-  for (let i = 0; i < count; i++) problems.push(generateProblem(tier));
-  
-  const p1 = problems.slice(0, 5).map((p, i) =>
-    `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
-  ).join('');
-  const p2 = problems.slice(5, 10).map((p, i) =>
-    `<div class="p-row"><span class="p-num">${i + 6}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
-  ).join('');
 
-  // こたえの いちばん うしろの すうじを つなげて「あんごう」にする（ゲームに もどって にゅうりょくする）
-  const code = problems.map(p => String(p.answer).slice(-1)).join('');
-  const printId = addPrintCode(s.id, code, { type: 'skill', problems, name: s.name });
-  save();
+  // 3種類のセットを生成
+  const variants = ['🅰 Aセット', '🅱 Bセット', '🅲 Cセット'].map((label, vi) => {
+    const problems = [];
+    for (let i = 0; i < count; i++) problems.push(generateProblem(tier));
+    return {
+      problems,
+      opLabel: OP_LABELS[tier],
+      onSelect: () => {
+        const p1 = problems.slice(0, 5).map((p, i) =>
+          `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+        ).join('');
+        const p2 = problems.slice(5, 10).map((p, i) =>
+          `<div class="p-row"><span class="p-num">${i + 6}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+        ).join('');
+        const code = problems.map(p => String(p.answer).slice(-1)).join('');
+        const printId = addPrintCode(s.id, code, { type: 'skill', problems, name: s.name });
+        save();
+        openPrintWindow(`
+          <div style="display:flex; align-items:center; gap:12px;"><h1>${s.name}の修行プリント</h1></div>
+          <div class="p-sub">えんざん：${OP_LABELS[tier]}／${label}／ぜんぶで ${count}もん</div>
+          <div class="p-sub" style="font-size:20px; font-weight:bold;">【プリント番号: ${printId}】</div>
+          <div class="p-sheet">${p1}${p2}</div>
+        `);
+      }
+    };
+  });
 
-  const codeBoxes = problems.map((p, i) =>
-    `<div class="p-code-box"><span class="p-code-num">${i + 1}</span><span class="p-code-cell"></span></div>`
-  ).join('');
-
-  const titleHtml = `<div style="display:flex; align-items:center; gap:12px;">${iconHtml(s.emoji, 48)} <h1>${s.name}の修行プリント</h1></div>`;
-
-  openPrintWindow(`
-    <div style="display:flex; align-items:center; gap:12px;"><h1>${s.name}の修行プリント</h1></div>
-    <div class="p-sub">えんざん：${OP_LABELS[tier]}／ぜんぶで ${count}もん</div>
-    <div class="p-sub" style="font-size:20px; font-weight:bold;">【プリント番号: ${printId}】</div>
-    <div class="p-sheet">${p1}${p2}</div>
-  `);
+  showPrintChoiceModal(variants);
 }
 
 /* ==========================================================
@@ -4563,35 +4604,37 @@ function startCodeEntry(s){
 /* ==========================================================
    古代装備の せっけいず プリント＆あんごう
    ========================================================== */
-function printBlueprintSheet(bp){
+function printBlueprintSheet(bp, uid){
   const count = 20;
-  const problems = [];
-  for (let i = 0; i < count; i++) problems.push(generateProblem(bp.tier));
-  
-  const p1 = problems.slice(0, 5).map((p, i) =>
-    `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
-  ).join('');
-  const p2 = problems.slice(5, 10).map((p, i) =>
-    `<div class="p-row"><span class="p-num">${i + 6}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
-  ).join('');
-  
-
-  const code = problems.map(p => String(p.answer).slice(-1)).join('');
-  const printId = addPrintCode(bp.id, code, { type: 'blueprint', uid, problems, name: bp.name });
-  save();
-
-  const codeBoxes = problems.map((p, i) =>
-    `<div class="p-code-box"><span class="p-code-num">${i + 1}</span><span class="p-code-cell"></span></div>`
-  ).join('');
-
   const equipDb = getEquipTemplate(bp.equipId);
-  openPrintWindow(`
-    <h1>古代装備の せっけいず：${bp.name}</h1>
-    <div class="p-sub">えんざん：${OP_LABELS[bp.tier]}／ぜんぶで ${count}もん／「${equipDb.name}」を かいどく！</div>
-    <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>\n    ${printMetaHtml()}
-    <div class="p-sheet">${p1}${p2}</div>
-    
-  `);
+
+  const variants = ['🅰 Aセット', '🅱 Bセット', '🅲 Cセット'].map((label, vi) => {
+    const problems = [];
+    for (let i = 0; i < count; i++) problems.push(generateProblem(bp.tier));
+    return {
+      problems,
+      opLabel: OP_LABELS[bp.tier],
+      onSelect: () => {
+        const p1 = problems.slice(0, 10).map((p, i) =>
+          `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+        ).join('');
+        const p2 = problems.slice(10, 20).map((p, i) =>
+          `<div class="p-row"><span class="p-num">${i + 11}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+        ).join('');
+        const code = problems.map(p => String(p.answer).slice(-1)).join('');
+        const printId = addPrintCode(bp.id, code, { type: 'blueprint', uid, problems, name: bp.name });
+        save();
+        openPrintWindow(`
+          <h1>古代装備の せっけいず：${bp.name}</h1>
+          <div class="p-sub">えんざん：${OP_LABELS[bp.tier]}／${label}／${count}もん／「${equipDb.name}」を かいどく！</div>
+          <div class="p-sub" style="font-size:20px; font-weight:bold;">【プリント番号: ${printId}】</div>
+          <div class="p-sheet">${p1}${p2}</div>
+        `);
+      }
+    };
+  });
+
+  showPrintChoiceModal(variants);
 }
 
 function startBlueprintCodeEntry(uid, bp){
@@ -7001,36 +7044,40 @@ function printAreaStage(areaId, idx) {
   const area = AREA_STAGES[areaId];
   const stage = area.stages[idx];
   const count = 10;
-  const problems = [];
-  for (let i = 0; i < count; i++) {
-    problems.push(stage.generateProblem());
-  }
-  
-  const p1 = problems.slice(0, 5).map((p, i) =>
-    `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
-  ).join('');
-  const p2 = problems.slice(5, 10).map((p, i) =>
-    `<div class="p-row"><span class="p-num">${i + 6}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
-  ).join('');
-  
-
-  const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
-  const printName = `${area.name} ${stage.name}`;
-  
-  const printId = addPrintCode(areaId + '_' + idx, pCode, { type: 'stage', problems, name: printName, areaId, stageIndex: idx });
-
   const numPrefix = area.displayNum || areaId.replace('area', '');
-  openPrintWindow(`
-    <div class="print-header">
-      <div class="p-title">【エリア${numPrefix}-${idx+1}】 ${printName}</div>
-      <div class="p-name-box">なまえ：<span class="p-name-line"></span></div>
-    </div>
-    <div class="p-desc">すべてのけいさんに こたえて、大報酬をゲットしよう！（プリント番号: ${printId}）</div>
-    <div class="p-cols">
-      <div class="p-col">${p1}</div>
-      <div class="p-col">${p2}</div>
-    </div>
-  `);
+  const printName = `${area.name} ${stage.name}`;
+
+  const variants = ['🅰 Aセット', '🅱 Bセット', '🅲 Cセット'].map((label, vi) => {
+    const problems = [];
+    for (let i = 0; i < count; i++) problems.push(stage.generateProblem());
+    return {
+      problems,
+      opLabel: stage.name,
+      onSelect: () => {
+        const p1 = problems.slice(0, 5).map((p, i) =>
+          `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+        ).join('');
+        const p2 = problems.slice(5, 10).map((p, i) =>
+          `<div class="p-row"><span class="p-num">${i + 6}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+        ).join('');
+        const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
+        const printId = addPrintCode(areaId + '_' + idx, pCode, { type: 'stage', problems, name: printName, areaId, stageIndex: idx });
+        save();
+        openPrintWindow(`
+          <div class="p-title">【エリア${numPrefix}-${idx+1}】 ${printName} ${label}</div>
+          <div class="p-name-box">なまえ：<span class="p-name-line"></span></div>
+          <div class="p-bonus-banner">🎉 プリントでクリアすると 通常の<b>3倍以上</b>の報酬が もらえるぞ！</div>
+          <div class="p-desc">プリント番号: ${printId}</div>
+          <div class="p-cols">
+            <div class="p-col">${p1}</div>
+            <div class="p-col">${p2}</div>
+          </div>
+        `);
+      }
+    };
+  });
+
+  showPrintChoiceModal(variants);
 }
 
 function printAreaBoss(areaId) {

@@ -942,6 +942,16 @@
         <button id="btn-unified-close" class="btn" style="margin-top:12px; width:100%;" onclick="document.getElementById('modal-unified-code').classList.add('hidden')">もどる</button>
       </div>
     </div>
+    <!-- プリント選択モーダル -->
+    <div id="modal-print-choice" class="modal-overlay hidden" style="z-index: 16000; overflow-y:auto;">
+      <div class="panel" style="max-width: 780px; margin: 30px auto; max-height: 92vh; overflow-y: auto;">
+        <h2>🖨️ どのプリントを 印刷する？</h2>
+        <p class="flavor">3種類の問題セットを作りました。<br>プレビューを見て、好きなものを選ぼう！</p>
+        <div id="print-choice-cards" style="display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-top:16px;"></div>
+        <button class="btn" style="margin-top:20px; width:100%;" onclick="document.getElementById('modal-print-choice').classList.add('hidden')">やめる</button>
+      </div>
+    </div>
+
 
 </body>
 </html>
