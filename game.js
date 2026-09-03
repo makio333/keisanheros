@@ -6681,7 +6681,7 @@ function grantPrintRewards(cur, correct, total, rate) {
   if (rate >= 0.5) {
     // 50%+: random basic item
     const pot = ITEM_DB.find(x => x.id === 'potion');
-    G.ownedItems.push({ uid: G.nextUid++, id: 'potion' });
+    addItem('potion', 1);
     rewards.push({ kind:'item', name:`${pot.name} x1`, icon:pot.emoji });
   }
   if (rate >= 0.8) {
@@ -6689,13 +6689,13 @@ function grantPrintRewards(cur, correct, total, rate) {
     const pool = ['hipotion', 'ether'];
     const itId = pick(pool);
     const db = ITEM_DB.find(x => x.id === itId);
-    G.ownedItems.push({ uid: G.nextUid++, id: itId });
+    addItem(itId, 1);
     rewards.push({ kind:'item', name:`${db.name} x1`, icon:db.emoji });
   }
   if (rate >= 1.0) {
     // 100%: Cost Seed!
     const seed = ITEM_DB.find(x => x.id === 'cost_seed');
-    G.ownedItems.push({ uid: G.nextUid++, id: 'cost_seed' });
+    addItem('cost_seed', 1);
     rewards.push({ kind:'item', name:`${seed.name} x1`, icon:seed.emoji });
     
     G.player.gold += 500;
