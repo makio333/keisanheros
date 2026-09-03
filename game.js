@@ -4630,7 +4630,7 @@ function printDemonCastleSheet(){
   const count = 20;
   const problems = [];
   for (let i = 0; i < 15; i++) {
-    const tier = pick(['add4', 'sub4', 'mul3', 'div3', 'elem5', 'elem6']);
+    const tier = pick(['add5', 'sub5', 'mul4', 'div3', 'div4']);
     problems.push(generateProblem(tier));
   }
   for (let i = 0; i < 5; i++) {
