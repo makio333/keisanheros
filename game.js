@@ -3967,7 +3967,7 @@ function printQuestSheet(q){
       ${rows}
     </div>
   `;
-  setTimeout(() => window.print(), 100);
+  requestAnimationFrame(() => { requestAnimationFrame(() => { setTimeout(() => window.print(), 10); }); });
 }
 
 const STAT_DEFS = [
@@ -4420,7 +4420,7 @@ function printTrainingSheet(s){
 
   // こたえの いちばん うしろの すうじを つなげて「あんごう」にする（ゲームに もどって にゅうりょくする）
   const code = problems.map(p => String(p.answer).slice(-1)).join('');
-  const printId = addPrintCode(s.id, code, { type: 'skill' });
+  const printId = addPrintCode(s.id, code, { type: 'skill', problems, name: s.name });
   save();
 
   const codeBoxes = problems.map((p, i) =>
@@ -4434,14 +4434,10 @@ function printTrainingSheet(s){
     <div class="p-sub" style="margin-top: 10px;">えんざん：${OP_LABELS[tier]}／ぜんぶで ${count}もん</div>
     <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>\n    ${printMetaHtml()}
     <div class="p-sheet">${rows}</div>
-    <div class="p-code-section">
-      <div class="p-code-title">🔑 あんごうを つくろう！</div>
-      <div class="p-code-desc">それぞれの こたえの いちばん うしろの すうじを じゅんばんに かいて、あんごうを かんせいさせよう。ゲームに もどって「あんごう」に にゅうりょくすると とくぎが てにはいるよ！</div>
-      <div class="p-code-boxes">${codeBoxes}</div>
-    </div>
+    
   `;
 
-  setTimeout(() => window.print(), 100);
+  requestAnimationFrame(() => { requestAnimationFrame(() => { setTimeout(() => window.print(), 10); }); });
 }
 
 /* ==========================================================
@@ -4524,7 +4520,7 @@ function printBlueprintSheet(bp){
   ).join('');
 
   const code = problems.map(p => String(p.answer).slice(-1)).join('');
-  const printId = addPrintCode(bp.id, code, { type: 'blueprint', uid: uid });
+  const printId = addPrintCode(bp.id, code, { type: 'blueprint', uid, problems, name: bp.name });
   save();
 
   const codeBoxes = problems.map((p, i) =>
@@ -4537,14 +4533,10 @@ function printBlueprintSheet(bp){
     <div class="p-sub">えんざん：${OP_LABELS[bp.tier]}／ぜんぶで ${count}もん／「${equipDb.name}」を かいどく！</div>
     <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>\n    ${printMetaHtml()}
     <div class="p-sheet">${rows}</div>
-    <div class="p-code-section">
-      <div class="p-code-title">🔑 あんごうを つくろう！</div>
-      <div class="p-code-desc">それぞれの こたえの いちばん うしろの すうじを じゅんばんに かいて、あんごうを かんせいさせよう。ゲームに もどって「あんごう」に にゅうりょくすると「${equipDb.name}」が てにはいるよ！</div>
-      <div class="p-code-boxes">${codeBoxes}</div>
-    </div>
+    
   `;
 
-  setTimeout(() => window.print(), 100);
+  requestAnimationFrame(() => { requestAnimationFrame(() => { setTimeout(() => window.print(), 10); }); });
 }
 
 function startBlueprintCodeEntry(uid, bp){
@@ -4628,7 +4620,7 @@ function printDemonCastleSheet(){
   }
   
   const code = problems.map(p => String(Math.abs(parseInt(p.answer, 10) || 1)).slice(-1)).join('');
-  const printId = addPrintCode('demon_castle', code, { type: 'demon_castle' });
+  const printId = addPrintCode('demon_castle', code, { type: 'demon_castle', problems, name: '禁断の魔王城' });
   if (G) save();
 
   const rows = problems.map((p, i) =>
@@ -4646,14 +4638,10 @@ function printDemonCastleSheet(){
     <div class="p-sub" style="margin-top: 10px;">魔王の秘宝を手に入れるための特別問題／ぜんぶで ${count}もん</div>
     <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>\n    ${printMetaHtml()}
     <div class="p-sheet">${rows}</div>
-    <div class="p-code-section">
-      <div class="p-code-title">🔑 魔王のあんごうを つくろう！</div>
-      <div class="p-code-desc">それぞれの こたえの いちばん うしろの すうじ（漢字問題は答えの文字数）を じゅんばんに かいて、${count}けたの あんごうを かんせいさせよう。ゲームのタイトル画面で魔王城を押して「魔王のあんごうをいれる」に入力すると、秘宝が手に入るぞ！</div>
-      <div class="p-code-boxes">${codeBoxes}</div>
-    </div>
+    
   `;
 
-  setTimeout(() => window.print(), 100);
+  requestAnimationFrame(() => { requestAnimationFrame(() => { setTimeout(() => window.print(), 10); }); });
   const hint = $('demon-sheet-status-hint');
   if (hint) {
     hint.innerHTML = '<span style="color:#2ecc71;">✅ プリントを印刷しました！解き終わったら「🔑 魔王のあんごうをいれる」を押してね！</span>';
