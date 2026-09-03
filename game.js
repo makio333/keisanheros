@@ -8,6 +8,34 @@ function skillTimeMult(s){ return 1.0; }
 function skillTimePenaltyLabel(s){ return ''; }
 'use strict';
 
+
+/* ==========================================================
+   Tooltips
+   ========================================================== */
+let globalTooltip = null;
+function showTooltip(e, html) {
+  if (!globalTooltip) {
+    globalTooltip = document.createElement('div');
+    globalTooltip.id = 'global-tooltip';
+    document.body.appendChild(globalTooltip);
+  }
+  globalTooltip.innerHTML = html;
+  globalTooltip.style.display = 'block';
+  updateTooltipPos(e);
+}
+function hideTooltip() {
+  if (globalTooltip) globalTooltip.style.display = 'none';
+}
+function updateTooltipPos(e) {
+  if (!globalTooltip || globalTooltip.style.display === 'none') return;
+  globalTooltip.style.left = (e.pageX + 15) + 'px';
+  globalTooltip.style.top = (e.pageY + 15) + 'px';
+  const rect = globalTooltip.getBoundingClientRect();
+  if (rect.right > window.innerWidth) globalTooltip.style.left = (window.innerWidth - rect.width - 10) + 'px';
+  if (rect.bottom > window.innerHeight) globalTooltip.style.top = (e.pageY - rect.height - 10) + 'px';
+}
+document.addEventListener('mousemove', updateTooltipPos);
+
 /* ==========================================================
    安全なローカルストレージラッパー (iPad file:// 環境対応)
    ========================================================== */
@@ -4005,10 +4033,61 @@ let statusPending = {};
 function showStatus(){
   statusPending = {};
   renderStatus();
+  renderRoomInventory();
 }
 
 function statusPendingTotal(){
   return Object.values(statusPending).reduce((a, b) => a + b, 0);
+}
+
+
+function renderRoomInventory() {
+  const grid = $('room-inventory-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  const CELLS = 64; // 8x8
+  
+  for (let i = 0; i < CELLS; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'inv-grid-cell';
+    
+    if (i < G.items.length) {
+      const it = G.items[i];
+      const db = getItemTemplate(it.id);
+      if (db) {
+        const isBlueprint = !!db.equipId;
+        const emoji = db.emoji || (isBlueprint ? '📜' : '💊');
+        cell.innerHTML = `<div style="font-size:32px;">${iconHtml(emoji, 32)}</div><span class="item-count">x${it.count}</span>`;
+        
+        let desc = db.desc || '';
+        if (isBlueprint) {
+          const equipDb = getEquipTemplate(db.equipId);
+          desc = `プリントを解いて暗号を入力すると「${equipDb.name}」が手に入る！`;
+        }
+
+        let tooltipHtml = `
+          <div style="font-size:16px; font-weight:bold; color:var(--accent); margin-bottom:4px;">${db.name}</div>
+          <div style="font-size:12px; color:#ccc;">${desc}</div>
+          <div style="font-size:13px; margin-top:8px; color:#f1c40f;">🖱 クリックして ${isBlueprint ? 'プリント' : 'つかう'}</div>
+        `;
+        
+        cell.onmouseover = (e) => showTooltip(e, tooltipHtml);
+        cell.onmouseout = () => hideTooltip();
+        cell.onclick = () => {
+          hideTooltip();
+          if (isBlueprint) {
+            printBlueprintSheet(db, it.uid);
+          } else {
+            useItem(it.uid, db); 
+            updateHud(); 
+            save(); 
+            renderRoomInventory(); // Re-render
+          }
+        };
+      }
+    }
+    grid.appendChild(cell);
+  }
 }
 
 function renderStatus(){
@@ -4188,32 +4267,48 @@ function renderWeaponShopTabs(){
 function renderWeaponShopList(){
   $('weapon-shop-gold').textContent = G.player.gold;
   const list = $('weapon-shop-list');
+  list.className = 'icon-grid';
   list.innerHTML = '';
   const items = weaponShopFilter === 'all' ? EQUIP_DB : EQUIP_DB.filter(db => db.slot === weaponShopFilter);
-  for (const db of items){
-    const stat = calcEquipStat(db.stat, 1);
-    const statText = Object.entries(stat).map(([k, v]) => `${statName(k)}+${v}`).join(' ');
-    const owned = G.ownedEquips.some(o => o.id === db.id);
-    const isOverCost = db.cost > costCap();
+  
+  for (let i = 0; i < Math.max(64, items.length); i++) {
+    const cell = document.createElement('div');
+    cell.className = 'inv-grid-cell';
     
-    let btnText = 'かう';
-    if (owned) btnText = 'こうにゅうずみ';
-    else if (isOverCost) btnText = 'コスト不足（装備できません）';
-    else if (G.player.gold < db.price) btnText = 'おかねがたりない';
-    
-    const card = document.createElement('div');
-    card.className = 'item-card shop-card';
-    card.innerHTML = `
-      <div class="item-card-icon rarity-1">${iconHtml(db.emoji, 48)}</div>
-      <div class="item-card-name">${db.name}</div>
-      <div class="item-card-stars rarity-1">${rarityLabelHtml(1)}</div>
-      <span class="tag">${SLOT_LABELS[db.slot]}</span><span class="tag cost-tag" style="${isOverCost ? 'color:#ff6b6b;' : ''}">コスト${db.cost}</span>
-      <div class="shop-card-stat">${statText}</div>
-      <div class="shop-card-price">${owned ? '' : db.price + 'G'}</div>
-      <button class="btn shop-card-buy" ${owned || G.player.gold < db.price || isOverCost ? 'disabled' : ''}>${btnText}</button>
-    `;
-    if (!owned && !isOverCost) card.querySelector('.shop-card-buy').onclick = () => buyEquip(db);
-    list.appendChild(card);
+    if (i < items.length) {
+      const db = items[i];
+      const stat = calcEquipStat(db.stat, 1);
+      const statText = Object.entries(stat).map(([k, v]) => `${statName(k)}+${v}`).join(' ');
+      const owned = G.ownedEquips.some(o => o.id === db.id);
+      const isOverCost = db.cost > costCap();
+      const canBuy = !owned && !isOverCost && G.player.gold >= db.price;
+      
+      cell.innerHTML = `<div class="equip-icon rarity-1">${iconHtml(db.emoji, 32)}</div>`;
+      if (owned) cell.style.opacity = '0.3';
+      
+      let tooltipHtml = `
+        <div style="font-size:16px; font-weight:bold; color:var(--accent);">${db.name}</div>
+        <div style="margin:4px 0;"><span class="tag">${SLOT_LABELS[db.slot]}</span> <span class="tag">コスト${db.cost}</span></div>
+        <div style="font-size:13px; margin-bottom:8px; color:#ccc;">${statText}</div>
+        <div style="font-size:16px; font-weight:bold;">${owned ? 'こうにゅうずみ' : '💰 ' + db.price + ' G'}</div>
+        ${isOverCost ? '<div style="color:#ff6b6b; font-size:12px; margin-top:4px;">※コスト不足（装備できません）</div>' : ''}
+      `;
+
+      cell.onmouseover = (e) => showTooltip(e, tooltipHtml);
+      cell.onmouseout = () => hideTooltip();
+      
+      if (canBuy) {
+        cell.onclick = () => {
+          hideTooltip();
+          buyEquip(db);
+        };
+      } else {
+        cell.onclick = () => {
+          if (!owned) SM.playBeep('error');
+        };
+      }
+    }
+    list.appendChild(cell);
   }
 }
 
