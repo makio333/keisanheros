@@ -3975,9 +3975,8 @@ function printQuestSheet(q){
   openPrintWindow(`
     <h1 style="font-size:34px;">サブクエスト：${q.npc.name}の たのみごと</h1>
     <div class="p-sub" style="font-size:19px; margin-bottom:26px;">＊${q.title}＊／えんざん：${OP_LABELS[q.tier]}</div>
-    <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>
     <div class="p-sheet" style="grid-template-columns:1fr; margin-top:12px;">
-      ${p1}${p2}
+      ${rows}
     </div>
   `);
 }
@@ -4679,49 +4678,53 @@ function openDemonCastleModal(){
 }
 
 function printDemonCastleSheet(){
-  // 算数と漢字の混合20問
   const count = 20;
-  const problems = [];
-  for (let i = 0; i < 15; i++) {
-    const tier = pick(['add5', 'sub5', 'mul4', 'div3', 'div4']);
-    problems.push(generateProblem(tier));
-  }
-  for (let i = 0; i < 5; i++) {
-    const g = pick(['kanji_g1', 'kanji_g2', 'kanji_g3', 'kanji_g4', 'kanji_g5', 'kanji_g6']);
-    const kp = generateKanjiProblem(g);
-    problems.push({ text: `【漢字】${kp.text}`, answer: kp.answer.length });
-  }
   
-  const code = problems.map(p => String(Math.abs(parseInt(p.answer, 10) || 1)).slice(-1)).join('');
-  const printId = addPrintCode('demon_castle', code, { type: 'demon_castle', problems, name: '禁断の魔王城' });
-  if (G) save();
-
-  
-  const p1 = problems.slice(0, 5).map((p, i) =>
-    `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
-  ).join('');
-  const p2 = problems.slice(5, 10).map((p, i) =>
-    `<div class="p-row"><span class="p-num">${i + 6}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
-  ).join('');
-  
-
-  const codeBoxes = problems.map((p, i) =>
-    `<div class="p-code-box"><span class="p-code-num">${i + 1}</span><span class="p-code-cell"></span></div>`
-  ).join('');
-
-  const titleHtml = `<div style="display:flex; align-items:center; gap:12px;"><span style="font-size:42px;">👑</span> <h1>禁断の魔王城 秘密の試練プリント</h1></div>`;
-
-  openPrintWindow(`
-    ${titleHtml}
-    <div class="p-sub" style="margin-top: 10px;">魔王の秘宝を手に入れるための特別問題／ぜんぶで ${count}もん</div>
-    <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>\n    ${printMetaHtml()}
-    <div class="p-sheet">${p1}${p2}</div>
+  const variants = ['🅰 Aセット', '🅱 Bセット', '🅲 Cセット'].map((label, vi) => {
+    const problems = [];
+    for (let i = 0; i < 15; i++) {
+      const tier = pick(['add5', 'sub5', 'mul4', 'div3', 'div4']);
+      problems.push(generateProblem(tier));
+    }
+    for (let i = 0; i < 5; i++) {
+      const g = pick(['kanji_g1', 'kanji_g2', 'kanji_g3', 'kanji_g4', 'kanji_g5', 'kanji_g6']);
+      const kp = generateKanjiProblem(g);
+      problems.push({ text: `【漢字】${kp.text}`, answer: kp.answer.length });
+    }
     
-  `);
-  const hint = $('demon-sheet-status-hint');
-  if (hint) {
-    hint.innerHTML = '<span style="color:#2ecc71;">✅ プリントを印刷しました！解き終わったら「🔑 魔王のあんごうをいれる」を押してね！</span>';
-  }
+    return {
+      problems,
+      opLabel: '魔王の試練',
+      onSelect: () => {
+        const p1 = problems.slice(0, 10).map((p, i) =>
+          `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr" style="font-size: 20px;">${p.text} = </span><span class="p-blank"></span></div>`
+        ).join('');
+        const p2 = problems.slice(10, 20).map((p, i) =>
+          `<div class="p-row"><span class="p-num">${i + 11}.</span><span class="p-expr" style="font-size: 20px;">${p.text} = </span><span class="p-blank"></span></div>`
+        ).join('');
+        
+        const code = problems.map(p => String(Math.abs(parseInt(p.answer, 10) || 1)).slice(-1)).join('');
+        const printId = addPrintCode('demon_castle', code, { type: 'demon_castle', problems, name: '禁断の魔王城' });
+        if (G) save();
+
+        const titleHtml = `<div style="display:flex; align-items:center; gap:12px;"><span style="font-size:42px;">👑</span> <h1>禁断の魔王城 秘密の試練プリント</h1></div>`;
+
+        openPrintWindow(`
+          ${titleHtml}
+          <div class="p-sub" style="margin-top: 10px;">魔王の秘宝を手に入れるための特別問題／ぜんぶで ${count}もん／${label}</div>
+          <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>
+          <div class="p-sheet">${p1}${p2}</div>
+        `);
+        
+        const hint = $('demon-sheet-status-hint');
+        if (hint) {
+          hint.innerHTML = '<span style="color:#2ecc71;">✅ プリントを印刷しました！「🔑 魔王のあんごうをいれる」から採点してね！</span>';
+        }
+      }
+    };
+  });
+
+  showPrintChoiceModal(variants);
 }
 
 function openDemonCastleCodeInput(){
@@ -6840,6 +6843,21 @@ function generatePrintId() {
   let id;
   do { id = String(rnd(1000, 9999)); } while (G && G.activePrints && G.activePrints[id]);
   return id;
+}
+
+
+function hasPrintCode(id) {
+  if (!G) {
+    if (id === 'demon_castle') {
+      try {
+        const prints = JSON.parse(storageGet('guest_active_prints') || '{}');
+        return Object.values(prints).some(p => p.targetId === id);
+      } catch(e) {}
+    }
+    return false;
+  }
+  if (!G.activePrints) return false;
+  return Object.values(G.activePrints).some(p => p.targetId === id);
 }
 
 function addPrintCode(id, newCode, meta = {}) {
