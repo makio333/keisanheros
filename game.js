@@ -4430,8 +4430,7 @@ function printTrainingSheet(s){
 
   // こたえの いちばん うしろの すうじを つなげて「あんごう」にする（ゲームに もどって にゅうりょくする）
   const code = problems.map(p => String(p.answer).slice(-1)).join('');
-  if (!G.printSheetCodes) G.printSheetCodes = {};
-  G.printSheetCodes[s.id] = code;
+  addPrintCode(s.id, code);
   save();
 
   const codeBoxes = problems.map((p, i) =>
@@ -4463,16 +4462,16 @@ function startCodeEntry(s){
   $('btn-training-quit').textContent = 'やめる';
   $('training-title').textContent = `＊${s.name}の あんごう＊`;
 
-  const expected = G.printSheetCodes && G.printSheetCodes[s.id];
-  if (!expected) {
+  const hasCode = hasPrintCode(s.id);
+  if (!hasCode) {
     $('training-progress').innerHTML = 'まだ プリントした もんだいシートが ないみたい。さきに 🖨️プリントで もんだいを といてみよう！';
     $('training-challenge').innerHTML = '';
     return;
   }
 
-  $('training-progress').innerHTML = `プリントした ${expected.length}もんの こたえから つくった あんごう（すうじ${expected.length}けた）を にゅうりょくしよう！`;
+  $('training-progress').innerHTML = `プリントした 10もんの こたえから つくった あんごう（すうじ10けた）を にゅうりょくしよう！`;
   $('training-challenge').innerHTML = `
-    <input type="text" inputmode="numeric" id="code-input" class="challenge-input" maxlength="${expected.length}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <input type="text" inputmode="numeric" id="code-input" class="challenge-input" maxlength="20" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
     <button id="code-submit" class="btn btn-primary" style="margin-top:12px;">けってい</button>
     <p class="result-text" id="code-result"></p>
   `;
@@ -4485,8 +4484,8 @@ function startCodeEntry(s){
 
   $('code-submit').onclick = () => {
     const val = input.value;
-    if (val === expected) {
-      delete G.printSheetCodes[s.id];
+    if (checkPrintCode(s.id, val)) {
+      removePrintCode(s.id, val);
       if (s.id === 'levelup') {
         const lvlBefore = G.player.lvl;
         const maxHpBefore = totalMaxHp();
@@ -4535,8 +4534,7 @@ function printBlueprintSheet(bp){
   ).join('');
 
   const code = problems.map(p => String(p.answer).slice(-1)).join('');
-  if (!G.printSheetCodes) G.printSheetCodes = {};
-  G.printSheetCodes[bp.id] = code;
+  addPrintCode(bp.id, code);
   save();
 
   const codeBoxes = problems.map((p, i) =>
@@ -4564,17 +4562,17 @@ function startBlueprintCodeEntry(uid, bp){
   $('btn-training-quit').textContent = 'やめる';
   $('training-title').textContent = `＊${bp.name}の あんごう＊`;
 
-  const expected = G.printSheetCodes && G.printSheetCodes[bp.id];
-  if (!expected) {
+  const hasCode = hasPrintCode(bp.id);
+  if (!hasCode) {
     $('training-progress').innerHTML = 'まだ プリントした せっけいずが ないみたい。さきに 🖨️プリントで もんだいを といてみよう！';
     $('training-challenge').innerHTML = '';
     return;
   }
 
   const equipDb = getEquipTemplate(bp.equipId);
-  $('training-progress').innerHTML = `プリントした ${expected.length}もんの こたえから つくった あんごう（すうじ${expected.length}けた）を にゅうりょくしよう！`;
+  $('training-progress').innerHTML = `プリントした 10もんの こたえから つくった あんごう（すうじ10けた）を にゅうりょくしよう！`;
   $('training-challenge').innerHTML = `
-    <input type="text" inputmode="numeric" id="code-input" class="challenge-input" maxlength="${expected.length}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <input type="text" inputmode="numeric" id="code-input" class="challenge-input" maxlength="20" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
     <button id="code-submit" class="btn btn-primary" style="margin-top:12px;">けってい</button>
     <p class="result-text" id="code-result"></p>
   `;
@@ -4587,8 +4585,8 @@ function startBlueprintCodeEntry(uid, bp){
 
   $('code-submit').onclick = () => {
     const val = input.value;
-    if (val === expected) {
-      delete G.printSheetCodes[bp.id];
+    if (checkPrintCode(bp.id, val)) {
+      removePrintCode(bp.id, val);
       removeItem(uid, 1);
       const ability = rollAbility(5);
       G.ownedEquips.push({ uid: G.nextUid++, id: bp.equipId, rarity: 5, ability });
@@ -4614,7 +4612,7 @@ function openDemonCastleModal(){
     modal.classList.remove('hidden');
     SM.playBeep('type');
     const hint = $('demon-sheet-status-hint');
-    const code = (G && G.printSheetCodes && G.printSheetCodes['demon_castle']) || storageGet('guest_demon_castle_code');
+    const code = hasPrintCode('demon_castle');
     if (hint) {
       if (code) {
         hint.innerHTML = '<span style="color:#2ecc71;">✅ プリントが発行されています！「🔑 魔王のあんごうをいれる」を押して入力しよう！</span>';
@@ -4640,13 +4638,8 @@ function printDemonCastleSheet(){
   }
   
   const code = problems.map(p => String(Math.abs(parseInt(p.answer, 10) || 1)).slice(-1)).join('');
-  if (G) {
-    if (!G.printSheetCodes) G.printSheetCodes = {};
-    G.printSheetCodes['demon_castle'] = code;
-    save();
-  } else {
-    storageSet('guest_demon_castle_code', code);
-  }
+  addPrintCode('demon_castle', code);
+  if (G) save();
 
   const rows = problems.map((p, i) =>
     `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
@@ -4699,16 +4692,16 @@ function openDemonCastleCodeInput(){
 
   $('training-title').textContent = '＊禁断の魔王城 あんごう入力＊';
 
-  const expected = (G && G.printSheetCodes && G.printSheetCodes['demon_castle']) || storageGet('guest_demon_castle_code');
-  if (!expected) {
+  const hasCode = hasPrintCode('demon_castle');
+  if (!hasCode) {
     $('training-progress').innerHTML = 'まだ プリントした 魔王城シートが ないみたい。さきに 🖨️プリントで もんだいを といてみよう！';
     $('training-challenge').innerHTML = '';
     return;
   }
 
-  $('training-progress').innerHTML = `プリントした ${expected.length}もんの こたえから つくった あんごう（すうじ${expected.length}けた）を にゅうりょくしよう！`;
+  $('training-progress').innerHTML = `プリントした 20もんの こたえから つくった あんごう（すうじ20けた）を にゅうりょくしよう！`;
   $('training-challenge').innerHTML = `
-    <input type="text" inputmode="numeric" id="code-input" class="challenge-input" maxlength="${expected.length}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <input type="text" inputmode="numeric" id="code-input" class="challenge-input" maxlength="20" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
     <button id="code-submit" class="btn btn-primary" style="margin-top:12px;">けってい</button>
     <p class="result-text" id="code-result"></p>
   `;
@@ -4721,9 +4714,8 @@ function openDemonCastleCodeInput(){
 
   $('code-submit').onclick = () => {
     const val = input.value;
-    if (val === expected) {
-      if (G && G.printSheetCodes) delete G.printSheetCodes['demon_castle'];
-      storageSet('guest_demon_castle_code', null);
+    if (checkPrintCode('demon_castle', val)) {
+      removePrintCode('demon_castle', val);
 
       if (G) {
         G.player.exp += 1000;
