@@ -6735,3 +6735,8 @@ function grantPrintRewards(cur, correct, total, rate) {
     onDone: showHome
   });
 }
+
+// Make print functions available to HTML onclick attributes
+window.openUnifiedCodeEntry = openUnifiedCodeEntry;
+window.fetchUnifiedPrint = fetchUnifiedPrint;
+window.gradeUnifiedPrint = gradeUnifiedPrint;
