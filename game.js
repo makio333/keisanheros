@@ -6968,11 +6968,15 @@ function removeResolvedPrint(result) {
 function openAdminGrade() {
   requestAdminAccess(() => {
     const listEl = $('unified-problems-list');
+    const cur = window.unifiedCurrentPrint;
+    if (!cur || !cur.meta || !cur.meta.problems) return;
+    const problems = cur.meta.problems;
     
-    // Change inputs to checkboxes for admin
+    // Change inputs to checkboxes for admin and show the answer
     const inputs = listEl.querySelectorAll('input.challenge-input');
     inputs.forEach((input, i) => {
-      input.outerHTML = `<label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="admin-grade-chk" data-idx="${i}" style="width:36px; height:36px;"> <span style="font-size:24px;">正解</span></label>`;
+      const ans = problems[i].answer;
+      input.outerHTML = `<span style="font-size:32px; color:#e74c3c; font-weight:bold; min-width: 60px;">${ans}</span> <label style="display:flex; align-items:center; gap:8px; margin-left: auto;"><input type="checkbox" class="admin-grade-chk" data-idx="${i}" style="width:36px; height:36px;"> <span style="font-size:24px;">正解</span></label>`;
     });
 
     const markSpans = listEl.querySelectorAll('span[id^="unified-mark-"]');
