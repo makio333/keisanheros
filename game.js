@@ -4765,6 +4765,7 @@ function startBlueprintCodeEntry(uid, bp){
    魔王城の秘密プリント（タイトル画面の魔王城から開く）
    ========================================================== */
 function openDemonCastleModal(){
+  cleanupOldPrints();
   if (!G) {
     showLoadSaveScreen(() => {
       showScreen('screen-home'); // 拠点画面を裏に表示
@@ -6725,6 +6726,7 @@ if (document.readyState === 'loading') {
 
 
 function openUnifiedCodeEntry() {
+  cleanupOldPrints();
   const modal = $('modal-unified-code');
   if (modal) {
     modal.classList.remove('hidden');
@@ -6972,7 +6974,44 @@ function hasPrintCode(id) {
   return Object.values(G.activePrints).some(p => p.targetId === id);
 }
 
+
+function cleanupOldPrints() {
+  const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  
+  if (G && G.activePrints) {
+    let changed = false;
+    for (const pId in G.activePrints) {
+      const createdAt = G.activePrints[pId].createdAt || now; // default to now if missing (keep old ones for 2 days from today)
+      if (now - createdAt > TWO_DAYS) {
+        delete G.activePrints[pId];
+        changed = true;
+      }
+    }
+    if (changed) save();
+  }
+  
+  try {
+    let guestStr = storageGet('guest_active_prints');
+    if (guestStr) {
+      let guestPrints = JSON.parse(guestStr);
+      let guestChanged = false;
+      for (const pId in guestPrints) {
+        const createdAt = guestPrints[pId].createdAt || now;
+        if (now - createdAt > TWO_DAYS) {
+          delete guestPrints[pId];
+          guestChanged = true;
+        }
+      }
+      if (guestChanged) {
+        storageSet('guest_active_prints', JSON.stringify(guestPrints));
+      }
+    }
+  } catch(e) {}
+}
+
 function addPrintCode(id, newCode, meta = {}) {
+  meta.createdAt = Date.now();
   const printId = generatePrintId();
   meta.targetId = id;
   meta.code = newCode;
