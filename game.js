@@ -1630,10 +1630,6 @@ function skillIsLearned(s){
 }
 
 /* プリントのみの とくべつな しゅぎょう（あんごうが せいかいすると レベルが 5 あがる） */
-const LEVEL_UP_TRAINING = {
-  id:'levelup', name:'レベルアップ しゅぎょう', emoji: '画像/スキル/skill_levelup.jpg', tier:'div5',
-  desc:'プリントした もんだいの あんごうが せいかいすると、レベルが 5 あがる！',
-};
 
 /* ==========================================================
    ゲーム状態
@@ -3603,20 +3599,62 @@ function showStageSelectNew(areaId){
     
     title.innerHTML = `＊${area.name}（${area.opLabel}）＊<br><span style="font-size: 13px; color: ${lvColor};">推奨Lv: ${recLv}（現在Lv: ${playerLv}）</span>`;
     container.appendChild(title);
+    
     const stageCounts = getStageClearCounts(areaId);
     (area.stages || []).forEach((stage, idx) => {
+      const rowWrap = document.createElement('div');
+      rowWrap.style.display = 'flex';
+      rowWrap.style.gap = '8px';
+      rowWrap.style.width = '100%';
+      rowWrap.style.marginBottom = '8px';
+      
       const row = document.createElement('button');
       row.className = 'stage-select-row';
+      row.style.flex = '1';
+      row.style.marginBottom = '0';
       row.innerHTML = `<span class="stage-select-num">${numPrefix}-${idx + 1}</span><span class="stage-select-name">${stage.name}</span>${stageClearStatusHtml(stageCounts[idx] || 0)}`;
       row.onclick = () => enterAreaStage(areaId, idx);
-      container.appendChild(row);
+      
+      const printBtn = document.createElement('button');
+      printBtn.className = 'btn btn-primary';
+      printBtn.style.padding = '8px 12px';
+      printBtn.style.fontSize = '24px';
+      printBtn.innerHTML = '🖨️';
+      printBtn.title = 'プリントして遊ぶ（大量報酬！）';
+      printBtn.onclick = () => printAreaStage(areaId, idx);
+      
+      rowWrap.appendChild(row);
+      rowWrap.appendChild(printBtn);
+      container.appendChild(rowWrap);
     });
+    
+    const bossWrap = document.createElement('div');
+    bossWrap.style.display = 'flex';
+    bossWrap.style.gap = '8px';
+    bossWrap.style.width = '100%';
+    bossWrap.style.marginTop = '16px';
+    
     const bossRow = document.createElement('button');
     bossRow.className = 'stage-select-row stage-select-boss-row';
+    bossRow.style.flex = '1';
+    bossRow.style.marginBottom = '0';
     const bossStars = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, (G && G.clearCounts && G.clearCounts[area.rewardZone]) || 0);
     bossRow.innerHTML = `<span class="stage-select-num">${numPrefix}-B</span><span class="stage-select-name">👹 ${area.bossName}</span>${stageClearStatusHtml(bossStars)}`;
     bossRow.onclick = () => enterAreaBoss(areaId);
-    container.appendChild(bossRow);
+    
+    const bossPrintBtn = document.createElement('button');
+    bossPrintBtn.className = 'btn btn-primary';
+    bossPrintBtn.style.padding = '8px 12px';
+    bossPrintBtn.style.fontSize = '24px';
+    bossPrintBtn.style.background = 'linear-gradient(to bottom, #d35400, #c0392b)';
+    bossPrintBtn.innerHTML = '🖨️';
+    bossPrintBtn.title = 'ボス戦をプリントで遊ぶ（大量報酬！）';
+    bossPrintBtn.onclick = () => printAreaBoss(areaId);
+    
+    bossWrap.appendChild(bossRow);
+    bossWrap.appendChild(bossPrintBtn);
+    container.appendChild(bossWrap);
+
   } catch (err) {
     console.error('showStageSelectNew error:', err);
   }
@@ -4385,25 +4423,7 @@ function showSkills(){
     list.appendChild(row);
   }
 
-  // プリントのみ の とくべつな しゅぎょう（レベルアップ）
-  const lvRow = document.createElement('div');
-  lvRow.className = 'skill-row skill-row-special';
-  lvRow.innerHTML = `
-    ${iconHtml(LEVEL_UP_TRAINING.emoji, 48)}
-    <div class="info">
-    <span class="mastered">⭐</span> ${LEVEL_UP_TRAINING.name}
-    <span class="tag">🧮${OP_LABELS[LEVEL_UP_TRAINING.tier]}</span><span class="tag">プリントのみ</span>
-    <div class="desc">${LEVEL_UP_TRAINING.desc}</div>
-    </div>`;
-  const lvBtnGroup = document.createElement('div');
-  lvBtnGroup.className = 'skill-row-btns';
-  const lvPrintBtn = document.createElement('button');
-  lvPrintBtn.className = 'btn';
-  lvPrintBtn.textContent = '🖨️ プリント';
-  lvPrintBtn.onclick = () => printTrainingSheet(LEVEL_UP_TRAINING);
-  lvBtnGroup.appendChild(lvPrintBtn);
-  lvRow.appendChild(lvBtnGroup);
-  list.appendChild(lvRow);
+  
 }
 
 /* ==========================================================
@@ -6612,10 +6632,10 @@ function fetchUnifiedPrint() {
   listEl.innerHTML = '';
   meta.problems.forEach((p, i) => {
     const isKanji = typeof p.answer === 'string' && isNaN(parseInt(p.answer, 10)); // crude check for kanji string vs number
-    listEl.innerHTML += `<div class="unified-prob-row" style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:20px;">
+    listEl.innerHTML += `<div class="unified-prob-row" style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:32px;">
       <span style="width:40px; text-align:right;">${i+1}.</span>
       <span style="flex:1; text-align:right;">${p.text} = </span>
-      <input type="text" id="unified-ans-${i}" class="challenge-input" style="width:100px; font-size:20px; padding:4px;" ${!isKanji ? 'inputmode="numeric"' : ''}>
+      <input type="text" id="unified-ans-${i}" class="challenge-input" style="width:160px; font-size:36px; height: 50px; padding:4px;" ${!isKanji ? 'inputmode="numeric"' : ''}>
       <span id="unified-mark-${i}" style="width:30px; font-weight:bold;"></span>
     </div>`;
   });
@@ -6904,7 +6924,7 @@ function openAdminGrade() {
 
     const btnArea = listEl.nextElementSibling;
     btnArea.outerHTML = `<div style="margin-top:20px; display:flex; gap:12px; flex-direction:column;">
-      <button class="btn btn-primary" style="width:100%; background:#27ae60; font-size:20px; padding:12px;" onclick="adminGradeAllCorrect()">💮 全問正解にする</button>
+      <button class="btn btn-primary" style="width:100%; background:#27ae60; font-size:32px; padding:12px;" onclick="adminGradeAllCorrect()">💮 全問正解にする</button>
       <button class="btn btn-primary" style="width:100%; background:linear-gradient(135deg, #e74c3c, #c0392b); font-size:24px; padding:16px;" onclick="submitAdminGrade()">この内容で採点を登録する</button>
     </div>`;
   });
@@ -6936,4 +6956,75 @@ function submitAdminGrade() {
 window.openAdminGrade = openAdminGrade;
 window.adminGradeAllCorrect = adminGradeAllCorrect;
 window.submitAdminGrade = submitAdminGrade;
+
+
+
+function printAreaStage(areaId, idx) {
+  const area = AREA_STAGES[areaId];
+  const stage = area.stages[idx];
+  const count = 10;
+  const problems = [];
+  for (let i = 0; i < count; i++) {
+    problems.push(stage.generateProblem());
+  }
+  const rows = problems.map((p, i) =>
+    `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+  ).join('');
+
+  const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
+  const printName = `${area.name} ${stage.name}`;
+  
+  const printId = addPrintCode(areaId + '_' + idx, pCode, { type: 'stage', problems, name: printName, areaId, stageIndex: idx });
+
+  const numPrefix = area.displayNum || areaId.replace('area', '');
+  $('print-sheet').innerHTML = `
+    <div class="print-header">
+      <div class="p-title">【エリア${numPrefix}-${idx+1}】 ${printName}</div>
+      <div class="p-name-box">なまえ：<span class="p-name-line"></span></div>
+    </div>
+    <div class="p-desc">すべてのけいさんに こたえて、大報酬をゲットしよう！（プリント番号: ${printId}）</div>
+    <div class="p-cols">
+      <div class="p-col">${rows.substring(0, rows.length/2)}</div>
+      <div class="p-col">${rows.substring(rows.length/2)}</div>
+    </div>
+  `;
+  
+  $('screen-print').style.display = 'block';
+  requestAnimationFrame(() => { requestAnimationFrame(() => { setTimeout(() => window.print(), 10); }); });
+}
+
+function printAreaBoss(areaId) {
+  const area = AREA_STAGES[areaId];
+  const count = 10;
+  const problems = [];
+  for (let i = 0; i < count; i++) {
+    // Boss problem mixing phase 1 & 2
+    if (Math.random() < 0.5) problems.push(area.bossPhase1Problem());
+    else problems.push(area.bossPhase2Problem());
+  }
+  const rows = problems.map((p, i) =>
+    `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+  ).join('');
+
+  const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
+  const printName = `${area.name} 👹${area.bossName}`;
+  
+  const printId = addPrintCode(areaId + '_boss', pCode, { type: 'stage_boss', problems, name: printName, areaId, isBoss: true });
+
+  const numPrefix = area.displayNum || areaId.replace('area', '');
+  $('print-sheet').innerHTML = `
+    <div class="print-header">
+      <div class="p-title" style="color:#c0392b;">【ボス戦 ${numPrefix}-B】 ${printName}</div>
+      <div class="p-name-box">なまえ：<span class="p-name-line"></span></div>
+    </div>
+    <div class="p-desc">すべてのけいさんに こたえて、ボスをとうばつしよう！（プリント番号: ${printId}）</div>
+    <div class="p-cols">
+      <div class="p-col">${rows.substring(0, rows.length/2)}</div>
+      <div class="p-col">${rows.substring(rows.length/2)}</div>
+    </div>
+  `;
+  
+  $('screen-print').style.display = 'block';
+  requestAnimationFrame(() => { requestAnimationFrame(() => { setTimeout(() => window.print(), 10); }); });
+}
 
