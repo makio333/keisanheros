@@ -3499,7 +3499,7 @@ function checkDemonCastleReward() {
     G.ownedEquips.push(equip);
     save();
 
-    showRewardModal([
+    playItemRevealSequence([
       { kind:'item', name:'ゴールド 10,000 G', icon:'💰' },
       { kind:'item', name:'経験値 1,000 EXP', icon:'✨' },
       { kind:'equip', name:'魔王の覇剣 (★5 レジェンド)', icon:'⚔️', rarity:5, ability }
@@ -4709,7 +4709,7 @@ function openDemonCastleCodeInput(){
         save();
 
         quitBtn.onclick = originalQuit; // 戻す
-        showRewardModal([
+        playItemRevealSequence([
           { kind:'item', name:'ゴールド 10,000 G', icon:'💰' },
           { kind:'item', name:'経験値 1,000 EXP', icon:'✨' },
           { kind:'equip', name:'魔王の覇剣 (★5 レジェンド)', icon:'⚔️', rarity:5, ability }
@@ -6558,6 +6558,8 @@ function openUnifiedCodeEntry() {
     } else {
       pIds.forEach(pId => {
         const meta = prints[pId];
+  window.currentUnifiedMeta = meta;
+  window.currentUnifiedPrintId = pId;
         listEl.innerHTML += `<button class="btn" style="width:100%; text-align:left; margin-bottom:8px; padding:12px; display:flex; justify-content:space-between; align-items:center; background:#2c3e50; border-color:#34495e;" onclick="selectUnifiedPrint('${pId}')">
             <span style="font-size:18px;">🖨️ <b>番号: ${pId}</b> （${meta.name}）</span>
             <span class="tag">全${meta.problems ? meta.problems.length : '?'}問</span>
@@ -6591,6 +6593,8 @@ function fetchUnifiedPrint() {
   }
   
   const meta = prints[pId];
+  window.currentUnifiedMeta = meta;
+  window.currentUnifiedPrintId = pId;
   if (!meta || !meta.problems) {
     resEl.innerHTML = '<span style="color:#ff5c5c;">プリントが見つかりません。古いプリントの場合は諦めるか、もう一度プリントを発行してね。</span>';
     return;
@@ -6738,7 +6742,7 @@ function grantPrintRewards(cur, correct, total, rate) {
   }
   
   save();
-  showRewardModal(rewards, {
+  playItemRevealSequence(rewards, {
     badge: '💮 採点完了',
     title: title,
     showSummary: true,
@@ -6879,4 +6883,57 @@ function removeResolvedPrint(result) {
     }
   }
 }
+
+
+
+function openAdminGrade() {
+  requestAdminAccess(() => {
+    const listEl = $('unified-problems-list');
+    
+    // Change inputs to checkboxes for admin
+    const inputs = listEl.querySelectorAll('input.challenge-input');
+    inputs.forEach((input, i) => {
+      const parent = input.parentElement;
+      const isKanji = parent.querySelector('div') && parent.querySelector('div').style.display === 'flex'; // kanji has grid
+      if (isKanji) {
+         parent.innerHTML = `<label style="display:flex; align-items:center; gap:8px; justify-content:center; width:100%;"><input type="checkbox" class="admin-grade-chk" data-idx="${i}" style="width:24px; height:24px;"> 正解</label>`;
+      } else {
+         parent.innerHTML = `<label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="admin-grade-chk" data-idx="${i}" style="width:24px; height:24px;"> 正解</label>`;
+      }
+    });
+
+    const btnArea = listEl.nextElementSibling;
+    btnArea.outerHTML = `<div style="margin-top:20px; display:flex; gap:12px; flex-direction:column;">
+      <button class="btn btn-primary" style="width:100%; background:#27ae60; font-size:20px; padding:12px;" onclick="adminGradeAllCorrect()">💮 全問正解にする</button>
+      <button class="btn btn-primary" style="width:100%; background:linear-gradient(135deg, #e74c3c, #c0392b); font-size:24px; padding:16px;" onclick="submitAdminGrade()">この内容で採点を登録する</button>
+    </div>`;
+  });
+}
+
+function adminGradeAllCorrect() {
+  const chks = document.querySelectorAll('.admin-grade-chk');
+  chks.forEach(c => c.checked = true);
+}
+
+function submitAdminGrade() {
+  if (!window.currentUnifiedMeta || !window.currentUnifiedMeta.problems) return;
+  const meta = window.currentUnifiedMeta;
+  const chks = document.querySelectorAll('.admin-grade-chk');
+  let correctCount = 0;
+  const count = meta.problems.length;
+  
+  chks.forEach(chk => {
+    if (chk.checked) correctCount++;
+  });
+  
+  const rate = correctCount / count;
+  $('unified-result').innerHTML = `<span style="color:#2ecc71;">採点を完了しました！ (正答率: ${Math.floor(rate*100)}%)</span>`;
+  
+  removeResolvedPrint({ printId: window.currentUnifiedPrintId });
+  grantPrintRewards(meta.targetId, rate, meta);
+}
+
+window.openAdminGrade = openAdminGrade;
+window.adminGradeAllCorrect = adminGradeAllCorrect;
+window.submitAdminGrade = submitAdminGrade;
 
