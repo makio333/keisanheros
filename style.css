@@ -258,10 +258,11 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
 }
 
 .volume-slider-popup {
+  position: absolute;
+  right: calc(100% + 12px);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -276,6 +277,16 @@
   transform: translateX(18px) scale(0.95);
   transition: opacity 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   white-space: nowrap;
+}
+
+/* ホバーが途切れないようにする透明な橋 */
+.volume-slider-popup::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -14px;
+  width: 14px;
 }
 
 /* ホバー時 または フォーカス時 または アクティブ時にスライド表示 */
