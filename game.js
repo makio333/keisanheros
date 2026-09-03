@@ -6696,6 +6696,9 @@ function fetchUnifiedPrint() {
     </div>`;
   });
   
+  if ($('unified-grade-btn-area')) $('unified-grade-btn-area').style.display = 'block';
+  if ($('admin-grade-btn-area')) $('admin-grade-btn-area').style.display = 'none';
+
   resEl.innerHTML = '';
 }
 
@@ -6969,20 +6972,16 @@ function openAdminGrade() {
     // Change inputs to checkboxes for admin
     const inputs = listEl.querySelectorAll('input.challenge-input');
     inputs.forEach((input, i) => {
-      const parent = input.parentElement;
-      const isKanji = parent.querySelector('div') && parent.querySelector('div').style.display === 'flex'; // kanji has grid
-      if (isKanji) {
-         parent.innerHTML = `<label style="display:flex; align-items:center; gap:8px; justify-content:center; width:100%;"><input type="checkbox" class="admin-grade-chk" data-idx="${i}" style="width:24px; height:24px;"> 正解</label>`;
-      } else {
-         parent.innerHTML = `<label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="admin-grade-chk" data-idx="${i}" style="width:24px; height:24px;"> 正解</label>`;
-      }
+      input.outerHTML = `<label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="admin-grade-chk" data-idx="${i}" style="width:36px; height:36px;"> <span style="font-size:24px;">正解</span></label>`;
     });
 
-    const btnArea = listEl.nextElementSibling;
-    btnArea.outerHTML = `<div style="margin-top:20px; display:flex; gap:12px; flex-direction:column;">
-      <button class="btn btn-primary" style="width:100%; background:#27ae60; font-size:32px; padding:12px;" onclick="adminGradeAllCorrect()">💮 全問正解にする</button>
-      <button class="btn btn-primary" style="width:100%; background:linear-gradient(135deg, #e74c3c, #c0392b); font-size:24px; padding:16px;" onclick="submitAdminGrade()">この内容で採点を登録する</button>
-    </div>`;
+    const markSpans = listEl.querySelectorAll('span[id^="unified-mark-"]');
+    markSpans.forEach(span => span.style.display = 'none');
+
+    $('unified-grade-btn-area').style.display = 'none';
+    $('admin-grade-btn-area').style.display = 'flex';
+    $('admin-grade-btn-area').style.flexDirection = 'column';
+    $('admin-grade-btn-area').style.gap = '12px';
   });
 }
 
@@ -6992,8 +6991,9 @@ function adminGradeAllCorrect() {
 }
 
 function submitAdminGrade() {
-  if (!window.currentUnifiedMeta || !window.currentUnifiedMeta.problems) return;
-  const meta = window.currentUnifiedMeta;
+  const cur = window.unifiedCurrentPrint;
+  if (!cur || !cur.meta || !cur.meta.problems) return;
+  const meta = cur.meta;
   const chks = document.querySelectorAll('.admin-grade-chk');
   let correctCount = 0;
   const count = meta.problems.length;
@@ -7005,8 +7005,7 @@ function submitAdminGrade() {
   const rate = correctCount / count;
   $('unified-result').innerHTML = `<span style="color:#2ecc71;">採点を完了しました！ (正答率: ${Math.floor(rate*100)}%)</span>`;
   
-  removeResolvedPrint({ printId: window.currentUnifiedPrintId });
-  grantPrintRewards(meta.targetId, rate, meta);
+  grantPrintRewards(cur, correctCount, count, rate);
 }
 
 window.openAdminGrade = openAdminGrade;
