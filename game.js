@@ -3962,12 +3962,12 @@ function printQuestSheet(q){
   $('print-sheet').innerHTML = `
     <h1 style="font-size:34px;">サブクエスト：${q.npc.name}の たのみごと</h1>
     <div class="p-sub" style="font-size:19px; margin-bottom:26px;">＊${q.title}＊／えんざん：${OP_LABELS[q.tier]}</div>
-    ${printMetaHtml()}
+    <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>\n    ${printMetaHtml()}
     <div class="p-sheet" style="grid-template-columns:1fr; margin-top:12px;">
       ${rows}
     </div>
   `;
-  window.print();
+  setTimeout(() => window.print(), 100);
 }
 
 const STAT_DEFS = [
@@ -4431,14 +4431,8 @@ function printTrainingSheet(s){
 
   $('print-sheet').innerHTML = `
     ${titleHtml}
-    <div class="p-sub" style="margin-top: 10px;">【プリント番号: " + printId + "】</div>
-    <div class="p-sub" style="margin-top: 10px;">【プリント番号: " + printId + "】</div>
-    <div class="p-sub" style="margin-top: 10px;">【プリント番号: " + printId + "】</div>
-    <div class="p-sub" style="margin-top: 10px;">【プリント番号: " + printId + "】</div>
-    <div class="p-sub" style="margin-top: 10px;">【プリント番号: " + printId + "】</div>
-    <div class="p-sub" style="margin-top: 10px;">【プリント番号: " + printId + "】</div>
     <div class="p-sub" style="margin-top: 10px;">えんざん：${OP_LABELS[tier]}／ぜんぶで ${count}もん</div>
-    ${printMetaHtml()}
+    <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>\n    ${printMetaHtml()}
     <div class="p-sheet">${rows}</div>
     <div class="p-code-section">
       <div class="p-code-title">🔑 あんごうを つくろう！</div>
@@ -4447,7 +4441,7 @@ function printTrainingSheet(s){
     </div>
   `;
 
-  window.print();
+  setTimeout(() => window.print(), 100);
 }
 
 /* ==========================================================
@@ -4541,7 +4535,7 @@ function printBlueprintSheet(bp){
   $('print-sheet').innerHTML = `
     <h1>古代装備の せっけいず：${bp.name}</h1>
     <div class="p-sub">えんざん：${OP_LABELS[bp.tier]}／ぜんぶで ${count}もん／「${equipDb.name}」を かいどく！</div>
-    ${printMetaHtml()}
+    <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>\n    ${printMetaHtml()}
     <div class="p-sheet">${rows}</div>
     <div class="p-code-section">
       <div class="p-code-title">🔑 あんごうを つくろう！</div>
@@ -4550,7 +4544,7 @@ function printBlueprintSheet(bp){
     </div>
   `;
 
-  window.print();
+  setTimeout(() => window.print(), 100);
 }
 
 function startBlueprintCodeEntry(uid, bp){
@@ -4650,7 +4644,7 @@ function printDemonCastleSheet(){
   $('print-sheet').innerHTML = `
     ${titleHtml}
     <div class="p-sub" style="margin-top: 10px;">魔王の秘宝を手に入れるための特別問題／ぜんぶで ${count}もん</div>
-    ${printMetaHtml()}
+    <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>\n    ${printMetaHtml()}
     <div class="p-sheet">${rows}</div>
     <div class="p-code-section">
       <div class="p-code-title">🔑 魔王のあんごうを つくろう！</div>
@@ -4659,7 +4653,7 @@ function printDemonCastleSheet(){
     </div>
   `;
 
-  window.print();
+  setTimeout(() => window.print(), 100);
   const hint = $('demon-sheet-status-hint');
   if (hint) {
     hint.innerHTML = '<span style="color:#2ecc71;">✅ プリントを印刷しました！解き終わったら「🔑 魔王のあんごうをいれる」を押してね！</span>';
