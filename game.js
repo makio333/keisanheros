@@ -3779,8 +3779,8 @@ function flyRewardChip(fromEl, toEl){
 
 function getNPCImage(npc) {
   const definedNpc = QUEST_NPCS.find(n => n.name === npc.name);
-  if (definedNpc && definedNpc.image) return definedNpc.image;
-  if (npc.image) return npc.image;
+  if (definedNpc && definedNpc.image) return av(definedNpc.image);
+  if (npc.image) return av(npc.image);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">${npc.emoji}</text></svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }

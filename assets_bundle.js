@@ -10,6 +10,7 @@ const assetModules = import.meta.glob([
   './画像/title_*.{png,jpg}',
   './画像/bg_*.jpg',
   './画像/training_dummy*.{png,jpg}',
+  './画像/NPC/**/*',
   '!./画像/Gemini_*',
   '!./画像/モンスター/**/*',
   '!./画像/装備/**/*',
