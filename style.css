@@ -185,10 +185,11 @@
 #print-sheet { display:none; }
 @media print {
   @page { size: A4; margin: 8mm; }
-  body * { visibility: hidden; }
-  #print-sheet, #print-sheet * { visibility: visible; }
+  body > * { display: none !important; }
+  #print-sheet { display: block !important; }
+  #print-sheet * { display: ''; }
   #print-sheet {
-    display:block;
+
     position:absolute; top:0; left:0; width:100%;
     background:#fff; color:#222;
     font-family: 'DotGothic16', 'M PLUS Rounded 1c', sans-serif;
@@ -2330,6 +2331,20 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   min-width: 34px;
 }
 .stage-select-row:hover .stage-select-num, .stage-select-row:focus .stage-select-num { color: #1a1626; text-shadow:none; }
+/* ステージ行内に埋め込むプリントアイコン */
+.stage-print-btn {
+  flex: 0 0 auto;
+  font-size: 20px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.15);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.stage-print-btn:hover {
+  background: rgba(255,255,255,0.35);
+  transform: scale(1.2);
+}
 .stage-select-name {
   font-size: 12px; line-height: 1.3;
   flex: 1 1 auto;

@@ -3602,58 +3602,33 @@ function showStageSelectNew(areaId){
     
     const stageCounts = getStageClearCounts(areaId);
     (area.stages || []).forEach((stage, idx) => {
-      const rowWrap = document.createElement('div');
-      rowWrap.style.display = 'flex';
-      rowWrap.style.gap = '8px';
-      rowWrap.style.width = '100%';
-      rowWrap.style.marginBottom = '8px';
-      
       const row = document.createElement('button');
       row.className = 'stage-select-row';
-      row.style.flex = '1';
-      row.style.marginBottom = '0';
-      row.innerHTML = `<span class="stage-select-num">${numPrefix}-${idx + 1}</span><span class="stage-select-name">${stage.name}</span>${stageClearStatusHtml(stageCounts[idx] || 0)}`;
-      row.onclick = () => enterAreaStage(areaId, idx);
-      
-      const printBtn = document.createElement('button');
-      printBtn.className = 'btn btn-primary';
-      printBtn.style.padding = '8px 12px';
-      printBtn.style.fontSize = '24px';
-      printBtn.innerHTML = '🖨️';
-      printBtn.title = 'プリントして遊ぶ（大量報酬！）';
-      printBtn.onclick = () => printAreaStage(areaId, idx);
-      
-      rowWrap.appendChild(row);
-      rowWrap.appendChild(printBtn);
-      container.appendChild(rowWrap);
+      row.innerHTML = `<span class="stage-select-num">${numPrefix}-${idx + 1}</span><span class="stage-select-name">${stage.name}</span>${stageClearStatusHtml(stageCounts[idx] || 0)}<span class="stage-print-btn" title="プリントして遊ぶ（大量報酬！）">🖨️</span>`;
+      row.onclick = (e) => {
+        if (e.target.classList.contains('stage-print-btn')) {
+          e.stopPropagation();
+          printAreaStage(areaId, idx);
+          return;
+        }
+        enterAreaStage(areaId, idx);
+      };
+      container.appendChild(row);
     });
     
-    const bossWrap = document.createElement('div');
-    bossWrap.style.display = 'flex';
-    bossWrap.style.gap = '8px';
-    bossWrap.style.width = '100%';
-    bossWrap.style.marginTop = '16px';
-    
+    const bossStars = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, (G && G.clearCounts && G.clearCounts[area.rewardZone]) || 0);
     const bossRow = document.createElement('button');
     bossRow.className = 'stage-select-row stage-select-boss-row';
-    bossRow.style.flex = '1';
-    bossRow.style.marginBottom = '0';
-    const bossStars = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, (G && G.clearCounts && G.clearCounts[area.rewardZone]) || 0);
-    bossRow.innerHTML = `<span class="stage-select-num">${numPrefix}-B</span><span class="stage-select-name">👹 ${area.bossName}</span>${stageClearStatusHtml(bossStars)}`;
-    bossRow.onclick = () => enterAreaBoss(areaId);
-    
-    const bossPrintBtn = document.createElement('button');
-    bossPrintBtn.className = 'btn btn-primary';
-    bossPrintBtn.style.padding = '8px 12px';
-    bossPrintBtn.style.fontSize = '24px';
-    bossPrintBtn.style.background = 'linear-gradient(to bottom, #d35400, #c0392b)';
-    bossPrintBtn.innerHTML = '🖨️';
-    bossPrintBtn.title = 'ボス戦をプリントで遊ぶ（大量報酬！）';
-    bossPrintBtn.onclick = () => printAreaBoss(areaId);
-    
-    bossWrap.appendChild(bossRow);
-    bossWrap.appendChild(bossPrintBtn);
-    container.appendChild(bossWrap);
+    bossRow.innerHTML = `<span class="stage-select-num">${numPrefix}-B</span><span class="stage-select-name">👹 ${area.bossName}</span>${stageClearStatusHtml(bossStars)}<span class="stage-print-btn" style="color:#ff6b6b;" title="ボス戦プリント">🖨️</span>`;
+    bossRow.onclick = (e) => {
+      if (e.target.classList.contains('stage-print-btn')) {
+        e.stopPropagation();
+        printAreaBoss(areaId);
+        return;
+      }
+      enterAreaBoss(areaId);
+    };
+    container.appendChild(bossRow);
 
   } catch (err) {
     console.error('showStageSelectNew error:', err);
@@ -4470,19 +4445,19 @@ function showPrintChoiceModal(variants) {
 
   variants.forEach((v, i) => {
     const card = document.createElement('div');
-    card.style.cssText = 'background:rgba(255,255,255,0.08); border:2px solid #4b6584; border-radius:12px; padding:16px; width:220px; cursor:pointer; transition: border-color 0.2s;';
+    card.style.cssText = 'background:rgba(255,255,255,0.08); border:2px solid #4b6584; border-radius:12px; padding:16px; width:230px; cursor:pointer; transition: border-color 0.2s; max-height:70vh; overflow-y:auto;';
     card.onmouseover = () => card.style.borderColor = '#f9ca24';
     card.onmouseout = () => card.style.borderColor = '#4b6584';
 
-    // プレビュー（最初の4問だけ表示）
-    const previewHtml = v.problems.slice(0, 4).map((p, pi) =>
+    // プレビュー（全問表示）
+    const previewHtml = v.problems.map((p, pi) =>
       `<div style="font-size:14px; padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.2);">${pi+1}. ${p.text} = ？</div>`
     ).join('');
 
     card.innerHTML = `
       <div style="font-size:18px; font-weight:bold; margin-bottom:10px; color:#f9ca24;">${labels[i]}</div>
       <div style="font-size:13px; color:#aaa; margin-bottom:10px;">${v.problems.length}問 (${v.opLabel || ''})</div>
-      <div style="margin-bottom:12px;">${previewHtml}<div style="font-size:12px; color:#888; margin-top:4px;">…ほか${Math.max(0, v.problems.length - 4)}問</div></div>
+      <div style="margin-bottom:12px;">${previewHtml}</div>
       <button class="btn btn-primary" style="width:100%; font-size:16px;">🖨️ これを印刷する</button>
     `;
 
