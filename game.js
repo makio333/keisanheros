@@ -2060,7 +2060,7 @@ function assistVisualHtml(problem){
     // a行 × b列の まる
     let rows = '';
     for (let i = 0; i < a; i++) rows += `<div class="assist-row">${dots(b)}</div>`;
-    return `<div class="assist-visual assist-grid">${rows}</div>`;
+    return `<div class="assist-visual assist-grid">${p1}${p2}</div>`;
   }
   if (op === '÷') {
     // a個のまるを bこずつの グループに わける
@@ -4002,7 +4002,7 @@ function printQuestSheet(q){
     <div class="p-sub" style="font-size:19px; margin-bottom:26px;">＊${q.title}＊／えんざん：${OP_LABELS[q.tier]}</div>
     <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>\n    ${printMetaHtml()}
     <div class="p-sheet" style="grid-template-columns:1fr; margin-top:12px;">
-      ${rows}
+      ${p1}${p2}
     </div>
   `;
   requestAnimationFrame(() => { requestAnimationFrame(() => { setTimeout(() => window.print(), 10); }); });
@@ -4434,8 +4434,12 @@ function printTrainingSheet(s){
   const tier = resolveTrainingTier(s);
   const problems = [];
   for (let i = 0; i < count; i++) problems.push(generateProblem(tier));
-  const rows = problems.map((p, i) =>
+  
+  const p1 = problems.slice(0, 5).map((p, i) =>
     `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+  ).join('');
+  const p2 = problems.slice(5, 10).map((p, i) =>
+    `<div class="p-row"><span class="p-num">${i + 6}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
   ).join('');
 
   // こたえの いちばん うしろの すうじを つなげて「あんごう」にする（ゲームに もどって にゅうりょくする）
@@ -4453,7 +4457,7 @@ function printTrainingSheet(s){
     ${titleHtml}
     <div class="p-sub" style="margin-top: 10px;">えんざん：${OP_LABELS[tier]}／ぜんぶで ${count}もん</div>
     <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>\n    ${printMetaHtml()}
-    <div class="p-sheet">${rows}</div>
+    <div class="p-sheet">${p1}${p2}</div>
     
   `;
 
@@ -4535,9 +4539,14 @@ function printBlueprintSheet(bp){
   const count = 20;
   const problems = [];
   for (let i = 0; i < count; i++) problems.push(generateProblem(bp.tier));
-  const rows = problems.map((p, i) =>
+  
+  const p1 = problems.slice(0, 5).map((p, i) =>
     `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
   ).join('');
+  const p2 = problems.slice(5, 10).map((p, i) =>
+    `<div class="p-row"><span class="p-num">${i + 6}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+  ).join('');
+  
 
   const code = problems.map(p => String(p.answer).slice(-1)).join('');
   const printId = addPrintCode(bp.id, code, { type: 'blueprint', uid, problems, name: bp.name });
@@ -4552,7 +4561,7 @@ function printBlueprintSheet(bp){
     <h1>古代装備の せっけいず：${bp.name}</h1>
     <div class="p-sub">えんざん：${OP_LABELS[bp.tier]}／ぜんぶで ${count}もん／「${equipDb.name}」を かいどく！</div>
     <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>\n    ${printMetaHtml()}
-    <div class="p-sheet">${rows}</div>
+    <div class="p-sheet">${p1}${p2}</div>
     
   `;
 
@@ -4643,9 +4652,14 @@ function printDemonCastleSheet(){
   const printId = addPrintCode('demon_castle', code, { type: 'demon_castle', problems, name: '禁断の魔王城' });
   if (G) save();
 
-  const rows = problems.map((p, i) =>
+  
+  const p1 = problems.slice(0, 5).map((p, i) =>
     `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
   ).join('');
+  const p2 = problems.slice(5, 10).map((p, i) =>
+    `<div class="p-row"><span class="p-num">${i + 6}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+  ).join('');
+  
 
   const codeBoxes = problems.map((p, i) =>
     `<div class="p-code-box"><span class="p-code-num">${i + 1}</span><span class="p-code-cell"></span></div>`
@@ -4657,7 +4671,7 @@ function printDemonCastleSheet(){
     ${titleHtml}
     <div class="p-sub" style="margin-top: 10px;">魔王の秘宝を手に入れるための特別問題／ぜんぶで ${count}もん</div>
     <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>\n    ${printMetaHtml()}
-    <div class="p-sheet">${rows}</div>
+    <div class="p-sheet">${p1}${p2}</div>
     
   `;
 
@@ -6967,9 +6981,14 @@ function printAreaStage(areaId, idx) {
   for (let i = 0; i < count; i++) {
     problems.push(stage.generateProblem());
   }
-  const rows = problems.map((p, i) =>
+  
+  const p1 = problems.slice(0, 5).map((p, i) =>
     `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
   ).join('');
+  const p2 = problems.slice(5, 10).map((p, i) =>
+    `<div class="p-row"><span class="p-num">${i + 6}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+  ).join('');
+  
 
   const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
   const printName = `${area.name} ${stage.name}`;
@@ -6984,13 +7003,12 @@ function printAreaStage(areaId, idx) {
     </div>
     <div class="p-desc">すべてのけいさんに こたえて、大報酬をゲットしよう！（プリント番号: ${printId}）</div>
     <div class="p-cols">
-      <div class="p-col">${rows.substring(0, rows.length/2)}</div>
-      <div class="p-col">${rows.substring(rows.length/2)}</div>
+      <div class="p-col">${p1}</div>
+      <div class="p-col">${p2}</div>
     </div>
   `;
   
-  $('screen-print').style.display = 'block';
-  requestAnimationFrame(() => { requestAnimationFrame(() => { setTimeout(() => window.print(), 10); }); });
+    requestAnimationFrame(() => { requestAnimationFrame(() => { setTimeout(() => window.print(), 10); }); });
 }
 
 function printAreaBoss(areaId) {
@@ -7002,9 +7020,14 @@ function printAreaBoss(areaId) {
     if (Math.random() < 0.5) problems.push(area.bossPhase1Problem());
     else problems.push(area.bossPhase2Problem());
   }
-  const rows = problems.map((p, i) =>
+  
+  const p1 = problems.slice(0, 5).map((p, i) =>
     `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
   ).join('');
+  const p2 = problems.slice(5, 10).map((p, i) =>
+    `<div class="p-row"><span class="p-num">${i + 6}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+  ).join('');
+  
 
   const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
   const printName = `${area.name} 👹${area.bossName}`;
@@ -7019,12 +7042,11 @@ function printAreaBoss(areaId) {
     </div>
     <div class="p-desc">すべてのけいさんに こたえて、ボスをとうばつしよう！（プリント番号: ${printId}）</div>
     <div class="p-cols">
-      <div class="p-col">${rows.substring(0, rows.length/2)}</div>
-      <div class="p-col">${rows.substring(rows.length/2)}</div>
+      <div class="p-col">${p1}</div>
+      <div class="p-col">${p2}</div>
     </div>
   `;
   
-  $('screen-print').style.display = 'block';
-  requestAnimationFrame(() => { requestAnimationFrame(() => { setTimeout(() => window.print(), 10); }); });
+    requestAnimationFrame(() => { requestAnimationFrame(() => { setTimeout(() => window.print(), 10); }); });
 }
 
