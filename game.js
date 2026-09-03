@@ -6559,7 +6559,35 @@ function openUnifiedCodeEntry() {
     $('unified-code-section').style.display = 'block';
     $('unified-problems-section').style.display = 'none';
     $('unified-result').innerHTML = '';
+    
+    const listEl = $('unified-prints-list');
+    listEl.innerHTML = '';
+    
+    let prints = (G && G.activePrints) ? G.activePrints : {};
+    if (!G) {
+      try {
+        prints = JSON.parse(storageGet('guest_active_prints') || '{}');
+      } catch(e){}
+    }
+    
+    const pIds = Object.keys(prints);
+    if (pIds.length === 0) {
+      listEl.innerHTML = '<div style="text-align:center; padding:12px; color:#aaa;">まだ 発行されたプリントが ありません。</div>';
+    } else {
+      pIds.forEach(pId => {
+        const meta = prints[pId];
+        listEl.innerHTML += `<button class="btn" style="width:100%; text-align:left; margin-bottom:8px; padding:12px; display:flex; justify-content:space-between; align-items:center; background:#2c3e50; border-color:#34495e;" onclick="selectUnifiedPrint('${pId}')">
+            <span style="font-size:18px;">🖨️ <b>番号: ${pId}</b> （${meta.name}）</span>
+            <span class="tag">全${meta.problems ? meta.problems.length : '?'}問</span>
+          </button>`;
+      });
+    }
   }
+}
+
+function selectUnifiedPrint(pId) {
+  $('unified-print-id').value = pId;
+  fetchUnifiedPrint();
 }
 
 // We change the unified flow: they enter Print ID -> click "問題を表示" -> shows the inputs -> they grade.
@@ -6740,3 +6768,4 @@ function grantPrintRewards(cur, correct, total, rate) {
 window.openUnifiedCodeEntry = openUnifiedCodeEntry;
 window.fetchUnifiedPrint = fetchUnifiedPrint;
 window.gradeUnifiedPrint = gradeUnifiedPrint;
+window.selectUnifiedPrint = selectUnifiedPrint;
