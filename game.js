@@ -3997,15 +3997,14 @@ function printQuestSheet(q){
       <div class="p-row quest-print-answer"><span class="p-num">こたえ</span><span class="p-blank"></span></div>
     </div>
   `).join('');
-  $('print-sheet').innerHTML = `
+  openPrintWindow(`
     <h1 style="font-size:34px;">サブクエスト：${q.npc.name}の たのみごと</h1>
     <div class="p-sub" style="font-size:19px; margin-bottom:26px;">＊${q.title}＊／えんざん：${OP_LABELS[q.tier]}</div>
-    <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>\n    ${printMetaHtml()}
+    <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>
     <div class="p-sheet" style="grid-template-columns:1fr; margin-top:12px;">
       ${p1}${p2}
     </div>
-  `;
-  requestAnimationFrame(() => { requestAnimationFrame(() => { setTimeout(() => window.print(), 10); }); });
+  `);
 }
 
 const STAT_DEFS = [
@@ -4429,6 +4428,38 @@ function showSkills(){
 /* ==========================================================
    しゅぎょうプリント（紙で れんしゅうできる もんだいシート）
    ========================================================== */
+
+/* 別ウィンドウを開いてプリント内容だけを印刷する（超高速）*/
+function openPrintWindow(htmlContent) {
+  const printCSS = `
+    @page { size: A4; margin: 8mm; }
+    body { font-family: sans-serif; background: #fff; color: #222; padding: 6mm; }
+    h1 { font-size: 26px; margin-bottom: 6px; }
+    .p-sub { font-size: 15px; color: #555; margin-bottom: 16px; }
+    .p-sheet { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 60px; }
+    .p-row { font-size: 24px; display: flex; align-items: baseline; gap: 12px; padding: 6px 0; border-bottom: 1px dotted #aaa; }
+    .p-num { width: auto; min-width: 34px; color: #888; font-size: 16px; white-space: nowrap; }
+    .p-expr { white-space: nowrap; }
+    .p-blank { flex: 1; border-bottom: 1px solid #222; min-width: 70px; height: 1.1em; }
+    .p-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 60px; }
+    .p-meta { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 40px; font-size: 16px; margin-bottom: 18px; }
+    .p-meta-name { border-bottom: 1px solid #222; padding: 0 160px 4px 4px; }
+    .p-title { font-size: 22px; font-weight: bold; margin-bottom: 8px; }
+    .p-name-box { font-size: 16px; margin-bottom: 12px; }
+    .p-name-line { display: inline-block; width: 200px; border-bottom: 1px solid #222; }
+    .p-desc { font-size: 14px; color: #555; margin-bottom: 16px; }
+    .p-bonus-banner { background: #fffde7; border: 2px solid #f9a825; border-radius: 8px; padding: 8px 12px; margin-bottom: 16px; font-size: 15px; }
+  `;
+  const pw = window.open('', '_blank', 'width=800,height=900');
+  if (!pw) { alert('ポップアップがブロックされました。許可してください。'); return; }
+  pw.document.open();
+  pw.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>プリント</title><style>${printCSS}</style></head><body>${htmlContent}</body></html>`);
+  pw.document.close();
+  pw.focus();
+  pw.onload = () => pw.print();
+  setTimeout(() => pw.print(), 500);
+}
+
 function printTrainingSheet(s){
   const count = 10;
   const tier = resolveTrainingTier(s);
@@ -4453,15 +4484,12 @@ function printTrainingSheet(s){
 
   const titleHtml = `<div style="display:flex; align-items:center; gap:12px;">${iconHtml(s.emoji, 48)} <h1>${s.name}の修行プリント</h1></div>`;
 
-  $('print-sheet').innerHTML = `
-    ${titleHtml}
-    <div class="p-sub" style="margin-top: 10px;">えんざん：${OP_LABELS[tier]}／ぜんぶで ${count}もん</div>
-    <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>\n    ${printMetaHtml()}
+  openPrintWindow(`
+    <div style="display:flex; align-items:center; gap:12px;"><h1>${s.name}の修行プリント</h1></div>
+    <div class="p-sub">えんざん：${OP_LABELS[tier]}／ぜんぶで ${count}もん</div>
+    <div class="p-sub" style="font-size:20px; font-weight:bold;">【プリント番号: ${printId}】</div>
     <div class="p-sheet">${p1}${p2}</div>
-    
-  `;
-
-  requestAnimationFrame(() => { requestAnimationFrame(() => { setTimeout(() => window.print(), 10); }); });
+  `);
 }
 
 /* ==========================================================
@@ -4557,15 +4585,13 @@ function printBlueprintSheet(bp){
   ).join('');
 
   const equipDb = getEquipTemplate(bp.equipId);
-  $('print-sheet').innerHTML = `
+  openPrintWindow(`
     <h1>古代装備の せっけいず：${bp.name}</h1>
     <div class="p-sub">えんざん：${OP_LABELS[bp.tier]}／ぜんぶで ${count}もん／「${equipDb.name}」を かいどく！</div>
     <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>\n    ${printMetaHtml()}
     <div class="p-sheet">${p1}${p2}</div>
     
-  `;
-
-  requestAnimationFrame(() => { requestAnimationFrame(() => { setTimeout(() => window.print(), 10); }); });
+  `);
 }
 
 function startBlueprintCodeEntry(uid, bp){
@@ -4667,15 +4693,13 @@ function printDemonCastleSheet(){
 
   const titleHtml = `<div style="display:flex; align-items:center; gap:12px;"><span style="font-size:42px;">👑</span> <h1>禁断の魔王城 秘密の試練プリント</h1></div>`;
 
-  $('print-sheet').innerHTML = `
+  openPrintWindow(`
     ${titleHtml}
     <div class="p-sub" style="margin-top: 10px;">魔王の秘宝を手に入れるための特別問題／ぜんぶで ${count}もん</div>
     <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>\n    ${printMetaHtml()}
     <div class="p-sheet">${p1}${p2}</div>
     
-  `;
-
-  requestAnimationFrame(() => { requestAnimationFrame(() => { setTimeout(() => window.print(), 10); }); });
+  `);
   const hint = $('demon-sheet-status-hint');
   if (hint) {
     hint.innerHTML = '<span style="color:#2ecc71;">✅ プリントを印刷しました！解き終わったら「🔑 魔王のあんごうをいれる」を押してね！</span>';
@@ -6996,7 +7020,7 @@ function printAreaStage(areaId, idx) {
   const printId = addPrintCode(areaId + '_' + idx, pCode, { type: 'stage', problems, name: printName, areaId, stageIndex: idx });
 
   const numPrefix = area.displayNum || areaId.replace('area', '');
-  $('print-sheet').innerHTML = `
+  openPrintWindow(`
     <div class="print-header">
       <div class="p-title">【エリア${numPrefix}-${idx+1}】 ${printName}</div>
       <div class="p-name-box">なまえ：<span class="p-name-line"></span></div>
@@ -7006,9 +7030,7 @@ function printAreaStage(areaId, idx) {
       <div class="p-col">${p1}</div>
       <div class="p-col">${p2}</div>
     </div>
-  `;
-  
-    requestAnimationFrame(() => { requestAnimationFrame(() => { setTimeout(() => window.print(), 10); }); });
+  `);
 }
 
 function printAreaBoss(areaId) {
@@ -7035,7 +7057,7 @@ function printAreaBoss(areaId) {
   const printId = addPrintCode(areaId + '_boss', pCode, { type: 'stage_boss', problems, name: printName, areaId, isBoss: true });
 
   const numPrefix = area.displayNum || areaId.replace('area', '');
-  $('print-sheet').innerHTML = `
+  openPrintWindow(`
     <div class="print-header">
       <div class="p-title" style="color:#c0392b;">【ボス戦 ${numPrefix}-B】 ${printName}</div>
       <div class="p-name-box">なまえ：<span class="p-name-line"></span></div>
@@ -7045,8 +7067,6 @@ function printAreaBoss(areaId) {
       <div class="p-col">${p1}</div>
       <div class="p-col">${p2}</div>
     </div>
-  `;
-  
-    requestAnimationFrame(() => { requestAnimationFrame(() => { setTimeout(() => window.print(), 10); }); });
+  `);
 }
 
