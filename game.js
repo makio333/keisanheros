@@ -6769,3 +6769,132 @@ window.openUnifiedCodeEntry = openUnifiedCodeEntry;
 window.fetchUnifiedPrint = fetchUnifiedPrint;
 window.gradeUnifiedPrint = gradeUnifiedPrint;
 window.selectUnifiedPrint = selectUnifiedPrint;
+
+
+function generatePrintId() {
+  let id;
+  do { id = String(rnd(1000, 9999)); } while (G && G.activePrints && G.activePrints[id]);
+  return id;
+}
+
+function addPrintCode(id, newCode, meta = {}) {
+  const printId = generatePrintId();
+  meta.targetId = id;
+  meta.code = newCode;
+  
+  if (!G) {
+    if (id === 'demon_castle') {
+      try {
+        let prints = JSON.parse(storageGet('guest_active_prints') || '{}');
+        prints[printId] = meta;
+        storageSet('guest_active_prints', JSON.stringify(prints));
+      } catch(e){}
+    }
+    return printId;
+  }
+  
+  if (!G.activePrints) G.activePrints = {};
+  G.activePrints[printId] = meta;
+  return printId;
+}
+
+function checkUnifiedCode(printId, codeVal) {
+  // 1. 新システム (プリント番号指定)
+  if (printId) {
+    if (!G) {
+      try {
+        const prints = JSON.parse(storageGet('guest_active_prints') || '{}');
+        if (prints[printId] && prints[printId].code === codeVal) {
+          return { match: true, meta: prints[printId], printId: printId };
+        }
+      } catch(e){}
+      return { match: false, diff: generateDiff(codeVal, null) }; 
+    }
+    if (G.activePrints && G.activePrints[printId]) {
+      const meta = G.activePrints[printId];
+      if (meta.code === codeVal) {
+        return { match: true, meta: meta, printId: printId };
+      } else {
+        return { match: false, diff: generateDiff(codeVal, meta.code) };
+      }
+    }
+    return { match: false, diff: 'プリント番号が見つかりません。' };
+  }
+
+  // 2. 旧システム ＆ 番号なし検索 (暗号だけで検索)
+  if (!G) {
+    let guestOld = storageGet('guest_demon_castle_codes');
+    if (guestOld) {
+      try {
+        let codes = JSON.parse(guestOld);
+        if (codes.includes(codeVal)) return { match: true, meta: { targetId: 'demon_castle', code: codeVal }, oldCode: codeVal, oldType: 'guest_demon_castle' };
+      } catch(e){}
+    }
+    return { match: false, diff: '暗号が一致するプリントが見つかりません。' };
+  }
+  
+  if (G.activePrints) {
+    for (const [pId, meta] of Object.entries(G.activePrints)) {
+      if (meta.code === codeVal) return { match: true, meta: meta, printId: pId };
+    }
+  }
+  
+  if (G.printSheetCodes) {
+    for (const [targetId, codes] of Object.entries(G.printSheetCodes)) {
+      if (Array.isArray(codes) && codes.includes(codeVal)) {
+        return { match: true, meta: { targetId: targetId, code: codeVal }, oldCode: codeVal, oldType: 'skill_or_bp' };
+      }
+      if (typeof codes === 'string' && codes === codeVal) {
+        return { match: true, meta: { targetId: targetId, code: codeVal }, oldCode: codeVal, oldType: 'skill_or_bp' };
+      }
+    }
+  }
+
+  return { match: false, diff: '番号なしで検索しましたが、一致する暗号がありませんでした。' };
+}
+
+function generateDiff(input, expected) {
+  if (!expected) return '';
+  let res = [];
+  for (let i = 0; i < expected.length; i++) {
+    if (i >= input.length) {
+      res.push('❌');
+    } else {
+      res.push(input[i] === expected[i] ? '〇' : '❌');
+    }
+  }
+  return res.join('');
+}
+
+function removeResolvedPrint(result) {
+  if (result.printId) {
+    if (!G) {
+      try {
+        const prints = JSON.parse(storageGet('guest_active_prints') || '{}');
+        delete prints[result.printId];
+        storageSet('guest_active_prints', JSON.stringify(prints));
+      } catch(e){}
+    } else {
+      delete G.activePrints[result.printId];
+      save();
+    }
+  } else if (result.oldCode) {
+    if (!G && result.oldType === 'guest_demon_castle') {
+      try {
+        let codes = JSON.parse(storageGet('guest_demon_castle_codes') || '[]');
+        codes = codes.filter(c => c !== result.oldCode);
+        storageSet('guest_demon_castle_codes', JSON.stringify(codes));
+      } catch(e){}
+    } else if (G && G.printSheetCodes && result.meta.targetId) {
+      let current = G.printSheetCodes[result.meta.targetId];
+      if (Array.isArray(current)) {
+        G.printSheetCodes[result.meta.targetId] = current.filter(c => c !== result.oldCode);
+        if (G.printSheetCodes[result.meta.targetId].length === 0) delete G.printSheetCodes[result.meta.targetId];
+      } else {
+        delete G.printSheetCodes[result.meta.targetId];
+      }
+      save();
+    }
+  }
+}
+
