@@ -596,6 +596,7 @@
     <section id="screen-skills" class="screen">
       <div class="panel">
         <h2>＊しゅぎょう＊</h2>
+        <button class="btn btn-primary" style="margin-bottom:12px; font-size:18px; padding:12px; width:100%;" onclick="openUnifiedCodeEntry()">🔑 プリントの あんごうを入力</button>
         <p class="flavor">しゅぎょうで けいさんに せいかいすると とくぎを マスター！<br>しゅぎょうの けいさんの しゅるいと せんとうでの はつどうは リンクしている。</p>
         <div id="skill-list" class="skill-list"></div>
         <button id="btn-skills-back" class="btn">もどる</button>
@@ -908,5 +909,24 @@
   <h2 id="result-text"></h2>
 </div>
 <script type="module" src="./main.js"></script>
+
+    <div id="modal-unified-code" class="modal-overlay hidden" style="z-index: 15000;">
+      <div class="panel" style="max-width: 600px;">
+        <h2>🖨️ プリントの あんごう入力</h2>
+        <p class="flavor">プリントに かかれている「プリント番号」と「あんごう」を にゅうりょくしてね。<br>（むかしの プリントは プリント番号を からっぽ にしてね）</p>
+        <div style="margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+          <label style="width:140px; text-align:right;">プリント番号：</label>
+          <input type="text" id="unified-print-id" class="challenge-input" style="flex:1; font-size: 24px; padding:8px;" inputmode="numeric">
+        </div>
+        <div style="margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+          <label style="width:140px; text-align:right;">あんごう：</label>
+          <input type="text" id="unified-code" class="challenge-input" style="flex:1; font-size: 24px; padding:8px;" inputmode="numeric">
+        </div>
+        <button id="btn-unified-submit" class="btn btn-primary" style="margin-top:12px; width:100%;" onclick="submitUnifiedCode()">けってい</button>
+        <p class="result-text" id="unified-result" style="margin-top:12px; font-size:18px; line-height:1.5; text-align:center; letter-spacing:4px;"></p>
+        <button id="btn-unified-close" class="btn" style="margin-top:12px; width:100%;" onclick="document.getElementById('modal-unified-code').classList.add('hidden')">もどる</button>
+      </div>
+    </div>
+
 </body>
 </html>

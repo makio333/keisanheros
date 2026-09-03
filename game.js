@@ -4378,14 +4378,8 @@ function showSkills(){
     printBtn.textContent = '🖨️ プリント';
     printBtn.disabled = locked || learned;
     printBtn.onclick = () => printTrainingSheet(s);
-    const codeBtn = document.createElement('button');
-    codeBtn.className = 'btn';
-    codeBtn.textContent = '🔑 あんごう';
-    codeBtn.disabled = learned || locked;
-    codeBtn.onclick = () => startCodeEntry(s);
     btnGroup.appendChild(btn);
     btnGroup.appendChild(printBtn);
-    btnGroup.appendChild(codeBtn);
     row.appendChild(btnGroup);
     list.appendChild(row);
   }
@@ -4406,12 +4400,7 @@ function showSkills(){
   lvPrintBtn.className = 'btn';
   lvPrintBtn.textContent = '🖨️ プリント';
   lvPrintBtn.onclick = () => printTrainingSheet(LEVEL_UP_TRAINING);
-  const lvCodeBtn = document.createElement('button');
-  lvCodeBtn.className = 'btn';
-  lvCodeBtn.textContent = '🔑 あんごう';
-  lvCodeBtn.onclick = () => startCodeEntry(LEVEL_UP_TRAINING);
   lvBtnGroup.appendChild(lvPrintBtn);
-  lvBtnGroup.appendChild(lvCodeBtn);
   lvRow.appendChild(lvBtnGroup);
   list.appendChild(lvRow);
 }
@@ -4430,7 +4419,7 @@ function printTrainingSheet(s){
 
   // こたえの いちばん うしろの すうじを つなげて「あんごう」にする（ゲームに もどって にゅうりょくする）
   const code = problems.map(p => String(p.answer).slice(-1)).join('');
-  addPrintCode(s.id, code);
+  const printId = addPrintCode(s.id, code, { type: 'skill' });
   save();
 
   const codeBoxes = problems.map((p, i) =>
@@ -4441,6 +4430,9 @@ function printTrainingSheet(s){
 
   $('print-sheet').innerHTML = `
     ${titleHtml}
+    <div class="p-sub" style="margin-top: 10px;">【プリント番号: " + printId + "】</div>
+    <div class="p-sub" style="margin-top: 10px;">【プリント番号: " + printId + "】</div>
+    <div class="p-sub" style="margin-top: 10px;">【プリント番号: " + printId + "】</div>
     <div class="p-sub" style="margin-top: 10px;">えんざん：${OP_LABELS[tier]}／ぜんぶで ${count}もん</div>
     ${printMetaHtml()}
     <div class="p-sheet">${rows}</div>
@@ -4534,7 +4526,7 @@ function printBlueprintSheet(bp){
   ).join('');
 
   const code = problems.map(p => String(p.answer).slice(-1)).join('');
-  addPrintCode(bp.id, code);
+  const printId = addPrintCode(bp.id, code, { type: 'blueprint', uid: uid });
   save();
 
   const codeBoxes = problems.map((p, i) =>
@@ -4638,7 +4630,7 @@ function printDemonCastleSheet(){
   }
   
   const code = problems.map(p => String(Math.abs(parseInt(p.answer, 10) || 1)).slice(-1)).join('');
-  addPrintCode('demon_castle', code);
+  const printId = addPrintCode('demon_castle', code, { type: 'demon_castle' });
   if (G) save();
 
   const rows = problems.map((p, i) =>
@@ -4899,12 +4891,7 @@ function showItems(){
       printBtn.className = 'btn';
       printBtn.textContent = '🖨️ プリント';
       printBtn.onclick = () => printBlueprintSheet(db);
-      const codeBtn = document.createElement('button');
-      codeBtn.className = 'btn';
-      codeBtn.textContent = '🔑 あんごう';
-      codeBtn.onclick = () => startBlueprintCodeEntry(it.uid, db);
       btnGroup.appendChild(printBtn);
-      btnGroup.appendChild(codeBtn);
       row.appendChild(btnGroup);
     } else {
       row.innerHTML = `<div class="info">${db.name} ×${it.count} <div class="desc">${db.desc} (効果:${db.value})</div></div>`;
@@ -5178,7 +5165,7 @@ function bindEvents(){
     if (m) m.classList.add('hidden');
   });
   on('btn-print-demon-sheet', printDemonCastleSheet);
-  on('btn-code-demon-sheet', openDemonCastleCodeInput);
+  on('btn-code-demon-sheet', openUnifiedCodeEntry);
 
   on('btn-status-back', showHome);
   on('btn-status-confirm', confirmStatusAllocation);
@@ -6556,4 +6543,93 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
   init();
+}
+
+
+function openUnifiedCodeEntry() {
+  const modal = $('modal-unified-code');
+  if (modal) {
+    modal.classList.remove('hidden');
+    $('unified-print-id').value = '';
+    $('unified-code').value = '';
+    $('unified-result').innerHTML = '';
+  }
+}
+
+function submitUnifiedCode() {
+  const pId = $('unified-print-id').value.trim();
+  const codeVal = $('unified-code').value.trim();
+  const resEl = $('unified-result');
+  
+  if (!codeVal) {
+    resEl.innerHTML = '<span style="color:#ff5c5c;">あんごうを入力してね！</span>';
+    return;
+  }
+  
+  const result = checkUnifiedCode(pId, codeVal);
+  if (!result.match) {
+    resEl.innerHTML = '<span style="color:#ff5c5c;">' + (result.diff.includes('〇') || result.diff.includes('❌') ? 'ちがうみたいだ…<br>' + result.diff : result.diff) + '</span>';
+    SM.playBeep('error');
+    return;
+  }
+  
+  // Match!
+  removeResolvedPrint(result);
+  $('modal-unified-code').classList.add('hidden');
+  SM.playBeep('decide');
+  
+  const meta = result.meta;
+  if (meta.targetId === 'demon_castle') {
+      if (G) {
+        G.player.exp += 1000;
+        G.player.gold += 10000;
+        const ability = rollAbility(5);
+        const equip = {
+          uid: G.nextUid++,
+          id: 'demon_sword',
+          rarity: 5,
+          ability
+        };
+        G.ownedEquips.push(equip);
+        save();
+        showRewardModal([
+          { kind:'item', name:'ゴールド 10,000 G', icon:'💰' },
+          { kind:'item', name:'経験値 1,000 EXP', icon:'✨' },
+          { kind:'equip', name:'魔王の覇剣 (★5 レジェンド)', icon:'⚔️', rarity:5, ability }
+        ], {
+          badge: '👑 試練突破！',
+          title: '魔王の秘宝 解放！！',
+          showSummary: true,
+          onDone: showHome
+        });
+      } else {
+        showConfirmModal('👑 試練突破！', '魔王のあんごう は かいどくされた！\nセーブデータをつくって ログインすれば、\nでんせつの けんが てにはいるぞ！', null);
+      }
+  } else if (meta.targetId === 'levelup') {
+        const lvlBefore = G.player.lvl;
+        G.player.lvl += 5;
+        G.player.points += 15;
+        G.player.maxHp += LEVEL_UP_HP_GAIN * 5;
+        G.player.maxMp += LEVEL_UP_MP_GAIN * 5;
+        G.player.hp = totalMaxHp();
+        G.player.mp = totalMaxMp();
+        save();
+        trainingDone(`あんごう せいかい！ ゆうしゃは レベルが 5 あがって Lv${G.player.lvl}に なった！`);
+  } else if (meta.type === 'skill') {
+        if (!G.skills[meta.targetId]) G.skills[meta.targetId] = { progress:0, level:0 };
+        G.skills[meta.targetId].level = 1;
+        G.skills[meta.targetId].progress = 10; // arbitrary max
+        save();
+        const s = SKILL_DB.find(x => x.id === meta.targetId);
+        trainingDone(`あんごう せいかい！ とくぎ「${s.name}」を マスターした！`);
+  } else if (meta.type === 'blueprint') {
+        removeItem(meta.uid, 1);
+        const bp = BLUEPRINTS.find(x => x.id === meta.targetId);
+        const equipDb = getEquipTemplate(bp.equipId);
+        const ability = rollAbility(5);
+        G.ownedEquips.push({ uid: G.nextUid++, id: bp.equipId, rarity: 5, ability });
+        save();
+        const abilityInfo = ability ? getAbility(ability) : null;
+        trainingDone(`あんごう せいかい！ でんせつの そうび「<span class="rarity-5">${rarityLabelHtml(5)} ${equipDb.name}</span>」を てにいれた！${abilityInfo ? `<br><span class="tag ability">✨ ${abilityInfo.name}（${abilityInfo.desc}）</span>` : ''}`);
+  }
 }
