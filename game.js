@@ -3435,7 +3435,7 @@ function nextFloor(){
 /* ==========================================================
    セーブデータ せんたく画面
    ========================================================== */
-function showLoadSaveScreen(){
+function showLoadSaveScreen(onSelectCb){
   showScreen('screen-load-save');
   const list = $('save-slot-list');
   list.innerHTML = '';
@@ -3458,8 +3458,17 @@ function showLoadSaveScreen(){
       </div>`;
     const btn = document.createElement('button');
     btn.className = 'btn btn-primary';
-    btn.textContent = 'つづける';
-    btn.onclick = () => { if (loadSlot(slot.key)) { startTimeLimitSession(slot.key); showHome(); } };
+    btn.textContent = onSelectCb ? 'これでちょうせん！' : 'つづける';
+    btn.onclick = () => { 
+      if (loadSlot(slot.key)) { 
+        startTimeLimitSession(slot.key); 
+        if (onSelectCb) {
+          onSelectCb();
+        } else {
+          showHome(); 
+        }
+      } 
+    };
     row.appendChild(btn);
     list.appendChild(row);
   }
@@ -4661,6 +4670,14 @@ function startBlueprintCodeEntry(uid, bp){
    魔王城の秘密プリント（タイトル画面の魔王城から開く）
    ========================================================== */
 function openDemonCastleModal(){
+  if (!G) {
+    showLoadSaveScreen(() => {
+      showScreen('screen-home'); // 拠点画面を裏に表示
+      openDemonCastleModal();    // セーブデータ選択後に改めてモーダルを開く
+    });
+    return;
+  }
+
   const modal = $('modal-demon-castle-secret');
   if (modal) {
     modal.classList.remove('hidden');
