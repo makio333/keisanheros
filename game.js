@@ -1516,6 +1516,7 @@ const ITEM_DB = [
   { id:'hipotion', name:'秘薬', opTier:'sub', effect:'heal', value:60, price:50, desc:'HPを大きく回復', emoji:'assets/items/hipotion.png' },
   { id:'herb', name:'魔力の草', opTier:'add', effect:'mana', value:10, price:12, desc:'MPを回復', emoji:'assets/items/herb.png' },
   { id:'ether', name:'エーテル', opTier:'addCarry', effect:'mana', value:30, price:40, desc:'MPを大きく回復', emoji:'assets/items/ether.png' },
+  { id:'cost_seed', name:'コストプラスのたね', opTier:'mul1', effect:'cost', value:1, price:1000, desc:'使うとそうびコストの上限が 1 あがる 不思議なたね。', emoji:'🌱' }
 ];
 
 /* 古代装備の せっけいず（プリント専用アイテム。少し難易度高め＝わりざん） */
@@ -1873,7 +1874,7 @@ function equipCost(db, rarity){
   return Math.max(1, Math.ceil((db.cost || 1) * (RARITY_MULTI[rarity] || 1)));
 }
 function costCap(){
-  return Math.max(1, G.player.lvl);
+  return Math.max(1, G.player.lvl) + (G.player.costPlus || 0);
 }
 /* 現在そうび中の合計コスト。excludeSlot を指定すると そのスロットぶんを除いて計算する
    （＝そのスロットに 別のそうびへ 付け替える時の判定に使う） */
@@ -4433,6 +4434,9 @@ function printTrainingSheet(s){
     <div class="p-sub" style="margin-top: 10px;">【プリント番号: " + printId + "】</div>
     <div class="p-sub" style="margin-top: 10px;">【プリント番号: " + printId + "】</div>
     <div class="p-sub" style="margin-top: 10px;">【プリント番号: " + printId + "】</div>
+    <div class="p-sub" style="margin-top: 10px;">【プリント番号: " + printId + "】</div>
+    <div class="p-sub" style="margin-top: 10px;">【プリント番号: " + printId + "】</div>
+    <div class="p-sub" style="margin-top: 10px;">【プリント番号: " + printId + "】</div>
     <div class="p-sub" style="margin-top: 10px;">えんざん：${OP_LABELS[tier]}／ぜんぶで ${count}もん</div>
     ${printMetaHtml()}
     <div class="p-sheet">${rows}</div>
@@ -6546,90 +6550,188 @@ if (document.readyState === 'loading') {
 }
 
 
+
 function openUnifiedCodeEntry() {
   const modal = $('modal-unified-code');
   if (modal) {
     modal.classList.remove('hidden');
     $('unified-print-id').value = '';
-    $('unified-code').value = '';
+    $('unified-code-section').style.display = 'block';
+    $('unified-problems-section').style.display = 'none';
     $('unified-result').innerHTML = '';
   }
 }
 
-function submitUnifiedCode() {
+// We change the unified flow: they enter Print ID -> click "問題を表示" -> shows the inputs -> they grade.
+window.unifiedCurrentPrint = null;
+
+function fetchUnifiedPrint() {
   const pId = $('unified-print-id').value.trim();
-  const codeVal = $('unified-code').value.trim();
   const resEl = $('unified-result');
-  
-  if (!codeVal) {
-    resEl.innerHTML = '<span style="color:#ff5c5c;">あんごうを入力してね！</span>';
+  if (!pId) {
+    resEl.innerHTML = '<span style="color:#ff5c5c;">プリント番号を入力してね！</span>';
     return;
   }
   
-  const result = checkUnifiedCode(pId, codeVal);
-  if (!result.match) {
-    resEl.innerHTML = '<span style="color:#ff5c5c;">' + (result.diff.includes('〇') || result.diff.includes('❌') ? 'ちがうみたいだ…<br>' + result.diff : result.diff) + '</span>';
-    SM.playBeep('error');
+  let prints = (G && G.activePrints) ? G.activePrints : {};
+  if (!G) {
+    try {
+      prints = JSON.parse(storageGet('guest_active_prints') || '{}');
+    } catch(e){}
+  }
+  
+  const meta = prints[pId];
+  if (!meta || !meta.problems) {
+    resEl.innerHTML = '<span style="color:#ff5c5c;">プリントが見つかりません。古いプリントの場合は諦めるか、もう一度プリントを発行してね。</span>';
     return;
   }
   
-  // Match!
-  removeResolvedPrint(result);
+  window.unifiedCurrentPrint = { printId: pId, meta };
+  
+  $('unified-code-section').style.display = 'none';
+  const probSec = $('unified-problems-section');
+  probSec.style.display = 'block';
+  
+  $('unified-problems-title').textContent = meta.name + ' の 答えあわせ';
+  
+  const listEl = $('unified-problems-list');
+  listEl.innerHTML = '';
+  meta.problems.forEach((p, i) => {
+    const isKanji = typeof p.answer === 'string' && isNaN(parseInt(p.answer, 10)); // crude check for kanji string vs number
+    listEl.innerHTML += `<div class="unified-prob-row" style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:20px;">
+      <span style="width:40px; text-align:right;">${i+1}.</span>
+      <span style="flex:1; text-align:right;">${p.text} = </span>
+      <input type="text" id="unified-ans-${i}" class="challenge-input" style="width:100px; font-size:20px; padding:4px;" ${!isKanji ? 'inputmode="numeric"' : ''}>
+      <span id="unified-mark-${i}" style="width:30px; font-weight:bold;"></span>
+    </div>`;
+  });
+  
+  resEl.innerHTML = '';
+}
+
+function gradeUnifiedPrint() {
+  const cur = window.unifiedCurrentPrint;
+  if (!cur) return;
+  const meta = cur.meta;
+  const probs = meta.problems;
+  let correct = 0;
+  
+  probs.forEach((p, i) => {
+    const inp = $(`unified-ans-${i}`).value.trim();
+    const expected = String(p.answer);
+    
+    // allow half-width conversion for math, exact for kanji
+    const isKanji = typeof p.answer === 'string' && isNaN(parseInt(p.answer, 10));
+    const processedInp = isKanji ? inp : toHalfWidth(inp).replace(/[^0-9\-]/g, '');
+    
+    if (processedInp === expected) {
+      correct++;
+      $(`unified-mark-${i}`).innerHTML = '<span style="color:#2ecc71;">〇</span>';
+    } else {
+      $(`unified-mark-${i}`).innerHTML = '<span style="color:#e74c3c;">❌</span>';
+    }
+  });
+  
+  const rate = correct / probs.length;
+  
+  const resEl = $('unified-result');
+  resEl.innerHTML = `${probs.length}問中 <b>${correct}問</b> 正解！（正答率: ${Math.floor(rate*100)}％）`;
+  
+  // Reward logic
+  setTimeout(() => {
+    grantPrintRewards(cur, correct, probs.length, rate);
+  }, 1000);
+}
+
+function grantPrintRewards(cur, correct, total, rate) {
+  const meta = cur.meta;
+  removeResolvedPrint({ printId: cur.printId });
   $('modal-unified-code').classList.add('hidden');
-  SM.playBeep('decide');
   
-  const meta = result.meta;
-  if (meta.targetId === 'demon_castle') {
-      if (G) {
-        G.player.exp += 1000;
-        G.player.gold += 10000;
-        const ability = rollAbility(5);
-        const equip = {
-          uid: G.nextUid++,
-          id: 'demon_sword',
-          rarity: 5,
-          ability
-        };
-        G.ownedEquips.push(equip);
-        save();
-        showRewardModal([
-          { kind:'item', name:'ゴールド 10,000 G', icon:'💰' },
-          { kind:'item', name:'経験値 1,000 EXP', icon:'✨' },
-          { kind:'equip', name:'魔王の覇剣 (★5 レジェンド)', icon:'⚔️', rarity:5, ability }
-        ], {
-          badge: '👑 試練突破！',
-          title: '魔王の秘宝 解放！！',
-          showSummary: true,
-          onDone: showHome
-        });
-      } else {
-        showConfirmModal('👑 試練突破！', '魔王のあんごう は かいどくされた！\nセーブデータをつくって ログインすれば、\nでんせつの けんが てにはいるぞ！', null);
-      }
-  } else if (meta.targetId === 'levelup') {
-        const lvlBefore = G.player.lvl;
-        G.player.lvl += 5;
-        G.player.points += 15;
-        G.player.maxHp += LEVEL_UP_HP_GAIN * 5;
-        G.player.maxMp += LEVEL_UP_MP_GAIN * 5;
-        G.player.hp = totalMaxHp();
-        G.player.mp = totalMaxMp();
-        save();
-        trainingDone(`あんごう せいかい！ ゆうしゃは レベルが 5 あがって Lv${G.player.lvl}に なった！`);
-  } else if (meta.type === 'skill') {
-        if (!G.skills[meta.targetId]) G.skills[meta.targetId] = { progress:0, level:0 };
-        G.skills[meta.targetId].level = 1;
-        G.skills[meta.targetId].progress = 10; // arbitrary max
-        save();
-        const s = SKILL_DB.find(x => x.id === meta.targetId);
-        trainingDone(`あんごう せいかい！ とくぎ「${s.name}」を マスターした！`);
-  } else if (meta.type === 'blueprint') {
-        removeItem(meta.uid, 1);
-        const bp = BLUEPRINTS.find(x => x.id === meta.targetId);
-        const equipDb = getEquipTemplate(bp.equipId);
-        const ability = rollAbility(5);
-        G.ownedEquips.push({ uid: G.nextUid++, id: bp.equipId, rarity: 5, ability });
-        save();
-        const abilityInfo = ability ? getAbility(ability) : null;
-        trainingDone(`あんごう せいかい！ でんせつの そうび「<span class="rarity-5">${rarityLabelHtml(5)} ${equipDb.name}</span>」を てにいれた！${abilityInfo ? `<br><span class="tag ability">✨ ${abilityInfo.name}（${abilityInfo.desc}）</span>` : ''}`);
+  if (!G && meta.targetId === 'demon_castle') {
+    if (rate >= 0.5) {
+      showConfirmModal('👑 試練突破！', '魔王の試練 を クリアした！\nセーブデータをつくって ログインすれば、\nでんせつの けんが てにはいるぞ！', null);
+    } else {
+      showConfirmModal('💀 しっぱい…', '正解数が 足りなかったみたいだ。\nもういちど プリントを出して チャレンジしよう！', null);
+    }
+    return;
   }
+  
+  let rewards = [];
+  
+  // Base rewards
+  const baseExp = correct * 20;
+  const baseGold = correct * 10;
+  G.player.exp += baseExp;
+  G.player.gold += baseGold;
+  if (baseExp > 0) rewards.push({ kind:'item', name:`経験値 ${baseExp} EXP`, icon:'✨' });
+  if (baseGold > 0) rewards.push({ kind:'item', name:`ゴールド ${baseGold} G`, icon:'💰' });
+  
+  // Rate bonuses
+  if (rate >= 0.5) {
+    // 50%+: random basic item
+    const pot = ITEM_DB.find(x => x.id === 'potion');
+    G.ownedItems.push({ uid: G.nextUid++, id: 'potion' });
+    rewards.push({ kind:'item', name:`${pot.name} x1`, icon:pot.emoji });
+  }
+  if (rate >= 0.8) {
+    // 80%+: hipotion or ether
+    const pool = ['hipotion', 'ether'];
+    const itId = pick(pool);
+    const db = ITEM_DB.find(x => x.id === itId);
+    G.ownedItems.push({ uid: G.nextUid++, id: itId });
+    rewards.push({ kind:'item', name:`${db.name} x1`, icon:db.emoji });
+  }
+  if (rate >= 1.0) {
+    // 100%: Cost Seed!
+    const seed = ITEM_DB.find(x => x.id === 'cost_seed');
+    G.ownedItems.push({ uid: G.nextUid++, id: 'cost_seed' });
+    rewards.push({ kind:'item', name:`${seed.name} x1`, icon:seed.emoji });
+    
+    G.player.gold += 500;
+    rewards.push({ kind:'item', name:`全問正解ボーナス 500 G`, icon:'💰' });
+  }
+  
+  // Target rewards
+  let title = '修行の成果！';
+  if (meta.targetId === 'demon_castle' && rate >= 0.5) {
+      G.player.exp += 1000;
+      G.player.gold += 10000;
+      const ability = rollAbility(5);
+      const equip = { uid: G.nextUid++, id: 'demon_sword', rarity: 5, ability };
+      G.ownedEquips.push(equip);
+      rewards.push({ kind:'item', name:'魔王の特別報酬 10,000 G', icon:'💰' });
+      rewards.push({ kind:'item', name:'魔王の特別報酬 1,000 EXP', icon:'✨' });
+      rewards.push({ kind:'equip', name:'魔王の覇剣 (★5 レジェンド)', icon:'⚔️', rarity:5, ability });
+      title = '魔王の秘宝 解放！！';
+  } else if (meta.targetId === 'levelup' && rate >= 0.8) {
+      G.player.lvl += 5;
+      G.player.points += 15;
+      G.player.maxHp += LEVEL_UP_HP_GAIN * 5;
+      G.player.maxMp += LEVEL_UP_MP_GAIN * 5;
+      G.player.hp = totalMaxHp();
+      G.player.mp = totalMaxMp();
+      title = 'レベルアップ修行 達成！';
+  } else if (meta.type === 'skill' && rate >= 0.8) {
+      if (!G.skills[meta.targetId]) G.skills[meta.targetId] = { progress:0, level:0 };
+      G.skills[meta.targetId].level = 1;
+      G.skills[meta.targetId].progress = 10;
+      const s = SKILL_DB.find(x => x.id === meta.targetId);
+      rewards.push({ kind:'item', name:`とくぎ「${s.name}」を習得！`, icon:'📖' });
+  } else if (meta.type === 'blueprint' && rate >= 0.8) {
+      removeItem(meta.uid, 1);
+      const bp = BLUEPRINTS.find(x => x.id === meta.targetId);
+      const equipDb = getEquipTemplate(bp.equipId);
+      const ability = rollAbility(5);
+      G.ownedEquips.push({ uid: G.nextUid++, id: bp.equipId, rarity: 5, ability });
+      rewards.push({ kind:'equip', name:`${equipDb.name} を完成させた！`, icon:'⚔️', rarity:5, ability });
+  }
+  
+  save();
+  showRewardModal(rewards, {
+    badge: '💮 採点完了',
+    title: title,
+    showSummary: true,
+    onDone: showHome
+  });
 }
