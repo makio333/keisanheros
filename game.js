@@ -5295,7 +5295,7 @@ function bindEvents(){
     });
   }
 
-  on('btn-continue', showLoadSaveScreen);
+  on('btn-continue', () => showLoadSaveScreen());
   on('btn-load-save-back', () => showScreen('screen-title'));
 
   on('hotspot-training', showSkills);
