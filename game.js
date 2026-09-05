@@ -2219,8 +2219,11 @@ function startChallenge(container, opts, cb){
   container.classList.remove('hidden');
 
   if (opts.showBattleCommands) {
-    $('btn-inline-skill').onclick = openSkillMenu;
-    $('btn-inline-item').onclick = openItemMenu;
+    // チャレンジ中はボタン無効（押すとdestroyChallenge→コールバック消滅バグ防止）
+    const skillBtn = $('btn-inline-skill');
+    const itemBtn = $('btn-inline-item');
+    if (skillBtn) { skillBtn.disabled = true; skillBtn.onclick = null; }
+    if (itemBtn) { itemBtn.disabled = true; itemBtn.onclick = null; }
   }
 
   const input = $('ch-input');
@@ -2329,6 +2332,11 @@ function startChallenge(container, opts, cb){
 
 function destroyChallenge(){
   if (currentChallenge){ currentChallenge.destroy(); currentChallenge = null; }
+  // チャレンジ終了後、とくぎ・どうぐボタンを再有効化
+  const skillBtn = $('btn-inline-skill');
+  const itemBtn = $('btn-inline-item');
+  if (skillBtn) { skillBtn.disabled = false; skillBtn.onclick = openSkillMenu; }
+  if (itemBtn) { itemBtn.disabled = false; itemBtn.onclick = openItemMenu; }
 }
 
 /* ==========================================================
