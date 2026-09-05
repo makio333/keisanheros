@@ -3486,11 +3486,12 @@ function showLoadSaveScreen(onSelectCb){
       </div>`;
     const btn = document.createElement('button');
     btn.className = 'btn btn-primary';
-    btn.textContent = onSelectCb ? 'これでちょうせん！' : 'つづける';
+    const isCallback = typeof onSelectCb === 'function';
+    btn.textContent = isCallback ? 'これでちょうせん！' : 'つづける';
     btn.onclick = () => { 
       if (loadSlot(slot.key)) { 
         startTimeLimitSession(slot.key); 
-        if (onSelectCb) {
+        if (isCallback) {
           onSelectCb();
         } else {
           showHome(); 
