@@ -134,17 +134,24 @@ class SoundManager {
     this.initialized = true;
 
     for (const [key, path] of Object.entries(this.audioFiles)) {
-      const src = av(path);
-      const audio = new Audio(src.startsWith('data:') ? src : encodeURI(src));
-      audio.preload = 'auto';
+      const isBgm = key.startsWith('bgm_');
+      const audio = new Audio();
+      audio.preload = isBgm ? 'none' : 'auto';
       audio.addEventListener('error', () => {
         console.warn('Failed to load audio:', path);
       });
+      // SEのみ初期ロード。BGMは再生時にオンデマンドでsrcを設定してロード
+      if (!isBgm) {
+        const src = av(path);
+        audio.src = src.startsWith('data:') ? src : encodeURI(src);
+      }
       this.audios[key] = audio;
     }
 
-    if ($('screen-home').classList.contains('active') || $('screen-title').classList.contains('active')) {
+    if ($('screen-home').classList.contains('active')) {
       this.playBGM('bgm_home');
+    } else if ($('screen-title').classList.contains('active')) {
+      this.playBGM('bgm_title');
     }
   }
 
@@ -181,6 +188,16 @@ class SoundManager {
     this.stopBGM();
     const audio = this.audios[key];
     if (!audio) return;
+    
+    // オンデマンドロード：srcが未設定ならここで設定
+    if (!audio.src) {
+      const path = this.audioFiles[key];
+      if (path) {
+        const src = av(path);
+        audio.src = src.startsWith('data:') ? src : encodeURI(src);
+      }
+    }
+    audio.preload = 'auto';
     audio.loop = true;
     
     if (key === 'bgm_home') {
@@ -6648,6 +6665,7 @@ const BOOT_ASSETS = [
   '画像/title_sky.jpg',
   '画像/title_foreground.png',
   '画像/title_logo_transparent.png',
+  '画像/ステージ/拠点.jpg',
 ];
 /* がぞうが 1まいも よみこめない ときでも、ぜったいに ロード画面で とまらない ための ほけん（ミリびょう） */
 const BOOT_TIMEOUT_MS = 12000;
@@ -6681,22 +6699,33 @@ function startBootLoader(){
     if (startArea) startArea.classList.remove('hidden');
   };
 
-  // プログレスバーのスムーズな進行アニメーション
+  // 重要アセット（タイトル＋拠点背景）を実際にプリロード
+  BOOT_ASSETS.forEach(path => {
+    const img = new Image();
+    img.onload = img.onerror = () => {
+      done++;
+      setPct((done / total) * 100);
+      if (done >= total) showStart();
+    };
+    img.src = av(path);
+  });
+
+  // プログレスバーのスムーズな進行アニメーション & 最低待機時間
   let progress = 0;
   const pInterval = setInterval(() => {
     progress += 25;
-    setPct(progress);
-    if (progress >= 100) {
+    if (progress > (done / total) * 100) setPct(progress);
+    if (progress >= 100 && done >= total) {
       clearInterval(pInterval);
       showStart();
     }
   }, 50);
 
-  // タイムアウト保険（300ms）
+  // タイムアウト保険（最大1.5秒でスタート可能にする）
   setTimeout(() => {
     clearInterval(pInterval);
     showStart();
-  }, 350);
+  }, 1500);
 
   /* スタート：ここが「はじめての クリック」なので、ここで おとを しょきかする */
   const begin = (e) => {
