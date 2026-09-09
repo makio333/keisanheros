@@ -1,8 +1,6 @@
 // 実使用アセット（assets, BGM SE, 画像フォルダ内のステージ/スキル/エフェクト/タイトル等）を一括インポート
 const assetModules = import.meta.glob([
   './assets/**/*',
-  './BGM SE/SE/**/*',
-  './BGM SE/BGM/**/*.m4a',
   './画像/ステージ/*.jpg',
   './画像/ステージ/戦闘背景/*.png',
   './画像/スキル/**/*',

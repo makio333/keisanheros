@@ -22,15 +22,19 @@ function pwaCopyPlugin(): Plugin {
   };
 }
 
+const isSingleFile = process.env.BUILD_SINGLEFILE === 'true';
+
 export default defineConfig({
   plugins: [
-    viteSingleFile({
-      useRecommendedBuildConfig: true,
-      removeViteModuleLoader: true,
-    }),
+    ...(isSingleFile ? [
+      viteSingleFile({
+        useRecommendedBuildConfig: true,
+        removeViteModuleLoader: true,
+      })
+    ] : []),
     pwaCopyPlugin(),
   ],
-  build: {
+  build: isSingleFile ? {
     target: 'esnext',
     assetsInlineLimit: 100000000, // 100MBまでBase64インライン化
     cssCodeSplit: false,
@@ -41,6 +45,9 @@ export default defineConfig({
         manualChunks: undefined,
       },
     },
+  } : {
+    target: 'esnext',
+    chunkSizeWarningLimit: 2000,
   },
   resolve: {
     alias: {
