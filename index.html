@@ -14,12 +14,10 @@
 <script>
   // Service Worker登録（完全オフライン永続キャッシュ）
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('./sw.js').then(function(reg) {
-        console.log('[PWA] ServiceWorker registration successful with scope: ', reg.scope);
-      }, function(err) {
-        console.warn('[PWA] ServiceWorker registration failed: ', err);
-      });
+    navigator.serviceWorker.register('./sw.js').then(function(reg) {
+      console.log('[PWA] ServiceWorker registration successful with scope: ', reg.scope);
+    }).catch(function(err) {
+      console.warn('[PWA] ServiceWorker registration failed: ', err);
     });
   }
 </script>
@@ -667,10 +665,6 @@
           </div>
         </div>
 
-        <div id="battle-sub-menu" class="command-window hidden"></div>
-
-        <!-- とくぎ／どうぐ は もんだいの ウィンドウの そとがわ（ひだり）に おく -->
-
         <div class="battle-atb-compare">
           <div class="atb-compare-row">
             <span class="atb-compare-label atb-compare-label-player">⚡ <span id="atb-compare-player-name">ゆうしゃ</span></span>
@@ -687,6 +681,7 @@
         <div id="calc-problem-center"></div>
 
         <div id="battle-challenge" class="challenge-area hidden"></div>
+        <div id="battle-sub-menu" class="command-window hidden"></div>
 
         <!-- 漢字入力バトルUI (非表示で追加) -->
         <!-- お題も 入力らんも ATBゲージの した。五十音ボードだけ みぎに だす -->

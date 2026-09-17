@@ -3,14 +3,13 @@ import { getFirestore, doc, setDoc } from "firebase/firestore";
 import { getAuth, signInAnonymously } from "firebase/auth";
 
 const firebaseConfig = {
-  projectId: "game-86071",
-  appId: "1:1442050997:web:f98b8a32805d17bce51ffc",
-  databaseURL: "https://game-86071-default-rtdb.asia-southeast1.firebasedatabase.app",
-  storageBucket: "game-86071.firebasestorage.app",
-  apiKey: "AIzaSyCRJ9rTd3Ss3QxczGc1R0rwUJXccGSLMco",
-  authDomain: "game-86071.firebaseapp.com",
-  messagingSenderId: "1442050997",
-  measurementId: "G-K87FND49Q0"
+  projectId: "treegames-ac5db",
+  appId: "1:538793714749:web:8cea9794c8b65f8a9d7654",
+  storageBucket: "treegames-ac5db.firebasestorage.app",
+  apiKey: "AIzaSyDu5F9Dlw4x7E1cDg2K41_mEzaEa0QGW6Q",
+  authDomain: "treegames-ac5db.firebaseapp.com",
+  messagingSenderId: "538793714749",
+  measurementId: "G-T5X3X57WJJ"
 };
 
 const app = initializeApp(firebaseConfig);

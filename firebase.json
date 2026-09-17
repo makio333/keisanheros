@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "keisanrpg",
+    "site": "keisan-heros",
     "public": "dist",
     "ignore": [
       "firebase.json",

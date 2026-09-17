@@ -3658,8 +3658,26 @@ body:has(.stage-clear-overlay) .volume-control-container { display: none; }
 }
 #screen-battle .battle-inline-commands .btn {
   width: auto;
-  min-width: 96px;
+  min-width: 100px;
   margin: 0;
+  padding: 8px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(135deg, #3d315b 0%, #2b2140 100%);
+  border: 2px solid var(--panel-border);
+  border-radius: 8px;
+  color: #fff;
+  transition: all 0.15s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+#screen-battle .battle-inline-commands .btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: 0 6px 14px rgba(255, 207, 77, 0.3);
+}
+#screen-battle .battle-inline-commands .btn:active {
+  transform: translateY(1px);
 }
 
 /* --- せまい画面：うかせるのを やめて、ぜんぶ 上から ならべる ---------- */

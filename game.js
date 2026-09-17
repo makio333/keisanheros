@@ -2225,8 +2225,8 @@ function startChallenge(container, opts, cb){
       <div class="challenge-body">
         ${challengeMainHTML}
         <div class="battle-inline-commands">
-          <button id="btn-inline-skill" class="btn">とくぎ</button>
-          <button id="btn-inline-item" class="btn">どうぐ</button>
+          <button type="button" id="btn-inline-skill" class="btn">✨ とくぎ</button>
+          <button type="button" id="btn-inline-item" class="btn">🧪 どうぐ</button>
         </div>
       </div>
     `;
@@ -2236,11 +2236,22 @@ function startChallenge(container, opts, cb){
   container.classList.remove('hidden');
 
   if (opts.showBattleCommands) {
-    // チャレンジ中はボタン無効（押すとdestroyChallenge→コールバック消滅バグ防止）
     const skillBtn = $('btn-inline-skill');
     const itemBtn = $('btn-inline-item');
-    if (skillBtn) { skillBtn.disabled = true; skillBtn.onclick = null; }
-    if (itemBtn) { itemBtn.disabled = true; itemBtn.onclick = null; }
+    if (skillBtn) {
+      skillBtn.disabled = false;
+      skillBtn.onclick = (e) => {
+        if (e) e.preventDefault();
+        openSkillMenu();
+      };
+    }
+    if (itemBtn) {
+      itemBtn.disabled = false;
+      itemBtn.onclick = (e) => {
+        if (e) e.preventDefault();
+        openItemMenu();
+      };
+    }
   }
 
   const input = $('ch-input');
@@ -2349,11 +2360,6 @@ function startChallenge(container, opts, cb){
 
 function destroyChallenge(){
   if (currentChallenge){ currentChallenge.destroy(); currentChallenge = null; }
-  // チャレンジ終了後、とくぎ・どうぐボタンを再有効化
-  const skillBtn = $('btn-inline-skill');
-  const itemBtn = $('btn-inline-item');
-  if (skillBtn) { skillBtn.disabled = false; skillBtn.onclick = openSkillMenu; }
-  if (itemBtn) { itemBtn.disabled = false; itemBtn.onclick = openItemMenu; }
 }
 
 /* ==========================================================
@@ -2654,7 +2660,7 @@ function useSkill(s){
   const { problem, timeLimit } = currentAttackProblem();
   startChallenge($('battle-challenge'),
     { problem, timeLimit,
-      showBattleCommands: true,
+      showBattleCommands: false,
       promptInKanji: true,
       prompt:`✨ ${s.name}！ こたえて はつどう！` },
     (res) => {
@@ -2700,6 +2706,7 @@ function useSkill(s){
 function openItemMenu(){
   destroyChallenge();
   const sub = $('battle-sub-menu');
+  if (!sub) return;
   sub.innerHTML = '';
   const title = document.createElement('h3');
   title.style.margin = '0 0 10px';
@@ -2713,10 +2720,12 @@ function openItemMenu(){
   list.style.display = 'flex';
   list.style.flexDirection = 'column';
   list.style.gap = '8px';
+  list.style.maxHeight = '240px';
+  list.style.overflowY = 'auto';
 
   for (const it of G.items){
     const db = getItemTemplate(it.id);
-    if (!db) continue;
+    if (!db || it.count <= 0) continue;
     any = true;
     const b = document.createElement('button');
     b.className = 'btn';
@@ -2726,6 +2735,7 @@ function openItemMenu(){
     b.style.padding = '10px 16px';
     b.innerHTML = `<strong>${db.name} ×${it.count}</strong> <small style="color:var(--text-light);">${db.desc} (効果:${db.value})</small>`;
     b.onclick = () => {
+      sub.classList.add('hidden');
       useItem(it.uid, db);
       blog(`<span class="good">ゆうしゃは ${db.name}を つかった！</span>`);
       updateBattleBars();
@@ -6655,21 +6665,11 @@ function init(){
 
 /* ==========================================================
    きどう時の ロード画面（NOW LOADING → スタートボタン）
-   ・タイトルで つかう おおきい がぞうだけを さきに よみこむ
-     （画像フォルダ ぜんぶは 200MB いじょう あるので、ぜんぶ よみこんでは いけない。
-       ステージや てきの がぞうは これまでどおり ひつような ときに よみこむ）
-   ・スタートボタンは「おとを ならす ための ユーザー操作」も かねている
-     （ブラウザは クリックが ないと おとを ならせない ルールに なっている）
+   ・ゲームでつかう全アセット（画像・BGM・SE）を初回ロード画面で一括プリロード
+   ・Service Worker / ブラウザキャッシュに完全保存されるため、
+     ゲーム本編中の画面遷移・戦闘・演出が一切引っかからず即座に表示される
+   ・スタートボタンは「音声を初期化するためのユーザー操作」を兼ねている
    ========================================================== */
-const BOOT_ASSETS = [
-  '画像/title_sky.jpg',
-  '画像/title_foreground.png',
-  '画像/title_logo_transparent.png',
-  '画像/ステージ/拠点.jpg',
-];
-/* がぞうが 1まいも よみこめない ときでも、ぜったいに ロード画面で とまらない ための ほけん（ミリびょう） */
-const BOOT_TIMEOUT_MS = 12000;
-
 function startBootLoader(){
   const screen = $('boot-loader-screen');
   if (!screen) return;
@@ -6679,8 +6679,6 @@ function startBootLoader(){
   const startArea = $('boot-start-area');
   const startBtn  = $('btn-boot-start');
 
-  const total = BOOT_ASSETS.length;
-  let done = 0;
   let ready = false;
 
   const setPct = (p) => {
@@ -6695,41 +6693,109 @@ function startBootLoader(){
     if (ready) return;
     ready = true;
     setPct(100);
-    if (barArea)   barArea.classList.add('hidden');
-    if (startArea) startArea.classList.remove('hidden');
+    setTimeout(() => {
+      if (barArea)   barArea.classList.add('hidden');
+      if (startArea) startArea.classList.remove('hidden');
+
+      // ロード完了（100%）後に初めてクリック/タップを解禁
+      if (startBtn) {
+        startBtn.onclick = begin;
+        startBtn.ontouchend = begin;
+      }
+      screen.addEventListener('click', begin);
+      screen.addEventListener('touchend', begin);
+    }, 200);
   };
 
-  // 重要アセット（タイトル＋拠点背景）を実際にプリロード
-  BOOT_ASSETS.forEach(path => {
-    const img = new Image();
-    img.onload = img.onerror = () => {
-      done++;
-      setPct((done / total) * 100);
-      if (done >= total) showStart();
-    };
-    img.src = av(path);
+  // 1. 優先アセット（タイトル画面まわり）
+  const PRIORITY_KEYS = [
+    '画像/title_sky.jpg',
+    '画像/title_foreground.png',
+    '画像/title_logo_transparent.png',
+    '画像/ステージ/拠点.jpg',
+    '画像/my_room.jpg',
+    '画像/bg_training.jpg',
+  ];
+  const priorityUrls = [];
+  PRIORITY_KEYS.forEach(k => {
+    const url = av(k);
+    if (url && !priorityUrls.includes(url)) priorityUrls.push(url);
   });
 
-  // プログレスバーのスムーズな進行アニメーション & 最低待機時間
-  let progress = 0;
-  const pInterval = setInterval(() => {
-    progress += 25;
-    if (progress > (done / total) * 100) setPct(progress);
-    if (progress >= 100 && done >= total) {
-      clearInterval(pInterval);
-      showStart();
+  // 2. 音声ファイル（全BGM & SE）
+  const AUDIO_URLS = [
+    'assets_audio/bgm_title.m4a',
+    'assets_audio/bgm_home.m4a',
+    'assets_audio/bgm_room.m4a',
+    'assets_audio/bgm_stage1.m4a',
+    'assets_audio/bgm_training.m4a',
+    'assets_audio/se_crit.mp3',
+    'assets_audio/se_clear.mp3',
+    'assets_audio/se_type.mp3',
+    'assets_audio/se_slash.mp3',
+    'assets_audio/se_decide.mp3',
+    'assets_audio/se_gameover.m4a',
+    'assets_audio/se_gacha_result.mp3',
+    'assets_audio/se_gacha_result2.mp3',
+  ];
+
+  // 3. バンドルされた全画像アセット
+  const otherUrls = [];
+  if (typeof window !== 'undefined' && window.__ASSET_MAP__) {
+    Object.values(window.__ASSET_MAP__).forEach(url => {
+      if (url && typeof url === 'string' && !url.startsWith('data:') && !url.startsWith('blob:')) {
+        if (!priorityUrls.includes(url) && !otherUrls.includes(url)) {
+          otherUrls.push(url);
+        }
+      }
+    });
+  }
+
+  const allUrls = [...priorityUrls, ...AUDIO_URLS, ...otherUrls];
+  const total = allUrls.length || 1;
+  let done = 0;
+
+  function loadSingleAsset(url) {
+    return new Promise((resolve) => {
+      const isAudio = /\.(m4a|mp3|ogg|wav)$/i.test(url);
+      const timer = setTimeout(() => resolve(), 8000); // 1アセットあたり最大8秒でスキップ
+      if (isAudio) {
+        fetch(url)
+          .then(() => { clearTimeout(timer); resolve(); })
+          .catch(() => { clearTimeout(timer); resolve(); });
+      } else {
+        const img = new Image();
+        img.onload = img.onerror = () => {
+          clearTimeout(timer);
+          resolve();
+        };
+        img.src = url;
+      }
+    });
+  }
+
+  // 並列ダウンロードワーカー（同時6並列でスムーズにロード）
+  const concurrency = 6;
+  let cursor = 0;
+
+  async function downloadWorker() {
+    while (cursor < allUrls.length) {
+      const currentUrl = allUrls[cursor++];
+      await loadSingleAsset(currentUrl);
+      done++;
+      setPct((done / total) * 100);
     }
-  }, 50);
+  }
 
-  // タイムアウト保険（最大1.5秒でスタート可能にする）
-  setTimeout(() => {
-    clearInterval(pInterval);
+  // 全アセットの読み込みが完全に完了するまで待つ
+  Promise.all(Array.from({ length: concurrency }, downloadWorker)).then(() => {
     showStart();
-  }, 1500);
+  });
 
-  /* スタート：ここが「はじめての クリック」なので、ここで おとを しょきかする */
+  /* スタート：全アセット読み込み完了（ready === true）後にのみ実行可能 */
   const begin = (e) => {
     if (e) e.stopPropagation();
+    if (!ready) return; // ロード未完了時は絶対に遷移させない（クリック誤爆防止）
     if (screen.classList.contains('fade-out')) return; // 二重クリック よけ
     try {
       if (!SM.initialized) SM.init();
@@ -6745,13 +6811,6 @@ function startBootLoader(){
     showScreen('screen-title');
     setTimeout(() => { if (screen.parentNode) screen.parentNode.removeChild(screen); }, 600);
   };
-  if (startBtn) {
-    startBtn.onclick = begin;
-    startBtn.ontouchend = begin;
-  }
-  /* ボタン いがいの ばしょを タップしても はじまる（「※画面をタッチ／クリックしてスタート」） */
-  screen.addEventListener('click', begin);
-  screen.addEventListener('touchend', begin);
 }
 
 // DOMがロードされたら実行

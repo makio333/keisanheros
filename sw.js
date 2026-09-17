@@ -1,4 +1,4 @@
-const CACHE_NAME = 'legend-heroes-cache-v3';
+const CACHE_NAME = 'legend-heroes-cache-v4';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -40,7 +40,7 @@ self.addEventListener('fetch', (event) => {
         return cachedResponse;
       }
       return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+        if (!networkResponse || networkResponse.status !== 200 || (networkResponse.type !== 'basic' && networkResponse.type !== 'cors')) {
           return networkResponse;
         }
         const responseToCache = networkResponse.clone();
