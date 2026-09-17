@@ -1733,19 +1733,19 @@ function removeItem(uid, count = 1) {
 }
 
 /* ---- 保存まわりの まどぐち関数 ---- */
-function save(){
-  if (!currentSlotKey) return;
+function save(immediate = false){
+  if (!currentSlotKey || !G) return;
   G.updatedAt = Date.now();
+  if (typeof getTimeLimitForSlot === 'function') {
+    G.timeLimitSettings = getTimeLimitForSlot(currentSlotKey);
+  }
   storageSet(currentSlotKey, JSON.stringify(G));
 
-  // Firestoreにもバックアップを保存
-  if (window._firestoreDb && window._firebaseUid) {
-    import("firebase/firestore").then(({ doc, setDoc }) => {
-      const docRef = doc(window._firestoreDb, "saves", window._firebaseUid + "_" + currentSlotKey);
-      setDoc(docRef, G, { merge: true }).catch(err => {
-        console.error("Firestore save failed:", err);
-      });
-    }).catch(err => console.error("Failed to load firestore:", err));
+  // Firestore クラウドセーブ（端末間共有）
+  if (window.CloudSave && typeof window.CloudSave.saveSlot === 'function') {
+    window.CloudSave.saveSlot(currentSlotKey, G, immediate).catch(err => {
+      console.warn("Cloud save failed:", err);
+    });
   }
 }
 
@@ -1817,6 +1817,9 @@ function loadSlot(key){
     }
     if (!G.stageClearCounts) G.stageClearCounts = {};
     if (!G.questBoard) G.questBoard = [];
+    if (G.timeLimitSettings && typeof setTimeLimitForSlot === 'function') {
+      setTimeLimitForSlot(key, G.timeLimitSettings);
+    }
     currentSlotKey = key;
     return true;
   } catch(e){ return false; }
@@ -1852,6 +1855,111 @@ function listSaveSlots(){
   }
   slots.sort((a, b) => b.updatedAt - a.updatedAt);
   return slots;
+}
+
+let isCloudSyncing = false;
+
+async function syncCloudSaves(onComplete){
+  if (isCloudSyncing) {
+    if (typeof onComplete === 'function') onComplete(false, false);
+    return;
+  }
+  if (!window.CloudSave || typeof window.CloudSave.fetchAllSlots !== 'function') {
+    if (typeof onComplete === 'function') onComplete(false, false);
+    return;
+  }
+  isCloudSyncing = true;
+  try {
+    const cloudSlots = await window.CloudSave.fetchAllSlots();
+    let hasChanges = false;
+    if (Array.isArray(cloudSlots)) {
+      const cloudMap = {};
+      for (const cs of cloudSlots) {
+        if (!cs.slotKey) continue;
+        cloudMap[cs.slotKey] = cs;
+
+        const rawLocal = storageGet(cs.slotKey);
+        if (cs.deleted) {
+          if (rawLocal) {
+            storageRemove(cs.slotKey);
+            hasChanges = true;
+            if (currentSlotKey === cs.slotKey) {
+              currentSlotKey = null;
+              G = null;
+            }
+          }
+          continue;
+        }
+
+        if (!rawLocal) {
+          // 他端末で作成された新しいセーブデータを保存
+          if (cs.gameState) {
+            storageSet(cs.slotKey, JSON.stringify(cs.gameState));
+            if (cs.gameState.timeLimitSettings && typeof setTimeLimitForSlot === 'function') {
+              setTimeLimitForSlot(cs.slotKey, cs.gameState.timeLimitSettings);
+            }
+            hasChanges = true;
+          }
+        } else {
+          // 既存データの更新比較
+          try {
+            const localData = JSON.parse(rawLocal);
+            const localTime = localData.updatedAt || 0;
+            const cloudTime = cs.updatedAt || (cs.gameState && cs.gameState.updatedAt) || 0;
+            if (cloudTime > localTime && cs.gameState) {
+              storageSet(cs.slotKey, JSON.stringify(cs.gameState));
+              if (cs.gameState.timeLimitSettings && typeof setTimeLimitForSlot === 'function') {
+                setTimeLimitForSlot(cs.slotKey, cs.gameState.timeLimitSettings);
+              }
+              if (currentSlotKey === cs.slotKey) {
+                loadSlot(cs.slotKey);
+              }
+              hasChanges = true;
+            } else if (localTime > cloudTime) {
+              if (typeof getTimeLimitForSlot === 'function') {
+                localData.timeLimitSettings = getTimeLimitForSlot(cs.slotKey);
+              }
+              window.CloudSave.saveSlot(cs.slotKey, localData);
+            }
+          } catch(e) {}
+        }
+      }
+
+      // ローカルにしか存在しないセーブ枠をクラウドへアップロード
+      for (let i = 0; i < storageLen(); i++) {
+        const key = storageK(i);
+        if (!key || !key.startsWith(SAVE_PREFIX)) continue;
+        if (!cloudMap[key]) {
+          try {
+            const localData = JSON.parse(storageGet(key));
+            if (localData) {
+              if (typeof getTimeLimitForSlot === 'function') {
+                localData.timeLimitSettings = getTimeLimitForSlot(key);
+              }
+              window.CloudSave.saveSlot(key, localData);
+            }
+          } catch(e) {}
+        }
+      }
+    }
+
+    const currentSlots = listSaveSlots();
+    const continueBtn = $('btn-continue');
+    if (continueBtn) {
+      if (currentSlots.length > 0) {
+        continueBtn.classList.remove('hidden');
+      } else {
+        continueBtn.classList.add('hidden');
+      }
+    }
+
+    if (typeof onComplete === 'function') onComplete(true, hasChanges);
+  } catch(err) {
+    console.warn('[CloudSave] Sync error:', err);
+    if (typeof onComplete === 'function') onComplete(false, false);
+  } finally {
+    isCloudSyncing = false;
+  }
 }
 
 /* 旧バージョン（単一セーブ枠）からの ひっこし。あたらしい形式の
@@ -3498,9 +3606,9 @@ function nextFloor(){
 /* ==========================================================
    セーブデータ せんたく画面
    ========================================================== */
-function showLoadSaveScreen(onSelectCb){
-  showScreen('screen-load-save');
+function renderLoadSaveSlots(onSelectCb){
   const list = $('save-slot-list');
+  if (!list) return;
   list.innerHTML = '';
   const slots = listSaveSlots();
   if (slots.length === 0){
@@ -3536,6 +3644,38 @@ function showLoadSaveScreen(onSelectCb){
     row.appendChild(btn);
     list.appendChild(row);
   }
+}
+
+function showLoadSaveScreen(onSelectCb){
+  showScreen('screen-load-save');
+  renderLoadSaveSlots(onSelectCb);
+
+  const statusEl = $('save-sync-status');
+  if (statusEl) {
+    statusEl.textContent = '☁️ クラウドと同期中...';
+    statusEl.style.color = '#3498db';
+  }
+
+  syncCloudSaves((success, hasChanges) => {
+    const activeScreen = document.querySelector('.screen.active');
+    if (activeScreen && activeScreen.id === 'screen-load-save') {
+      renderLoadSaveSlots(onSelectCb);
+    }
+    if (statusEl) {
+      if (success) {
+        statusEl.textContent = '☁️ クラウド同期完了';
+        statusEl.style.color = '#2ecc71';
+        setTimeout(() => {
+          if (statusEl.textContent === '☁️ クラウド同期完了') {
+            statusEl.textContent = '';
+          }
+        }, 2500);
+      } else {
+        statusEl.textContent = '⚠️ クラウド同期失敗（オフライン）';
+        statusEl.style.color = '#e67e22';
+      }
+    }
+  });
 }
 
 /* ==========================================================
@@ -5460,23 +5600,15 @@ function bindEvents(){
       let currentDeleted = false;
       
       const doDelete = async () => {
-        let firestoreDoc = null, firestoreDeleteDoc = null;
-        if (window._firestoreDb && window._firebaseUid) {
-          try {
-            const fs = await import("firebase/firestore");
-            firestoreDoc = fs.doc;
-            firestoreDeleteDoc = fs.deleteDoc;
-          } catch(e) {}
-        }
-        
         for (const cb of checkboxes) {
           const key = cb.value;
           storageRemove(key);
-          if (firestoreDoc && firestoreDeleteDoc) {
+          if (window.CloudSave && typeof window.CloudSave.deleteSlot === 'function') {
             try {
-              const docRef = firestoreDoc(window._firestoreDb, "saves", window._firebaseUid + "_" + key);
-              await firestoreDeleteDoc(docRef);
-            } catch(e) {}
+              await window.CloudSave.deleteSlot(key);
+            } catch(e) {
+              console.warn("Cloud delete error:", e);
+            }
           }
           if (key === currentSlotKey) {
             currentDeleted = true;
@@ -6483,6 +6615,13 @@ function init(){
       const continueBtn = $('btn-continue');
       if (continueBtn) continueBtn.classList.remove('hidden');
     }
+    // バックグラウンドでクラウドセーブを同期（別端末のセーブデータを取得）
+    syncCloudSaves(() => {
+      if (listSaveSlots().length > 0) {
+        const continueBtn = $('btn-continue');
+        if (continueBtn) continueBtn.classList.remove('hidden');
+      }
+    });
     showScreen('screen-title');
     initTimeLimitFeature();
     initAdminPasswordGate();
@@ -6657,7 +6796,7 @@ function init(){
     if (battle && !battle.over) endBattleLoop();
     if (trainingSkill) { destroyChallenge(); trainingSkill = null; }
     explore = null;
-    save();
+    save(true);
     if (listSaveSlots().length > 0) $('btn-continue').classList.remove('hidden');
     showScreen('screen-title');
   };

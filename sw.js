@@ -1,4 +1,4 @@
-const CACHE_NAME = 'legend-heroes-cache-v4';
+const CACHE_NAME = 'legend-heroes-cache-v5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -33,6 +33,11 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // GETリクエスト かつ 同一オリジンのアセットのみキャッシュ対象とする
+  if (event.request.method !== 'GET' || !event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
+
   // キャッシュ優先（Cache-First）でオフライン完全対応
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {

@@ -2,8 +2,43 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /saves/{saveId} {
-      // 認証済みユーザーのみ読み書き可能
-      allow read, write: if request.auth != null;
+      allow read, write: if true;
+    }
+    match /users/{document} {
+      allow read, write: if true;
+    }
+    match /deviceTransfers/{document} {
+      allow read, write: if true;
+    }
+    match /deviceBackups/{document} {
+      allow read, write: if true;
+    }
+    match /global_players/{document} {
+      allow read, write: if true;
+    }
+    match /shared_profiles/{document} {
+      allow read, write: if true;
+    }
+    match /word_requests/{document} {
+      allow read, write: if true;
+    }
+    match /adopted_words/{document} {
+      allow read, write: if true;
+    }
+    match /typing_reports/{document} {
+      allow read, write: if true;
+    }
+    match /word_corrections/{document} {
+      allow read, write: if true;
+    }
+    match /announcements/{document} {
+      allow read, write: if true;
+    }
+    match /custom_stages/{document} {
+      allow read, write: if true;
+    }
+    match /official_show_rankings/{document} {
+      allow read, write: if true;
     }
   }
 }
