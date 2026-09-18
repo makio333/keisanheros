@@ -1194,11 +1194,11 @@ const ENEMIES_PER_STAGE = 10;
    { stageMode:true, areaId, stageIndex(0〜6・ボスはnull), isBoss, bossPhase(ボスのみ),
      stageKillCount(いまの ステージで たおした 数、0〜ENEMIES_PER_STAGE-1) } */
 function enterAreaStage(areaId, stageIndex){
-  explore = { stageMode:true, areaId, stageIndex, isBoss:false, stageKillCount:0, sessionDrops: [], sessionGold: 0, stageDrops: [], stageGold: 0, stageExp: 0 };
+  explore = { stageMode:true, areaId, stageIndex, isBoss:false, stageKillCount:0, sessionDrops: [], sessionGold: 0, stageDrops: [], stageGold: 0, stageExp: 0, usedProblems: new Set() };
   startBattle(false);
 }
 function enterAreaBoss(areaId){
-  explore = { stageMode:true, areaId, stageIndex:null, isBoss:true, bossPhase:1, sessionDrops: [], sessionGold: 0, stageDrops: [], stageGold: 0, stageExp: 0 };
+  explore = { stageMode:true, areaId, stageIndex:null, isBoss:true, bossPhase:1, sessionDrops: [], sessionGold: 0, stageDrops: [], stageGold: 0, stageExp: 0, usedProblems: new Set() };
   startBattle(false);
 }
 
@@ -2132,6 +2132,9 @@ function bgmKeyForScreen(id){
 
 function updateHud(){
   if (!G) return;
+  if (G.isTestMode && typeof ensureTestModeSupplies === 'function') {
+    ensureTestModeSupplies();
+  }
   const p = G.player;
 
   // バトル画面と拠点のステータスウィンドウ更新
@@ -2154,7 +2157,7 @@ function updateHud(){
     const expNumEl = $(`${prefix}-player-exp-num`);
     const expMaxEl = $(`${prefix}-player-exp-max`);
 
-    if (nameEl) nameEl.textContent = G.playerName || 'ゆうしゃ';
+    if (nameEl) nameEl.textContent = (G.playerName || 'ゆうしゃ') + (G.isTestMode ? ' [テスト]' : '');
     if (lvEl) lvEl.textContent = 'Lv' + p.lvl;
     if (goldEl) goldEl.textContent = p.gold;
 
@@ -2578,6 +2581,7 @@ function startBattle(animateFloor){
     running: false,
     tickId: null,
     over: false,
+    currentTurnProblem: null,
   };
   showScreen('screen-battle');
   const bg = isStageMode
@@ -2671,7 +2675,10 @@ function resumeBattle(actor){
   if (battle.over) return;
   // 行動した側だけゲージをリセット。もう片方のゲージは溜まり具合を
   // 持ち越す（すばやさが高いほど連続で行動できる、本来のATB挙動）
-  if (actor === 'player') battle.pGauge = 0;
+  if (actor === 'player') {
+    battle.pGauge = 0;
+    battle.currentTurnProblem = null;
+  }
   else battle.eGauge = 0;
   hideBattleMenus();
   updateBattleBars();
@@ -2719,24 +2726,70 @@ function applyMissPenalty(){
 }
 
 /* 新ステージモードなら エリア／ステージ（またはボスのフェーズ）に ひもづく もんだいを、
-   きゅうシステム（ゾーン／フロア）なら これまでどおり opTierForZoneFloor から もんだいを つくる */
+   きゅうシステム（ゾーン／フロア）なら これまでどおり opTierForZoneFloor から もんだいを つくる。
+   ステージ攻略中は同じ問題が重複して出ないように制御する */
 function currentAttackProblem(){
-  if (explore.stageMode){
-    const area = AREA_STAGES[explore.areaId];
-    if (explore.isBoss){
-      const problem = explore.bossPhase === 2 ? area.bossPhase2Problem() : area.bossPhase1Problem();
-      const timeLimit = explore.bossPhase === 2 ? area.bossTimeLimit2 : area.bossTimeLimit1;
-      return { problem, timeLimit };
-    }
-    const stage = area.stages[explore.stageIndex];
-    return { problem: stage.generateProblem(), timeLimit: stage.timeLimit };
+  if (!explore) {
+    return { problem: generateProblem('add1'), timeLimit: 5000 };
   }
-  const tier = opTierForZoneFloor(explore.zone, explore.floor);
-  return { problem: generateProblem(tier), timeLimit: problemTimeLimit(tier) };
+  if (!explore.usedProblems) {
+    explore.usedProblems = new Set();
+  }
+
+  const generateRaw = () => {
+    if (explore.stageMode){
+      const area = AREA_STAGES[explore.areaId];
+      if (explore.isBoss){
+        const problem = explore.bossPhase === 2 ? area.bossPhase2Problem() : area.bossPhase1Problem();
+        const timeLimit = explore.bossPhase === 2 ? area.bossTimeLimit2 : area.bossTimeLimit1;
+        return { problem, timeLimit };
+      }
+      const stage = area.stages[explore.stageIndex];
+      return { problem: stage.generateProblem(), timeLimit: stage.timeLimit };
+    }
+    const tier = opTierForZoneFloor(explore.zone, explore.floor);
+    return { problem: generateProblem(tier), timeLimit: problemTimeLimit(tier) };
+  };
+
+  const getSig = (p) => {
+    if (!p) return '';
+    const txt = p.text || (p.a !== undefined ? `${p.a} ${p.op} ${p.b}` : '');
+    return `${txt} => ${p.answer}`;
+  };
+
+  let candidate = generateRaw();
+  let sig = getSig(candidate.problem);
+  let attempts = 0;
+  // ステージ攻略中は算数・漢字とも同じ問題が出ないように再抽選
+  while (explore.usedProblems.has(sig) && attempts < 50) {
+    candidate = generateRaw();
+    sig = getSig(candidate.problem);
+    attempts++;
+  }
+
+  // もしプールの問題（例: 10+〇の9問など）をすべて出し切った場合はクリアして再循環
+  if (explore.usedProblems.has(sig)) {
+    explore.usedProblems.clear();
+  }
+  explore.usedProblems.add(sig);
+
+  return candidate;
+}
+
+/* ターン中の問題キャッシュ：特技や道具のメニューを開いて戻っても同じ問題を維持する */
+function getOrGenerateTurnProblem(){
+  if (battle && battle.currentTurnProblem) {
+    return battle.currentTurnProblem;
+  }
+  const probObj = currentAttackProblem();
+  if (battle) {
+    battle.currentTurnProblem = probObj;
+  }
+  return probObj;
 }
 
 function doAttack(){
-  const { problem, timeLimit } = currentAttackProblem();
+  const { problem, timeLimit } = getOrGenerateTurnProblem();
   startChallenge($('battle-challenge'),
     { problem, timeLimit, prompt: 'こうげき！ けいさんの こたえを にゅうりょく！', showBattleCommands: true },
     (res) => {
@@ -2812,7 +2865,7 @@ function useSkill(s){
   G.player.mp -= cost;
   updateBattleBars();
   
-  const { problem, timeLimit } = currentAttackProblem();
+  const { problem, timeLimit } = getOrGenerateTurnProblem();
   startChallenge($('battle-challenge'),
     { problem, timeLimit,
       showBattleCommands: false,
@@ -3078,6 +3131,7 @@ function triggerBossPhase2(){
 }
 
 function afterPlayerAction(){
+  if (battle) battle.currentTurnProblem = null;
   if (battle.enemy.hp <= 0){
     const frame = document.querySelector('.enemy-sprite');
     frame.classList.remove('enemy-damage-hit');
@@ -3119,9 +3173,11 @@ function enemyAct(){
 }
 
 function endBattleLoop(){
+  if (!battle) return;
   battle.over = true;
   battle.running = false;
   clearInterval(battle.tickId);
+  battle.currentTurnProblem = null;
   destroyChallenge();
 }
 
@@ -3692,6 +3748,7 @@ function nextStage(){
     explore.stageDrops = [];
     explore.stageGold = 0;
     explore.stageExp = 0;
+    explore.usedProblems = new Set();
     if (explore.stageIndex >= area.stages.length){
       explore.isBoss = true;
       explore.stageIndex = null;
@@ -3792,6 +3849,9 @@ function showHome(){
   // 拠点では全回復
   G.player.hp = totalMaxHp();
   G.player.mp = totalMaxMp();
+  if (G.isTestMode && typeof ensureTestModeSupplies === 'function') {
+    ensureTestModeSupplies();
+  }
   updateHud();
   save();
   checkDemonCastleReward();
@@ -5707,6 +5767,8 @@ function bindEvents(){
   on('btn-admin-filter-math', () => { adminSelectedFilter = 'math'; updateAdminFilterUI('btn-admin-filter-math'); updateAdminStudyDisplay($('admin-stats-slot-select').value); });
   on('btn-admin-filter-kanji', () => { adminSelectedFilter = 'kanji'; updateAdminFilterUI('btn-admin-filter-kanji'); updateAdminStudyDisplay($('admin-stats-slot-select').value); });
 
+  on('btn-admin-start-testplay', startAdminTestPlay);
+
   on('btn-admin-get-gold', () => {
     if (G && G.player) {
       G.player.gold += 10000;
@@ -6294,6 +6356,50 @@ function updateAdminFilterUI(activeId) {
     const btn = $(id);
     if (btn) btn.classList.toggle('is-active', id === activeId);
   });
+}
+
+/* ==========================================================
+   管理者用 テスト用プレイモード
+   ・全アイテム所持 (x99)
+   ・スキルポイント 9999
+   ・所持金 99,999,999G
+   ========================================================== */
+function ensureTestModeSupplies(){
+  if (!G || !G.isTestMode || !G.player) return;
+  if ((G.player.points || 0) < 9999) G.player.points = 9999;
+  if ((G.player.gold || 0) < 99999999) G.player.gold = 99999999;
+
+  const allItemDefs = [
+    ...ITEM_DB,
+    ...BLUEPRINT_DB,
+    ...Object.keys(customItems || {}).map(id => ({ id }))
+  ];
+  const seen = new Set();
+  if (!G.items) G.items = [];
+  for (const itemDef of allItemDefs){
+    if (!itemDef || !itemDef.id || seen.has(itemDef.id)) continue;
+    seen.add(itemDef.id);
+    let it = G.items.find(i => i.id === itemDef.id);
+    if (it){
+      if (it.count < 99) it.count = 99;
+    } else {
+      G.items.push({ uid: G.nextUid++, id: itemDef.id, count: 99 });
+    }
+  }
+}
+
+function startAdminTestPlay(){
+  if (!G){
+    createSaveSlot('テスト勇者');
+  }
+  G.isTestMode = true;
+  G.player.gold = 99999999;
+  G.player.points = 9999;
+  ensureTestModeSupplies();
+  save(true);
+  updateHud();
+  alert('🎮 テスト用プレイモードを開始しました！\n・すべてのアイテム所持 (各99個)\n・スキルポイント: 9999\n・所持金: 99,999,999G');
+  showHome();
 }
 
 /* ==========================================================
