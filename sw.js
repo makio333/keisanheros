@@ -1,4 +1,4 @@
-const CACHE_NAME = 'legend-heroes-cache-v7';
+const CACHE_NAME = 'legend-heroes-cache-v8';
 const ASSETS_TO_CACHE = [
   './manifest.json',
   './icon-192.png',
@@ -10,7 +10,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker v7] Caching essential PWA assets');
+      console.log('[Service Worker v8] Caching essential PWA assets');
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );

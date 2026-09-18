@@ -2936,40 +2936,36 @@ function useItem(uid, db, inBattle = false){
   if (!db) return { success: false, message: 'アイテムの データが ありません。' };
 
   if (db.effect === 'heal') {
+    if (!inBattle) {
+      const msg = '回復アイテムは バトル中に つかおう！\n（部屋で使えるのは 古代の設計図 や コストの種 のみです）';
+      alert(msg);
+      SM.playBeep('error');
+      return { success: false, message: msg };
+    }
     if (G.player.hp >= totalMaxHp()) {
       const msg = 'HPは すでに まんたんだ！';
-      if (!inBattle) {
-        alert(msg);
-        SM.playBeep('error');
-      }
       return { success: false, message: msg };
     }
     const healed = Math.min(totalMaxHp() - G.player.hp, db.value || 0);
     G.player.hp += healed;
     removeItem(uid, 1);
-    if (!inBattle) {
-      SM.playBeep('heal');
-      alert(`${db.name}を つかって HPが ${healed} かいふくした！`);
-    }
     return { success: true, amount: healed, message: `HPが ${healed} かいふく！` };
   }
 
   if (db.effect === 'mana') {
+    if (!inBattle) {
+      const msg = '回復アイテムは バトル中に つかおう！\n（部屋で使えるのは 古代の設計図 や コストの種 のみです）';
+      alert(msg);
+      SM.playBeep('error');
+      return { success: false, message: msg };
+    }
     if (G.player.mp >= totalMaxMp()) {
       const msg = 'MPは すでに まんたんだ！';
-      if (!inBattle) {
-        alert(msg);
-        SM.playBeep('error');
-      }
       return { success: false, message: msg };
     }
     const healed = Math.min(totalMaxMp() - G.player.mp, db.value || 0);
     G.player.mp += healed;
     removeItem(uid, 1);
-    if (!inBattle) {
-      SM.playBeep('heal');
-      alert(`${db.name}を つかって MPが ${healed} かいふくした！`);
-    }
     return { success: true, amount: healed, message: `MPが ${healed} かいふく！` };
   }
 
@@ -4340,6 +4336,7 @@ function renderRoomInventory() {
       const db = getItemTemplate(it.id);
       if (db) {
         const isBlueprint = !!db.equipId;
+        const isCostSeed = db.effect === 'cost';
         const emoji = db.emoji || (isBlueprint ? '📜' : '💊');
         cell.innerHTML = `<div style="font-size:32px;">${iconHtml(emoji, 32)}</div><span class="item-count">x${it.count}</span>`;
         
@@ -4349,10 +4346,19 @@ function renderRoomInventory() {
           desc = `プリントを解いて暗号を入力すると「${equipDb.name}」が手に入る！`;
         }
 
+        let actionHint = '';
+        if (isBlueprint) {
+          actionHint = '<div style="font-size:13px; margin-top:8px; color:#f1c40f;">🖱 クリックして プリント</div>';
+        } else if (isCostSeed) {
+          actionHint = '<div style="font-size:13px; margin-top:8px; color:#2ecc71;">🖱 クリックして つかう</div>';
+        } else {
+          actionHint = '<div style="font-size:12px; margin-top:8px; color:#f39c12;">⚔️ バトル専用アイテム（部屋では使えません）</div>';
+        }
+
         let tooltipHtml = `
           <div style="font-size:16px; font-weight:bold; color:var(--accent); margin-bottom:4px;">${db.name}</div>
           <div style="font-size:12px; color:#ccc;">${desc}</div>
-          <div style="font-size:13px; margin-top:8px; color:#f1c40f;">🖱 クリックして ${isBlueprint ? 'プリント' : 'つかう'}</div>
+          ${actionHint}
         `;
         
         cell.onmouseover = (e) => showTooltip(e, tooltipHtml);
@@ -4361,13 +4367,16 @@ function renderRoomInventory() {
           hideTooltip();
           if (isBlueprint) {
             printBlueprintSheet(db, it.uid);
-          } else {
+          } else if (isCostSeed) {
             const res = useItem(it.uid, db, false);
             if (res && res.success) {
               updateHud(); 
               save(); 
               renderRoomInventory(); // Re-render
             }
+          } else {
+            SM.playBeep('error');
+            alert('回復アイテムは バトル中に つかおう！\n（部屋で使えるのは 古代の設計図 や コストの種 のみです）');
           }
         };
       }
@@ -5357,8 +5366,8 @@ function showItems(){
       printBtn.onclick = () => printBlueprintSheet(db);
       btnGroup.appendChild(printBtn);
       row.appendChild(btnGroup);
-    } else {
-      row.innerHTML = `<div class="info">${db.name} ×${it.count} <div class="desc">${db.desc} (効果:${db.value})</div></div>`;
+    } else if (db.effect === 'cost') {
+      row.innerHTML = `<div class="info">${db.name} ×${it.count} <div class="desc">${db.desc}</div></div>`;
       const btn = document.createElement('button');
       btn.className = 'btn';
       btn.textContent = 'つかう';
@@ -5370,6 +5379,14 @@ function showItems(){
           showItems();
         }
       };
+      row.appendChild(btn);
+    } else {
+      row.innerHTML = `<div class="info">${db.name} ×${it.count} <div class="desc">${db.desc} (効果:${db.value})</div></div>`;
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.disabled = true;
+      btn.style.opacity = '0.6';
+      btn.textContent = 'バトル専用';
       row.appendChild(btn);
     }
     list.appendChild(row);
