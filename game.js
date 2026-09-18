@@ -168,6 +168,7 @@ class SoundManager {
       if (key === 'se_type' || key === 'se_decide') this.playBeep('type');
       if (key === 'se_slash') this.playBeep('hit');
       if (key === 'se_crit') this.playBeep('hit');
+      if (key === 'se_heal') this.playBeep('heal');
       return;
     }
     const node = base.cloneNode(true);
@@ -176,6 +177,7 @@ class SoundManager {
       if (key === 'se_type' || key === 'se_decide') this.playBeep('type');
       if (key === 'se_slash') this.playBeep('hit');
       if (key === 'se_crit') this.playBeep('hit');
+      if (key === 'se_heal') this.playBeep('heal');
     });
   }
 
@@ -267,6 +269,16 @@ class SoundManager {
       gain.gain.exponentialRampToValueAtTime(0.01 * volBase, now + 0.1);
       osc.start(now);
       osc.stop(now + 0.1);
+    } else if (type === 'heal') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.setValueAtTime(659.25, now + 0.07);
+      osc.frequency.setValueAtTime(783.99, now + 0.14);
+      osc.frequency.setValueAtTime(1046.50, now + 0.21);
+      gain.gain.setValueAtTime(0.4 * volBase, now);
+      gain.gain.exponentialRampToValueAtTime(0.01 * volBase, now + 0.35);
+      osc.start(now);
+      osc.stop(now + 0.35);
     }
   }
 }
@@ -546,7 +558,7 @@ class DamageEffect {
     this.typeClass = typeClass;
     this.life = 1.1;
     this.maxLife = 1.1;
-    this.vy = -55;
+    this.vy = (typeClass.includes('heal') || typeClass.includes('mana')) ? -40 : -55;
     this.isSkill = typeClass.includes('skill');
     this.isCrit = typeClass.includes('crit');
   }
@@ -594,6 +606,26 @@ class DamageEffect {
         ctx.shadowColor = `rgba(0, 180, 255, ${alpha})`;
       }
       ctx.shadowBlur = 20;
+      ctx.fillText(this.text, 0, 0);
+
+    } else if (this.typeClass.includes('heal')) {
+      ctx.font = "900 36px 'DotGothic16', sans-serif";
+      ctx.strokeStyle = 'rgba(0, 0, 0, ' + alpha + ')';
+      ctx.lineWidth = 4;
+      ctx.strokeText(this.text, 0, 0);
+      ctx.fillStyle = `rgba(46, 213, 115, ${alpha})`;
+      ctx.shadowColor = `rgba(46, 213, 115, ${alpha})`;
+      ctx.shadowBlur = 12;
+      ctx.fillText(this.text, 0, 0);
+
+    } else if (this.typeClass.includes('mana')) {
+      ctx.font = "900 36px 'DotGothic16', sans-serif";
+      ctx.strokeStyle = 'rgba(0, 0, 0, ' + alpha + ')';
+      ctx.lineWidth = 4;
+      ctx.strokeText(this.text, 0, 0);
+      ctx.fillStyle = `rgba(54, 162, 235, ${alpha})`;
+      ctx.shadowColor = `rgba(54, 162, 235, ${alpha})`;
+      ctx.shadowBlur = 12;
       ctx.fillText(this.text, 0, 0);
 
     } else if (this.typeClass.includes('enemy-dmg')) {
@@ -2798,6 +2830,12 @@ function useSkill(s){
         const heal = Math.round(totalMaxHp() * s.healPct);
         G.player.hp = Math.min(totalMaxHp(), G.player.hp + heal);
         blog(`<span class="good">${s.name}！ HPが ${heal} かいふくした！</span>`);
+        SM.playBeep('heal');
+        const pEl = $('battle-player-window') || $('battle-player-hp');
+        if (pEl) {
+          spawnFloatingDamage(pEl, `+${heal}`, 'heal');
+        }
+        updateBattleBars();
         afterPlayerAction();
         return;
       }
@@ -2848,7 +2886,7 @@ function openItemMenu(){
 
   for (const it of G.items){
     const db = getItemTemplate(it.id);
-    if (!db || it.count <= 0) continue;
+    if (!db || it.count <= 0 || db.equipId) continue;
     any = true;
     const b = document.createElement('button');
     b.className = 'btn';
@@ -2858,9 +2896,19 @@ function openItemMenu(){
     b.style.padding = '10px 16px';
     b.innerHTML = `<strong>${db.name} ×${it.count}</strong> <small style="color:var(--text-light);">${db.desc} (効果:${db.value})</small>`;
     b.onclick = () => {
+      const res = useItem(it.uid, db, true);
+      if (!res.success) {
+        blog(`<span class="bad">${res.message}</span>`);
+        SM.playBeep('error');
+        return;
+      }
       sub.classList.add('hidden');
-      useItem(it.uid, db);
-      blog(`<span class="good">ゆうしゃは ${db.name}を つかった！</span>`);
+      blog(`<span class="good">ゆうしゃは ${db.name}を つかった！ ${res.message}</span>`);
+      SM.playBeep('heal');
+      const pEl = $('battle-player-window') || $('battle-player-hp');
+      if (pEl && res.amount) {
+        spawnFloatingDamage(pEl, `+${res.amount}`, db.effect === 'mana' ? 'mana' : 'heal');
+      }
       updateBattleBars();
       afterPlayerAction();
     };
@@ -2884,10 +2932,59 @@ function openItemMenu(){
   sub.classList.remove('hidden');
 }
 
-function useItem(uid, db){
-  removeItem(uid, 1);
-  if (db.effect === 'heal') G.player.hp = Math.min(totalMaxHp(), G.player.hp + db.value);
-  if (db.effect === 'mana') G.player.mp = Math.min(totalMaxMp(), G.player.mp + db.value);
+function useItem(uid, db, inBattle = false){
+  if (!db) return { success: false, message: 'アイテムの データが ありません。' };
+
+  if (db.effect === 'heal') {
+    if (G.player.hp >= totalMaxHp()) {
+      const msg = 'HPは すでに まんたんだ！';
+      if (!inBattle) {
+        alert(msg);
+        SM.playBeep('error');
+      }
+      return { success: false, message: msg };
+    }
+    const healed = Math.min(totalMaxHp() - G.player.hp, db.value || 0);
+    G.player.hp += healed;
+    removeItem(uid, 1);
+    if (!inBattle) {
+      SM.playBeep('heal');
+      alert(`${db.name}を つかって HPが ${healed} かいふくした！`);
+    }
+    return { success: true, amount: healed, message: `HPが ${healed} かいふく！` };
+  }
+
+  if (db.effect === 'mana') {
+    if (G.player.mp >= totalMaxMp()) {
+      const msg = 'MPは すでに まんたんだ！';
+      if (!inBattle) {
+        alert(msg);
+        SM.playBeep('error');
+      }
+      return { success: false, message: msg };
+    }
+    const healed = Math.min(totalMaxMp() - G.player.mp, db.value || 0);
+    G.player.mp += healed;
+    removeItem(uid, 1);
+    if (!inBattle) {
+      SM.playBeep('heal');
+      alert(`${db.name}を つかって MPが ${healed} かいふくした！`);
+    }
+    return { success: true, amount: healed, message: `MPが ${healed} かいふく！` };
+  }
+
+  if (db.effect === 'cost') {
+    G.player.costPlus = (G.player.costPlus || 0) + (db.value || 1);
+    removeItem(uid, 1);
+    const msg = `${db.name}を つかった！ そうびコストの じょうげんが ${db.value || 1} あがった！（現在: ${costCap()}）`;
+    if (!inBattle) {
+      SM.playBeep('heal');
+      alert(msg);
+    }
+    return { success: true, amount: db.value || 1, message: msg };
+  }
+
+  return { success: false, message: 'このアイテムは つかえない。' };
 }
 
 /* --- ダメージ処理 --- */
@@ -3589,9 +3686,7 @@ function stageAreaCleared(areaId, extraRewards){
 }
 
 /* 勝利後：おなじ ステージの もんだいタイプで つぎの 敵へ（テンポ重視で即戦闘）。
-   ENEMIES_PER_STAGE たい たおしたら つぎの ステージへ すすみ、7ステージを こえたら ボスへ。
-   せいかいしつづけても 前のたたかいで うけた ダメージが つみかさなって
-   しなないよう、つぎの 敵に すすむ たびに HP／MPを ぜんかいふくする */
+   ENEMIES_PER_STAGE たい たおしたら つぎの ステージへ すすみ、7ステージを こえたら ボスへ。 */
 function nextStage(){
   const area = AREA_STAGES[explore.areaId];
   explore.stageKillCount = (explore.stageKillCount || 0) + 1;
@@ -3607,8 +3702,6 @@ function nextStage(){
       explore.bossPhase = 1;
     }
   }
-  G.player.hp = totalMaxHp();
-  G.player.mp = totalMaxMp();
   startBattle(true);
 }
 
@@ -4269,10 +4362,12 @@ function renderRoomInventory() {
           if (isBlueprint) {
             printBlueprintSheet(db, it.uid);
           } else {
-            useItem(it.uid, db); 
-            updateHud(); 
-            save(); 
-            renderRoomInventory(); // Re-render
+            const res = useItem(it.uid, db, false);
+            if (res && res.success) {
+              updateHud(); 
+              save(); 
+              renderRoomInventory(); // Re-render
+            }
           }
         };
       }
@@ -5267,7 +5362,14 @@ function showItems(){
       const btn = document.createElement('button');
       btn.className = 'btn';
       btn.textContent = 'つかう';
-      btn.onclick = () => { useItem(it.uid, db); updateHud(); save(); showItems(); };
+      btn.onclick = () => {
+        const res = useItem(it.uid, db, false);
+        if (res && res.success) {
+          updateHud();
+          save();
+          showItems();
+        }
+      };
       row.appendChild(btn);
     }
     list.appendChild(row);
