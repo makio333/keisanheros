@@ -1,7 +1,5 @@
-const CACHE_NAME = 'legend-heroes-cache-v5';
+const CACHE_NAME = 'legend-heroes-cache-v6';
 const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
@@ -9,11 +7,12 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Caching all game assets for offline play');
+      console.log('[Service Worker v6] Caching essential PWA assets');
       return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
@@ -23,7 +22,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
-            console.log('[Service Worker] Removing old cache:', key);
+            console.log('[Service Worker v6] Removing old cache:', key);
             return caches.delete(key);
           }
         })
@@ -38,7 +37,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // キャッシュ優先（Cache-First）でオフライン完全対応
+  const url = new URL(event.request.url);
+
+  // HTML または ナビゲーションリクエストは必ず「ネットワーク優先（Network-First）」
+  // 端末がオンラインなら常に最新の index.html と最新バンドルを取得し、オフライン時のみキャッシュへフォールバック
+  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+    event.respondWith(
+      fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const resClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
+        }
+        return networkResponse;
+      }).catch(() => {
+        return caches.match(event.request).then((cached) => cached || caches.match('./index.html') || caches.match('./'));
+      })
+    );
+    return;
+  }
+
+  // 静的画像・音声・スタイルなどは「キャッシュ優先（Cache-First）」
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -53,9 +71,6 @@ self.addEventListener('fetch', (event) => {
           cache.put(event.request, responseToCache);
         });
         return networkResponse;
-      }).catch(() => {
-        // オフライン時のフォールバック
-        return caches.match('./index.html') || caches.match('./');
       });
     })
   );

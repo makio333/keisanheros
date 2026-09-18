@@ -12,12 +12,21 @@
 <link rel="icon" type="image/png" href="./icon-192.png">
 <title>レジェンドヒーローズ 〜知恵を受け継ぎし勇者たち〜</title>
 <script>
-  // Service Worker登録（完全オフライン永続キャッシュ）
+  // Service Worker登録（完全オフライン対応 ＆ 端末間リアルタイム更新）
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').then(function(reg) {
-      console.log('[PWA] ServiceWorker registration successful with scope: ', reg.scope);
+      console.log('[PWA] ServiceWorker registered with scope: ', reg.scope);
+      reg.update(); // 起動時に即座に更新チェック
     }).catch(function(err) {
       console.warn('[PWA] ServiceWorker registration failed: ', err);
+    });
+
+    navigator.serviceWorker.addEventListener('controllerchange', function() {
+      if (!window._swReloading) {
+        window._swReloading = true;
+        console.log('[PWA] New version activated, reloading...');
+        window.location.reload();
+      }
     });
   }
 </script>

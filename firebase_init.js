@@ -1,20 +1,39 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, setDoc, getDocs, collection } from "firebase/firestore";
-import { getAuth, signInAnonymously } from "firebase/auth";
+import { getAnalytics, isSupported } from "firebase/analytics";
+import { 
+  getFirestore, 
+  doc, 
+  setDoc, 
+  getDoc, 
+  getDocs, 
+  collection, 
+  deleteDoc,
+  onSnapshot 
+} from "firebase/firestore";
 
 const firebaseConfig = {
-  projectId: "treegames-ac5db",
-  appId: "1:538793714749:web:8cea9794c8b65f8a9d7654",
-  storageBucket: "treegames-ac5db.firebasestorage.app",
   apiKey: "AIzaSyDu5F9Dlw4x7E1cDg2K41_mEzaEa0QGW6Q",
   authDomain: "treegames-ac5db.firebaseapp.com",
+  projectId: "treegames-ac5db",
+  storageBucket: "treegames-ac5db.firebasestorage.app",
   messagingSenderId: "538793714749",
+  appId: "1:538793714749:web:8cea9794c8b65f8a9d7654",
   measurementId: "G-T5X3X57WJJ"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
+
+// Initialize Analytics (ブラウザ環境でサポートされている場合のみ)
+isSupported().then((supported) => {
+  if (supported) {
+    try {
+      getAnalytics(app);
+      console.log("[Firebase] Analytics initialized");
+    } catch(e) {}
+  }
+}).catch(() => {});
 
 window._firestoreDb = db;
 
@@ -26,10 +45,13 @@ function slotKeyToDocId(slotKey) {
 function docIdToSlotKey(docId, data) {
   if (data && data.slotKey) return data.slotKey;
   try {
-    return decodeURIComponent(docId);
-  } catch(e) {
-    return docId;
+    const decoded = decodeURIComponent(docId);
+    if (decoded.startsWith('typing_rpg_save_v3::')) return decoded;
+  } catch(e) {}
+  if (docId.startsWith('typing_rpg_save_v3__')) {
+    return docId.replace('typing_rpg_save_v3__', 'typing_rpg_save_v3::');
   }
+  return docId;
 }
 
 // Debounce map for writes
@@ -58,8 +80,70 @@ async function executeSave(slotKey, gameState) {
   }
 }
 
+// Listeners for realtime updates
+const cloudChangeListeners = new Set();
+
+// Start realtime listening to Firestore saves
+try {
+  const colRef = collection(db, "saves");
+  onSnapshot(colRef, (snapshot) => {
+    const cloudSlots = [];
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      const key = docIdToSlotKey(docSnap.id, data);
+      if (data.deleted) {
+        cloudSlots.push({
+          slotKey: key,
+          deleted: true,
+          updatedAt: data.updatedAt || 0
+        });
+        return;
+      }
+
+      let gameState = null;
+      if (data.gameData) {
+        try {
+          gameState = JSON.parse(data.gameData);
+        } catch(e) {
+          console.warn("[CloudSave] Failed to parse gameData for:", key, e);
+        }
+      } else if (data.playerName) {
+        // Legacy direct object format
+        gameState = data;
+      }
+
+      if (gameState) {
+        cloudSlots.push({
+          slotKey: key,
+          deleted: false,
+          updatedAt: data.updatedAt || (gameState.updatedAt || 0),
+          gameState: gameState
+        });
+      }
+    });
+
+    console.log(`[CloudSave] Realtime update: ${cloudSlots.length} slots loaded from Firestore`);
+    for (const listener of cloudChangeListeners) {
+      try {
+        listener(cloudSlots);
+      } catch(e) {
+        console.error("[CloudSave] Listener error:", e);
+      }
+    }
+  }, (err) => {
+    console.error("[CloudSave] Realtime subscription error:", err);
+  });
+} catch(err) {
+  console.error("[CloudSave] Failed to initialize onSnapshot:", err);
+}
+
 // Global CloudSave API
 window.CloudSave = {
+  onCloudUpdate(fn) {
+    cloudChangeListeners.add(fn);
+    return () => cloudChangeListeners.delete(fn);
+  },
+
   saveSlot(slotKey, gameState, immediate = false) {
     if (!slotKey || !gameState) return Promise.resolve(false);
 
@@ -120,7 +204,6 @@ window.CloudSave = {
             console.warn("[CloudSave] Failed to parse gameData for:", key, e);
           }
         } else if (data.playerName) {
-          // Legacy direct object format
           gameState = data;
         }
 
@@ -183,11 +266,4 @@ window.addEventListener('pagehide', () => {
 });
 window.addEventListener('beforeunload', () => {
   if (window.CloudSave) window.CloudSave.flush();
-});
-
-signInAnonymously(auth).then((userCredential) => {
-    window._firebaseUid = userCredential.user.uid;
-    console.log("Firebase Auth Signed In", window._firebaseUid);
-}).catch((error) => {
-    console.error("Anonymous auth failed:", error);
 });
