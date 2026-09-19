@@ -1589,19 +1589,27 @@ function getEquipTemplate(id) {
 }
 
 const ITEM_DB = [
-  { id:'potion', name:'傷薬', opTier:'add', effect:'heal', value:20, price:15, desc:'HPを回復', emoji:'assets/items/potion.png' },
-  { id:'hipotion', name:'秘薬', opTier:'sub', effect:'heal', value:60, price:50, desc:'HPを大きく回復', emoji:'assets/items/hipotion.png' },
-  { id:'herb', name:'魔力の草', opTier:'add', effect:'mana', value:10, price:12, desc:'MPを回復', emoji:'assets/items/herb.png' },
-  { id:'ether', name:'エーテル', opTier:'addCarry', effect:'mana', value:30, price:40, desc:'MPを大きく回復', emoji:'assets/items/ether.png' },
-  { id:'cost_seed', name:'コストプラスのたね', opTier:'mul1', effect:'cost', value:1, price:1000, desc:'使うとそうびコストの上限が 1 あがる 不思議なたね。', emoji:'🌱' }
+  { id:'potion', name:'傷薬', opTier:'add', effect:'heal', value:20, price:15, desc:'HPを回復', emoji:'assets/items/potion.png', tags:['戦闘用'] },
+  { id:'hipotion', name:'秘薬', opTier:'sub', effect:'heal', value:60, price:50, desc:'HPを大きく回復', emoji:'assets/items/hipotion.png', tags:['戦闘用'] },
+  { id:'herb', name:'魔力の草', opTier:'add', effect:'mana', value:10, price:12, desc:'MPを回復', emoji:'assets/items/herb.png', tags:['戦闘用'] },
+  { id:'ether', name:'エーテル', opTier:'addCarry', effect:'mana', value:30, price:40, desc:'MPを大きく回復', emoji:'assets/items/ether.png', tags:['戦闘用'] },
+  { id:'cost_seed', name:'コストプラスのたね', opTier:'mul1', effect:'cost', value:1, price:1000, desc:'使うとそうびコストの上限が 1 あがる 不思議なたね。', emoji:'🌱', tags:['部屋用'] }
 ];
 
 /* 古代装備の せっけいず（プリント専用アイテム。少し難易度高め＝わりざん） */
 const BLUEPRINT_DB = [
-  { id:'bp_anc_w1', name:'古代の大剣の せっけいず', equipId:'anc_w1', tier:'div5', emoji:'assets/items/blueprint.png' },
-  { id:'bp_anc_a1', name:'古代の鎧の せっけいず', equipId:'anc_a1', tier:'div5', emoji:'assets/items/blueprint.png' },
-  { id:'bp_anc_c1', name:'古代の指輪の せっけいず', equipId:'anc_c1', tier:'div5', emoji:'assets/items/blueprint.png' },
+  { id:'bp_anc_w1', name:'古代の大剣の せっけいず', equipId:'anc_w1', tier:'div5', emoji:'assets/items/blueprint.png', tags:['設計図'] },
+  { id:'bp_anc_a1', name:'古代の鎧の せっけいず', equipId:'anc_a1', tier:'div5', emoji:'assets/items/blueprint.png', tags:['設計図'] },
+  { id:'bp_anc_c1', name:'古代の指輪の せっけいず', equipId:'anc_c1', tier:'div5', emoji:'assets/items/blueprint.png', tags:['設計図'] },
 ];
+
+function isBattleItem(db) {
+  if (!db) return false;
+  if (Array.isArray(db.tags)) return db.tags.includes('戦闘用');
+  if (typeof db.tags === 'string') return db.tags.includes('戦闘用');
+  if (db.tag === '戦闘用') return true;
+  return false;
+}
 
 function getItemTemplate(id) {
   const base = ITEM_DB.find(d => d.id === id) || BLUEPRINT_DB.find(d => d.id === id);
@@ -2939,7 +2947,7 @@ function openItemMenu(){
 
   for (const it of G.items){
     const db = getItemTemplate(it.id);
-    if (!db || it.count <= 0 || db.equipId) continue;
+    if (!db || it.count <= 0 || !isBattleItem(db)) continue;
     any = true;
     const b = document.createElement('button');
     b.className = 'btn';
@@ -2947,7 +2955,7 @@ function openItemMenu(){
     b.style.justifyContent = 'space-between';
     b.style.alignItems = 'center';
     b.style.padding = '10px 16px';
-    b.innerHTML = `<strong>${db.name} ×${it.count}</strong> <small style="color:var(--text-light);">${db.desc} (効果:${db.value})</small>`;
+    b.innerHTML = `<strong>${iconHtml(db.emoji, 20)} ${db.name} ×${it.count} <span class="tag" style="background:rgba(231,76,60,0.2); border-color:#e74c3c; color:#ff7675; font-size:11px; margin-left:4px; padding:1px 6px; border-radius:4px;">⚔️ 戦闘用</span></strong> <small style="color:var(--text-light);">${db.desc} (効果:${db.value})</small>`;
     b.onclick = () => {
       const res = useItem(it.uid, db, true);
       if (!res.success) {
@@ -2988,13 +2996,17 @@ function openItemMenu(){
 function useItem(uid, db, inBattle = false){
   if (!db) return { success: false, message: 'アイテムの データが ありません。' };
 
+  if (inBattle && !isBattleItem(db)) {
+    return { success: false, message: 'このアイテムは 戦闘中には つかえない！' };
+  }
+  if (!inBattle && isBattleItem(db)) {
+    const msg = '「戦闘用」アイテムは バトル中に つかおう！\n（部屋で使えるのは 古代の設計図 や コストの種 のみです）';
+    alert(msg);
+    SM.playBeep('error');
+    return { success: false, message: msg };
+  }
+
   if (db.effect === 'heal') {
-    if (!inBattle) {
-      const msg = '回復アイテムは バトル中に つかおう！\n（部屋で使えるのは 古代の設計図 や コストの種 のみです）';
-      alert(msg);
-      SM.playBeep('error');
-      return { success: false, message: msg };
-    }
     if (G.player.hp >= totalMaxHp()) {
       const msg = 'HPは すでに まんたんだ！';
       return { success: false, message: msg };
@@ -3006,12 +3018,6 @@ function useItem(uid, db, inBattle = false){
   }
 
   if (db.effect === 'mana') {
-    if (!inBattle) {
-      const msg = '回復アイテムは バトル中に つかおう！\n（部屋で使えるのは 古代の設計図 や コストの種 のみです）';
-      alert(msg);
-      SM.playBeep('error');
-      return { success: false, message: msg };
-    }
     if (G.player.mp >= totalMaxMp()) {
       const msg = 'MPは すでに まんたんだ！';
       return { success: false, message: msg };
@@ -4399,6 +4405,7 @@ function renderRoomInventory() {
       if (db) {
         const isBlueprint = !!db.equipId;
         const isCostSeed = db.effect === 'cost';
+        const isBattle = isBattleItem(db);
         const emoji = db.emoji || (isBlueprint ? '📜' : '💊');
         cell.innerHTML = `<div style="font-size:32px;">${iconHtml(emoji, 32)}</div><span class="item-count">x${it.count}</span>`;
         
@@ -4408,17 +4415,23 @@ function renderRoomInventory() {
           desc = `プリントを解いて暗号を入力すると「${equipDb.name}」が手に入る！`;
         }
 
+        let tagBadge = '';
         let actionHint = '';
         if (isBlueprint) {
+          tagBadge = '<span class="tag" style="background:rgba(243,156,18,0.2); border-color:#f39c12; color:#f39c12; font-size:11px; margin-left:6px; padding:1px 6px; border-radius:4px;">📜 設計図</span>';
           actionHint = '<div style="font-size:13px; margin-top:8px; color:#f1c40f;">🖱 クリックして プリント</div>';
         } else if (isCostSeed) {
+          tagBadge = '<span class="tag" style="background:rgba(46,204,113,0.2); border-color:#2ecc71; color:#2ecc71; font-size:11px; margin-left:6px; padding:1px 6px; border-radius:4px;">🌱 部屋用</span>';
           actionHint = '<div style="font-size:13px; margin-top:8px; color:#2ecc71;">🖱 クリックして つかう</div>';
+        } else if (isBattle) {
+          tagBadge = '<span class="tag" style="background:rgba(231,76,60,0.2); border-color:#e74c3c; color:#ff7675; font-size:11px; margin-left:6px; padding:1px 6px; border-radius:4px;">⚔️ 戦闘用</span>';
+          actionHint = '<div style="font-size:12px; margin-top:8px; color:#f39c12;">⚔️ 戦闘用アイテム（部屋では使えません）</div>';
         } else {
-          actionHint = '<div style="font-size:12px; margin-top:8px; color:#f39c12;">⚔️ バトル専用アイテム（部屋では使えません）</div>';
+          actionHint = '<div style="font-size:12px; margin-top:8px; color:#bbb;">🖱 クリックして つかう</div>';
         }
 
         let tooltipHtml = `
-          <div style="font-size:16px; font-weight:bold; color:var(--accent); margin-bottom:4px;">${db.name}</div>
+          <div style="font-size:16px; font-weight:bold; color:var(--accent); margin-bottom:4px; display:flex; align-items:center;">${db.name} ${tagBadge}</div>
           <div style="font-size:12px; color:#ccc;">${desc}</div>
           ${actionHint}
         `;
@@ -4444,9 +4457,16 @@ function renderRoomInventory() {
                 costBar.classList.add('cost-up-anim');
               }
             }
-          } else {
+          } else if (isBattle) {
             SM.playBeep('error');
-            alert('回復アイテムは バトル中に つかおう！\n（部屋で使えるのは 古代の設計図 や コストの種 のみです）');
+            alert('「戦闘用」アイテムは バトル中に つかおう！\n（部屋で使えるのは 古代の設計図 や コストの種 のみです）');
+          } else {
+            const res = useItem(it.uid, db, false);
+            if (res && res.success) {
+              updateHud();
+              save();
+              renderRoomInventory();
+            }
           }
         };
       }
@@ -5392,9 +5412,12 @@ function showItemShop(){
   for (const db of ITEM_DB){
     const card = document.createElement('div');
     card.className = 'item-card shop-card';
+    const tagBadge = isBattleItem(db)
+      ? '<span class="tag" style="background:rgba(231,76,60,0.2); border-color:#e74c3c; color:#ff7675; font-size:11px; margin-left:4px; padding:1px 5px; border-radius:3px;">⚔️ 戦闘用</span>'
+      : (db.effect === 'cost' ? '<span class="tag" style="background:rgba(46,204,113,0.2); border-color:#2ecc71; color:#2ecc71; font-size:11px; margin-left:4px; padding:1px 5px; border-radius:3px;">🌱 部屋用</span>' : '');
     card.innerHTML = `
       <div class="item-card-icon">${iconHtml(db.emoji, 48)}</div>
-      <div class="item-card-name">${db.name}</div>
+      <div class="item-card-name">${db.name} ${tagBadge}</div>
       <div class="shop-card-desc">${db.desc}(効果:${db.value})</div>
       <div class="shop-card-price">${db.price}G</div>
       <button class="btn shop-card-buy" ${G.player.gold < db.price ? 'disabled' : ''}>かう</button>
@@ -5427,7 +5450,7 @@ function showItems(){
     if (db.equipId) {
       // 設計図（古代装備の あんごうプリント用アイテム）
       const equipDb = getEquipTemplate(db.equipId);
-      row.innerHTML = `<div class="info">📜 ${db.name} ×${it.count} <div class="desc">プリントして あんごうに せいかいすると「${equipDb.name}」が てにはいる</div></div>`;
+      row.innerHTML = `<div class="info">📜 ${db.name} ×${it.count} <span class="tag" style="background:rgba(243,156,18,0.2); border-color:#f39c12; color:#f39c12; font-size:11px; margin-left:6px; padding:1px 5px; border-radius:3px;">📜 設計図</span><div class="desc">プリントして あんごうに せいかいすると「${equipDb.name}」が てにはいる</div></div>`;
       const btnGroup = document.createElement('div');
       btnGroup.className = 'skill-row-btns';
       const printBtn = document.createElement('button');
@@ -5436,8 +5459,16 @@ function showItems(){
       printBtn.onclick = () => printBlueprintSheet(db);
       btnGroup.appendChild(printBtn);
       row.appendChild(btnGroup);
+    } else if (isBattleItem(db)) {
+      row.innerHTML = `<div class="info">${iconHtml(db.emoji, 20)} ${db.name} ×${it.count} <span class="tag" style="background:rgba(231,76,60,0.2); border-color:#e74c3c; color:#ff7675; font-size:11px; margin-left:6px; padding:1px 5px; border-radius:3px;">⚔️ 戦闘用</span><div class="desc">${db.desc} (効果:${db.value})</div></div>`;
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.disabled = true;
+      btn.style.opacity = '0.6';
+      btn.textContent = '戦闘用';
+      row.appendChild(btn);
     } else if (db.effect === 'cost') {
-      row.innerHTML = `<div class="info">${db.name} ×${it.count} <div class="desc">${db.desc}</div></div>`;
+      row.innerHTML = `<div class="info">${iconHtml(db.emoji, 20)} ${db.name} ×${it.count} <span class="tag" style="background:rgba(46,204,113,0.2); border-color:#2ecc71; color:#2ecc71; font-size:11px; margin-left:6px; padding:1px 5px; border-radius:3px;">🌱 部屋用</span><div class="desc">${db.desc}</div></div>`;
       const btn = document.createElement('button');
       btn.className = 'btn';
       btn.textContent = 'つかう';
@@ -5452,12 +5483,18 @@ function showItems(){
       };
       row.appendChild(btn);
     } else {
-      row.innerHTML = `<div class="info">${db.name} ×${it.count} <div class="desc">${db.desc} (効果:${db.value})</div></div>`;
+      row.innerHTML = `<div class="info">${iconHtml(db.emoji, 20)} ${db.name} ×${it.count} <div class="desc">${db.desc}</div></div>`;
       const btn = document.createElement('button');
       btn.className = 'btn';
-      btn.disabled = true;
-      btn.style.opacity = '0.6';
-      btn.textContent = 'バトル専用';
+      btn.textContent = 'つかう';
+      btn.onclick = () => {
+        const res = useItem(it.uid, db, false);
+        if (res && res.success) {
+          updateHud();
+          save();
+          showItems();
+        }
+      };
       row.appendChild(btn);
     }
     list.appendChild(row);
@@ -6509,6 +6546,12 @@ function openAdminEdit(zone, key, tmpl) {
   const gold = tmpl.gold || [0,0];
   $('admin-edit-gmin').value = gold[0] !== undefined ? gold[0] : tmpl.goldMin || 0;
   $('admin-edit-gmax').value = gold[1] !== undefined ? gold[1] : tmpl.goldMax || 0;
+
+  const battleCont = $('admin-edit-for-battle-container');
+  if (battleCont) battleCont.style.display = zone === 'item' ? 'flex' : 'none';
+  if ($('admin-edit-for-battle')) {
+    $('admin-edit-for-battle').checked = isBattleItem(tmpl);
+  }
 }
 
 $('btn-admin-cancel').onclick = () => {
@@ -6534,6 +6577,8 @@ $('btn-admin-save').onclick = () => {
     customItems[k].name = $('admin-edit-name').value;
     customItems[k].emoji = $('admin-edit-emoji').value;
     customItems[k].value = parseInt($('admin-edit-value').value)||0;
+    const isBattle = $('admin-edit-for-battle') ? $('admin-edit-for-battle').checked : false;
+    customItems[k].tags = isBattle ? ['戦闘用'] : [];
   } else {
     if (!customEnemies[z]) customEnemies[z] = {};
     customEnemies[z][k] = {

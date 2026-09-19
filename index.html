@@ -891,8 +891,13 @@
             <label>ドロップG (最小)</label><input type="number" id="admin-edit-gmin">
             <label>ドロップG (最大)</label><input type="number" id="admin-edit-gmax">
             <hr style="margin:10px 0; border:1px solid #444;">
-            <p class="flavor" style="margin-bottom:5px;">※以下は装備・アイテム専用設定</p>
             <label>効果量（アイテム回復量など）</label><input type="number" id="admin-edit-value">
+            <div id="admin-edit-for-battle-container" style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+              <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:13px;">
+                <input type="checkbox" id="admin-edit-for-battle">
+                <span>⚔️ 「戦闘用」タグ（戦闘中に使用可能）</span>
+              </label>
+            </div>
           </div>
           <div class="menu-grid">
             <button id="btn-admin-save" class="btn good">ほぞんする</button>
