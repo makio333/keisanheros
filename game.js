@@ -3027,6 +3027,8 @@ function useItem(uid, db, inBattle = false){
     removeItem(uid, 1);
     const msg = `${db.name}を つかった！ そうびコストの じょうげんが ${db.value || 1} あがった！（現在: ${costCap()}）`;
     if (!inBattle) {
+      if (typeof renderEquipmentSlots === 'function') renderEquipmentSlots();
+      if (typeof renderRoomInventory === 'function') renderRoomInventory();
       SM.playBeep('heal');
       alert(msg);
     }
@@ -4430,9 +4432,17 @@ function renderRoomInventory() {
           } else if (isCostSeed) {
             const res = useItem(it.uid, db, false);
             if (res && res.success) {
+              renderEquipmentSlots();
+              renderStatus();
+              renderRoomInventory(); // Re-render
               updateHud(); 
               save(); 
-              renderRoomInventory(); // Re-render
+              const costBar = $('equip-cost-bar');
+              if (costBar) {
+                costBar.classList.remove('cost-up-anim');
+                void costBar.offsetWidth;
+                costBar.classList.add('cost-up-anim');
+              }
             }
           } else {
             SM.playBeep('error');
@@ -5437,6 +5447,7 @@ function showItems(){
           updateHud();
           save();
           showItems();
+          if (typeof renderEquipmentSlots === 'function') renderEquipmentSlots();
         }
       };
       row.appendChild(btn);

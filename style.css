@@ -1789,6 +1789,14 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   box-shadow: 2px 2px 0 rgba(0,0,0,0.35);
 }
 .cost-block.filled { background: var(--accent); box-shadow: 2px 2px 0 rgba(0,0,0,0.35), 0 0 6px rgba(255,207,77,0.6); }
+.cost-up-anim {
+  animation: costUpPulse 0.6s ease-in-out;
+}
+@keyframes costUpPulse {
+  0% { transform: scale(1); filter: drop-shadow(0 0 0px #ffd700); }
+  50% { transform: scale(1.05); filter: drop-shadow(0 0 12px #ffd700); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 0px #ffd700); }
+}
 .tag.cost-tag { color:var(--accent); border-color:rgba(255,207,77,0.4); }
 .tag.cost-tag-over { color:var(--bad); border-color:rgba(255,92,92,0.5); }
 /* そうびの おもさ（つよい そうびは すばやさが さがる） */
