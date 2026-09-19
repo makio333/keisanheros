@@ -1775,6 +1775,8 @@ function removeItem(uid, count = 1) {
 /* ---- 保存まわりの まどぐち関数 ---- */
 function save(immediate = false){
   if (!currentSlotKey || !G) return;
+  if (G.isTestMode) return; // テストモード中は一切セーブしない
+  if (!currentSlotKey.startsWith(SAVE_PREFIX)) return;
   G.updatedAt = Date.now();
   if (typeof getTimeLimitForSlot === 'function') {
     G.timeLimitSettings = getTimeLimitForSlot(currentSlotKey);
@@ -1818,14 +1820,19 @@ function normalizeRarityData(data){
   // そうびスロットを ぶき・よろい・アクセサリーの3つに統一。
   // ふるいセーブの head/leg は accessory に ひっこす（両方ついていたら headを優先）
   if (data.equipment){
-    if (data.equipment.head !== undefined || data.equipment.leg !== undefined){
-      if (data.equipment.accessory === undefined || data.equipment.accessory === null){
-        data.equipment.accessory = data.equipment.head || data.equipment.leg || null;
+    if (data.equipment.head || data.equipment.leg){
+      if (!data.equipment.accessory){
+        data.equipment.accessory = data.equipment.head || data.equipment.leg;
       }
       delete data.equipment.head;
       delete data.equipment.leg;
     }
-    if (data.equipment.accessory === undefined) data.equipment.accessory = null;
+  }
+  // レアリティの 数値正規化（★1〜5）
+  if (data.ownedEquips){
+    for (const eq of data.ownedEquips){
+      eq.rarity = Math.max(1, Math.min(RARITY_MAX, Math.round(Number(eq.rarity) || 1)));
+    }
   }
   // スキルの状態を {progress, mastered} から {level, progress} に統一。
   // マスター済みだった スキルは Lv1（せんとうで つかえる状態）として ひきつぐ
@@ -1846,32 +1853,26 @@ function loadSlot(key){
   const raw = storageGet(key);
   if (!raw) return false;
   try {
-    G = normalizeRarityData(JSON.parse(raw));
+    G = JSON.parse(raw);
+    G = normalizeRarityData(G);
+    if (!G.completedAreaStages) G.completedAreaStages = {};
     if (!G.printSheetCodes) G.printSheetCodes = {};
-    if (!G.playerName) G.playerName = 'ぼうけんしゃ';
-    if (!G.clears) G.clears = { tower:false, dungeon:false, crypt:false, bandit:false };
-    if (!G.clearCounts) {
-      // ふるいセーブは クリアずみの ゾーンを ★3（かいほうずみ）として ひきつぐ
-      G.clearCounts = {};
-      for (const z of ['tower', 'dungeon', 'crypt', 'bandit']) G.clearCounts[z] = G.clears[z] ? 3 : 0;
-    }
-    if (!G.stageClearCounts) G.stageClearCounts = {};
-    if (!G.questBoard) G.questBoard = [];
-    if (G.timeLimitSettings && typeof setTimeLimitForSlot === 'function') {
-      setTimeLimitForSlot(key, G.timeLimitSettings);
-    }
+    if (!G.usedPrintCodes) G.usedPrintCodes = [];
+    if (!G.studyStats) G.studyStats = { totalAnswers: 0, totalCorrect: 0, units: {}, stageHistory: {} };
+    if (!G.studyStats.stageHistory) G.studyStats.stageHistory = {};
+    if (G.player.costPlus === undefined) G.player.costPlus = 0;
     currentSlotKey = key;
     return true;
   } catch(e){ return false; }
 }
 
 function resolveSaveSlotEquip(data, ref){
-  if (!ref || !ref.uid || !data.ownedEquips) return null;
-  const owned = data.ownedEquips.find(o => o.uid === ref.uid);
+  if (!ref) return null;
+  const owned = (data.ownedEquips || []).find(o => o.uid === ref.uid);
   if (!owned) return null;
-  const template = getEquipTemplate(owned.id);
-  if (!template) return null;
-  return { name: template.name, emoji: template.emoji, rarity: owned.rarity || 1 };
+  const db = getEquipTemplate(owned.id);
+  if (!db) return null;
+  return { name: db.name, rarity: owned.rarity || 1 };
 }
 
 function listSaveSlots(){
@@ -1881,6 +1882,15 @@ function listSaveSlots(){
     if (!key || !key.startsWith(SAVE_PREFIX)) continue;
     try {
       const data = JSON.parse(storageGet(key));
+      if (!data) continue;
+      // テストモードやテストアカウントはセーブスロットから除外＆クリーンアップ
+      if (data.isTestMode || data.playerName === 'テスト勇者' || (data.playerName && data.playerName.includes('[テスト]'))) {
+        storageRemove(key);
+        if (window.CloudSave && typeof window.CloudSave.deleteSlot === 'function') {
+          window.CloudSave.deleteSlot(key).catch(() => {});
+        }
+        continue;
+      }
       slots.push({
         key,
         name: data.playerName || 'ぼうけんしゃ',
@@ -1906,6 +1916,14 @@ function applyCloudSlots(cloudSlots) {
 
   for (const cs of cloudSlots) {
     if (!cs.slotKey) continue;
+    // テストモードのアカウントがクラウドに届いた場合は保存せず即座に削除
+    if (cs.gameState && (cs.gameState.isTestMode || cs.gameState.playerName === 'テスト勇者' || (cs.gameState.playerName && cs.gameState.playerName.includes('[テスト]')))) {
+      if (storageGet(cs.slotKey)) storageRemove(cs.slotKey);
+      if (window.CloudSave && typeof window.CloudSave.deleteSlot === 'function') {
+        window.CloudSave.deleteSlot(cs.slotKey).catch(() => {});
+      }
+      continue;
+    }
     cloudMap[cs.slotKey] = cs;
 
     const rawLocal = storageGet(cs.slotKey);
@@ -6437,16 +6455,14 @@ function ensureTestModeSupplies(){
 }
 
 function startAdminTestPlay(){
-  if (!G){
-    createSaveSlot('テスト勇者');
-  }
+  currentSlotKey = 'TEST_MODE_TEMP';
+  G = newGameState('テスト勇者');
   G.isTestMode = true;
   G.player.gold = 99999999;
   G.player.points = 9999;
   ensureTestModeSupplies();
-  save(true);
   updateHud();
-  alert('🎮 テスト用プレイモードを開始しました！\n・すべてのアイテム所持 (各99個)\n・スキルポイント: 9999\n・所持金: 99,999,999G');
+  alert('🎮 テスト用プレイモードを開始しました！\n・すべてのアイテム所持 (各99個)\n・スキルポイント: 9999\n・所持金: 99,999,999G\n※テストモードのデータは保存されず、終了時に自動破棄されます。');
   showHome();
 }
 
@@ -7025,6 +7041,14 @@ function init(){
     menuBtn.onclick = (e) => {
       e.stopPropagation();
       menuDropdown.classList.toggle('hidden');
+      const saveTitleBtn = $('btn-menu-save-title');
+      if (saveTitleBtn) {
+        if (G && G.isTestMode) {
+          saveTitleBtn.textContent = '🚪 そのまま終了';
+        } else {
+          saveTitleBtn.textContent = '💾 セーブして タイトルへ';
+        }
+      }
     };
     document.addEventListener('click', (e) => {
       if (!menuDropdown.classList.contains('hidden') && !$('menu-container').contains(e.target)) {
@@ -7103,6 +7127,15 @@ function init(){
     if (battle && !battle.over) endBattleLoop();
     if (trainingSkill) { destroyChallenge(); trainingSkill = null; }
     explore = null;
+    if (G && G.isTestMode) {
+      G = null;
+      currentSlotKey = null;
+      updateHud();
+      if (listSaveSlots().length > 0) $('btn-continue').classList.remove('hidden');
+      else $('btn-continue').classList.add('hidden');
+      showScreen('screen-title');
+      return;
+    }
     save(true);
     if (listSaveSlots().length > 0) $('btn-continue').classList.remove('hidden');
     showScreen('screen-title');

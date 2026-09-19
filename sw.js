@@ -1,4 +1,4 @@
-const CACHE_NAME = 'legend-heroes-cache-v11';
+const CACHE_NAME = 'legend-heroes-cache-v12';
 const ASSETS_TO_CACHE = [
   './manifest.json',
   './icon-192.png',
