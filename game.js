@@ -320,10 +320,11 @@ class CanvasManager {
   }
   
   loadImage(src) {
-    if (this.imageLoader.has(src)) return this.imageLoader.get(src);
+    const resolved = (typeof av === 'function') ? av(src) : src;
+    if (this.imageLoader.has(resolved)) return this.imageLoader.get(resolved);
     const img = new Image();
-    img.src = src;
-    this.imageLoader.set(src, img);
+    img.src = resolved;
+    this.imageLoader.set(resolved, img);
     return img;
   }
   
@@ -515,7 +516,32 @@ class RenzokuSlashEffect {
       const alpha = Math.sin(progress * Math.PI);
 
       const img = s.type === 'cross' ? this.imgCross : this.imgArc;
-      if (!img || !img.complete || img.naturalWidth === 0) return;
+      if (!img || !img.complete || img.naturalWidth === 0) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(s.angle);
+        ctx.scale(
+          (s.flipX ? -1 : 1) * s.scale * scaleEase,
+          (s.flipY ? -1 : 1) * s.scale * scaleEase
+        );
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = s.color;
+        ctx.shadowColor = s.color;
+        ctx.shadowBlur = 20;
+        ctx.lineWidth = (s.type === 'cross' ? 12 : 8) * scaleEase;
+        ctx.beginPath();
+        if (s.type === 'cross') {
+          ctx.moveTo(-80, -80);
+          ctx.lineTo(80, 80);
+          ctx.moveTo(-80, 80);
+          ctx.lineTo(80, -80);
+        } else {
+          ctx.arc(0, 0, 90, -Math.PI * 0.45, Math.PI * 0.45);
+        }
+        ctx.stroke();
+        ctx.restore();
+        return;
+      }
 
       ctx.save();
       ctx.translate(this.x, this.y);
@@ -546,6 +572,281 @@ class RenzokuSlashEffect {
       ctx.restore();
     });
 
+    ctx.restore();
+  }
+}
+
+/* ほのおの剣 / ほのおの剣Ⅱ の火炎爆砕エフェクト */
+class FlameSlashEffect {
+  constructor(x, y, isLevel2 = false) {
+    this.x = x;
+    this.y = y;
+    this.isLevel2 = isLevel2;
+    this.life = isLevel2 ? 0.65 : 0.5;
+    this.maxLife = this.life;
+    this.particles = [];
+    this.played = false;
+  }
+  update(dt) {
+    if (!this.played) {
+      this.played = true;
+      if (typeof SM !== 'undefined') {
+        if (SM.play) SM.play('se_slash');
+        if (SM.playBeep) SM.playBeep('hit');
+      }
+      const pCount = this.isLevel2 ? 45 : 30;
+      for (let i = 0; i < pCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const spd = Math.random() * 200 + 80;
+        this.particles.push({
+          x: this.x + (Math.random() * 30 - 15),
+          y: this.y + (Math.random() * 30 - 15),
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd - (Math.random() * 120 + 60),
+          color: ['#ff4757', '#ff6b6b', '#ffa502', '#ffd32a'][Math.floor(Math.random() * 4)],
+          size: Math.random() * 8 + 4,
+          life: 0.45,
+          maxLife: 0.45
+        });
+      }
+      const targets = document.querySelectorAll('.enemy-sprite, .training-dummy-wrap');
+      targets.forEach(frame => {
+        frame.classList.remove('enemy-damage-hit', 'hit');
+        void frame.offsetWidth;
+        frame.classList.add('enemy-damage-hit', 'hit');
+      });
+    }
+    this.particles.forEach(p => {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt;
+    });
+    this.particles = this.particles.filter(p => p.life > 0);
+  }
+  draw(ctx) {
+    const progress = 1 - (this.life / this.maxLife);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const scale = (this.isLevel2 ? 1.4 : 1.1) * (0.8 + Math.sin(progress * Math.PI) * 0.4);
+    const alpha = Math.sin(progress * Math.PI);
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(-0.35 + progress * 0.7);
+    ctx.scale(scale, scale);
+    ctx.strokeStyle = '#ffa502';
+    ctx.shadowColor = '#ff4757';
+    ctx.shadowBlur = 24;
+    ctx.lineWidth = 14;
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.arc(0, 0, 85, -Math.PI * 0.5, Math.PI * 0.4);
+    ctx.stroke();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 6;
+    ctx.stroke();
+    ctx.restore();
+
+    this.particles.forEach(p => {
+      const pAlpha = Math.max(0, p.life / p.maxLife);
+      ctx.save();
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 14;
+      ctx.globalAlpha = pAlpha;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * pAlpha, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+    ctx.restore();
+  }
+}
+
+/* いなずま斬り / いなずま斬りⅡ の雷光撃滅エフェクト */
+class InazumaSlashEffect {
+  constructor(x, y, isLevel2 = false) {
+    this.x = x;
+    this.y = y;
+    this.isLevel2 = isLevel2;
+    this.life = isLevel2 ? 0.6 : 0.45;
+    this.maxLife = this.life;
+    this.particles = [];
+    this.bolts = [];
+    this.played = false;
+  }
+  generateBolts() {
+    const boltCount = this.isLevel2 ? 4 : 2;
+    this.bolts = [];
+    for (let b = 0; b < boltCount; b++) {
+      const points = [];
+      let curX = this.x + (Math.random() * 60 - 30);
+      let curY = this.y - 180;
+      points.push({ x: curX, y: curY });
+      while (curY < this.y + 30) {
+        curX += (Math.random() * 40 - 20);
+        curY += (Math.random() * 30 + 15);
+        points.push({ x: curX, y: curY });
+      }
+      this.bolts.push(points);
+    }
+  }
+  update(dt) {
+    if (!this.played) {
+      this.played = true;
+      this.generateBolts();
+      if (typeof SM !== 'undefined' && SM.play) {
+        SM.play('se_crit');
+      }
+      const pCount = this.isLevel2 ? 40 : 25;
+      for (let i = 0; i < pCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const spd = Math.random() * 220 + 100;
+        this.particles.push({
+          x: this.x + (Math.random() * 20 - 10),
+          y: this.y + (Math.random() * 20 - 10),
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd,
+          color: ['#feca57', '#ffd32a', '#70a1ff', '#ffffff'][Math.floor(Math.random() * 4)],
+          size: Math.random() * 5 + 2,
+          life: 0.35,
+          maxLife: 0.35
+        });
+      }
+      const targets = document.querySelectorAll('.enemy-sprite, .training-dummy-wrap');
+      targets.forEach(frame => {
+        frame.classList.remove('enemy-damage-hit', 'hit');
+        void frame.offsetWidth;
+        frame.classList.add('enemy-damage-hit', 'hit');
+      });
+    }
+    if (Math.random() < 0.3) this.generateBolts();
+    this.particles.forEach(p => {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt;
+    });
+    this.particles = this.particles.filter(p => p.life > 0);
+  }
+  draw(ctx) {
+    const progress = 1 - (this.life / this.maxLife);
+    const alpha = Math.sin(progress * Math.PI);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const bolt of this.bolts) {
+      if (bolt.length < 2) continue;
+      ctx.save();
+      ctx.strokeStyle = '#ffd32a';
+      ctx.shadowColor = '#70a1ff';
+      ctx.shadowBlur = 20;
+      ctx.lineWidth = this.isLevel2 ? 8 : 5;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.moveTo(bolt[0].x, bolt[0].y);
+      for (let i = 1; i < bolt.length; i++) ctx.lineTo(bolt[i].x, bolt[i].y);
+      ctx.stroke();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.restore();
+    }
+    this.particles.forEach(p => {
+      const pAlpha = Math.max(0, p.life / p.maxLife);
+      ctx.save();
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 12;
+      ctx.globalAlpha = pAlpha;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+    ctx.restore();
+  }
+}
+
+/* しっぷう斬り / しっぷう斬りⅡ の旋風斬撃エフェクト */
+class GaleSlashEffect {
+  constructor(x, y, isLevel2 = false) {
+    this.x = x;
+    this.y = y;
+    this.isLevel2 = isLevel2;
+    this.life = isLevel2 ? 0.6 : 0.45;
+    this.maxLife = this.life;
+    this.particles = [];
+    this.played = false;
+  }
+  update(dt) {
+    if (!this.played) {
+      this.played = true;
+      if (typeof SM !== 'undefined' && SM.play) {
+        SM.play('se_slash');
+      }
+      const pCount = this.isLevel2 ? 40 : 25;
+      for (let i = 0; i < pCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const spd = Math.random() * 220 + 80;
+        this.particles.push({
+          x: this.x + (Math.random() * 20 - 10),
+          y: this.y + (Math.random() * 20 - 10),
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd,
+          color: ['#1dd1a1', '#10ac84', '#00d2d3', '#c8d6e5'][Math.floor(Math.random() * 4)],
+          size: Math.random() * 6 + 2,
+          life: 0.4,
+          maxLife: 0.4
+        });
+      }
+      const targets = document.querySelectorAll('.enemy-sprite, .training-dummy-wrap');
+      targets.forEach(frame => {
+        frame.classList.remove('enemy-damage-hit', 'hit');
+        void frame.offsetWidth;
+        frame.classList.add('enemy-damage-hit', 'hit');
+      });
+    }
+    this.particles.forEach(p => {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt;
+    });
+    this.particles = this.particles.filter(p => p.life > 0);
+  }
+  draw(ctx) {
+    const progress = 1 - (this.life / this.maxLife);
+    const alpha = Math.sin(progress * Math.PI);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const scale = (this.isLevel2 ? 1.5 : 1.1) * (0.8 + progress * 0.4);
+    for (const rot of [-0.6 + progress * 1.2, 0.6 - progress * 1.2]) {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(rot);
+      ctx.scale(scale, scale);
+      ctx.strokeStyle = '#1dd1a1';
+      ctx.shadowColor = '#00d2d3';
+      ctx.shadowBlur = 18;
+      ctx.lineWidth = 8;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.arc(0, 0, 80, -Math.PI * 0.5, Math.PI * 0.3);
+      ctx.stroke();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.restore();
+    }
+    this.particles.forEach(p => {
+      const pAlpha = Math.max(0, p.life / p.maxLife);
+      ctx.save();
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 10;
+      ctx.globalAlpha = pAlpha;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
     ctx.restore();
   }
 }
@@ -3063,13 +3364,14 @@ function useItem(uid, db, inBattle = false){
 }
 
 /* --- ダメージ処理 --- */
-function spawnFloatingDamage(targetEl, text, typeClass) {
-  if (!targetEl || !CM.running) return;
+function spawnFloatingDamage(targetEl, text, typeClass, manager = CM) {
+  const mgr = manager || CM;
+  if (!targetEl || !mgr || !mgr.running || !mgr.canvas) return;
   const rect = targetEl.getBoundingClientRect();
-  const canvasRect = CM.canvas.getBoundingClientRect();
+  const canvasRect = mgr.canvas.getBoundingClientRect();
   const x = (rect.left - canvasRect.left) + rect.width / 2;
   const y = (rect.top - canvasRect.top) + rect.height / 2;
-  CM.addEffect(new DamageEffect(x, y, text, typeClass));
+  mgr.addEffect(new DamageEffect(x, y, text, typeClass));
 }
 
 function flashScreenRed() {
@@ -3090,61 +3392,144 @@ function showPlayerDownOverlay() {
   return el;
 }
 
+function getEnemyCanvasCoords() {
+  const frame = document.querySelector('.enemy-sprite');
+  if (frame && CM && CM.canvas) {
+    const rect = frame.getBoundingClientRect();
+    const canvasRect = CM.canvas.getBoundingClientRect();
+    return {
+      x: (rect.left - canvasRect.left) + rect.width / 2,
+      y: (rect.top - canvasRect.top) + rect.height / 2,
+      frame
+    };
+  }
+  if (CM && CM.canvas) {
+    const canvasRect = CM.canvas.getBoundingClientRect();
+    return { x: canvasRect.width / 2, y: canvasRect.height / 2, frame };
+  }
+  return { x: 200, y: 150, frame };
+}
+
 function playPlayerAttackAnim() {
   if (!CM.running) return;
-  const canvasRect = CM.canvas.getBoundingClientRect();
-  const x = canvasRect.width / 2;
-  const y = canvasRect.height / 2;
-  CM.addEffect(new SlashEffect(x, y));
+  const coords = getEnemyCanvasCoords();
+  CM.addEffect(new SlashEffect(coords.x, coords.y));
 }
 
 function playEnemyAttackAnim() {
   const frame = document.querySelector('.enemy-sprite');
+  if (!frame) return;
   frame.classList.remove('enemy-attack-lean');
   void frame.offsetWidth;
   frame.classList.add('enemy-attack-lean');
 }
 
-function dealToEnemy(dmg, label, isCrit, cb){
-  playPlayerAttackAnim();
-  
+function handlePostDamageEffects(dmg, cb) {
+  // そうびの特殊能力「きゅうけつ」：あたえたダメージの15%をHP吸収
+  if (equippedAbilities().has('lifesteal')){
+    const heal = Math.max(1, Math.round(dmg * 0.15));
+    G.player.hp = Math.min(totalMaxHp(), G.player.hp + heal);
+    blog(`<span class="good">きゅうけつ！ HPを ${heal} きゅうしゅうした！</span>`);
+    updateBattleBars();
+  }
+
+  // 新ステージのボス戦：HP50%を きったら フェーズ2（限界突破）へ ステートいこう
+  if (explore && explore.stageMode && explore.isBoss && explore.bossPhase === 1 &&
+      battle && battle.enemy && battle.enemy.hp > 0 && battle.enemy.hp <= battle.enemy.maxHp * 0.5){
+    triggerBossPhase2();
+  }
+
   setTimeout(() => {
-    battle.enemy.hp -= dmg;
+    if (cb) cb();
+  }, 400);
+}
+
+function dealToEnemy(dmg, label, isCrit, cb, skillId){
+  const coords = getEnemyCanvasCoords();
+  const frame = coords.frame || document.querySelector('.enemy-sprite');
+
+  // れんぞく斬り（renzoku / renzoku2）: 専用スプライトアニメーション＆多段ヒットダメージ
+  if (skillId === 'renzoku' || skillId === 'renzoku2') {
+    const isLevel2 = (skillId === 'renzoku2');
+    if (CM.running) {
+      CM.addEffect(new RenzokuSlashEffect(coords.x, coords.y, isLevel2));
+    }
+    
+    // 多段ヒットスケジュール
+    const hitDelays = isLevel2 ? [0, 120, 240, 360, 480] : [0, 140, 280];
+    const hitRatios = isLevel2 ? [0.18, 0.18, 0.18, 0.18, 0.28] : [0.30, 0.30, 0.40];
+    let dealtTotal = 0;
+    
+    blog(`<span class="good" style="color:#00d2d3; font-weight:bold;">${isCrit ? 'かいしんのいちげき！！ ' : ''}ゆうしゃの ${label}！ 疾風怒濤のれんぞく攻撃！</span>`);
+
+    hitDelays.forEach((delay, idx) => {
+      setTimeout(() => {
+        if (!battle || !battle.enemy) return;
+        const isLast = (idx === hitDelays.length - 1);
+        const thisHitDmg = isLast ? Math.max(1, dmg - dealtTotal) : Math.max(1, Math.round(dmg * hitRatios[idx]));
+        dealtTotal += thisHitDmg;
+
+        battle.enemy.hp = Math.max(0, battle.enemy.hp - thisHitDmg);
+        if (frame) {
+          frame.classList.remove('enemy-damage-hit');
+          void frame.offsetWidth;
+          frame.classList.add('enemy-damage-hit');
+          spawnFloatingDamage(frame, thisHitDmg, isCrit ? 'enemy-dmg crit skill-dmg' : 'enemy-dmg skill-dmg');
+        }
+        updateBattleBars();
+
+        if (isLast) {
+          blog(`<span class="good">${label}により ${battle.enemy.name}に ごうけい <b>${dmg}</b>の ダメージ！</span>`);
+          handlePostDamageEffects(dmg, cb);
+        }
+      }, delay);
+    });
+    return;
+  }
+
+  // ほのおの剣
+  if (skillId === 'honoo' || skillId === 'honoo2') {
+    if (CM.running) {
+      CM.addEffect(new FlameSlashEffect(coords.x, coords.y, skillId === 'honoo2'));
+    }
+    blog(`<span class="good" style="color:#ff6b6b; font-weight:bold;">${isCrit ? 'かいしんのいちげき！！ ' : ''}ゆうしゃの ${label}！ 烈火の一閃！</span>`);
+  } else if (skillId === 'inazuma' || skillId === 'inazuma2') {
+    if (CM.running) {
+      CM.addEffect(new InazumaSlashEffect(coords.x, coords.y, skillId === 'inazuma2'));
+    }
+    blog(`<span class="good" style="color:#ffd32a; font-weight:bold;">${isCrit ? 'かいしんのいちげき！！ ' : ''}ゆうしゃの ${label}！ 迅雷の一閃！</span>`);
+  } else if (skillId === 'gale' || skillId === 'gale2') {
+    if (CM.running) {
+      CM.addEffect(new GaleSlashEffect(coords.x, coords.y, skillId === 'gale2'));
+    }
+    blog(`<span class="good" style="color:#1dd1a1; font-weight:bold;">${isCrit ? 'かいしんのいちげき！！ ' : ''}ゆうしゃの ${label}！ 旋風乱舞！</span>`);
+  } else {
+    // 通常こうげき
+    playPlayerAttackAnim();
+  }
+
+  setTimeout(() => {
+    if (!battle || !battle.enemy) return;
+    battle.enemy.hp = Math.max(0, battle.enemy.hp - dmg);
     
     if (isCrit) {
       SM.play('se_crit');
       blog(`<span class="good" style="color:#ffcc00; font-size:1.1em;">かいしんのいちげき！！ ゆうしゃの ${label}！ ${battle.enemy.name}に <b>${dmg}</b>の ダメージ！</span>`);
     } else {
-      SM.play('se_slash');
+      if (!skillId) SM.play('se_slash');
       blog(`<span class="good">ゆうしゃの ${label}！ ${battle.enemy.name}に <b>${dmg}</b>の ダメージ！</span>`);
     }
     
-    const frame = document.querySelector('.enemy-sprite');
-    frame.classList.remove('enemy-damage-hit'); 
-    void frame.offsetWidth; 
-    frame.classList.add('enemy-damage-hit');
+    if (frame) {
+      frame.classList.remove('enemy-damage-hit'); 
+      void frame.offsetWidth; 
+      frame.classList.add('enemy-damage-hit');
+      spawnFloatingDamage(frame, dmg, isCrit ? 'enemy-dmg crit skill-dmg' : (skillId ? 'enemy-dmg skill-dmg' : 'enemy-dmg'));
+    }
     
     updateBattleBars();
-    spawnFloatingDamage(frame, dmg, isCrit ? 'enemy-dmg crit' : 'enemy-dmg');
-
-    // そうびの特殊能力「きゅうけつ」：あたえたダメージの15%をHP吸収
-    if (equippedAbilities().has('lifesteal')){
-      const heal = Math.max(1, Math.round(dmg * 0.15));
-      G.player.hp = Math.min(totalMaxHp(), G.player.hp + heal);
-      blog(`<span class="good">きゅうけつ！ HPを ${heal} きゅうしゅうした！</span>`);
-      updateBattleBars();
-    }
-
-    // 新ステージのボス戦：HP50%を きったら フェーズ2（限界突破）へ ステートいこう
-    if (explore && explore.stageMode && explore.isBoss && explore.bossPhase === 1 &&
-        battle.enemy.hp > 0 && battle.enemy.hp <= battle.enemy.maxHp * 0.5){
-      triggerBossPhase2();
-    }
-
-    setTimeout(() => {
-      if (cb) cb();
-    }, 400);
-  }, 250);
+    handlePostDamageEffects(dmg, cb);
+  }, 220);
 }
 
 /* ボスが フェーズ2（限界突破）へ いこうする演出：オーラを つけて もんだいの なんいどを あげる */
@@ -5372,6 +5757,15 @@ function hitTrainingDummy(skillId){
         spawnFloatingDamage(wrap, singleHitDmg, 'skill-dmg crit', TCM);
       }, 380);
 
+    } else if (sId === 'honoo' || sId === 'honoo2') {
+      TCM.addEffect(new FlameSlashEffect(x, y, sId === 'honoo2'));
+      spawnFloatingDamage(wrap, totalDmg, 'skill-dmg crit', TCM);
+    } else if (sId === 'inazuma' || sId === 'inazuma2') {
+      TCM.addEffect(new InazumaSlashEffect(x, y, sId === 'inazuma2'));
+      spawnFloatingDamage(wrap, totalDmg, 'skill-dmg crit', TCM);
+    } else if (sId === 'gale' || sId === 'gale2') {
+      TCM.addEffect(new GaleSlashEffect(x, y, sId === 'gale2'));
+      spawnFloatingDamage(wrap, totalDmg, 'skill-dmg crit', TCM);
     } else {
       TCM.addEffect(new SlashEffect(x, y));
       spawnFloatingDamage(wrap, totalDmg, s ? 'skill-dmg' : 'enemy-dmg', TCM);
@@ -6434,6 +6828,24 @@ function ensureTestModeSupplies(){
   if (!G || !G.isTestMode || !G.player) return;
   if ((G.player.points || 0) < 9999) G.player.points = 9999;
   if ((G.player.gold || 0) < 99999999) G.player.gold = 99999999;
+  if ((G.player.maxMp || 0) < 999) {
+    G.player.maxMp = 999;
+    G.player.mp = 999;
+  }
+  if ((G.player.maxHp || 0) < 999) {
+    G.player.maxHp = 999;
+    G.player.hp = 999;
+  }
+
+  // 全スキル習得済み（戦闘テストで即使用可能）
+  if (!G.skills) G.skills = {};
+  if (typeof SKILL_DB !== 'undefined' && Array.isArray(SKILL_DB)) {
+    for (const s of SKILL_DB) {
+      if (!G.skills[s.id] || G.skills[s.id].level < 1) {
+        G.skills[s.id] = { level: 1, progress: s.trainReq || 10 };
+      }
+    }
+  }
 
   const allItemDefs = [
     ...ITEM_DB,
