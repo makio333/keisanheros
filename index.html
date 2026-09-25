@@ -187,12 +187,32 @@
 
     <!-- なまえ にゅうりょく（あたらしく はじめる） -->
     <section id="screen-new-save" class="screen">
-      <div class="panel title-panel">
-        <h2>＊なまえを にゅうりょく＊</h2>
-        <p class="flavor">ゆうしゃの なまえを きめよう！</p>
-        <input type="text" id="new-save-name" class="challenge-input" maxlength="12" placeholder="なまえ" style="max-width:320px; margin:0 auto 16px; display:block;">
+      <div class="panel new-save-panel">
+        <h2>＊ぼうけんしゃの とうろく＊</h2>
+        <p class="flavor">みた目と なまえを きめて ぼうけんを はじめよう！</p>
+        
+        <!-- 見た目選択カルーセル＆サムネイル -->
+        <div class="hero-selector-wrapper">
+          <div class="hero-selector-stage">
+            <button type="button" id="btn-hero-prev" class="hero-arrow-btn prev" title="まえのみた目">◀</button>
+            
+            <div class="hero-stage-center">
+              <div class="hero-stage-portrait-frame">
+                <div class="hero-stage-shine"></div>
+                <img id="hero-preview-img" src="画像/キャラクター/hero_female_1.png" alt="キャラクター">
+              </div>
+            </div>
+
+            <button type="button" id="btn-hero-next" class="hero-arrow-btn next" title="つぎのみた目">▶</button>
+          </div>
+
+          <!-- 4つのクイック選択サムネイル -->
+          <div class="hero-thumbs-list" id="hero-thumbs-list"></div>
+        </div>
+
+        <input type="text" id="new-save-name" class="challenge-input" maxlength="12" placeholder="なまえ（12もじまで）" style="max-width:320px; margin:0 auto 16px; display:block;">
         <div class="menu-grid" style="max-width:320px; margin:0 auto;">
-          <button id="btn-new-save-start" class="btn btn-primary">ぼうけんに でる</button>
+          <button id="btn-new-save-start" class="btn btn-primary">ぼうけんに でる ⚔️</button>
           <button id="btn-new-save-back" class="btn">もどる</button>
         </div>
       </div>
@@ -224,11 +244,11 @@
 
     <!-- セーブデータ せんたく（つづきから） -->
     <section id="screen-load-save" class="screen">
-      <div class="panel">
+      <div class="panel" style="max-width: 960px; width: 95%;">
         <h2>＊セーブデータを えらぶ＊</h2>
         <div id="save-sync-status" style="text-align:right; font-size:13px; color:#3498db; margin-bottom:8px; min-height:18px;"></div>
-        <div id="save-slot-list" class="inventory-list"></div>
-        <button id="btn-load-save-back" class="btn" style="margin-top:10px;">もどる</button>
+        <div id="save-slot-list" class="save-slots-container"></div>
+        <button id="btn-load-save-back" class="btn" style="margin-top:14px;">もどる</button>
       </div>
     </section>
 
@@ -325,34 +345,39 @@
           <p class="stage-group-note">1年生から じゅんばんに すすむ みち</p>
           <div class="stage-list">
             <button id="area-card-tower" class="stage-card" style="background-image:url('./画像/ステージ/草原.jpg')">
-              <span class="stage-card-badge">1年生</span>
+              <span class="stage-card-badge">エリア1 (1年)</span>
               <span class="stage-card-name">始まりの平原</span>
-              <span class="stage-card-desc" id="stage-status-area1">7ステージ＋ボス／たしざん・ひきざん</span>
+              <span class="stage-card-desc" id="stage-status-area1">7ステージ＋ボス／たしざんのきほん</span>
             </button>
-            <button id="stage-card-dungeon" class="stage-card" style="background-image:url('./画像/ステージ/沼地.jpg')">
-              <span class="stage-card-badge">2年生</span>
-              <span class="stage-card-name">沼</span>
-              <span class="stage-card-desc" id="stage-status-area2">7ステージ＋ボス／ひっさん・九九</span>
+            <button id="stage-card-area13" class="stage-card" style="background-image:url('./画像/ステージ/沼地.jpg')">
+              <span class="stage-card-badge">エリア2 (1年)</span>
+              <span class="stage-card-name">迷いの沼</span>
+              <span class="stage-card-desc" id="stage-status-area13">7ステージ＋ボス／ひきざんのきほん</span>
             </button>
-            <button id="stage-card-area3" class="stage-card" style="background-image:url('./画像/ステージ/かけ算の森.jpg')">
-              <span class="stage-card-badge">3年生</span>
-              <span class="stage-card-name">わり算の森</span>
-              <span class="stage-card-desc" id="stage-status-area3">9ステージ＋ボス／わりざん・ひっさん</span>
+            <button id="stage-card-dungeon" class="stage-card" style="background-image:url('./画像/ステージ/かけ算の森.jpg')">
+              <span class="stage-card-badge">エリア3 (2年)</span>
+              <span class="stage-card-name">かけ算の森</span>
+              <span class="stage-card-desc" id="stage-status-area2">9ステージ＋ボス／九九（1〜9の段）</span>
+            </button>
+            <button id="stage-card-area3" class="stage-card" style="background-image:url('./画像/ステージ/わり算の海.jpg')">
+              <span class="stage-card-badge">エリア4 (3年)</span>
+              <span class="stage-card-name">わり算の海</span>
+              <span class="stage-card-desc" id="stage-status-area3">7ステージ＋ボス／わりざんのきほん</span>
             </button>
             <button id="stage-card-area4" class="stage-card" style="background-image:url('./画像/ステージ/試練の塔.jpg')">
-              <span class="stage-card-badge">4年生</span>
+              <span class="stage-card-badge">エリア5 (4年)</span>
               <span class="stage-card-name">試練の塔</span>
-              <span class="stage-card-desc" id="stage-status-area4">7ステージ＋ボス／わりざん・小数・分数</span>
+              <span class="stage-card-desc" id="stage-status-area4">7ステージ＋ボス／四則計算ミックス</span>
             </button>
             <button id="stage-card-area11" class="stage-card" style="background-image:url('./画像/ステージ/天空.jpg')">
-              <span class="stage-card-badge">5年生</span>
+              <span class="stage-card-badge">エリア6 (5年)</span>
               <span class="stage-card-name">天空の階段</span>
-              <span class="stage-card-desc" id="stage-status-area11">7ステージ＋ボス／小数のかけわり・通分</span>
+              <span class="stage-card-desc" id="stage-status-area11">7ステージ＋ボス／小数・分数・平均・割合</span>
             </button>
             <button id="stage-card-area12" class="stage-card" style="background-image:url('./画像/ステージ/魔王城.jpg')">
-              <span class="stage-card-badge">6年生</span>
+              <span class="stage-card-badge">エリア7 (6年)</span>
               <span class="stage-card-name">算数の魔王城</span>
-              <span class="stage-card-desc" id="stage-status-area12">7ステージ＋ボス／分数のかけわり・比・速さ</span>
+              <span class="stage-card-desc" id="stage-status-area12">7ステージ＋ボス／分数・比・速さ</span>
             </button>
           </div>
         </div>

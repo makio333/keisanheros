@@ -122,7 +122,7 @@ class SoundManager {
     if (this.bgmKey && this.audios[this.bgmKey]) {
       const a = this.audios[this.bgmKey];
       if (this.bgmKey === 'bgm_home') {
-        a.volume = 0.15 * this.globalVolume;
+        a.volume = 0.075 * this.globalVolume;
       } else {
         a.volume = 0.4 * this.globalVolume;
       }
@@ -203,7 +203,7 @@ class SoundManager {
     audio.loop = true;
     
     if (key === 'bgm_home') {
-      audio.volume = 0.15 * this.globalVolume;
+      audio.volume = 0.075 * this.globalVolume;
     } else {
       audio.volume = 0.4 * this.globalVolume;
     }
@@ -1118,145 +1118,205 @@ const AREA_STAGES = {
   area1: {
     name: '始まりの平原',
     recLv: 1,
+    displayNum: '1',
     opLabel: 'たしざん',
     enemyZone: 'tower',   // 敵の見た目は 既存の草原プールを流用
-    bossKey: 'tower5',    // ボスの見た目・ステータスは 既存の草原ボスを流用（7ステージ構成なので tower10ではなく 5階相当の強さに）
+    bossKey: 'tower5',    // ボスの見た目・ステータスは 既存の草原ボスを流用
     rewardZone: 'tower',  // クリア報酬・救助イベントは 既存の草原クリア処理を流用
     bgImage: '画像/ステージ/草原.jpg',
-    bossName: 'エリアボス',
+    bossName: 'たしざんの まじん',
     stages: [
       { name:'1桁＋1桁（くり上がりなし）', timeLimit:5000, generateProblem:() => {
         let a, b;
         do { a = rnd(1,9); b = rnd(1,9); } while (a + b > 9);
         return stageProblem(a, b, '+', a + b);
       }},
-      { name:'10＋〇', timeLimit:5000, generateProblem:() => {
+      { name:'10をつくる（たすと10）', timeLimit:5000, generateProblem:() => {
+        const a = rnd(1,9);
+        const b = 10 - a;
+        return stageProblem(a, b, '+', 10);
+      }},
+      { name:'10＋〇（10のまとまり）', timeLimit:5000, generateProblem:() => {
         const a = 10, b = rnd(1,9);
-        return stageProblem(a, b, '+', a + b);
+        return Math.random() < 0.5 ? stageProblem(a, b, '+', a + b) : stageProblem(b, a, '+', a + b);
       }},
-      { name:'1桁＋1桁（くり上がりあり）', timeLimit:6000, generateProblem:() => {
+      { name:'1桁＋1桁（くり上がりあり）', timeLimit:5500, generateProblem:() => {
         let a, b;
-        do { a = rnd(1,9); b = rnd(1,9); } while (a + b < 10);
+        do { a = rnd(2,9); b = rnd(2,9); } while (a + b < 10);
         return stageProblem(a, b, '+', a + b);
       }},
-      { name:'3つの数の足し算', timeLimit:7000, generateProblem:() => {
+      { name:'3つの数のたし算', timeLimit:6500, generateProblem:() => {
         const a = rnd(1,5), b = rnd(1,5), c = rnd(1,5);
-        const answer = a + b + c;
-        return { a, b, c, op:'+', answer, text:`${a} + ${b} + ${c}` };
+        return { a, b, c, op:'+', answer: a + b + c, text:`${a} + ${b} + ${c}` };
       }},
-      { name:'2桁＋1桁', timeLimit:6500, generateProblem:() => {
-        const a = rnd(10,49), b = rnd(1,9);
+      { name:'2桁＋1桁のたし算', timeLimit:6000, generateProblem:() => {
+        const a = rnd(11,49), b = rnd(1,9);
         return stageProblem(a, b, '+', a + b);
       }},
-      { name:'2桁＋2桁（くり上がりなし）', timeLimit:7000, generateProblem:() => {
-        let a, b;
-        do { a = rnd(10,49); b = rnd(10,49); } while (a + b > 99);
-        return stageProblem(a, b, '+', a + b);
-      }},
-      { name:'2桁＋2桁（くり上がりあり）', timeLimit:7500, generateProblem:() => {
-        let a, b;
-        do { a = rnd(15,89); b = rnd(15,89); } while ((a % 10) + (b % 10) < 10);
+      { name:'2桁＋2桁のたし算', timeLimit:7000, generateProblem:() => {
+        const a = rnd(12,48), b = rnd(12,48);
         return stageProblem(a, b, '+', a + b);
       }},
     ],
-    bossTimeLimit1: 7000,
-    bossTimeLimit2: 9000,
+    bossTimeLimit1: 6500,
+    bossTimeLimit2: 8000,
     bossPhase1Problem(){ return pick(this.stages).generateProblem(); },
     bossPhase2Problem(){
-      if (Math.random() < 0.5){
-        const a = rnd(100,199), b = rnd(10,99);
-        return stageProblem(a, b, '+', a + b);
-      }
       let a, b;
-      do { a = rnd(40,89); b = rnd(40,89); } while (a + b < 100);
+      do { a = rnd(15,59); b = rnd(15,49); } while ((a % 10) + (b % 10) < 10);
       return stageProblem(a, b, '+', a + b);
     },
   },
-  area2: {
-    name: '沼',
-    recLv: 5,
+  area13: {
+    name: '迷いの沼',
+    recLv: 3,
+    displayNum: '2',
     opLabel: 'ひきざん',
     enemyZone: 'dungeon',
-    bossKey: 'dungeon5', // 7ステージ構成なので dungeon10ではなく 5階相当の強さに
+    bossKey: 'dungeon5',
     rewardZone: 'dungeon',
     bgImage: '画像/ステージ/沼地.jpg',
-    bossName: 'エリアボス',
+    bossName: 'ひきざんの ヌシ',
     stages: [
       { name:'1桁－1桁', timeLimit:5000, generateProblem:() => {
         const a = rnd(3,9), b = rnd(1,a-1);
         return stageProblem(a, b, '-', a - b);
       }},
-      { name:'10－〇', timeLimit:5000, generateProblem:() => {
-        const a = 10, b = rnd(1,9);
+      { name:'10からのひき算（10－〇）', timeLimit:5000, generateProblem:() => {
+        const b = rnd(1,9);
+        return stageProblem(10, b, '-', 10 - b);
+      }},
+      { name:'2桁－1桁（くり下がりなし）', timeLimit:5500, generateProblem:() => {
+        const a = rnd(11,19), b = rnd(1, a % 10 || 1);
         return stageProblem(a, b, '-', a - b);
       }},
-      { name:'2桁－1桁（くり下がりなし）', timeLimit:6000, generateProblem:() => {
+      { name:'くり下がりのあるひき算', timeLimit:6000, generateProblem:() => {
         let a, b;
-        do { a = rnd(11,98); b = rnd(1,9); } while ((a % 10) < b);
+        do { a = rnd(11,18); b = rnd(a - 9, 9); } while ((a % 10) >= b);
         return stageProblem(a, b, '-', a - b);
       }},
-      { name:'3つの数の引き算', timeLimit:7000, generateProblem:() => {
+      { name:'3つの数のひき算', timeLimit:6500, generateProblem:() => {
         let a, b, c;
-        do { a = rnd(10,20); b = rnd(1,5); c = rnd(1,5); } while (a - b - c < 0);
-        return { a, b, c, op:'-', answer:a - b - c, text:`${a} - ${b} - ${c}` };
+        do { a = rnd(10,18); b = rnd(1,5); c = rnd(1,5); } while (a - b - c < 0);
+        return { a, b, c, op:'-', answer: a - b - c, text:`${a} - ${b} - ${c}` };
       }},
       { name:'2桁－1桁（くり下がりあり）', timeLimit:6500, generateProblem:() => {
         let a, b;
-        do { a = rnd(11,98); b = rnd(1,9); } while ((a % 10) >= b);
+        do { a = rnd(21,58); b = rnd((a % 10) + 1, 9); } while ((a % 10) >= b);
         return stageProblem(a, b, '-', a - b);
       }},
-      { name:'2桁－2桁（くり下がりなし）', timeLimit:7000, generateProblem:() => {
-        let a, b;
-        do { a = rnd(20,98); b = rnd(10,a-1); } while ((a % 10) < (b % 10));
-        return stageProblem(a, b, '-', a - b);
-      }},
-      { name:'2桁－2桁（くり下がりあり）', timeLimit:7500, generateProblem:() => {
-        let a, b;
-        do { a = rnd(20,98); b = rnd(10,a-1); } while ((a % 10) >= (b % 10));
+      { name:'2桁－2桁のひき算', timeLimit:7000, generateProblem:() => {
+        const a = rnd(25,69), b = rnd(11, a - 5);
         return stageProblem(a, b, '-', a - b);
       }},
     ],
-    bossTimeLimit1: 7500,
-    bossTimeLimit2: 9500,
+    bossTimeLimit1: 6500,
+    bossTimeLimit2: 8000,
     bossPhase1Problem(){ return pick(this.stages).generateProblem(); },
     bossPhase2Problem(){
-      if (Math.random() < 0.5){
-        const a = rnd(100,109), b = rnd(10, Math.min(a-1,99));
-        return stageProblem(a, b, '-', a - b);
-      }
-      const a = rnd(101,199), b = rnd(10, Math.min(a-1,99));
+      let a, b;
+      do { a = rnd(31,78); b = rnd(15, a - 10); } while ((a % 10) >= (b % 10));
       return stageProblem(a, b, '-', a - b);
     },
   },
-  area3: {
-    name: '第3エリア：かけ算の森',
-    recLv: 10,
-    opLabel: 'かけざん',
+  area2: {
+    name: 'かけ算の森',
+    recLv: 6,
+    displayNum: '3',
+    opLabel: 'かけざん（九九）',
     enemyZone: 'crypt',
-    bgImage: '画像/ステージ/かけ算の森.jpg',
-    bossName: 'かけざんのヌシ',
     bossKey: 'forest_boss',
     rewardZone: 'forest',
+    bgImage: '画像/ステージ/かけ算の森.jpg',
+    bossName: 'かけざんのヌシ',
     stages: [
-      { name:'1の段', timeLimit:4000, generateProblem:() => { const b = rnd(1,9); return stageProblem(1, b, '×', 1 * b); } },
-      { name:'2の段', timeLimit:4000, generateProblem:() => { const b = rnd(1,9); return stageProblem(2, b, '×', 2 * b); } },
-      { name:'3の段', timeLimit:4000, generateProblem:() => { const b = rnd(1,9); return stageProblem(3, b, '×', 3 * b); } },
-      { name:'4の段', timeLimit:4000, generateProblem:() => { const b = rnd(1,9); return stageProblem(4, b, '×', 4 * b); } },
-      { name:'5の段', timeLimit:4000, generateProblem:() => { const b = rnd(1,9); return stageProblem(5, b, '×', 5 * b); } },
-      { name:'6の段', timeLimit:4000, generateProblem:() => { const b = rnd(1,9); return stageProblem(6, b, '×', 6 * b); } },
-      { name:'7の段', timeLimit:4000, generateProblem:() => { const b = rnd(1,9); return stageProblem(7, b, '×', 7 * b); } },
-      { name:'8の段', timeLimit:4000, generateProblem:() => { const b = rnd(1,9); return stageProblem(8, b, '×', 8 * b); } },
-      { name:'9の段', timeLimit:4000, generateProblem:() => { const b = rnd(1,9); return stageProblem(9, b, '×', 9 * b); } },
+      { name:'1の段', timeLimit:4500, generateProblem:() => { const b = rnd(1,9); return stageProblem(1, b, '×', 1 * b); } },
+      { name:'2の段', timeLimit:4500, generateProblem:() => { const b = rnd(1,9); return stageProblem(2, b, '×', 2 * b); } },
+      { name:'3の段', timeLimit:4500, generateProblem:() => { const b = rnd(1,9); return stageProblem(3, b, '×', 3 * b); } },
+      { name:'4の段', timeLimit:4500, generateProblem:() => { const b = rnd(1,9); return stageProblem(4, b, '×', 4 * b); } },
+      { name:'5の段', timeLimit:4500, generateProblem:() => { const b = rnd(1,9); return stageProblem(5, b, '×', 5 * b); } },
+      { name:'6の段', timeLimit:4500, generateProblem:() => { const b = rnd(1,9); return stageProblem(6, b, '×', 6 * b); } },
+      { name:'7の段', timeLimit:4500, generateProblem:() => { const b = rnd(1,9); return stageProblem(7, b, '×', 7 * b); } },
+      { name:'8の段', timeLimit:4500, generateProblem:() => { const b = rnd(1,9); return stageProblem(8, b, '×', 8 * b); } },
+      { name:'9の段', timeLimit:4500, generateProblem:() => { const b = rnd(1,9); return stageProblem(9, b, '×', 9 * b); } },
     ],
-    bossTimeLimit1: 4000,
-    bossTimeLimit2: 5000,
+    bossTimeLimit1: 4500,
+    bossTimeLimit2: 5500,
     bossPhase1Problem(){ const a = rnd(1,9), b = rnd(1,9); return stageProblem(a, b, '×', a * b); },
     bossPhase2Problem(){ const a = rnd(1,9), b = rnd(1,9); return stageProblem(a, b, '×', a * b); },
   },
+  area3: {
+    name: 'わり算の海',
+    recLv: 10,
+    displayNum: '4',
+    opLabel: 'わりざん',
+    enemyZone: 'dungeon',
+    bossKey: 'dungeon5',
+    rewardZone: 'dungeon',
+    bgImage: '画像/ステージ/わり算の海.jpg',
+    bossName: 'うみの ぬし',
+    stages: [
+      { name:'2・5の段のわり算', timeLimit:5500, generateProblem:() => {
+        const divisor = Math.random() < 0.5 ? 2 : 5;
+        const ans = rnd(1,9);
+        return stageProblem(divisor * ans, divisor, '÷', ans);
+      }},
+      { name:'1〜3の段のわり算', timeLimit:5500, generateProblem:() => {
+        const divisor = rnd(1,3);
+        const ans = rnd(1,9);
+        return stageProblem(divisor * ans, divisor, '÷', ans);
+      }},
+      { name:'4〜6の段のわり算', timeLimit:6000, generateProblem:() => {
+        const divisor = rnd(4,6);
+        const ans = rnd(1,9);
+        return stageProblem(divisor * ans, divisor, '÷', ans);
+      }},
+      { name:'7〜9の段のわり算', timeLimit:6000, generateProblem:() => {
+        const divisor = rnd(7,9);
+        const ans = rnd(1,9);
+        return stageProblem(divisor * ans, divisor, '÷', ans);
+      }},
+      { name:'九九ぜんぶのわり算', timeLimit:6500, generateProblem:() => {
+        const divisor = rnd(2,9);
+        const ans = rnd(1,9);
+        return stageProblem(divisor * ans, divisor, '÷', ans);
+      }},
+      { name:'あまりのあるわり算（小）', timeLimit:7000, generateProblem:() => {
+        const divisor = rnd(2,5);
+        const ans = rnd(2,7);
+        const rem = rnd(1, divisor - 1);
+        const dividend = divisor * ans + rem;
+        return { a:dividend, b:divisor, op:'÷', answer:ans, text:`${dividend} ÷ ${divisor}` };
+      }},
+      { name:'あまりのあるわり算（大）', timeLimit:7000, generateProblem:() => {
+        const divisor = rnd(6,9);
+        const ans = rnd(2,7);
+        const rem = rnd(1, divisor - 1);
+        const dividend = divisor * ans + rem;
+        return { a:dividend, b:divisor, op:'÷', answer:ans, text:`${dividend} ÷ ${divisor}` };
+      }},
+    ],
+    bossTimeLimit1: 6500,
+    bossTimeLimit2: 7500,
+    bossPhase1Problem(){
+      const divisor = rnd(2,9);
+      const ans = rnd(1,9);
+      return stageProblem(divisor * ans, divisor, '÷', ans);
+    },
+    bossPhase2Problem(){
+      // フェーズ2：あまりのあるわり算
+      const divisor = rnd(2,9);
+      const ans = rnd(2,8);
+      const rem = rnd(1, divisor - 1);
+      const dividend = divisor * ans + rem;
+      return { a:dividend, b:divisor, op:'÷', answer:ans, text:`${dividend} ÷ ${divisor}` };
+    },
+  },
   area4: {
-    name: '第4エリア：試練の塔',
+    name: '試練の塔',
     recLv: 15,
-    opLabel: '計算ミックス',
+    displayNum: '5',
+    opLabel: '四則ミックス',
     enemyZone: 'bandit',
     bgImage: '画像/ステージ/試練の塔.jpg',
     bossName: '試練のガーディアン',
@@ -1407,7 +1467,7 @@ const AREA_STAGES = {
   area11: {
     name: '天空の階段',
     recLv: 20,
-    displayNum: '5年',
+    displayNum: '6',
     opLabel: '小5 算数',
     enemyZone: 'crypt',
     bossKey: 'sky_boss',
@@ -1430,7 +1490,7 @@ const AREA_STAGES = {
   area12: {
     name: '算数の魔王城',
     recLv: 25,
-    displayNum: '6年',
+    displayNum: '7',
     opLabel: '小6 算数',
     enemyZone: 'bandit',
     bossKey: 'castle_boss',
@@ -1465,13 +1525,11 @@ function generateArea4MixedProblem() {
     const a = rnd(1, 9), b = rnd(1, 9);
     return stageProblem(a, b, '×', a * b);
   } else if (type === 4) {
-    const op = Math.random() < 0.5 ? '+' : '-';
-    let a = rnd(1, 9) * 100, b = rnd(1, 9) * 100;
-    if (op === '-') {
-      if (a < b) [a, b] = [b, a];
-      return stageProblem(a, b, '-', a - b);
-    }
-    return stageProblem(a, b, '+', a + b);
+    // わり算（九九の逆算：割り切れる計算）
+    const b = rnd(2, 9);
+    const ans = rnd(1, 9);
+    const a = b * ans;
+    return stageProblem(a, b, '÷', ans);
   } else {
     const ops = [ ['+','+'], ['+','-'], ['-','-'] ];
     const opPair = pick(ops);
@@ -1489,7 +1547,7 @@ function generateArea4MixedProblem() {
 
 /* 1つの ステージ（例：1-1）で、おなじ もんだいタイプの 敵を なんたい たおすと
    つぎの ステージへ すすむか（＝おなじ けいさんに くりかえし ふれて なれる ための かいすう） */
-const ENEMIES_PER_STAGE = 10;
+const ENEMIES_PER_STAGE = 5;
 
 /* いま えらんでいる エリア／ステージの じょうたい。
    { stageMode:true, areaId, stageIndex(0〜6・ボスはnull), isBoss, bossPhase(ボスのみ),
@@ -1535,21 +1593,20 @@ function generateStageEnemy(areaId, stageIndex, isBoss){
   const selectedEnemyRef = pick(availablePool);
   const tmpl = getEnemyTemplate(selectedEnemyRef.zone, selectedEnemyRef.key);
 
-  /* エリア1・2は しょきゅうしゃ向け。そうびなしでも かならず 2〜3げきで たおせる くらい、
-     敵のHPと こうげき力の のびを ひかえめに おさえる */
+  /* エリア1は 初心者向け。エリア2・3は少し本格的に */
   let mult = 1 + (stageIndex || 0) * 0.05;
   let hpMult = mult;
 
   if (areaId === 'area1') {
-    // 最初の平原はHPを低めからスタート
+    // 始まりの平原は HPを低めからスタート（たしざん・ひきざん）
     hpMult = 0.35 + (stageIndex || 0) * 0.12;
   } else if (areaId === 'area2' || areaId === 'area5') {
+    // かけ算の森・漢字の森もやや低め
     hpMult = 0.5 + (stageIndex || 0) * 0.1;
   }
 
   let atk = Math.round(tmpl.atk * mult);
-  /* たしざんの草原エリア（area1）の 1〜2ステージめは、はじめての けいさんに
-     しゅうちゅうできるよう、敵の こうげき力を 1〜2に とくべつ おさえる */
+  /* area1の 1〜2ステージめは はじめての計算に集中できるよう、攻撃力を控えめに */
   if (areaId === 'area1' && (stageIndex || 0) < 2) atk = rnd(1, 2);
 
   // HPが低くなりすぎないように最低値は 2 を保証
@@ -1829,6 +1886,7 @@ function getDefaultAreaDifficultyMultiplier(areaId){
   const defaults = {
     // 算数エリア
     area1: 1.0,
+    area13: 1.5,
     area2: 2.0,
     area3: 3.0,
     area4: 4.0,
@@ -1888,18 +1946,17 @@ const AREA_ENEMY_POOLS = {
     { zone:'tower', key:13 }, // はたけのすずめ
     { zone:'tower', key:3 },  // キノコ
   ],
-  // area2: 沼（ひきざん）- 湿地や植物のモンスター
-  area2: [
+  // area13: 迷いの沼（ひきざん）- 沼地・湿地のモンスター
+  area13: [
     { zone:'dungeon', key:0 },  // どくスライム
     { zone:'dungeon', key:1 },  // コウモリ
-    { zone:'dungeon', key:7 },  // きりかぶモンスター
+    { zone:'dungeon', key:2 },  // どくキノコ
+    { zone:'crypt', key:0 },    // どろぬまスライム
     { zone:'dungeon', key:10 }, // どくとかげ
     { zone:'dungeon', key:12 }, // ぬまのハチドリ
-    { zone:'dungeon', key:11 }, // こけのせいれい
-    { zone:'dungeon', key:9 },  // つるのばけもの
   ],
-  // area3: かけ算の森 - 森の生き物・精霊
-  area3: [
+  // area2: かけ算の森（九九・かけざん）- 森の生き物・精霊
+  area2: [
     { zone:'tower', key:8 },    // キノコやまあらし
     { zone:'tower', key:10 },   // じょうろのせいれい
     { zone:'tower', key:14 },   // どろんこモグラ
@@ -1908,7 +1965,17 @@ const AREA_ENEMY_POOLS = {
     { zone:'crypt', key:12 },   // かぜのわたぼこり
     { zone:'dungeon', key:13 }, // こけいわゴーレム
   ],
-  // area4: 試練の塔（計算ミックス）- 機械・天使・高位精霊
+  // area3: わり算の海（わりざん）- 海・水辺のモンスター
+  area3: [
+    { zone:'dungeon', key:0 },  // どくスライム
+    { zone:'dungeon', key:1 },  // コウモリ
+    { zone:'dungeon', key:7 },  // きりかぶモンスター
+    { zone:'dungeon', key:10 }, // どくとかげ
+    { zone:'dungeon', key:12 }, // ぬまのハチドリ
+    { zone:'dungeon', key:11 }, // こけのせいれい
+    { zone:'dungeon', key:9 },  // つるのばけもの
+  ],
+  // area4: 試練の塔（四則ミックス）- 機械・天使・高位精霊
   area4: [
     { zone:'tower', key:15 },   // たいようのてんし
     { zone:'tower', key:17 },   // きかいのつかいま
@@ -2034,6 +2101,20 @@ function generateEnemy(zone, floor){
   };
   e.hp = e.maxHp;
   return e;
+}
+
+/* ==========================================================
+   プレイヤー アバター立ち絵データ（男女2パターンずつ）
+   ========================================================== */
+const HERO_AVATARS = [
+  { id: 'hero_female_1', name: '少女の冒険者', gender: 'female', job: '剣士・戦士', desc: '活発なポニーテールと剣技が自慢の少女', image: '画像/キャラクター/hero_female_1.png' },
+  { id: 'hero_male_1', name: '青年の騎士', gender: 'male', job: '騎士・勇者', desc: '聖剣をたずさえた誇り高き青年騎士', image: '画像/キャラクター/hero_male_1.png' },
+  { id: 'hero_male_2', name: '少年の冒険者', gender: 'male', job: '冒険者・シーフ', desc: 'ゴーグルと身軽な動きで挑む元気な少年', image: '画像/キャラクター/hero_male_2.png' },
+  { id: 'hero_female_2', name: '星詠みの少女', gender: 'female', job: '魔法使い', desc: '星空のローブと水晶の杖を持つ神秘的な少女', image: '画像/キャラクター/hero_female_2.png' },
+];
+
+function getHeroAvatar(avatarId) {
+  return HERO_AVATARS.find(a => a.id === avatarId) || HERO_AVATARS[0];
 }
 
 /* ==========================================================
@@ -2230,9 +2311,10 @@ const LEGACY_OLD_SAVE_KEY = 'typing_rpg_save_v2';
 let G = null;
 let currentSlotKey = null; // いま えらんでいる セーブ枠の localStorage キー
 
-function newGameState(name){
+function newGameState(name, avatarId){
   return {
     playerName: (name && name.trim()) || 'ぼうけんしゃ',
+    avatar: avatarId || 'hero_male_1',
     updatedAt: Date.now(),
     player: {
       lvl:1, exp:0, points:0,
@@ -2293,9 +2375,9 @@ function newSlotId(){
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
-function createSaveSlot(name){
+function createSaveSlot(name, avatarId){
   currentSlotKey = SAVE_PREFIX + newSlotId();
-  G = newGameState(name);
+  G = newGameState(name, avatarId);
   save(true);
   return currentSlotKey;
 }
@@ -2370,7 +2452,15 @@ function resolveSaveSlotEquip(data, ref){
   if (!owned) return null;
   const db = getEquipTemplate(owned.id);
   if (!db) return null;
-  return { name: db.name, rarity: owned.rarity || 1 };
+  return {
+    id: db.id,
+    name: db.name,
+    rarity: owned.rarity || 1,
+    emoji: db.emoji,
+    slot: db.slot,
+    stat: db.stat || {},
+    desc: db.desc || '',
+  };
 }
 
 function listSaveSlots(){
@@ -2389,14 +2479,85 @@ function listSaveSlots(){
         }
         continue;
       }
+
+      const p = data.player || { lvl:1, hp:30, maxHp:30, mp:10, maxMp:10, atk:5, def:3, spd:6, gold:0 };
+      const eqWeapon = data.equipment ? resolveSaveSlotEquip(data, data.equipment.weapon) : null;
+      const eqArmor = data.equipment ? resolveSaveSlotEquip(data, data.equipment.armor) : null;
+      const eqAccessory = data.equipment ? resolveSaveSlotEquip(data, data.equipment.accessory) : null;
+
+      // 装備補正の合算
+      const eqList = [eqWeapon, eqArmor, eqAccessory].filter(Boolean);
+      let boostAtk = 0, boostDef = 0, boostSpd = 0, boostHp = 0, boostMp = 0;
+      for (const eq of eqList) {
+        if (eq.stat) {
+          if (eq.stat.atk) boostAtk += eq.stat.atk;
+          if (eq.stat.def) boostDef += eq.stat.def;
+          if (eq.stat.spd) boostSpd += eq.stat.spd;
+          if (eq.stat.hp) boostHp += eq.stat.hp;
+          if (eq.stat.mp) boostMp += eq.stat.mp;
+        }
+      }
+
+      // 所持アイテム（dbから情報補完）
+      const items = (data.items || []).map(it => {
+        const itemDb = ITEM_DB.find(d => d.id === it.id);
+        return itemDb ? { ...it, name: itemDb.name, emoji: itemDb.emoji, desc: itemDb.desc } : null;
+      }).filter(Boolean);
+
+      // 到達エリアとスター合計の集計
+      let currentAreaName = '始まりの平原';
+      let totalStars = 0;
+      if (data.stageClearCounts && typeof data.stageClearCounts === 'object') {
+        for (const aKey in data.stageClearCounts) {
+          const list = data.stageClearCounts[aKey];
+          if (Array.isArray(list)) {
+            list.forEach(c => totalStars += (c || 0));
+            if (list.some(c => c > 0) && typeof AREA_STAGES !== 'undefined' && AREA_STAGES[aKey]) {
+              currentAreaName = AREA_STAGES[aKey].name;
+            }
+          }
+        }
+      }
+      const rescuedCount = (data.rescued && Array.isArray(data.rescued)) ? data.rescued.length : 0;
+
       slots.push({
         key,
         name: data.playerName || 'ぼうけんしゃ',
-        lvl: data.player ? data.player.lvl : 1,
-        gold: data.player ? data.player.gold : 0,
-        equippedWeapon: data.equipment ? resolveSaveSlotEquip(data, data.equipment.weapon) : null,
-        equippedArmor: data.equipment ? resolveSaveSlotEquip(data, data.equipment.armor) : null,
-        equippedAccessory: data.equipment ? resolveSaveSlotEquip(data, data.equipment.accessory) : null,
+        avatar: data.avatar || 'hero_male_1',
+        lvl: p.lvl || 1,
+        gold: p.gold || 0,
+        baseStats: {
+          hp: p.hp !== undefined ? p.hp : 30,
+          maxHp: p.maxHp || 30,
+          mp: p.mp !== undefined ? p.mp : 10,
+          maxMp: p.maxMp || 10,
+          atk: p.atk || 5,
+          def: p.def || 3,
+          spd: p.spd || 6,
+        },
+        totalStats: {
+          maxHp: (p.maxHp || 30) + boostHp,
+          maxMp: (p.maxMp || 10) + boostMp,
+          atk: (p.atk || 5) + boostAtk,
+          def: (p.def || 3) + boostDef,
+          spd: (p.spd || 6) + boostSpd,
+        },
+        boostStats: {
+          hp: boostHp,
+          mp: boostMp,
+          atk: boostAtk,
+          def: boostDef,
+          spd: boostSpd,
+        },
+        equippedWeapon: eqWeapon,
+        equippedArmor: eqArmor,
+        equippedAccessory: eqAccessory,
+        items,
+        progress: {
+          areaName: currentAreaName,
+          stars: totalStars,
+          rescuedCount: rescuedCount,
+        },
         updatedAt: data.updatedAt || 0,
       });
     } catch(e){}
@@ -4508,37 +4669,171 @@ function renderLoadSaveSlots(onSelectCb){
   list.innerHTML = '';
   const slots = listSaveSlots();
   if (slots.length === 0){
-    list.innerHTML = '<div class="flavor">セーブデータが ありません。「あたらしく はじめる」から ぼうけんを はじめよう！</div>';
+    list.innerHTML = '<div class="flavor" style="text-align:center; padding:30px;">セーブデータが ありません。<br>「あたらしく はじめる」から ぼうけんを はじめよう！</div>';
     return;
   }
+
   for (const slot of slots){
-    const row = document.createElement('div');
-    row.className = 'inv-row';
-    const equips = [slot.equippedWeapon, slot.equippedArmor, slot.equippedAccessory].filter(Boolean);
-    const equipHtml = equips.length ? `<div style="display:flex; gap:8px; margin-top:6px;">${
-      equips.map(eq => `<div class="equip-icon rarity-${eq.rarity || 1}" style="width:40px; height:40px;" title="${eq.name}">${iconHtml(eq.emoji, 26)}</div>`).join('')
-    }</div>` : '';
-    row.innerHTML = `<div class="info">
-      <span class="rarity-4">${slot.name}</span> <span class="tag" style="margin-left:8px;">Lv${slot.lvl}</span>
-      <div class="desc" style="margin-top:4px;">所持金：${slot.gold} G</div>
-      ${equipHtml}
-      </div>`;
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-primary';
-    const isCallback = typeof onSelectCb === 'function';
-    btn.textContent = isCallback ? 'これでちょうせん！' : 'つづける';
-    btn.onclick = () => { 
-      if (loadSlot(slot.key)) { 
-        startTimeLimitSession(slot.key); 
-        if (isCallback) {
-          onSelectCb();
-        } else {
-          showHome(); 
+    const avatar = getHeroAvatar(slot.avatar);
+    const card = document.createElement('div');
+    card.className = 'save-slot-card';
+
+    // 装備スロット情報
+    const weapon = slot.equippedWeapon;
+    const armor = slot.equippedArmor;
+    const accessory = slot.equippedAccessory;
+
+    // 装備ツールチップHTML生成
+    function makeEquipTooltipHtml(eq, defaultName) {
+      if (!eq) {
+        return `
+          <div class="save-equip-tooltip">
+            <div class="tooltip-header"><span class="tooltip-title">${defaultName}</span></div>
+            <div class="tooltip-desc">そうびしていません</div>
+          </div>
+        `;
+      }
+      let statHtml = '';
+      if (eq.stat) {
+        if (eq.stat.atk) statHtml += `<div class="tooltip-stat stat-atk">⚔️ こうげき +${eq.stat.atk}</div>`;
+        if (eq.stat.def) statHtml += `<div class="tooltip-stat stat-def">🛡️ ぼうぎょ +${eq.stat.def}</div>`;
+        if (eq.stat.spd) statHtml += `<div class="tooltip-stat stat-spd">💨 すばやさ +${eq.stat.spd}</div>`;
+        if (eq.stat.hp) statHtml += `<div class="tooltip-stat stat-hp">❤️ HP +${eq.stat.hp}</div>`;
+        if (eq.stat.mp) statHtml += `<div class="tooltip-stat stat-mp">💧 MP +${eq.stat.mp}</div>`;
+      }
+      return `
+        <div class="save-equip-tooltip">
+          <div class="tooltip-header">
+            <span class="tooltip-title">${eq.name}</span>
+            <span class="tooltip-rarity">${'★'.repeat(eq.rarity || 1)}</span>
+          </div>
+          ${statHtml}
+          ${eq.desc ? `<div class="tooltip-desc">${eq.desc}</div>` : ''}
+        </div>
+      `;
+    }
+
+    const weaponTooltipHtml = makeEquipTooltipHtml(weapon, '（武器なし）');
+    const armorTooltipHtml = makeEquipTooltipHtml(armor, '（防具なし）');
+    const accessoryTooltipHtml = makeEquipTooltipHtml(accessory, '（装飾品なし）');
+
+    // ステータス表示（カッコ書き不要、最終的な数値のみ）
+    const atkHtml = `<span class="${slot.boostStats.atk > 0 ? 'stat-boosted' : 'stat-normal'}">${slot.totalStats.atk}</span>`;
+    const defHtml = `<span class="${slot.boostStats.def > 0 ? 'stat-boosted' : 'stat-normal'}">${slot.totalStats.def}</span>`;
+    const spdHtml = `<span class="${slot.boostStats.spd > 0 ? 'stat-boosted' : 'stat-normal'}">${slot.totalStats.spd}</span>`;
+
+    const weaponTooltip = weapon ? `${weapon.name}${weapon.stat && weapon.stat.atk ? ` (+${weapon.stat.atk})` : ''}` : '（武器なし）';
+    const armorTooltip = armor ? `${armor.name}${armor.stat && armor.stat.def ? ` (+${armor.stat.def})` : ''}` : '（防具なし）';
+    const accessoryTooltip = accessory ? accessory.name : '（装飾品なし）';
+
+    // 最終セーブ日時のフォーマット
+    let dateStr = '';
+    if (slot.updatedAt) {
+      const d = new Date(slot.updatedAt);
+      if (!isNaN(d.getTime())) {
+        const m = d.getMonth() + 1;
+        const day = d.getDate();
+        const h = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        dateStr = `${m}/${day} ${h}:${min}`;
+      }
+    }
+
+    // HP/MPゲージの計算（数値分の長さを出す。上限100%でクランプしレイアウトを超えない）
+    const hpGaugePct = Math.min(100, Math.max(8, Math.round(slot.totalStats.maxHp)));
+    const mpGaugePct = Math.min(100, Math.max(8, Math.round(slot.totalStats.maxMp * 2)));
+
+    card.innerHTML = `
+      <!-- 1段目: プレイヤー名 ＆ レベル ＆ 所持金 -->
+      <div class="save-slot-card-header">
+        <div class="save-slot-name-row">
+          <span class="save-slot-player-name">${slot.name}</span>
+          <span class="save-slot-lv-badge">Lv.${slot.lvl}</span>
+        </div>
+        <div class="save-slot-gold-badge">
+          💰 <span class="save-gold-num">${slot.gold.toLocaleString()}</span> G
+        </div>
+      </div>
+
+      <!-- 2段目: 立ち絵エリア -->
+      <div class="save-slot-avatar-frame">
+        <img src="${avatar.image}" class="save-slot-avatar-img" alt="キャラクター">
+      </div>
+
+      <!-- 3段目: ステータス縦並び ＆ 装備アイコン縦並び -->
+      <div class="save-slot-mid-row">
+        <!-- ステータス縦並びリスト -->
+        <div class="save-slot-stats-col">
+          <div class="save-stat-line stat-line-hp">
+            <span class="stat-name"><span class="stat-icon">❤️</span>HP</span>
+            <div class="save-gauge-track">
+              <div class="save-gauge-fill hp" style="width: ${hpGaugePct}%;"></div>
+            </div>
+            <span class="stat-val stat-hp">${slot.totalStats.maxHp}</span>
+          </div>
+          <div class="save-stat-line stat-line-mp">
+            <span class="stat-name"><span class="stat-icon">💧</span>MP</span>
+            <div class="save-gauge-track">
+              <div class="save-gauge-fill mp" style="width: ${mpGaugePct}%;"></div>
+            </div>
+            <span class="stat-val stat-mp">${slot.totalStats.maxMp}</span>
+          </div>
+          <div class="save-stat-line"><span class="stat-name"><span class="stat-icon">⚔️</span>こうげき</span><span class="stat-val stat-atk">${atkHtml}</span></div>
+          <div class="save-stat-line"><span class="stat-name"><span class="stat-icon">🛡️</span>ぼうぎょ</span><span class="stat-val stat-def">${defHtml}</span></div>
+          <div class="save-stat-line"><span class="stat-name"><span class="stat-icon">💨</span>すばやさ</span><span class="stat-val stat-spd">${spdHtml}</span></div>
+        </div>
+
+        <!-- 装備アイコンのみ縦並び（名前なし・アイコンのみ・ホバーで即座にツールチップ） -->
+        <div class="save-slot-equips-col">
+          <div class="save-equip-icon-btn ${weapon ? 'has-equip' : 'no-equip'}" title="${weaponTooltip}">
+            <span class="equip-tag">武器</span>
+            <div class="save-equip-icon-wrap rarity-${weapon ? weapon.rarity : 1}">
+              ${weapon ? iconHtml(weapon.emoji, 22) : '<span class="empty-dash">ー</span>'}
+            </div>
+            ${weaponTooltipHtml}
+          </div>
+
+          <div class="save-equip-icon-btn ${armor ? 'has-equip' : 'no-equip'}" title="${armorTooltip}">
+            <span class="equip-tag">防具</span>
+            <div class="save-equip-icon-wrap rarity-${armor ? armor.rarity : 1}">
+              ${armor ? iconHtml(armor.emoji, 22) : '<span class="empty-dash">ー</span>'}
+            </div>
+            ${armorTooltipHtml}
+          </div>
+
+          <div class="save-equip-icon-btn ${accessory ? 'has-equip' : 'no-equip'}" title="${accessoryTooltip}">
+            <span class="equip-tag">装飾</span>
+            <div class="save-equip-icon-wrap rarity-${accessory ? accessory.rarity : 1}">
+              ${accessory ? iconHtml(accessory.emoji, 22) : '<span class="empty-dash">ー</span>'}
+            </div>
+            ${accessoryTooltipHtml}
+          </div>
+        </div>
+      </div>
+
+      <!-- 4段目: つづけるボタン -->
+      <div class="save-slot-action-row">
+        <button class="btn btn-primary btn-save-select">
+          ${typeof onSelectCb === 'function' ? 'これでちょうせん！' : 'つづける ⚔️'}
+        </button>
+      </div>
+    `;
+
+    const btn = card.querySelector('.btn-save-select');
+    if (btn) {
+      btn.onclick = () => {
+        if (loadSlot(slot.key)) {
+          startTimeLimitSession(slot.key);
+          if (typeof onSelectCb === 'function') {
+            onSelectCb();
+          } else {
+            showHome();
+          }
         }
-      } 
-    };
-    row.appendChild(btn);
-    list.appendChild(row);
+      };
+    }
+
+    list.appendChild(card);
   }
 }
 
@@ -4647,11 +4942,12 @@ function showStageSelect(){
 
   // さんすうエリア
   if ($('stage-status-area1')) $('stage-status-area1').innerHTML = `推奨Lv:1 / たしざん　${zoneStarsHtml('tower')}`;
-  if ($('stage-status-area2')) $('stage-status-area2').innerHTML = `推奨Lv:5 / ひきざん　${zoneStarsHtml('dungeon')}`;
-  if ($('stage-status-area3')) $('stage-status-area3').innerHTML = `推奨Lv:10 / かけざん　${zoneStarsHtml('forest')}`;
-  if ($('stage-status-area4')) $('stage-status-area4').innerHTML = `推奨Lv:15 / 計算ミックス　${zoneStarsHtml('cave')}`;
-  if ($('stage-status-area11')) $('stage-status-area11').innerHTML = `推奨Lv:20 / 小5算数　${zoneStarsHtml('sky')}`;
-  if ($('stage-status-area12')) $('stage-status-area12').innerHTML = `推奨Lv:25 / 小6算数　${zoneStarsHtml('castle')}`;
+  if ($('stage-status-area13')) $('stage-status-area13').innerHTML = `推奨Lv:3 / ひきざん　${zoneStarsHtml('dungeon')}`;
+  if ($('stage-status-area2')) $('stage-status-area2').innerHTML = `推奨Lv:6 / 九九・かけざん　${zoneStarsHtml('forest')}`;
+  if ($('stage-status-area3')) $('stage-status-area3').innerHTML = `推奨Lv:10 / わりざん　${zoneStarsHtml('dungeon')}`;
+  if ($('stage-status-area4')) $('stage-status-area4').innerHTML = `推奨Lv:15 / 四則ミックス　${zoneStarsHtml('cave')}`;
+  if ($('stage-status-area11')) $('stage-status-area11').innerHTML = `推奨Lv:20 / 小5算数（小数・分数）　${zoneStarsHtml('sky')}`;
+  if ($('stage-status-area12')) $('stage-status-area12').innerHTML = `推奨Lv:25 / 小6算数（比・速さ）　${zoneStarsHtml('castle')}`;
 
   // こくご（漢字）エリア
   for (let i = 5; i <= 10; i++) {
@@ -6960,8 +7256,64 @@ function bindEvents(){
     if (el) el.onclick = fn;
   };
 
+  let currentAvatarIndex = 0;
+  let selectedNewSaveAvatar = HERO_AVATARS[0].id;
+
+  function updateAvatarDisplay(index) {
+    currentAvatarIndex = (index + HERO_AVATARS.length) % HERO_AVATARS.length;
+    const hero = HERO_AVATARS[currentAvatarIndex];
+    selectedNewSaveAvatar = hero.id;
+
+    const imgEl = $('hero-preview-img');
+    if (imgEl) {
+      imgEl.style.transform = 'scale(0.88)';
+      imgEl.style.opacity = '0.5';
+      setTimeout(() => {
+        imgEl.src = hero.image;
+        imgEl.alt = 'キャラクター';
+        imgEl.style.transform = 'scale(1)';
+        imgEl.style.opacity = '1';
+      }, 90);
+    }
+
+    // サムネイルのアクティブ状態更新
+    const thumbBtns = document.querySelectorAll('.hero-thumb-btn');
+    thumbBtns.forEach((btn, i) => {
+      btn.classList.toggle('is-active', i === currentAvatarIndex);
+    });
+  }
+
+  function initAvatarSelection() {
+    currentAvatarIndex = 0;
+    const thumbsContainer = $('hero-thumbs-list');
+    if (thumbsContainer) {
+      thumbsContainer.innerHTML = HERO_AVATARS.map((hero, i) => `
+        <button type="button" class="hero-thumb-btn ${i === 0 ? 'is-active' : ''}" data-index="${i}">
+          <div class="hero-thumb-img-wrap">
+            <img src="${hero.image}" alt="アバター">
+          </div>
+        </button>
+      `).join('');
+
+      thumbsContainer.querySelectorAll('.hero-thumb-btn').forEach(btn => {
+        btn.onclick = () => {
+          const idx = parseInt(btn.dataset.index, 10);
+          updateAvatarDisplay(idx);
+        };
+      });
+    }
+
+    const prevBtn = $('btn-hero-prev');
+    const nextBtn = $('btn-hero-next');
+    if (prevBtn) prevBtn.onclick = () => updateAvatarDisplay(currentAvatarIndex - 1);
+    if (nextBtn) nextBtn.onclick = () => updateAvatarDisplay(currentAvatarIndex + 1);
+
+    updateAvatarDisplay(0);
+  }
+
   on('btn-newgame', () => {
     showScreen('screen-new-save');
+    initAvatarSelection();
     const nameInput = $('new-save-name');
     if (nameInput) {
       nameInput.value = '';
@@ -6971,7 +7323,7 @@ function bindEvents(){
   on('btn-new-save-back', () => showScreen('screen-title'));
   on('btn-new-save-start', () => {
     const nameInput = $('new-save-name');
-    const key = createSaveSlot(nameInput ? nameInput.value : '');
+    const key = createSaveSlot(nameInput ? nameInput.value : '', selectedNewSaveAvatar);
     startTimeLimitSession(key);
     showScreen('screen-intro'); // チュートリアル画面へ
   });
@@ -7020,6 +7372,7 @@ function bindEvents(){
 
   // さんすうエリア
   on('area-card-tower', () => showStageSelectNew('area1'));
+  on('stage-card-area13', () => showStageSelectNew('area13'));
   on('stage-card-dungeon', () => showStageSelectNew('area2'));
   on('stage-card-area3', () => showStageSelectNew('area3'));
   on('stage-card-area4', () => showStageSelectNew('area4'));

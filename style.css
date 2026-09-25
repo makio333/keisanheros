@@ -1789,8 +1789,8 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   background: rgba(22, 17, 38, 0.96);
   border: 2px solid rgba(255, 215, 0, 0.35);
   border-radius: 10px;
-  padding: 6px 8px;
-  width: 122px;
+  padding: 5px 8px;
+  width: 144px;
   box-sizing: border-box;
   box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 0 10px rgba(0,0,0,0.3);
   transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
@@ -1846,37 +1846,43 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   padding-bottom: 4px;
+  gap: 4px;
+  min-width: 0;
 }
 
 .stat-node-name {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   color: #f1f5f9;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .stat-node-name .stat-inline-icon {
-  width: 20px;
-  height: 20px;
+  width: 17px;
+  height: 17px;
 }
 
 .stat-node-val {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 900;
   color: var(--accent, #fbbf24);
   white-space: nowrap;
   line-height: 1.1;
   text-align: right;
+  flex-shrink: 0;
 }
 
 .stat-node-val small {
-  font-size: 11px;
+  font-size: 10px;
   color: #38bdf8;
   font-weight: 700;
   display: block;
+  line-height: 1.1;
+  margin-top: 1px;
 }
 
 .stat-node-val .pending-gain {
@@ -2004,25 +2010,22 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
     height: 380px;
   }
   .stat-radar-node {
-    padding: 6px 8px;
-  }
-  .stat-node-main {
-    gap: 8px;
+    width: 136px;
+    padding: 5px 6px;
   }
   .stat-node-name {
-    font-size: 13px;
+    font-size: 11px;
+    gap: 2px;
   }
   .stat-node-name .stat-inline-icon {
-    width: 20px;
-    height: 20px;
+    width: 15px;
+    height: 15px;
   }
   .stat-node-val {
-    font-size: 16px;
+    font-size: 15px;
   }
-  .stat-node-btns .btn {
-    width: 28px;
-    height: 28px;
-    font-size: 16px;
+  .stat-node-val small {
+    font-size: 9px;
   }
 }
 
@@ -5214,4 +5217,551 @@ body:has(.stage-clear-overlay) .volume-control-container { display: none; }
 .drop-reward-card:active {
   transform: scale(0.98);
 }
+
+/* ==========================================================
+   アバター選択（新規ゲーム作成画面：カルーセル＆サムネイル）
+   ========================================================== */
+.new-save-panel {
+  max-width: 520px !important;
+  width: 90% !important;
+  max-height: 92vh !important;
+  overflow-y: auto !important;
+  background: linear-gradient(135deg, rgba(28, 22, 45, 0.98) 0%, rgba(18, 16, 32, 0.98) 100%) !important;
+  border: 2px solid rgba(255, 215, 0, 0.45) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(255, 215, 0, 0.18) !important;
+  padding: 16px 20px 20px !important;
+  text-align: center;
+  box-sizing: border-box !important;
+}
+
+.hero-selector-wrapper {
+  margin: 10px 0 14px;
+}
+
+.hero-selector-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+/* 左右矢印ボタン */
+.hero-arrow-btn {
+  width: 42px;
+  height: 52px;
+  background: rgba(40, 32, 65, 0.85);
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  border-radius: 8px;
+  color: #ffd700;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  user-select: none;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+.hero-arrow-btn:hover {
+  background: rgba(60, 48, 100, 0.95);
+  border-color: #ffd700;
+  transform: scale(1.08);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+}
+.hero-arrow-btn:active {
+  transform: scale(0.95);
+}
+
+/* 中央の立ち絵表示枠 */
+.hero-stage-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 200px;
+}
+
+.hero-stage-portrait-frame {
+  width: 200px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(120, 90, 180, 0.35) 0%, rgba(20, 15, 35, 0.7) 100%);
+  border: 2px solid rgba(255, 215, 0, 0.45);
+  border-radius: 12px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(255, 215, 0, 0.12);
+  padding-bottom: 8px;
+}
+
+.hero-stage-shine {
+  position: absolute;
+  top: -40%;
+  left: -40%;
+  width: 180%;
+  height: 180%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.hero-stage-portrait-frame img {
+  max-width: 95%;
+  max-height: 95%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.65));
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* サムネイル一覧 */
+.hero-thumbs-list {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.hero-thumb-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 16, 35, 0.7);
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  padding: 4px;
+  cursor: pointer;
+  width: 52px;
+  height: 52px;
+  transition: all 0.18s ease;
+}
+.hero-thumb-btn:hover {
+  border-color: rgba(255, 215, 0, 0.6);
+  transform: translateY(-2px);
+}
+.hero-thumb-btn.is-active {
+  border-color: #ffd700;
+  background: linear-gradient(180deg, rgba(60, 45, 10, 0.8) 0%, rgba(25, 20, 35, 0.9) 100%);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.hero-thumb-img-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hero-thumb-img-wrap img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* ==========================================================
+   セーブデータ選択画面（リニューアルカードレイアウト）
+   ========================================================== */
+.save-slots-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.save-slot-card {
+  display: flex;
+  flex-direction: row;
+  background: linear-gradient(135deg, rgba(28, 22, 45, 0.95) 0%, rgba(18, 16, 32, 0.95) 100%);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  border-radius: 12px;
+  padding: 12px 14px;
+  gap: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  position: relative;
+}
+.save-slot-card:hover {
+  border-color: rgba(255, 215, 0, 0.8);
+  box-shadow: 0 8px 24px rgba(255, 215, 0, 0.25), 0 0 10px rgba(255, 215, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+/* 左側：立ち絵フル表示 */
+.save-slot-avatar-col {
+  width: 110px;
+  min-width: 110px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(90, 65, 140, 0.4) 0%, rgba(20, 15, 35, 0.6) 100%);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 6px 4px;
+  position: relative;
+}
+.save-slot-avatar-frame {
+  width: 100%;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.save-slot-avatar-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.7));
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* ==========================================================
+   セーブデータ選択画面（横4列 縦長カードグリッド）
+   ========================================================== */
+.save-slots-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-height: 72vh;
+  overflow-y: auto;
+  padding: 6px 4px 10px;
+}
+
+/* 縦長セーブカード */
+.save-slot-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: linear-gradient(180deg, rgba(28, 22, 45, 0.96) 0%, rgba(16, 14, 28, 0.98) 100%);
+  border: 2px solid rgba(255, 215, 0, 0.35);
+  border-radius: 12px;
+  padding: 10px;
+  gap: 8px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  position: relative;
+  min-width: 0;
+}
+.save-slot-card:hover {
+  border-color: #ffd700;
+  box-shadow: 0 8px 24px rgba(255, 215, 0, 0.3);
+  transform: translateY(-3px);
+}
+
+/* 1段目: ヘッダー（名前、Lv、所持金） */
+.save-slot-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 5px;
+}
+.save-slot-name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+.save-slot-player-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: #ffd700;
+  text-shadow: 0 0 6px rgba(255, 215, 0, 0.4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.save-slot-lv-badge {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 1px 6px;
+  border-radius: 10px;
+  border: 1px solid #74b9ff;
+  flex-shrink: 0;
+}
+.save-slot-gold-badge {
+  font-size: 12px;
+  font-weight: bold;
+  color: #fbc531;
+  text-align: right;
+  white-space: nowrap;
+}
+.save-gold-num {
+  font-size: 13px;
+}
+
+/* 2段目: 立ち絵フレーム（中央配置） */
+.save-slot-avatar-frame {
+  width: 100%;
+  height: 140px;
+  background: radial-gradient(circle, rgba(90, 65, 140, 0.45) 0%, rgba(20, 15, 35, 0.6) 100%);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 4px;
+  overflow: hidden;
+}
+.save-slot-avatar-img {
+  max-width: 95%;
+  max-height: 95%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7));
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* 3段目: ステータス縦並び ＆ 装備アイコン縦並び（横並びで配置） */
+.save-slot-mid-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+/* ステータス縦並び */
+.save-slot-stats-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.save-stat-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  min-height: 22px;
+  box-sizing: border-box;
+}
+.save-stat-line .stat-name {
+  color: #a4b0be;
+  font-weight: bold;
+  font-size: 10px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.save-stat-line .stat-icon {
+  font-size: 11px;
+  line-height: 1;
+}
+.save-stat-line .stat-val {
+  color: #fff;
+  font-weight: bold;
+  font-size: 11px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.stat-val.stat-hp { color: #ff6b81; }
+.stat-val.stat-mp { color: #70a1ff; }
+.stat-val.stat-atk { color: #ffa502; }
+.stat-val.stat-def { color: #2ed573; }
+.stat-val.stat-spd { color: #1e90ff; }
+.stat-boosted { color: #ffd700; font-weight: 800; text-shadow: 0 0 5px rgba(255, 215, 0, 0.4); }
+.stat-normal { color: #f1f2f6; }
+
+/* HP・MPゲージバー（数値分伸びて、レイアウトを超えない） */
+.save-gauge-track {
+  flex: 1;
+  height: 5px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  margin: 0 5px;
+  overflow: hidden;
+  position: relative;
+  max-width: 100%;
+}
+.save-gauge-fill {
+  height: 100%;
+  border-radius: 2px;
+  max-width: 100%;
+  transition: width 0.3s ease;
+}
+.save-gauge-fill.hp {
+  background: linear-gradient(90deg, #ff4757, #ff6b81);
+  box-shadow: 0 0 4px rgba(255, 71, 87, 0.6);
+}
+.save-gauge-fill.mp {
+  background: linear-gradient(90deg, #1e90ff, #70a1ff);
+  box-shadow: 0 0 4px rgba(30, 144, 255, 0.6);
+}
+
+/* 装備アイコン縦並び（名前なし・アイコンのみ・即座に詳細ツールチップ） */
+.save-slot-equips-col {
+  width: 44px;
+  min-width: 44px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  gap: 4px;
+  align-items: center;
+}
+.save-equip-icon-btn {
+  width: 42px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  position: relative;
+}
+.save-equip-icon-btn:hover {
+  border-color: #ffd700;
+  transform: scale(1.08);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+  z-index: 50;
+}
+.save-equip-icon-btn.no-equip {
+  opacity: 0.55;
+  border-style: dashed;
+}
+.equip-tag {
+  font-size: 8.5px;
+  color: #a4b0be;
+  line-height: 1;
+  margin-bottom: 1px;
+}
+.save-equip-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.save-equip-icon-wrap .empty-dash {
+  color: #57606f;
+  font-size: 11px;
+}
+
+/* 装備詳細ポップアップ（ホバーで即座に表示） */
+.save-equip-tooltip {
+  position: absolute;
+  right: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%) scale(0.96);
+  background: rgba(14, 12, 26, 0.98);
+  border: 1.5px solid #ffd700;
+  border-radius: 8px;
+  padding: 6px 9px;
+  min-width: 125px;
+  max-width: 165px;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+  z-index: 1000;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8), 0 0 8px rgba(255, 215, 0, 0.35);
+  text-align: left;
+}
+.save-equip-tooltip::after {
+  content: '';
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 5px solid transparent;
+  border-left-color: #ffd700;
+}
+.save-equip-icon-btn:hover .save-equip-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) scale(1);
+}
+.save-equip-tooltip .tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  padding-bottom: 3px;
+  margin-bottom: 4px;
+}
+.save-equip-tooltip .tooltip-title {
+  font-size: 11px;
+  font-weight: bold;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.save-equip-tooltip .tooltip-rarity {
+  color: #ffd700;
+  font-size: 10px;
+  letter-spacing: -1px;
+}
+.save-equip-tooltip .tooltip-stat {
+  font-size: 10px;
+  font-weight: bold;
+  margin-top: 1px;
+}
+.save-equip-tooltip .tooltip-stat.stat-atk { color: #ffa502; }
+.save-equip-tooltip .tooltip-stat.stat-def { color: #2ed573; }
+.save-equip-tooltip .tooltip-stat.stat-spd { color: #1e90ff; }
+.save-equip-tooltip .tooltip-stat.stat-hp { color: #ff6b81; }
+.save-equip-tooltip .tooltip-stat.stat-mp { color: #70a1ff; }
+.save-equip-tooltip .tooltip-desc {
+  font-size: 9px;
+  color: #a4b0be;
+  margin-top: 3px;
+  line-height: 1.25;
+}
+
+/* 4段目: つづけるボタン */
+.save-slot-action-row {
+  width: 100%;
+  margin-top: 4px;
+}
+.btn-save-select {
+  padding: 7px 12px;
+  font-size: 13.5px;
+  font-weight: bold;
+  width: 100% !important;
+}
+
+/* レスポンシブ対応（画面幅に応じて列数を調整） */
+@media (max-width: 900px) {
+  .save-slots-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .save-slots-container {
+    grid-template-columns: 1fr;
+  }
+}
+
 
