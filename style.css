@@ -1703,6 +1703,329 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 }
 
 /* ===== つよさ（ステータス） ===== */
+/* 五角形パラメーター統合UI（チャート＋頂点ノード＋ツールチップ） */
+.status-pentagon-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 490px;
+  height: 430px;
+  margin: 10px auto 16px auto;
+  background: radial-gradient(circle, rgba(32, 26, 56, 0.92) 0%, rgba(12, 9, 20, 0.98) 100%);
+  border: 2px solid var(--panel-border);
+  border-radius: 16px;
+  box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.75), 0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
+.status-radar-chart {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.status-nodes-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.status-radar-grid {
+  stroke: rgba(255, 255, 255, 0.14);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.status-radar-grid.outer {
+  stroke: rgba(255, 215, 0, 0.45);
+  stroke-width: 2.2;
+}
+
+.status-radar-axis {
+  stroke: rgba(255, 255, 255, 0.22);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 3;
+}
+
+.status-radar-poly-pending {
+  fill: rgba(74, 222, 128, 0.3);
+  stroke: #4ade80;
+  stroke-width: 3;
+  stroke-dasharray: 5 4;
+  filter: drop-shadow(0 0 8px rgba(74, 222, 128, 0.8));
+  transition: all 0.2s ease-out;
+}
+
+.status-radar-poly-base {
+  fill: rgba(56, 189, 248, 0.38);
+  stroke: #38bdf8;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.7));
+  transition: all 0.2s ease-out;
+}
+
+.status-radar-dot {
+  fill: #38bdf8;
+  stroke: #ffffff;
+  stroke-width: 2;
+  transition: all 0.2s ease-out;
+}
+
+.status-radar-dot-pending {
+  fill: #4ade80;
+  stroke: #ffffff;
+  stroke-width: 2;
+  transition: all 0.2s ease-out;
+}
+
+/* 5頂点パラメーター操作ノード（被り防止・2段組スリムカード） */
+.stat-radar-node {
+  position: absolute;
+  pointer-events: auto;
+  background: rgba(22, 17, 38, 0.96);
+  border: 2px solid rgba(255, 215, 0, 0.35);
+  border-radius: 10px;
+  padding: 6px 8px;
+  width: 122px;
+  box-sizing: border-box;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 0 10px rgba(0,0,0,0.3);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+  cursor: default;
+  z-index: 10;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.stat-radar-node:hover {
+  border-color: var(--accent, #fbbf24);
+  box-shadow: 0 0 16px rgba(251, 191, 36, 0.5), 0 6px 14px rgba(0,0,0,0.8);
+  z-index: 30;
+  transform: scale(1.04);
+}
+
+/* 各ノードの位置配置（被りを完全に防止） */
+.stat-radar-node.pos-top {
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.stat-radar-node.pos-top:hover {
+  transform: translateX(-50%) scale(1.04);
+}
+
+.stat-radar-node.pos-top-right {
+  top: 70px;
+  right: 8px;
+}
+
+.stat-radar-node.pos-bottom-right {
+  bottom: 10px;
+  right: 8px;
+}
+
+.stat-radar-node.pos-bottom-left {
+  bottom: 10px;
+  left: 8px;
+}
+
+.stat-radar-node.pos-top-left {
+  top: 70px;
+  left: 8px;
+}
+
+/* ノードヘッダー（名前・アイコン・数値） */
+.stat-node-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding-bottom: 4px;
+}
+
+.stat-node-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.stat-node-name .stat-inline-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.stat-node-val {
+  font-size: 17px;
+  font-weight: 900;
+  color: var(--accent, #fbbf24);
+  white-space: nowrap;
+  line-height: 1.1;
+  text-align: right;
+}
+
+.stat-node-val small {
+  font-size: 11px;
+  color: #38bdf8;
+  font-weight: 700;
+  display: block;
+}
+
+.stat-node-val .pending-gain {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--good, #4ade80);
+}
+
+/* ノードコントロール（ボタン行） */
+.stat-node-controls {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.stat-node-controls .btn {
+  flex: 1;
+  height: 27px;
+  padding: 0;
+  font-size: 17px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  margin: 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.35);
+}
+
+/* ホバーツールチップ解説 */
+.stat-node-tooltip {
+  position: absolute;
+  width: 220px;
+  background: rgba(12, 10, 22, 0.98);
+  border: 2px solid var(--accent, #fbbf24);
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.85), 0 0 16px rgba(251, 191, 36, 0.35);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+  z-index: 50;
+  text-align: left;
+}
+
+.stat-radar-node:hover .stat-node-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 各位置ごとのツールチップ表示方向 */
+.stat-radar-node.pos-top .stat-node-tooltip {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+}
+.stat-radar-node.pos-top:hover .stat-node-tooltip {
+  transform: translateX(-50%) translateY(10px);
+}
+
+.stat-radar-node.pos-top-right .stat-node-tooltip {
+  top: 100%;
+  right: 0;
+  transform: translateY(6px);
+}
+.stat-radar-node.pos-top-right:hover .stat-node-tooltip {
+  transform: translateY(10px);
+}
+
+.stat-radar-node.pos-bottom-right .stat-node-tooltip {
+  bottom: 100%;
+  right: 0;
+  transform: translateY(-6px);
+}
+.stat-radar-node.pos-bottom-right:hover .stat-node-tooltip {
+  transform: translateY(-10px);
+}
+
+.stat-radar-node.pos-bottom-left .stat-node-tooltip {
+  bottom: 100%;
+  left: 0;
+  transform: translateY(-6px);
+}
+.stat-radar-node.pos-bottom-left:hover .stat-node-tooltip {
+  transform: translateY(-10px);
+}
+
+.stat-radar-node.pos-top-left .stat-node-tooltip {
+  top: 100%;
+  left: 0;
+  transform: translateY(6px);
+}
+.stat-radar-node.pos-top-left:hover .stat-node-tooltip {
+  transform: translateY(10px);
+}
+
+.stat-node-tooltip .tooltip-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--accent, #fbbf24);
+  margin-bottom: 5px;
+  border-bottom: 1px solid rgba(255,255,255,0.18);
+  padding-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-node-tooltip .tooltip-gain {
+  font-size: 13px;
+  color: var(--good, #4ade80);
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.stat-node-tooltip .tooltip-note {
+  font-size: 12px;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+@media (max-width: 460px) {
+  .status-pentagon-wrap {
+    height: 380px;
+  }
+  .stat-radar-node {
+    padding: 6px 8px;
+  }
+  .stat-node-main {
+    gap: 8px;
+  }
+  .stat-node-name {
+    font-size: 13px;
+  }
+  .stat-node-name .stat-inline-icon {
+    width: 20px;
+    height: 20px;
+  }
+  .stat-node-val {
+    font-size: 16px;
+  }
+  .stat-node-btns .btn {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+}
+
 .status-list { display:flex; flex-direction:column; gap:8px; margin-bottom:18px; }
 .status-row {
   display:flex; align-items:center; gap:12px;
@@ -1755,40 +2078,201 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 .town-status-overlay .gold-badge-num { font-size: 15px; }
 
 /* ===== そうび・どうぐ ===== */
-.equip-slots { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:12px; }
+.equip-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
 .equip-slot {
-  background: var(--card-bg); border: 2px solid var(--panel-border); border-radius: 10px;
-  padding:12px; font-size:13px; min-height:76px; line-height:1.7;
-  box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
-  text-align: center;
+  background: var(--card-bg);
+  border: 2px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
-.equip-slot .slot-label { color:var(--text-light); font-size:11px; font-weight:700; margin-bottom:4px; display:block; }
+.equip-slot:hover {
+  border-color: rgba(255, 215, 0, 0.4);
+}
+.equip-slot.empty-slot {
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(18, 14, 30, 0.55);
+}
 
-.equip-icon {
-  width:56px; height:56px; flex-shrink:0;
-  display:flex; align-items:center; justify-content:center;
-  background: rgba(20,16,34,0.88);
-  border: 3px solid var(--panel-border);
+/* スロットヘッダー（スロット名・コスト） */
+.equip-slot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 6px;
+}
+.slot-badge {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--accent, #fbbf24);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.slot-status-text {
+  font-size: 11px;
+  color: var(--text-light);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+/* スロットボディ（アイコン＋情報） */
+.equip-slot-body {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.equip-slot .equip-icon {
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  margin: 0;
   border-radius: 10px;
-  box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
 }
-.equip-icon img { width:80%; height:80%; object-fit:contain; }
-.equip-slot .equip-icon { margin:2px auto 6px; }
-.equip-icon-empty { font-size:32px; opacity:0.35; }
-.equip-slot .btn-unequip { margin-top:8px; width:auto; padding:5px 14px; font-size:12px; }
+.equip-icon-empty {
+  font-size: 28px;
+  opacity: 0.35;
+}
+.equip-slot-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.equip-slot-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.equip-slot-name {
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+.equip-slot-empty-msg {
+  font-size: 13px;
+  color: var(--text-light);
+  margin-bottom: 4px;
+}
+.equip-slot-details .btn-equip-change {
+  align-self: flex-start;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+}
 
-/* そうびコストの ビジュアル表示（四角いブロック1個＝コスト1） */
-.equip-cost-bar-wrap { margin: 0 0 16px; }
-.cost-bar-label { font-size:12px; color:var(--text-light); font-weight:700; margin-bottom:6px; }
-.cost-bar-label b { color:var(--text); font-size:14px; }
-.cost-bar-label b.bad { color:var(--bad); }
-.cost-bar { display:flex; flex-wrap:wrap; gap:4px; }
-.cost-block {
-  width:16px; height:16px;
-  background: var(--card-bg); border: 2px solid var(--panel-border); border-radius: 10px;
-  box-shadow: 2px 2px 0 rgba(0,0,0,0.35);
+/* ステータスバー（ゆったりした幅） */
+.equip-slot .equip-stat-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 2px;
+  width: 100%;
 }
-.cost-block.filled { background: var(--accent); box-shadow: 2px 2px 0 rgba(0,0,0,0.35), 0 0 6px rgba(255,207,77,0.6); }
+.equip-slot .equip-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.equip-slot .equip-stat-label {
+  flex-shrink: 0;
+  width: 20px;
+}
+.equip-slot .equip-stat-label .stat-inline-icon {
+  width: 16px;
+  height: 16px;
+}
+.equip-slot .equip-stat-bar {
+  flex: 1;
+  height: 9px;
+  min-width: 60px;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.equip-slot .equip-stat-val {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--accent);
+  width: 32px;
+  text-align: right;
+}
+.equip-slot .ability-desc {
+  font-size: 11.5px;
+  color: #a7f3d0;
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+/* アクションボタン群（横並びで押しやすい配置） */
+.equip-slot-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+.equip-slot-actions .btn {
+  flex: 1;
+  margin: 0;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 8px;
+}
+.equip-slot-actions .btn-unequip {
+  background: rgba(90, 35, 45, 0.7);
+  border-color: rgba(255, 100, 100, 0.4);
+  color: #ffb3b3;
+}
+.equip-slot-actions .btn-unequip:hover {
+  background: rgba(130, 45, 60, 0.85);
+  border-color: rgba(255, 120, 120, 0.6);
+}
+
+/* そうびコストの ビジュアル表示 */
+.equip-cost-bar-wrap {
+  margin: 0 0 14px;
+  background: rgba(15, 12, 25, 0.75);
+  border: 1.5px solid rgba(255, 215, 0, 0.25);
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cost-bar-label { font-size: 13px; color: var(--text-light); font-weight: 700; margin: 0; }
+.cost-bar-label b { color: var(--accent); font-size: 15px; }
+.cost-bar-label b.bad { color: var(--bad); }
+.cost-bar { display: flex; align-items: center; gap: 6px; }
+.cost-block {
+  width: 18px; height: 18px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  transition: all 0.2s;
+}
+.cost-block.filled {
+  background: var(--accent);
+  border-color: #ffd700;
+  box-shadow: 0 0 8px rgba(255, 207, 77, 0.7);
+}
 .cost-up-anim {
   animation: costUpPulse 0.6s ease-in-out;
 }
@@ -1797,8 +2281,50 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   50% { transform: scale(1.05); filter: drop-shadow(0 0 12px #ffd700); }
   100% { transform: scale(1); filter: drop-shadow(0 0 0px #ffd700); }
 }
-.tag.cost-tag { color:var(--accent); border-color:rgba(255,207,77,0.4); }
-.tag.cost-tag-over { color:var(--bad); border-color:rgba(255,92,92,0.5); }
+.tag.cost-tag {
+  color: var(--accent);
+  border-color: rgba(255,207,77,0.4);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.tag.cost-tag-over {
+  color: var(--bad);
+  border-color: rgba(255,92,92,0.5);
+}
+.cost-num-val {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--accent, #fbbf24);
+  line-height: 1;
+}
+.tag.cost-tag-over .cost-num-val {
+  color: var(--bad, #ff5c5c);
+}
+.cost-mini-blocks {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 2px;
+}
+.cost-mini-block {
+  width: 10px;
+  height: 10px;
+  background: var(--accent, #fbbf24);
+  border: 1px solid #ffd700;
+  border-radius: 2px;
+  box-shadow: 0 0 4px rgba(255, 207, 77, 0.7);
+  display: inline-block;
+}
+.cost-mini-block.over {
+  background: var(--bad, #ff5c5c);
+  border-color: #ff9999;
+  box-shadow: 0 0 4px rgba(255, 92, 92, 0.7);
+}
 /* そうびの おもさ（つよい そうびは すばやさが さがる） */
 .tag.weight-tag { color:#c9a6ff; border-color:rgba(201,166,255,0.45); }
 /* おもさで マイナスに なった すばやさの バー */
@@ -2527,8 +3053,76 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 .admin-form input:focus { border-color: var(--accent); outline:none; }
 
 .admin-enemy-img {
-  width: 48px; height: 48px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+  width: 44px; height: 44px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
 }
+
+/* 敵ステータス一覧テーブル（横並び表示） */
+.admin-enemy-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 12px;
+  border: 2px solid var(--panel-border);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.admin-enemy-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 820px;
+  font-size: 13.5px;
+}
+.admin-enemy-table th {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 10px 8px;
+  font-weight: 700;
+  border-bottom: 2px solid var(--panel-border);
+  white-space: nowrap;
+  text-align: center;
+}
+.admin-enemy-table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  vertical-align: middle;
+  text-align: center;
+}
+.admin-enemy-table tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.admin-enemy-table tr.is-modified {
+  background: rgba(251, 197, 49, 0.12) !important;
+}
+.admin-enemy-table input[type="number"] {
+  padding: 5px 4px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: 1.5px solid var(--panel-border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: bold;
+  text-align: center;
+  transition: border-color 0.2s, background 0.2s;
+}
+.admin-enemy-table input[type="number"]:focus {
+  border-color: var(--accent);
+  background: rgba(0, 0, 0, 0.85);
+  outline: none;
+}
+.admin-enemy-table input[type="text"] {
+  padding: 5px 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: 1.5px solid var(--panel-border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13px;
+}
+.admin-enemy-table input[type="text"]:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
 .inventory-item {
   display:flex; align-items:center; justify-content:space-between; gap:12px;
   background: var(--card-bg); border: 2px solid var(--panel-border); border-radius: 10px;
@@ -3207,35 +3801,208 @@ body:has(.stage-clear-overlay) .volume-control-container { display: none; }
   100% { opacity:0; transform: translate(-50%, -75%) scale(1.3); }
 }
 
-/* Room Layout (Status + Equip) */
-#screen-status .panel {
-  max-width: 900px; /* Slightly wider to fit both */
+/* 自分の部屋・管理者設定の左タブレイアウト */
+#screen-status .panel.room-panel,
+#screen-admin .panel.room-panel {
+  max-width: 1040px;
+  width: 96%;
+  padding: 14px;
 }
+
+.room-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .room-container {
+    flex-direction: row;
+    align-items: stretch;
+    min-height: 520px;
+  }
+}
+
+/* 左側サイドバー（タブ） */
+.room-sidebar {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(16, 12, 26, 0.75);
+  border: 2px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+}
+
+@media (min-width: 768px) {
+  .room-sidebar {
+    width: 175px;
+    flex-shrink: 0;
+  }
+}
+
+.room-sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 2px dashed rgba(255, 255, 255, 0.2);
+}
+
+.room-sidebar-icon {
+  font-size: 20px;
+}
+
+.room-sidebar-title {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+}
+
+.room-nav {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
+  .room-nav {
+    flex-direction: column;
+    flex: 1;
+  }
+}
+
+.room-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 12px;
+  border-radius: 9px;
+  font-size: 13.5px;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-light);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: left;
+}
+
+.room-nav-btn .room-nav-icon {
+  font-size: 17px;
+  flex-shrink: 0;
+}
+
+.room-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.room-nav-btn.active {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.12));
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 900;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.28);
+}
+
+.room-back-btn {
+  width: 100%;
+  margin: 0 0 6px 0;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.room-back-btn:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: #ef4444;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* メインコンテンツエリア */
+.room-main-content {
+  flex: 1;
+  min-width: 0;
+  background: rgba(18, 14, 30, 0.45);
+  border: 2px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.4);
+}
+
+.room-tab-pane {
+  display: none;
+  animation: roomFadeIn 0.2s ease;
+}
+
+.room-tab-pane.active {
+  display: block;
+}
+
+@keyframes roomFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.room-pane-header {
+  margin-bottom: 14px;
+  border-bottom: 2px dashed rgba(255, 255, 255, 0.15);
+  padding-bottom: 8px;
+}
+
+.room-pane-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  color: var(--accent);
+}
+
 .room-layout {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 22px;
 }
 @media (min-width: 768px) {
   .room-layout {
     flex-direction: row;
     align-items: flex-start;
+    gap: 24px;
   }
   .room-status-area {
-    flex: 3;
+    flex: 1;
+    min-width: 320px;
   }
   .room-equip-area {
-    flex: 2;
-    background: rgba(0,0,0,0.2);
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
+    flex: 1;
+    min-width: 320px;
+    background: rgba(18, 14, 30, 0.65);
+    padding: 16px 18px;
+    border-radius: 12px;
+    border: 1.5px solid var(--panel-border);
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
   }
 }
 .room-status-area h3, .room-equip-area h3 {
   margin-top: 0;
   border-bottom: 2px dashed rgba(255,255,255,0.2);
-  padding-bottom: 5px;
+  padding-bottom: 6px;
+  font-size: 16px;
 }
 
 /* Modal Overlay for Equip Selection */
@@ -4075,18 +4842,376 @@ body:has(.stage-clear-overlay) .volume-control-container { display: none; }
 #global-tooltip {
   position: absolute;
   z-index: 9999;
-  background: rgba(20, 16, 34, 0.95);
-  border: 2px solid var(--accent);
-  padding: 10px 14px;
-  border-radius: 8px;
+  background: rgba(18, 14, 30, 0.98);
+  border: 2px solid var(--accent, #fbbf24);
+  padding: 12px 14px;
+  border-radius: 12px;
   color: white;
   pointer-events: none;
-  min-width: 180px;
-  max-width: 250px;
+  min-width: 250px;
+  max-width: 320px;
   font-size: 13px;
   text-align: left;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85), 0 0 16px rgba(251, 191, 36, 0.35);
   display: none;
-  font-family: var(--pixel-font);
+  line-height: 1.45;
+}
+
+/* 統一装備詳細カード（武器屋・スロット・モーダル共通） */
+.equip-unified-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.equip-unified-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  padding-bottom: 6px;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.equip-unified-header .slot-badge {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.equip-unified-header .rarity-label {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.equip-cost-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cost-lbl {
+  font-size: 11.5px;
+  color: var(--text-light);
+  font-weight: 700;
+}
+
+/* タイトル・アイコン部 */
+.equip-unified-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.equip-unified-main .equip-icon {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  margin: 0;
+  border-radius: 8px;
+}
+
+.equip-unified-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.equip-unified-name {
+  font-size: 15px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.equip-unified-calc {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* ステータス数値バッジ（バーではなく数値でハッキリ表示） */
+.equip-stat-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.equip-stat-val-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.equip-stat-val-badge.stat-plus {
+  border-color: rgba(74, 222, 128, 0.45);
+  background: rgba(74, 222, 128, 0.08);
+}
+
+.equip-stat-val-badge.stat-plus .stat-badge-num {
+  color: #4ade80;
+  font-size: 13.5px;
+  font-weight: 900;
+}
+
+.equip-stat-val-badge.stat-minus {
+  border-color: rgba(255, 92, 92, 0.45);
+  background: rgba(255, 92, 92, 0.08);
+}
+
+.equip-stat-val-badge.stat-minus .stat-badge-num {
+  color: #ff6b6b;
+  font-size: 13.5px;
+  font-weight: 900;
+}
+
+.stat-badge-name {
+  color: #e2e8f0;
+}
+
+/* アビリティ表示 */
+.equip-unified-ability {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 7px;
+  padding: 6px 8px;
+}
+
+.equip-unified-ability .ability-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #38bdf8;
+  margin-bottom: 2px;
+}
+
+.equip-unified-ability .ability-desc {
+  font-size: 11px;
+  color: #cbd5e1;
+  line-height: 1.35;
+}
+
+/* お店用追加情報セクション（値段・注意点・警告） */
+.equip-detail-shop-box {
+  margin-top: 4px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.2);
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.shop-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.shop-price-label {
+  font-size: 12px;
+  color: var(--text-light);
+  font-weight: 700;
+}
+
+.shop-price-val {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.shop-price-val.good {
+  color: #ffd700;
+}
+
+.shop-price-val.bad {
+  color: #ff5c5c;
+}
+
+.shop-warn-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.shop-warn-item {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
   line-height: 1.4;
 }
+
+.shop-warn-item.warn-good {
+  background: rgba(74, 222, 128, 0.15);
+  color: #86efac;
+  border: 1px solid rgba(74, 222, 128, 0.35);
+}
+
+.shop-warn-item.warn-warn {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fde047;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+.shop-warn-item.warn-bad {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.shop-warn-item.warn-info {
+  background: rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+/* 統一アイテム詳細カードスタイル */
+.item-unified-card {
+  /* equip-unified-card の基本スタイルを継承 */
+}
+
+.item-unified-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.item-unified-count b {
+  color: #f8fafc;
+  font-size: 13px;
+}
+
+.item-unified-icon {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.item-desc-text {
+  font-size: 12.5px;
+  color: #e2e8f0;
+  line-height: 1.45;
+  margin-top: 2px;
+}
+
+.item-usage-guide {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #fde047;
+  background: rgba(253, 224, 71, 0.12);
+  border-left: 3px solid #facc15;
+  padding: 5px 8px;
+  border-radius: 0 6px 6px 0;
+  margin-top: 5px;
+  line-height: 1.35;
+}
+
+/* ショップカードのホバー効果 */
+.item-card.shop-card {
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.item-card.shop-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* ==========================================================
+   獲得報酬（リザルト・帰還）の ポッポぽっぽ ポップイン演出
+   ========================================================== */
+@keyframes rewardPopIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) translateY(14px);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.15) translateY(-3px);
+  }
+  85% {
+    transform: scale(0.96) translateY(1px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.reward-pop-item {
+  animation: rewardPopIn 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.stage-clear-rewards, .run-drops-summary {
+  margin-top: 12px;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 2px solid var(--panel-border);
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+}
+
+.rewards-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+  justify-content: center;
+}
+
+.reward-stat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid var(--panel-border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+}
+.reward-stat-gold {
+  color: #fbc531;
+  border-color: rgba(251, 197, 49, 0.45);
+  background: rgba(251, 197, 49, 0.14);
+}
+.reward-stat-exp {
+  color: #00d2d3;
+  border-color: rgba(0, 210, 211, 0.45);
+  background: rgba(0, 210, 211, 0.14);
+}
+
+.drop-reward-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--card-bg, #222);
+  border: 2px solid var(--panel-border);
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.4);
+  user-select: none;
+}
+.drop-reward-card:hover {
+  transform: translateY(-2px) scale(1.04);
+  border-color: var(--accent);
+  box-shadow: 0 6px 14px rgba(255, 215, 0, 0.35);
+}
+.drop-reward-card:active {
+  transform: scale(0.98);
+}
+

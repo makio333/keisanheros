@@ -464,100 +464,125 @@
       </div>
     </div>
 
-    <!-- 自分の部屋（ステータス＆装備） -->
+    <!-- 自分の部屋（左側タブ式: ステータス・装備 / 持ち物 / 成績） -->
     <section id="screen-status" class="screen">
-      <div class="panel">
-        <h2>＊自分の部屋＊</h2>
-        
-        <div class="room-layout">
-          <div class="room-status-area">
-            <h3>ステータス <span id="status-points" class="points-badge"></span></h3>
-            <p class="flavor">ポイントを わりふろう。</p>
-            <div id="status-list" class="status-list"></div>
-            <button id="btn-status-confirm" class="btn btn-primary" style="margin-top:10px;" disabled>けってい</button>
-            <button id="btn-status-respec" class="btn" style="margin-top:8px;">⚖ ふりなおす</button>
-            <p class="hint" id="status-respec-hint">わりふりを やりなおしたい ときは、けいさんに せいかいすると ぜんぶ もどってくるよ。</p>
-          </div>
-          
-          <div class="room-equip-area">
-            <h3>そうび</h3>
-            <p class="flavor">スロットをえらんで そうびする。</p>
-            <div class="equip-slots">
-              <div class="equip-slot" id="slot-weapon"></div>
-              <div class="equip-slot" id="slot-armor"></div>
-              <div class="equip-slot" id="slot-accessory"></div>
-            </div>
-            <div id="equip-cost-bar" class="equip-cost-bar-wrap"></div>
-          </div>
-        </div>
-        
-        <div class="room-inventory-area" style="margin-top: 16px;">
-          <h3>もちもの</h3>
-          <div id="room-inventory-grid" class="inv-grid"></div>
-        </div>
-        
-        <button id="btn-show-player-stats" class="btn btn-primary" style="margin-top:14px; width:100%; font-size:15px;">📊 ぼうけんの せいせき（せいちょうグラフ）</button>
-        <button id="btn-status-back" class="btn" style="margin-top:10px;">もどる</button>
+      <div class="panel room-panel">
+        <div class="room-container">
+          <!-- 左側タブナビゲーション -->
+          <aside class="room-sidebar">
+            <button id="btn-status-back" class="btn room-back-btn">← 🚪 へやを出る</button>
 
-        <!-- プレイヤー向け成績モーダル -->
-        <div id="player-stats-modal" class="modal-overlay hidden">
-          <div class="modal-panel study-stats-modal-panel">
-            <div class="study-stats-header">
-              <h2>📊 ぼうけんの せいせき ＆ せいちょう</h2>
-              <p class="flavor">いままで べんきょうして つよくなった きろくだよ！</p>
-            </div>
-            
-            <div class="study-summary-cards">
-              <div class="study-summary-card">
-                <span class="study-card-label">といた もんだい</span>
-                <div class="study-card-val-row"><span class="study-card-value" id="player-stat-total-answers">0</span><span class="study-card-unit">もん</span></div>
-              </div>
-              <div class="study-summary-card">
-                <span class="study-card-label">ぜんたい せいとうりつ</span>
-                <div class="study-card-val-row"><span class="study-card-value" id="player-stat-overall-rate">0</span><span class="study-card-unit">%</span></div>
-              </div>
-              <div class="study-summary-card">
-                <span class="study-card-label">せいちょうど (UP!)</span>
-                <div class="study-card-val-row"><span class="study-card-value highlight-up" id="player-stat-growth-rate">+0</span><span class="study-card-unit">%</span></div>
-              </div>
+            <div class="room-sidebar-header">
+              <span class="room-sidebar-icon">🏠</span>
+              <span class="room-sidebar-title">自分の部屋</span>
             </div>
 
-            <div class="study-chart-section">
-              <h3 style="color:var(--accent); margin-bottom:4px;">📈 たんげんべつ せいちょうグラフ</h3>
-              <p class="hint" style="margin-bottom:8px;">青＝さいしょの 正答率 ｜ 金＝いまの 正答率</p>
-              <div class="study-chart-container">
-                <canvas id="player-study-chart" class="study-canvas"></canvas>
+            <nav class="room-nav">
+              <button class="room-nav-btn active" data-room-tab="status-equip" id="room-tab-btn-status-equip">
+                <span class="room-nav-icon">👤</span>
+                <span class="room-nav-text">ステータス・装備</span>
+              </button>
+              <button class="room-nav-btn" data-room-tab="inventory" id="room-tab-btn-inventory">
+                <span class="room-nav-icon">🎒</span>
+                <span class="room-nav-text">持ち物</span>
+              </button>
+              <button class="room-nav-btn" data-room-tab="stats" id="room-tab-btn-stats">
+                <span class="room-nav-icon">📊</span>
+                <span class="room-nav-text">成績</span>
+              </button>
+            </nav>
+          </aside>
+
+          <!-- 右側メインコンテンツエリア -->
+          <main class="room-main-content">
+            <!-- タブ1: ステータス・装備 -->
+            <div id="room-tab-pane-status-equip" class="room-tab-pane active">
+              <div class="room-layout">
+                <div class="room-status-area">
+                  <h3>ステータス <span id="status-points" class="points-badge"></span></h3>
+                  <p class="flavor">ポイントを わりふろう。</p>
+                  <!-- 五角形パラメーター統合UI（五角形チャート＋割り振りボタン・ホバー解説） -->
+                  <div class="status-pentagon-wrap">
+                    <svg id="status-radar-svg" viewBox="0 0 420 400" class="status-radar-chart" aria-label="ステータス五角形チャート"></svg>
+                    <div id="status-nodes-container" class="status-nodes-container"></div>
+                  </div>
+                  <div id="status-list" class="status-list" style="display:none;"></div>
+                  <button id="btn-status-confirm" class="btn btn-primary" style="margin-top:10px;" disabled>けってい</button>
+                </div>
+                
+                <div class="room-equip-area">
+                  <h3>そうび</h3>
+                  <div id="equip-cost-bar" class="equip-cost-bar-wrap"></div>
+                  <div class="equip-slots">
+                    <div class="equip-slot" id="slot-weapon"></div>
+                    <div class="equip-slot" id="slot-armor"></div>
+                    <div class="equip-slot" id="slot-accessory"></div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div class="study-chart-section" style="margin-top:16px;">
-              <div class="study-section-title-row">
-                <h3 style="color:var(--accent); margin:0;">🎯 ステージごとの せいとうりつ</h3>
-                <select id="player-stats-stage-select" class="admin-select" style="max-width:200px; padding:4px 8px; font-size:12px;"></select>
+            <!-- タブ2: 持ち物 -->
+            <div id="room-tab-pane-inventory" class="room-tab-pane">
+              <div class="room-pane-header">
+                <h3>🎒 もちもの一覧</h3>
+                <p class="flavor">持っているアイテムや設計図です。アイコンにマウスを合わせると詳しい説明が見られます。</p>
               </div>
-              <div class="study-chart-container">
-                <canvas id="player-stage-chart" class="study-canvas"></canvas>
+              <div class="room-inventory-area">
+                <div id="room-inventory-grid" class="inv-grid"></div>
               </div>
             </div>
 
-            <button id="btn-show-kanji-stats" class="btn" style="margin-top:16px; width:100%;">📝 漢字の せいせき一覧をみる</button>
+            <!-- タブ3: 成績 -->
+            <div id="room-tab-pane-stats" class="room-tab-pane">
+              <div class="room-pane-header">
+                <h3>📊 ぼうけんの せいせき ＆ せいちょう</h3>
+                <p class="flavor">いままで べんきょうして つよくなった きろくだよ！</p>
+              </div>
 
-            <button id="btn-player-stats-close" class="btn btn-primary" style="margin-top:20px; width:100%;">とじる</button>
-          </div>
-        </div>
+              <div class="study-summary-cards">
+                <div class="study-summary-card">
+                  <span class="study-card-label">といた もんだい</span>
+                  <div class="study-card-val-row"><span class="study-card-value" id="player-stat-total-answers">0</span><span class="study-card-unit">もん</span></div>
+                </div>
+                <div class="study-summary-card">
+                  <span class="study-card-label">ぜんたい せいとうりつ</span>
+                  <div class="study-card-val-row"><span class="study-card-value" id="player-stat-overall-rate">0</span><span class="study-card-unit">%</span></div>
+                </div>
+                <div class="study-summary-card">
+                  <span class="study-card-label">せいちょうど (UP!)</span>
+                  <div class="study-card-val-row"><span class="study-card-value highlight-up" id="player-stat-growth-rate">+0</span><span class="study-card-unit">%</span></div>
+                </div>
+              </div>
 
-        <!-- 漢字成績専用モーダル -->
-        <div id="kanji-stats-modal" class="modal-overlay hidden">
-          <div class="modal-panel study-stats-modal-panel" style="max-height:85vh; display:flex; flex-direction:column;">
-            <div class="study-stats-header" style="flex-shrink:0;">
-              <h2>📝 漢字の せいせき一覧</h2>
-              <p class="flavor">漢字の とくい・にがて が わかるよ！</p>
+              <div class="study-chart-section">
+                <h3 style="color:var(--accent); margin-bottom:4px;">📈 たんげんべつ せいちょうグラフ</h3>
+                <p class="hint" style="margin-bottom:8px;">青＝さいしょの 正答率 ｜ 金＝いまの 正答率</p>
+                <div class="study-chart-container">
+                  <canvas id="player-study-chart" class="study-canvas"></canvas>
+                </div>
+              </div>
+
+              <div class="study-chart-section" style="margin-top:16px;">
+                <div class="study-section-title-row">
+                  <h3 style="color:var(--accent); margin:0;">🎯 ステージごとの せいとうりつ</h3>
+                  <select id="player-stats-stage-select" class="admin-select" style="max-width:200px; padding:4px 8px; font-size:12px;"></select>
+                </div>
+                <div class="study-chart-container">
+                  <canvas id="player-stage-chart" class="study-canvas"></canvas>
+                </div>
+              </div>
+
+              <!-- 漢字の成績セクション -->
+              <div class="study-chart-section" style="margin-top:16px;">
+                <h3 style="color:var(--accent); margin-bottom:4px;">📝 漢字の せいせき一覧</h3>
+                <p class="flavor" style="margin-bottom:8px;">漢字の とくい・にがて が わかるよ！</p>
+                <div id="player-kanji-stats-list" style="max-height:280px; overflow-y:auto; background:rgba(0,0,0,0.3); border-radius:6px; padding:10px; font-size:14px; text-align:left;">
+                  （まだ 漢字の問題を 解いていません）
+                </div>
+              </div>
             </div>
-            <div id="player-kanji-stats-list" style="flex:1; overflow-y:auto; background:rgba(0,0,0,0.3); border-radius:4px; padding:10px; font-size:14px; text-align:left; margin-top:10px;">
-              （まだ 漢字の問題を 解いていません）
-            </div>
-            <button id="btn-kanji-stats-close" class="btn btn-primary" style="margin-top:20px; width:100%; flex-shrink:0;">とじる</button>
-          </div>
+          </main>
         </div>
 
         <!-- 装備選択モーダル -->
@@ -737,173 +762,231 @@
       </div>
     </section>
 
-    <!-- 管理者設定（敵カスタマイズ ＆ 保護者向けレポート） -->
+    <!-- 管理者設定（左側タブ式: 学習レポート / 時間制限 / データ編集 / テスト・管理） -->
     <section id="screen-admin" class="screen">
-      <div class="panel">
-        <h2>＊かんりしゃせってい＊</h2>
-        <p class="flavor">敵のステータスや見た目の変更、学習成績レポートを確認できます。</p>
+      <div class="panel room-panel admin-panel">
+        <div class="room-container admin-container">
+          <!-- 左側タブナビゲーション -->
+          <aside class="room-sidebar admin-sidebar">
+            <button id="btn-admin-back" class="btn room-back-btn">← 🚪 もどる</button>
 
-        <!-- 保護者向け 学習成績・成長グラフ セクション -->
-        <div id="admin-study-stats-section" class="admin-timelimit-section" style="margin-bottom:24px; border-color:var(--accent); background:rgba(30, 24, 48, 0.95);">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:6px;">
-            <h3 style="color:var(--accent); font-size:18px; margin:0;">📊 学習成績・成長グラフ（保護者向けレポート）</h3>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <label style="font-size:13px; font-weight:bold; color:var(--text-light);">対象セーブデータ:</label>
-              <select id="admin-stats-slot-select" class="admin-select" style="min-width:180px; padding:6px 10px; font-size:13px;"></select>
+            <div class="room-sidebar-header">
+              <span class="room-sidebar-icon">⚙️</span>
+              <span class="room-sidebar-title">管理者設定</span>
             </div>
-          </div>
-          <p class="flavor" style="margin:4px 0 14px;">お子様の単元・ステージごとの解答履歴、最初の正答率と最新の正答率の比較、苦手・得意分野を詳細に可視化します。</p>
 
-          <!-- サマリーカード -->
-          <div class="study-summary-cards">
-            <div class="study-summary-card">
-              <span class="study-card-label">総解答数</span>
-              <div class="study-card-val-row"><span class="study-card-value" id="admin-stat-total-answers">0</span><span class="study-card-unit">問</span></div>
-            </div>
-            <div class="study-summary-card">
-              <span class="study-card-label">総合正答率</span>
-              <div class="study-card-val-row"><span class="study-card-value" id="admin-stat-overall-rate">0</span><span class="study-card-unit">%</span></div>
-            </div>
-            <div class="study-summary-card">
-              <span class="study-card-label">平均成長度 (UP!)</span>
-              <div class="study-card-val-row"><span class="study-card-value highlight-up" id="admin-stat-growth-rate">+0</span><span class="study-card-unit">%</span></div>
-            </div>
-            <div class="study-summary-card">
-              <span class="study-card-label">学習済み単元数</span>
-              <div class="study-card-val-row"><span class="study-card-value" id="admin-stat-unit-count">0</span><span class="study-card-unit">単元</span></div>
-            </div>
-          </div>
+            <nav class="room-nav admin-nav">
+              <button class="room-nav-btn admin-nav-btn active" data-admin-tab="report" id="admin-tab-btn-report">
+                <span class="room-nav-icon">📊</span>
+                <span class="room-nav-text">学習レポート</span>
+              </button>
+              <button class="room-nav-btn admin-nav-btn" data-admin-tab="timelimit" id="admin-tab-btn-timelimit">
+                <span class="room-nav-icon">⏰</span>
+                <span class="room-nav-text">時間制限</span>
+              </button>
+              <button class="room-nav-btn admin-nav-btn" data-admin-tab="data-edit" id="admin-tab-btn-data-edit">
+                <span class="room-nav-icon">⚔️</span>
+                <span class="room-nav-text">データ編集</span>
+              </button>
+              <button class="room-nav-btn admin-nav-btn" data-admin-tab="tools" id="admin-tab-btn-tools">
+                <span class="room-nav-icon">🛠️</span>
+                <span class="room-nav-text">テスト・管理</span>
+              </button>
+            </nav>
+          </aside>
 
-          <!-- 単元別 成長比較グラフ -->
-          <div class="study-chart-section">
-            <div class="study-section-title-row">
-              <h4 style="color:var(--accent); margin:0;">📈 単元別 正答率の推移（初回 ➔ 最新）</h4>
-              <div style="display:flex; gap:6px;">
-                <button id="btn-admin-filter-all" class="btn btn-sm btn-filter is-active">すべて</button>
-                <button id="btn-admin-filter-math" class="btn btn-sm btn-filter">さんすう</button>
-                <button id="btn-admin-filter-kanji" class="btn btn-sm btn-filter">こくご(漢字)</button>
+          <!-- 右側メインコンテンツエリア -->
+          <main class="room-main-content admin-main-content">
+            <!-- タブ1: 学習成績・成長グラフ（保護者向けレポート） -->
+            <div id="admin-tab-pane-report" class="room-tab-pane admin-tab-pane active">
+              <div id="admin-study-stats-section" class="admin-timelimit-section" style="border-color:var(--accent); background:rgba(30, 24, 48, 0.95);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:6px;">
+                  <h3 style="color:var(--accent); font-size:18px; margin:0;">📊 学習成績・成長グラフ（保護者向けレポート）</h3>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <label style="font-size:13px; font-weight:bold; color:var(--text-light);">対象セーブデータ:</label>
+                    <select id="admin-stats-slot-select" class="admin-select" style="min-width:180px; padding:6px 10px; font-size:13px;"></select>
+                  </div>
+                </div>
+                <p class="flavor" style="margin:4px 0 14px;">お子様の単元・ステージごとの解答履歴、最初の正答率と最新の正答率の比較、苦手・得意分野を詳細に可視化します。</p>
+
+                <!-- サマリーカード -->
+                <div class="study-summary-cards">
+                  <div class="study-summary-card">
+                    <span class="study-card-label">総解答数</span>
+                    <div class="study-card-val-row"><span class="study-card-value" id="admin-stat-total-answers">0</span><span class="study-card-unit">問</span></div>
+                  </div>
+                  <div class="study-summary-card">
+                    <span class="study-card-label">総合正答率</span>
+                    <div class="study-card-val-row"><span class="study-card-value" id="admin-stat-overall-rate">0</span><span class="study-card-unit">%</span></div>
+                  </div>
+                  <div class="study-summary-card">
+                    <span class="study-card-label">平均成長度 (UP!)</span>
+                    <div class="study-card-val-row"><span class="study-card-value highlight-up" id="admin-stat-growth-rate">+0</span><span class="study-card-unit">%</span></div>
+                  </div>
+                  <div class="study-summary-card">
+                    <span class="study-card-label">学習済み単元数</span>
+                    <div class="study-card-val-row"><span class="study-card-value" id="admin-stat-unit-count">0</span><span class="study-card-unit">単元</span></div>
+                  </div>
+                </div>
+
+                <!-- 単元別 成長比較グラフ -->
+                <div class="study-chart-section">
+                  <div class="study-section-title-row">
+                    <h4 style="color:var(--accent); margin:0;">📈 単元別 正答率の推移（初回 ➔ 最新）</h4>
+                    <div style="display:flex; gap:6px;">
+                      <button id="btn-admin-filter-all" class="btn btn-sm btn-filter is-active">すべて</button>
+                      <button id="btn-admin-filter-math" class="btn btn-sm btn-filter">さんすう</button>
+                      <button id="btn-admin-filter-kanji" class="btn btn-sm btn-filter">こくご(漢字)</button>
+                    </div>
+                  </div>
+                  <p class="hint" style="margin:4px 0 8px;">青バー＝初期の正答率 ｜ 金バー＝最新の正答率 ｜ 右側の数値＝成長率（UP!）</p>
+                  <div class="study-chart-container">
+                    <canvas id="admin-study-chart" class="study-canvas"></canvas>
+                  </div>
+                </div>
+
+                <!-- ステージ別 推移グラフ -->
+                <div class="study-chart-section" style="margin-top:18px;">
+                  <div class="study-section-title-row">
+                    <h4 style="color:var(--accent); margin:0;">🎯 ステージ・エリア別 正答率推移グラフ</h4>
+                    <select id="admin-stats-stage-select" class="admin-select" style="max-width:260px; padding:4px 8px; font-size:12px;"></select>
+                  </div>
+                  <div class="study-chart-container">
+                    <canvas id="admin-stage-chart" class="study-canvas"></canvas>
+                  </div>
+                </div>
+
+                <!-- 詳細データテーブル -->
+                <div class="study-table-section" style="margin-top:18px;">
+                  <h4 style="color:var(--accent); margin-bottom:8px;">📋 単元・ステージ別 詳細データ一覧</h4>
+                  <div class="study-table-wrap">
+                    <table class="study-data-table" id="admin-study-table">
+                      <thead>
+                        <tr>
+                          <th>教科 / 学年</th>
+                          <th>単元・ステージ名</th>
+                          <th>解答数 (正解)</th>
+                          <th>初回正答率</th>
+                          <th>最新正答率</th>
+                          <th>成長度</th>
+                          <th>ステータス</th>
+                        </tr>
+                      </thead>
+                      <tbody id="admin-study-table-body">
+                        <tr><td colspan="7" style="text-align:center; padding:16px;">データがありません</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
-            <p class="hint" style="margin:4px 0 8px;">青バー＝初期の正答率 ｜ 金バー＝最新の正答率 ｜ 右側の数値＝成長率（UP!）</p>
-            <div class="study-chart-container">
-              <canvas id="admin-study-chart" class="study-canvas"></canvas>
+
+            <!-- タブ2: プレイ時間制限 -->
+            <div id="admin-tab-pane-timelimit" class="room-tab-pane admin-tab-pane">
+              <div id="admin-timelimit-section" class="admin-timelimit-section">
+                <h3>⏰ じかんせいげん（セーブデータごと）</h3>
+                <p class="flavor" style="margin-bottom:4px;">セーブデータごとに あそべる時間（分）を せっていできます。「つづきから」よみこむたびに、その分数から カウントダウンが スタートします。</p>
+
+                <div class="admin-timelimit-bulk">
+                  <label class="admin-checkbox-row">
+                    <input type="checkbox" id="admin-timelimit-bulk-enabled">
+                    <span>じかんせいげんを ゆうこうにする</span>
+                  </label>
+                  <label>プレイじかん（分）</label>
+                  <input type="number" id="admin-timelimit-bulk-minutes" class="admin-time-input" min="1" value="30">
+                  <button id="btn-admin-timelimit-bulk-apply" class="btn good" style="margin-top:6px;">✅ せんたくした セーブに まとめて てきよう（<span id="admin-timelimit-bulk-count">0</span>件）</button>
+                </div>
+
+                <div id="admin-timelimit-slot-list" class="inventory-list" style="margin-top:12px;"></div>
+              </div>
             </div>
-          </div>
 
-          <!-- ステージ別 推移グラフ -->
-          <div class="study-chart-section" style="margin-top:18px;">
-            <div class="study-section-title-row">
-              <h4 style="color:var(--accent); margin:0;">🎯 ステージ・エリア別 正答率推移グラフ</h4>
-              <select id="admin-stats-stage-select" class="admin-select" style="max-width:260px; padding:4px 8px; font-size:12px;"></select>
+            <!-- タブ3: データ編集 -->
+            <div id="admin-tab-pane-data-edit" class="room-tab-pane admin-tab-pane">
+              <!-- エリア別 難易度倍率セクション -->
+              <div id="admin-difficulty-section" style="margin-bottom:20px;">
+                <h3>⚔️ エリアごとの難易度倍率（0.1倍〜10.0倍）</h3>
+                <p class="flavor" style="margin-bottom:10px;">ステージの敵のつよさ（HP・攻撃力）をエリアごとに調整できます。基本設定は算数・国語ともにエリアが進むごとに+1.0倍ずつ上昇します。</p>
+                <div style="display:flex; align-items:center; gap:6px; margin-bottom:12px; flex-wrap:wrap;">
+                  <span style="font-size:12px; color:var(--text-light);">一括設定:</span>
+                  <button type="button" class="btn btn-sm btn-diff-preset" data-preset="0.5" style="padding:4px 8px; font-size:11.5px;">0.5倍(易)</button>
+                  <button type="button" class="btn btn-sm btn-diff-preset" data-preset="1.0" style="padding:4px 8px; font-size:11.5px;">1.0倍(標準)</button>
+                  <button type="button" class="btn btn-sm btn-diff-preset" data-preset="2.0" style="padding:4px 8px; font-size:11.5px;">2.0倍(難)</button>
+                  <button type="button" class="btn btn-sm btn-diff-preset" data-preset="5.0" style="padding:4px 8px; font-size:11.5px;">5.0倍(激難)</button>
+                  <button type="button" class="btn btn-sm btn-diff-preset" data-preset="10.0" style="padding:4px 8px; font-size:11.5px;">10.0倍(極限)</button>
+                </div>
+                <div id="admin-difficulty-list" style="display:flex; flex-direction:column; gap:12px;"></div>
+                <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+                  <button id="btn-admin-difficulty-save" class="btn good">✅ 倍率をほぞんする</button>
+                  <button id="btn-admin-difficulty-reset" class="btn">🔄 標準（+1.0倍ずつ）にもどす</button>
+                </div>
+              </div>
+
+              <!-- 敵・装備・アイテムの編集 -->
+              <div id="admin-list-view">
+                <h3>敵・装備・アイテムの編集</h3>
+                <select id="admin-category-select" class="admin-select">
+                  <option value="tower">草原の敵</option>
+                  <option value="dungeon">沼地の敵</option>
+                  <option value="crypt">地下ダンジョンの敵</option>
+                  <option value="bandit">盗賊のアジトの敵</option>
+                  <option value="boss">ボス</option>
+                  <option value="equipment">装備</option>
+                  <option value="item">アイテム</option>
+                </select>
+                <div id="admin-enemy-list" class="inventory-list" style="margin-top:10px;"></div>
+              </div>
+
+              <div id="admin-edit-view" class="hidden">
+                <h3>データの編集</h3>
+                <div class="admin-form">
+                  <label>名前</label><input type="text" id="admin-edit-name">
+                  <label>見た目 (絵文字 または 画像URL)</label><input type="text" id="admin-edit-emoji">
+                  <label>HP</label><input type="number" id="admin-edit-hp">
+                  <label>攻撃力</label><input type="number" id="admin-edit-atk">
+                  <label>防御力</label><input type="number" id="admin-edit-def">
+                  <label>素早さ</label><input type="number" id="admin-edit-spd">
+                  <label>経験値</label><input type="number" id="admin-edit-exp">
+                  <label>ドロップG (最小)</label><input type="number" id="admin-edit-gmin">
+                  <label>ドロップG (最大)</label><input type="number" id="admin-edit-gmax">
+                  <hr style="margin:10px 0; border:1px solid #444;">
+                  <label>効果量（アイテム回復量など）</label><input type="number" id="admin-edit-value">
+                  <div id="admin-edit-for-battle-container" style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+                    <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:13px;">
+                      <input type="checkbox" id="admin-edit-for-battle">
+                      <span>⚔️ 「戦闘用」タグ（戦闘中に使用可能）</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="menu-grid">
+                  <button id="btn-admin-save" class="btn good">ほぞんする</button>
+                  <button id="btn-admin-reset" class="btn bad">デフォルトに戻す</button>
+                  <button id="btn-admin-cancel" class="btn">キャンセル</button>
+                </div>
+              </div>
             </div>
-            <div class="study-chart-container">
-              <canvas id="admin-stage-chart" class="study-canvas"></canvas>
+
+            <!-- タブ4: テスト・管理 -->
+            <div id="admin-tab-pane-tools" class="room-tab-pane admin-tab-pane">
+              <!-- テスト用プレイ セクション -->
+              <div id="admin-testplay-section" style="padding:18px; border:2px solid #2ecc71; background:rgba(46, 204, 113, 0.15); border-radius:12px; text-align:center;">
+                <h3 style="color:#2ecc71; margin:0 0 8px; font-size:20px;">🎮 テスト用プレイモード</h3>
+                <p class="flavor" style="margin-bottom:14px; font-size:14px; color:#fff;">
+                  すべてのアイテム所持（各99個）・スキルポイント9999・所持金99,999,999Gの状態でゲームをプレイ・検証できます。
+                </p>
+                <button id="btn-admin-start-testplay" class="btn btn-primary" style="background:linear-gradient(135deg, #27ae60, #2ecc71); font-size:18px; padding:14px 28px; font-weight:bold; box-shadow:0 4px 14px rgba(46,204,113,0.4); width:100%; max-width:360px;">
+                  🚀 テスト用プレイを開始する
+                </button>
+              </div>
+
+              <!-- デバッグ・管理操作 -->
+              <div style="margin-top:20px; padding:16px; background:rgba(0,0,0,0.3); border:1.5px solid var(--panel-border); border-radius:12px; display:flex; flex-direction:column; gap:12px;">
+                <h3 style="margin:0; font-size:16px; color:var(--accent);">🛠️ 管理・デバッグ操作</h3>
+                <button id="btn-admin-get-gold" class="btn" style="background-color: var(--atb); color: var(--text);">💰 10,000ゴールド獲得</button>
+                <button id="btn-admin-delete-save" class="btn bad">🗑️ セーブデータを削除する</button>
+              </div>
             </div>
-          </div>
-
-          <!-- 詳細データテーブル -->
-          <div class="study-table-section" style="margin-top:18px;">
-            <h4 style="color:var(--accent); margin-bottom:8px;">📋 単元・ステージ別 詳細データ一覧</h4>
-            <div class="study-table-wrap">
-              <table class="study-data-table" id="admin-study-table">
-                <thead>
-                  <tr>
-                    <th>教科 / 学年</th>
-                    <th>単元・ステージ名</th>
-                    <th>解答数 (正解)</th>
-                    <th>初回正答率</th>
-                    <th>最新正答率</th>
-                    <th>成長度</th>
-                    <th>ステータス</th>
-                  </tr>
-                </thead>
-                <tbody id="admin-study-table-body">
-                  <tr><td colspan="7" style="text-align:center; padding:16px;">データがありません</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div id="admin-timelimit-section" class="admin-timelimit-section">
-          <h3>⏰ じかんせいげん（セーブデータごと）</h3>
-          <p class="flavor" style="margin-bottom:4px;">セーブデータごとに あそべる時間（分）を せっていできます。「つづきから」よみこむたびに、その分数から カウントダウンが スタートします。</p>
-
-          <div class="admin-timelimit-bulk">
-            <label class="admin-checkbox-row">
-              <input type="checkbox" id="admin-timelimit-bulk-enabled">
-              <span>じかんせいげんを ゆうこうにする</span>
-            </label>
-            <label>プレイじかん（分）</label>
-            <input type="number" id="admin-timelimit-bulk-minutes" class="admin-time-input" min="1" value="30">
-            <button id="btn-admin-timelimit-bulk-apply" class="btn good" style="margin-top:6px;">✅ せんたくした セーブに まとめて てきよう（<span id="admin-timelimit-bulk-count">0</span>件）</button>
-          </div>
-
-          <div id="admin-timelimit-slot-list" class="inventory-list" style="margin-top:12px;"></div>
-        </div>
-
-        <!-- エリア別 難易度倍率セクション -->
-        <div id="admin-difficulty-section" style="margin-top:20px;">
-          <h3>⚔️ エリアごとの難易度倍率</h3>
-          <p class="flavor" style="margin-bottom:10px;">ステージの敵のつよさをエリアごとに調整できます。数字が大きいほど敵が強くなります。</p>
-          <div id="admin-difficulty-list" style="display:flex; flex-direction:column; gap:12px;"></div>
-          <button id="btn-admin-difficulty-save" class="btn good" style="margin-top:14px;">✅ 倍率をほぞんする</button>
-        </div>
-
-        <!-- テスト用プレイ セクション -->
-        <div id="admin-testplay-section" style="margin-top:20px; padding:18px; border:2px solid #2ecc71; background:rgba(46, 204, 113, 0.15); border-radius:12px; text-align:center;">
-          <h3 style="color:#2ecc71; margin:0 0 8px; font-size:20px;">🎮 テスト用プレイモード</h3>
-          <p class="flavor" style="margin-bottom:14px; font-size:14px; color:#fff;">
-            すべてのアイテム所持（各99個）・スキルポイント9999・所持金99,999,999Gの状態でゲームをプレイ・検証できます。
-          </p>
-          <button id="btn-admin-start-testplay" class="btn btn-primary" style="background:linear-gradient(135deg, #27ae60, #2ecc71); font-size:18px; padding:14px 28px; font-weight:bold; box-shadow:0 4px 14px rgba(46,204,113,0.4); width:100%; max-width:360px;">
-            🚀 テスト用プレイを開始する
-          </button>
-        </div>
-
-        <div id="admin-list-view">
-          <h3>敵リスト</h3>
-          <select id="admin-category-select" class="admin-select">
-            <option value="tower">草原の敵</option>
-            <option value="dungeon">沼地の敵</option>
-            <option value="crypt">地下ダンジョンの敵</option>
-            <option value="bandit">盗賊のアジトの敵</option>
-            <option value="boss">ボス</option>
-            <option value="equipment">装備</option>
-            <option value="item">アイテム</option>
-          </select>
-          <div id="admin-enemy-list" class="inventory-list" style="margin-top:10px;"></div>
-          <button id="btn-admin-get-gold" class="btn" style="margin-top:10px; background-color: var(--atb); color: var(--text);">💰 10,000ゴールド獲得</button>
-          <button id="btn-admin-delete-save" class="btn bad" style="margin-top:10px;">🗑️ セーブデータを削除する</button>
-          <button id="btn-admin-back" class="btn" style="margin-top:10px;">もどる</button>
-        </div>
-
-        <div id="admin-edit-view" class="hidden">
-          <h3>敵の編集</h3>
-          <div class="admin-form">
-            <label>名前</label><input type="text" id="admin-edit-name">
-            <label>見た目 (絵文字 または 画像URL)</label><input type="text" id="admin-edit-emoji">
-            <label>HP</label><input type="number" id="admin-edit-hp">
-            <label>攻撃力</label><input type="number" id="admin-edit-atk">
-            <label>防御力</label><input type="number" id="admin-edit-def">
-            <label>素早さ</label><input type="number" id="admin-edit-spd">
-            <label>経験値</label><input type="number" id="admin-edit-exp">
-            <label>ドロップG (最小)</label><input type="number" id="admin-edit-gmin">
-            <label>ドロップG (最大)</label><input type="number" id="admin-edit-gmax">
-            <hr style="margin:10px 0; border:1px solid #444;">
-            <label>効果量（アイテム回復量など）</label><input type="number" id="admin-edit-value">
-            <div id="admin-edit-for-battle-container" style="display:flex; align-items:center; gap:8px; margin-top:8px;">
-              <label style="cursor:pointer; display:flex; align-items:center; gap:6px; font-size:13px;">
-                <input type="checkbox" id="admin-edit-for-battle">
-                <span>⚔️ 「戦闘用」タグ（戦闘中に使用可能）</span>
-              </label>
-            </div>
-          </div>
-          <div class="menu-grid">
-            <button id="btn-admin-save" class="btn good">ほぞんする</button>
-            <button id="btn-admin-reset" class="btn bad">デフォルトに戻す</button>
-            <button id="btn-admin-cancel" class="btn">キャンセル</button>
-          </div>
+          </main>
         </div>
       </div>
     </section>
