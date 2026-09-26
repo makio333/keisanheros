@@ -5537,7 +5537,6 @@ function renderStatus(){
 
   // 五角形パラメーター統合UI（五角形チャート＋5頂点割り振りボタン・ホバー解説）を描画
   renderStatusPentagonUI(bonusMap, remaining);
-
   const confirmBtn = $('btn-status-confirm');
   const total = statusPendingTotal();
   confirmBtn.disabled = total <= 0;
@@ -7417,6 +7416,15 @@ function bindEvents(){
       setRoomTab(btn.dataset.roomTab);
     };
   });
+
+  const homeWin = $('home-player-window');
+  if (homeWin) {
+    homeWin.style.cursor = 'pointer';
+    homeWin.addEventListener('click', (e) => {
+      if (e.target.closest('#btn-toggle-home-status')) return;
+      showStatus();
+    });
+  }
   on('btn-skills-back', showHome);
   on('btn-items-back', showHome);
   on('btn-equip-select-close', closeEquipSelectModal);
