@@ -28,11 +28,13 @@ function hideTooltip() {
 }
 function updateTooltipPos(e) {
   if (!globalTooltip || globalTooltip.style.display === 'none') return;
-  globalTooltip.style.left = (e.pageX + 15) + 'px';
-  globalTooltip.style.top = (e.pageY + 15) + 'px';
+  const clientX = e.clientX !== undefined ? e.clientX : (e.pageX - (window.scrollX || window.pageXOffset || 0));
+  const clientY = e.clientY !== undefined ? e.clientY : (e.pageY - (window.scrollY || window.pageYOffset || 0));
+  globalTooltip.style.left = (clientX + 15) + 'px';
+  globalTooltip.style.top = (clientY + 15) + 'px';
   const rect = globalTooltip.getBoundingClientRect();
   if (rect.right > window.innerWidth) globalTooltip.style.left = (window.innerWidth - rect.width - 10) + 'px';
-  if (rect.bottom > window.innerHeight) globalTooltip.style.top = (e.pageY - rect.height - 10) + 'px';
+  if (rect.bottom > window.innerHeight) globalTooltip.style.top = Math.max(10, clientY - rect.height - 10) + 'px';
 }
 document.addEventListener('mousemove', updateTooltipPos);
 
@@ -4037,15 +4039,15 @@ function winBattle(){
     `${gold}ゴールドを てにいれた！`,
   ];
 
-  // ドロップ
+  // ドロップ（1ステージ5戦化に合わせて確率を調整）
   const drops = [];
-  if (Math.random() < 0.35){
+  if (Math.random() < 0.12){ // 35% -> 12%
     const it = pick(ITEM_DB);
     addItem(it.id, 1);
     drops.push({ kind:'item', id:it.id, name:it.name, icon:it.emoji });
     rewards.push(`${it.name}を ひろった！`);
   }
-  if (e.isBoss || Math.random() < 0.12){
+  if (e.isBoss || Math.random() < 0.04){ // 通常敵: 12% -> 4%（ボスは確定）
     const db = pick(EQUIP_DB);
     const rarities = e.isBoss ? [3, 3, 4, 4, 4, 5] : [1, 2, 2];
     const rarity = pick(rarities);
@@ -4055,7 +4057,7 @@ function winBattle(){
     rewards.push(`そうび「<span class="rarity-${rarity}">${db.name}</span>」を てにいれた！`);
   }
   // 古代装備の せっけいず（レア・ドロップ）
-  if (Math.random() < (e.isBoss ? 0.15 : 0.04)){
+  if (Math.random() < (e.isBoss ? 0.08 : 0.015)){ // ボス: 15% -> 8%, 通常敵: 4% -> 1.5%
     const bp = pick(BLUEPRINT_DB);
     addItem(bp.id, 1);
     drops.push({ kind:'blueprint', id:bp.id, name:bp.name, icon:bp.emoji });
@@ -7397,8 +7399,8 @@ function bindEvents(){
 
   on('btn-goto-admin', () => requestAdminAccess(showAdmin));
 
-  // タイトル画面 魔王城の秘密プリント
-  on('title-demon-castle-hotspot', openDemonCastleModal);
+  // タイトル画面 魔王城の秘密プリント（一旦無効化）
+  // on('title-demon-castle-hotspot', openDemonCastleModal);
   on('btn-demon-secret-close', () => {
     const m = $('modal-demon-castle-secret');
     if (m) m.classList.add('hidden');

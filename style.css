@@ -4250,26 +4250,8 @@ body:has(.stage-clear-overlay) .volume-control-container { display: none; }
 }
 
 .title-demon-castle-hotspot {
-  position: absolute !important;
-  right: 13% !important;
-  top: 15% !important;
-  width: 22vw !important;
-  max-width: 250px;
-  height: 25vh !important;
-  max-height: 200px;
-  cursor: pointer !important;
-  z-index: 100 !important;
-  pointer-events: auto !important;
-  background: transparent !important;
-  touch-action: manipulation;
-  border-radius: 20%;
-  transition: all 0.3s ease;
-}
-
-.title-demon-castle-hotspot:hover {
-  background: radial-gradient(circle, rgba(168,85,247,0.4) 0%, rgba(224,86,253,0) 70%) !important;
-  box-shadow: 0 0 30px rgba(168,85,247,0.6);
-  transform: scale(1.05);
+  display: none !important;
+  pointer-events: none !important;
 }
 
 /* 魔王城モーダル */
@@ -4843,8 +4825,8 @@ body:has(.stage-clear-overlay) .volume-control-container { display: none; }
   text-shadow: 1px 1px 2px black, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
 }
 #global-tooltip {
-  position: absolute;
-  z-index: 9999;
+  position: fixed !important;
+  z-index: 99999999 !important;
   background: rgba(18, 14, 30, 0.98);
   border: 2px solid var(--accent, #fbbf24);
   padding: 12px 14px;
