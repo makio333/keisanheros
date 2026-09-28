@@ -5,6 +5,7 @@ const assetModules = import.meta.glob([
   './画像/ステージ/戦闘背景/*.png',
   './画像/スキル/**/*',
   './画像/エフェクト/**/*',
+  './画像/キャラクター/**/*',
   './画像/title_*.{png,jpg}',
   './画像/bg_*.jpg',
   './画像/training_dummy*.{png,jpg}',
