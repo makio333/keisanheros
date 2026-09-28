@@ -2109,10 +2109,10 @@ function generateEnemy(zone, floor){
    プレイヤー アバター立ち絵データ（男女2パターンずつ）
    ========================================================== */
 const HERO_AVATARS = [
-  { id: 'hero_female_1', name: '少女の冒険者', gender: 'female', job: '剣士・戦士', desc: '活発なポニーテールと剣技が自慢の少女', image: '画像/キャラクター/hero_female_1.png' },
-  { id: 'hero_male_1', name: '青年の騎士', gender: 'male', job: '騎士・勇者', desc: '聖剣をたずさえた誇り高き青年騎士', image: '画像/キャラクター/hero_male_1.png' },
-  { id: 'hero_male_2', name: '少年の冒険者', gender: 'male', job: '冒険者・シーフ', desc: 'ゴーグルと身軽な動きで挑む元気な少年', image: '画像/キャラクター/hero_male_2.png' },
-  { id: 'hero_female_2', name: '星詠みの少女', gender: 'female', job: '魔法使い', desc: '星空のローブと水晶の杖を持つ神秘的な少女', image: '画像/キャラクター/hero_female_2.png' },
+  { id: 'hero_female_1', name: '少女の冒険者', gender: 'female', job: '剣士・戦士', desc: '活発なポニーテールと剣技が自慢の少女', image: 'assets/characters/hero_female_1.png' },
+  { id: 'hero_male_1', name: '青年の騎士', gender: 'male', job: '騎士・勇者', desc: '聖剣をたずさえた誇り高き青年騎士', image: 'assets/characters/hero_male_1.png' },
+  { id: 'hero_male_2', name: '少年の冒険者', gender: 'male', job: '冒険者・シーフ', desc: 'ゴーグルと身軽な動きで挑む元気な少年', image: 'assets/characters/hero_male_2.png' },
+  { id: 'hero_female_2', name: '星詠みの少女', gender: 'female', job: '魔法使い', desc: '星空のローブと水晶の杖を持つ神秘的な少女', image: 'assets/characters/hero_female_2.png' },
 ];
 
 function getHeroAvatar(avatarId) {
