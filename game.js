@@ -7483,14 +7483,14 @@ function bindEvents(){
       btn.appendChild(img);
       btn.appendChild(name);
       
-      if (player.avatar === avatar.id) {
+      if (G.player.avatar === avatar.id) {
         btn.style.border = '2px solid #f1c40f';
         btn.style.background = 'rgba(241, 196, 15, 0.2)';
       }
       
       btn.onclick = () => {
         SM.playBeep('equip');
-        player.avatar = avatar.id;
+        G.player.avatar = avatar.id;
         modal.classList.add('hidden');
         saveGame();
         renderRoomStatus();
@@ -9558,7 +9558,6 @@ function grantPrintRewards(cur, correct, total, rate) {
   // Base rewards
   const baseExp = correct * 20;
   const baseGold = correct * 10;
-  G.player.exp += baseExp;
   G.player.gold += baseGold;
   if (baseExp > 0) rewards.push({ kind:'item', name:`経験値 ${baseExp} EXP`, icon:'✨' });
   if (baseGold > 0) rewards.push({ kind:'item', name:`ゴールド ${baseGold} G`, icon:'💰' });
@@ -9621,14 +9620,42 @@ function grantPrintRewards(cur, correct, total, rate) {
       const ability = rollAbility(5);
       G.ownedEquips.push({ uid: G.nextUid++, id: bp.equipId, rarity: 5, ability });
       rewards.push({ kind:'equip', name:`${equipDb.name} を完成させた！`, icon:'⚔️', rarity:5, ability });
+  } else if (meta.type === 'stage' && rate >= 0.8) {
+      const counts = getStageClearCounts(meta.areaId);
+      counts[meta.stageIndex] = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, (counts[meta.stageIndex] || 0) + 1);
+      title = 'ステージ クリア！';
+      rewards.push({ kind:'item', name:`${meta.name} をクリア！`, icon:'🚩' });
+  } else if (meta.type === 'stage_boss' && rate >= 0.8) {
+      if (!G.clearedAreaBosses) G.clearedAreaBosses = {};
+      G.clearedAreaBosses[meta.areaId] = true;
+      if (!G.rescued) G.rescued = [];
+      const npcAreaIdMap = { area1:'baker_sara', area13:'farmer_tom', area2:'blacksmith_ken', area3:'fisherman_dan', area4:'merchant_lina', area11:'adventurer', area12:'wiseman_gondo' };
+      const npcId = npcAreaIdMap[meta.areaId];
+      if (npcId && !G.rescued.includes(npcId)) G.rescued.push(npcId);
+      title = 'エリア 制覇！';
+      rewards.push({ kind:'item', name:`${meta.name} を完全クリア！`, icon:'👑' });
   }
   
+  const { leveledUp, lvlBefore, pointsGained, maxHpBefore, maxMpBefore } = grantExp(baseExp);
+
   save();
   playItemRevealSequence(rewards, {
     badge: '💮 採点完了',
     title: title,
     showSummary: true,
-    onDone: showHome
+    onDone: () => {
+      if (leveledUp) {
+        const unlockedSkills = SKILL_DB.filter(s => (s.reqLvl || 1) > lvlBefore && (s.reqLvl || 1) <= G.player.lvl);
+        showLevelUpModal({
+          fromLvl: lvlBefore, toLvl: G.player.lvl,
+          hpBefore: maxHpBefore, hpAfter: totalMaxHp(),
+          mpBefore: maxMpBefore, mpAfter: totalMaxMp(),
+          pointsGained, unlockedSkills,
+        }, showHome);
+      } else {
+        showHome();
+      }
+    }
   });
 }
 
