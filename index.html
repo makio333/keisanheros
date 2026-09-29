@@ -258,10 +258,15 @@
 
       <div class="town-map" id="town-map">
         <img src="./画像/ステージ/拠点.jpg" class="town-map-img" alt="拠点" loading="eager" fetchpriority="high">
-        <div class="town-status-cluster">
+        <div class="town-status-cluster" style="align-items: flex-end;">
+          <!-- スキン表示用独立ウィンドウ -->
+          <div class="status-window avatar-window" id="home-avatar-window">
+            <div class="avatar-bg"></div>
+            <img id="home-player-avatar" class="avatar-img-layer" src="" alt="" title="クリックでスキンを変更" style="display: none;">
+          </div>
+
+          <!-- 従来のステータス情報 -->
           <div class="status-window town-status-overlay" id="home-player-window">
-            <!-- ウィンドウの上に大きく表示する立ち絵 -->
-            <img id="home-player-avatar" class="status-stand-image" src="" alt="" title="クリックでスキンを変更">
             <div class="status-header-row">
               <div class="status-line"><span id="home-player-name">ゆうしゃ</span><span id="home-player-lv"></span></div>
               <button id="btn-toggle-home-status" class="btn-status-toggle" title="ステータスをおりたたむ">➖</button>
@@ -699,11 +704,16 @@
     <!-- バトル（DQ風・一人称視点） -->
     <section id="screen-battle" class="screen">
       <div class="battle-wrap">
-        <div class="battle-top">
+        <div class="battle-top" style="align-items: flex-end;">
           <div class="floor-window" id="battle-floor-title">とう 1かい／10</div>
 
+          <!-- スキン表示用独立ウィンドウ -->
+          <div class="status-window avatar-window" id="battle-avatar-window" style="margin-right: 8px;">
+            <div class="avatar-bg"></div>
+            <img id="battle-player-avatar" class="avatar-img-layer" src="" alt="" title="クリックでスキンを変更" style="display: none;">
+          </div>
+
           <div class="status-window" id="battle-player-window">
-            <img id="battle-player-avatar" class="status-stand-image" src="" alt="" title="クリックでスキンを変更">
             <div class="status-header-row">
               <div class="status-line"><span id="battle-player-name">ゆうしゃ</span><span id="battle-player-lv"></span></div>
             </div>

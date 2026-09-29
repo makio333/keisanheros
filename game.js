@@ -7520,6 +7520,8 @@ function bindEvents(){
   on('home-player-avatar', showAvatarChangeModal);
   on('battle-player-avatar', showAvatarChangeModal);
   on('room-player-avatar', showAvatarChangeModal);
+  on('home-avatar-window', showAvatarChangeModal);
+  on('battle-avatar-window', showAvatarChangeModal);
 
   on('btn-gacha-back', showHome);
   on('btn-item-shop-back', showHome);

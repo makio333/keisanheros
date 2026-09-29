@@ -2513,24 +2513,38 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   gap: 6px;
   margin-bottom: 2px;
 }
-.status-stand-image {
-  position: absolute;
-  bottom: 85%; /* ウィンドウ上端から少し下（15%）にめり込むように配置 */
-  left: -20px; /* 少し左に飛び出させる */
-  height: 220px; /* 適度な大きさ */
-  max-width: 200px;
-  object-fit: contain;
-  object-position: bottom left;
-  display: none;
+.avatar-window {
+  padding: 0 !important;
+  width: 140px;
+  height: 180px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+  border-radius: var(--border-radius);
   cursor: pointer;
-  z-index: 10;
-  transform-origin: bottom left;
-  transition: transform 0.2s, filter 0.2s;
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+  transition: transform 0.2s, box-shadow 0.2s;
 }
-.status-stand-image:hover {
-  transform: scale(1.05);
-  filter: drop-shadow(0 2px 12px rgba(255,255,255,0.4));
+.avatar-window:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+}
+.avatar-bg {
+  position: absolute;
+  inset: 0;
+  background: var(--btn-grad-end);
+  z-index: 1;
+}
+.avatar-img-layer {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
 }
 
 .btn-status-toggle {
