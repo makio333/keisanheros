@@ -3033,6 +3033,19 @@ function startChallenge(container, opts, cb){
       }
     }
 
+    const kanjiCmds = $('kanji-battle-commands');
+    if (kanjiCmds) {
+      if (opts.showBattleCommands) {
+        kanjiCmds.classList.remove('hidden');
+        const kSkill = $('btn-kanji-skill');
+        const kItem = $('btn-kanji-item');
+        if (kSkill) kSkill.onclick = (e) => { if(e) e.preventDefault(); openSkillMenu(); };
+        if (kItem) kItem.onclick = (e) => { if(e) e.preventDefault(); openItemMenu(); };
+      } else {
+        kanjiCmds.classList.add('hidden');
+      }
+    }
+
     const start = Date.now();
     let done = false;
 
