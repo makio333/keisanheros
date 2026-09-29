@@ -7507,14 +7507,14 @@ function bindEvents(){
       btn.appendChild(img);
       btn.appendChild(name);
       
-      if (G.player.avatar === avatar.id) {
+      if (G.avatar === avatar.id) {
         btn.style.border = '2px solid #f1c40f';
         btn.style.background = 'rgba(241, 196, 15, 0.2)';
       }
       
       btn.onclick = () => {
         SM.playBeep('equip');
-        G.player.avatar = avatar.id;
+        G.avatar = avatar.id;
         modal.classList.add('hidden');
         save();
         updateHud();
