@@ -258,44 +258,42 @@
 
       <div class="town-map" id="town-map">
         <img src="./画像/ステージ/拠点.jpg" class="town-map-img" alt="拠点" loading="eager" fetchpriority="high">
-        <div class="town-status-cluster">
-          <div class="status-window town-status-overlay" id="home-player-window" style="display: flex; gap: 8px; align-items: center;">
-            <div class="status-left-pane">
-              <img id="home-player-avatar" class="status-avatar-icon" src="" alt="" title="クリックでスキンを変更">
+        <div class="town-status-cluster" style="position: relative;">
+          <!-- ウィンドウの上に大きく表示する立ち絵 -->
+          <img id="home-player-avatar" class="status-stand-image" src="" alt="" title="クリックでスキンを変更">
+
+          <div class="status-window town-status-overlay" id="home-player-window">
+            <div class="status-header-row">
+              <div class="status-line"><span id="home-player-name">ゆうしゃ</span><span id="home-player-lv"></span></div>
+              <button id="btn-toggle-home-status" class="btn-status-toggle" title="ステータスをおりたたむ">➖</button>
             </div>
-            <div class="status-right-pane" style="flex: 1; min-width: 0;">
-              <div class="status-header-row">
-                <div class="status-line"><span id="home-player-name">ゆうしゃ</span><span id="home-player-lv"></span></div>
-                <button id="btn-toggle-home-status" class="btn-status-toggle" title="ステータスをおりたたむ">➖</button>
+            <div class="gold-badge"><span class="gold-badge-icon">💰</span><span id="home-player-gold" class="gold-badge-num">0</span><span class="gold-badge-unit">G</span></div>
+            <div class="stat-bar-wrap">
+              <span class="stat-label"><img src="assets/ui_icons/ui_icon_4.png" class="stat-inline-icon">HP</span>
+              <div class="stat-bar hp-bar-container">
+                <div id="home-player-hp-ghost" class="stat-bar-fill ghost-fill"></div>
+                <div id="home-player-hp" class="stat-bar-fill hp"></div>
+                <span class="stat-bar-label"><span id="home-player-hp-num">0</span>/<span id="home-player-hp-max">0</span></span>
               </div>
-              <div class="gold-badge"><span class="gold-badge-icon">💰</span><span id="home-player-gold" class="gold-badge-num">0</span><span class="gold-badge-unit">G</span></div>
-              <div class="stat-bar-wrap">
-                <span class="stat-label"><img src="assets/ui_icons/ui_icon_4.png" class="stat-inline-icon">HP</span>
-                <div class="stat-bar hp-bar-container">
-                  <div id="home-player-hp-ghost" class="stat-bar-fill ghost-fill"></div>
-                  <div id="home-player-hp" class="stat-bar-fill hp"></div>
-                  <span class="stat-bar-label"><span id="home-player-hp-num">0</span>/<span id="home-player-hp-max">0</span></span>
-                </div>
+            </div>
+            <div class="stat-bar-wrap">
+              <span class="stat-label"><img src="assets/ui_icons/ui_icon_6.png" class="stat-inline-icon">MP</span>
+              <div class="stat-bar mp-bar-container">
+                <div id="home-player-mp-ghost" class="stat-bar-fill ghost-fill"></div>
+                <div id="home-player-mp" class="stat-bar-fill mp"></div>
+                <span class="stat-bar-label"><span id="home-player-mp-num">0</span>/<span id="home-player-mp-max">0</span></span>
               </div>
-              <div class="stat-bar-wrap">
-                <span class="stat-label"><img src="assets/ui_icons/ui_icon_6.png" class="stat-inline-icon">MP</span>
-                <div class="stat-bar mp-bar-container">
-                  <div id="home-player-mp-ghost" class="stat-bar-fill ghost-fill"></div>
-                  <div id="home-player-mp" class="stat-bar-fill mp"></div>
-                  <span class="stat-bar-label"><span id="home-player-mp-num">0</span>/<span id="home-player-mp-max">0</span></span>
-                </div>
+            </div>
+            <div class="stat-bar-wrap">
+              <span class="stat-label">✨</span>
+              <div class="stat-bar exp-bar-container">
+                <div id="home-player-exp" class="stat-bar-fill exp"></div>
+                <span class="stat-bar-label"><span id="home-player-exp-num">0</span>/<span id="home-player-exp-max">0</span></span>
               </div>
-              <div class="stat-bar-wrap">
-                <span class="stat-label">✨</span>
-                <div class="stat-bar exp-bar-container">
-                  <div id="home-player-exp" class="stat-bar-fill exp"></div>
-                  <span class="stat-bar-label"><span id="home-player-exp-num">0</span>/<span id="home-player-exp-max">0</span></span>
-                </div>
-              </div>
-              <div class="stat-bar-wrap">
-                <span class="stat-label">⚡</span>
-                <div class="stat-bar atb"><div id="home-player-atb" class="stat-bar-fill atb"></div></div>
-              </div>
+            </div>
+            <div class="stat-bar-wrap">
+              <span class="stat-label">⚡</span>
+              <div class="stat-bar atb"><div id="home-player-atb" class="stat-bar-fill atb"></div></div>
             </div>
           </div>
           <div class="town-equip-icons" id="home-equip-icons"></div>
@@ -702,38 +700,36 @@
     <!-- バトル（DQ風・一人称視点） -->
     <section id="screen-battle" class="screen">
       <div class="battle-wrap">
-        <div class="battle-top">
+        <div class="battle-top" style="position: relative;">
           <div class="floor-window" id="battle-floor-title">とう 1かい／10</div>
-          <div class="status-window" id="battle-player-window" style="display: flex; gap: 8px; align-items: center;">
-            <div class="status-left-pane">
-              <img id="battle-player-avatar" class="status-avatar-icon" src="" alt="" title="クリックでスキンを変更">
+          
+          <img id="battle-player-avatar" class="status-stand-image" src="" alt="" title="クリックでスキンを変更">
+
+          <div class="status-window" id="battle-player-window">
+            <div class="status-header-row">
+              <div class="status-line"><span id="battle-player-name">ゆうしゃ</span><span id="battle-player-lv"></span></div>
             </div>
-            <div class="status-right-pane" style="flex: 1; min-width: 0;">
-              <div class="status-header-row">
-                <div class="status-line"><span id="battle-player-name">ゆうしゃ</span><span id="battle-player-lv"></span></div>
+            <div class="stat-bar-wrap">
+              <span class="stat-label"><img src="assets/ui_icons/ui_icon_4.png" class="stat-inline-icon">HP</span>
+              <div class="stat-bar hp-bar-container">
+                <div id="battle-player-hp-ghost" class="stat-bar-fill ghost-fill"></div>
+                <div id="battle-player-hp" class="stat-bar-fill hp"></div>
+                <span class="stat-bar-label"><span id="battle-player-hp-num">0</span>/<span id="battle-player-hp-max">0</span></span>
               </div>
-              <div class="stat-bar-wrap">
-                <span class="stat-label"><img src="assets/ui_icons/ui_icon_4.png" class="stat-inline-icon">HP</span>
-                <div class="stat-bar hp-bar-container">
-                  <div id="battle-player-hp-ghost" class="stat-bar-fill ghost-fill"></div>
-                  <div id="battle-player-hp" class="stat-bar-fill hp"></div>
-                  <span class="stat-bar-label"><span id="battle-player-hp-num">0</span>/<span id="battle-player-hp-max">0</span></span>
-                </div>
+            </div>
+            <div class="stat-bar-wrap">
+              <span class="stat-label"><img src="assets/ui_icons/ui_icon_6.png" class="stat-inline-icon">MP</span>
+              <div class="stat-bar mp-bar-container">
+                <div id="battle-player-mp-ghost" class="stat-bar-fill ghost-fill"></div>
+                <div id="battle-player-mp" class="stat-bar-fill mp"></div>
+                <span class="stat-bar-label"><span id="battle-player-mp-num">0</span>/<span id="battle-player-mp-max">0</span></span>
               </div>
-              <div class="stat-bar-wrap">
-                <span class="stat-label"><img src="assets/ui_icons/ui_icon_6.png" class="stat-inline-icon">MP</span>
-                <div class="stat-bar mp-bar-container">
-                  <div id="battle-player-mp-ghost" class="stat-bar-fill ghost-fill"></div>
-                  <div id="battle-player-mp" class="stat-bar-fill mp"></div>
-                  <span class="stat-bar-label"><span id="battle-player-mp-num">0</span>/<span id="battle-player-mp-max">0</span></span>
-                </div>
-              </div>
-              <div class="stat-bar-wrap">
-                <span class="stat-label">✨</span>
-                <div class="stat-bar exp-bar-container">
-                  <div id="battle-player-exp" class="stat-bar-fill exp"></div>
-                  <span class="stat-bar-label"><span id="battle-player-exp-num">0</span>/<span id="battle-player-exp-max">0</span></span>
-                </div>
+            </div>
+            <div class="stat-bar-wrap">
+              <span class="stat-label">✨</span>
+              <div class="stat-bar exp-bar-container">
+                <div id="battle-player-exp" class="stat-bar-fill exp"></div>
+                <span class="stat-bar-label"><span id="battle-player-exp-num">0</span>/<span id="battle-player-exp-max">0</span></span>
               </div>
             </div>
           </div>

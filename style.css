@@ -2512,22 +2512,24 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   gap: 6px;
   margin-bottom: 2px;
 }
-.status-avatar-icon {
-  width: 64px;
-  height: 96px; /* 縦長（ゲージ群と並ぶくらいの高さ） */
-  border-radius: 6px;
-  object-fit: cover;
-  object-position: top; /* 顔周辺が見えるように上寄せ */
-  border: 2px solid var(--accent);
-  background: var(--btn-grad-end);
-  flex-shrink: 0;
+.status-stand-image {
+  position: absolute;
+  bottom: calc(100% - 10px); /* ウィンドウの上に配置（少しウィンドウにかぶるように） */
+  left: 10px;
+  height: 240px; /* 全体画像が出るように大きく */
+  max-width: 200px;
+  object-fit: contain;
+  object-position: bottom left;
   display: none;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  z-index: 10;
+  transform-origin: bottom left;
+  transition: transform 0.2s, filter 0.2s;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5)); /* キャラに影をつける */
 }
-.status-avatar-icon:hover {
+.status-stand-image:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+  filter: drop-shadow(0 2px 12px rgba(255,255,255,0.4));
 }
 
 .btn-status-toggle {
