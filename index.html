@@ -633,15 +633,6 @@
           </div>
         </div>
         
-        <!-- スキン変更モーダル -->
-        <div id="avatar-change-modal" class="modal-overlay hidden">
-          <div class="modal-panel" style="max-width: 400px;">
-            <h3>スキンを変更する</h3>
-            <div id="avatar-change-list" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin: 15px 0;"></div>
-            <button id="btn-avatar-change-close" class="btn" style="width:100%;">とじる</button>
-          </div>
-        </div>
-      </div>
     </section>
 
     <!-- 道具屋（購入） -->
@@ -1122,6 +1113,15 @@
         <p class="flavor">3種類の問題セットを作りました。<br>プレビューを見て、好きなものを選ぼう！</p>
         <div id="print-choice-cards" style="display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-top:16px;"></div>
         <button class="btn" style="margin-top:20px; width:100%;" onclick="document.getElementById('modal-print-choice').classList.add('hidden')">やめる</button>
+      </div>
+    </div>
+
+    <!-- スキン変更モーダル -->
+    <div id="avatar-change-modal" class="modal-overlay hidden" style="z-index: 15000;">
+      <div class="modal-panel" style="max-width: 400px;">
+        <h3>スキンを変更する</h3>
+        <div id="avatar-change-list" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin: 15px 0;"></div>
+        <button id="btn-avatar-change-close" class="btn" style="width:100%;">とじる</button>
       </div>
     </div>
 
