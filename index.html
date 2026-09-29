@@ -258,15 +258,15 @@
 
       <div class="town-map" id="town-map">
         <img src="./画像/ステージ/拠点.jpg" class="town-map-img" alt="拠点" loading="eager" fetchpriority="high">
-        <div class="town-status-cluster" style="align-items: flex-end;">
-          <!-- スキン表示用独立ウィンドウ -->
-          <div class="status-window avatar-window" id="home-avatar-window">
+        <div class="town-status-cluster" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+          <!-- スキン表示用独立ウィンドウ（上に乗る） -->
+          <div class="status-window avatar-window" id="home-avatar-window" style="margin-left: 10px; margin-bottom: -10px; z-index: 10; width: 130px; height: 160px;">
             <div class="avatar-bg"></div>
             <img id="home-player-avatar" class="avatar-img-layer" src="" alt="" title="クリックでスキンを変更" style="display: none;">
           </div>
 
           <!-- 従来のステータス情報 -->
-          <div class="status-window town-status-overlay" id="home-player-window">
+          <div class="status-window town-status-overlay" id="home-player-window" style="z-index: 1;">
             <div class="status-header-row">
               <div class="status-line"><span id="home-player-name">ゆうしゃ</span><span id="home-player-lv"></span></div>
               <button id="btn-toggle-home-status" class="btn-status-toggle" title="ステータスをおりたたむ">➖</button>
@@ -704,16 +704,18 @@
     <!-- バトル（DQ風・一人称視点） -->
     <section id="screen-battle" class="screen">
       <div class="battle-wrap">
-        <div class="battle-top" style="align-items: flex-end;">
+        <div class="battle-top">
           <div class="floor-window" id="battle-floor-title">とう 1かい／10</div>
 
-          <!-- スキン表示用独立ウィンドウ -->
-          <div class="status-window avatar-window" id="battle-avatar-window" style="margin-right: 8px;">
-            <div class="avatar-bg"></div>
-            <img id="battle-player-avatar" class="avatar-img-layer" src="" alt="" title="クリックでスキンを変更" style="display: none;">
-          </div>
+          <!-- ステータスとスキンを縦に並べるコンテナ -->
+          <div class="battle-status-cluster" style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
+            <!-- スキン表示用独立ウィンドウ（上に乗る） -->
+            <div class="status-window avatar-window" id="battle-avatar-window" style="margin-left: 10px; margin-bottom: -10px; z-index: 10; width: 130px; height: 160px;">
+              <div class="avatar-bg"></div>
+              <img id="battle-player-avatar" class="avatar-img-layer" src="" alt="" title="クリックでスキンを変更" style="display: none;">
+            </div>
 
-          <div class="status-window" id="battle-player-window">
+            <div class="status-window" id="battle-player-window" style="z-index: 1;">
             <div class="status-header-row">
               <div class="status-line"><span id="battle-player-name">ゆうしゃ</span><span id="battle-player-lv"></span></div>
             </div>
@@ -741,6 +743,7 @@
               </div>
             </div>
           </div>
+          </div> <!-- /.battle-status-cluster -->
         </div>
 
         <div id="battle-field" class="battle-field">
