@@ -2337,7 +2337,7 @@ let currentSlotKey = null; // いま えらんでいる セーブ枠の localSto
 function newGameState(name, avatarId){
   return {
     playerName: (name && name.trim()) || 'ぼうけんしゃ',
-    avatar: avatarId || 'hero_male_1',
+    avatar: avatarId || HERO_AVATARS[0].id,
     updatedAt: Date.now(),
     player: {
       lvl:1, exp:0, points:0,
@@ -2458,6 +2458,9 @@ function loadSlot(key){
   try {
     G = JSON.parse(raw);
     G = normalizeRarityData(G);
+    if (!G.avatar) {
+      G.avatar = (G.player && G.player.avatar) ? G.player.avatar : HERO_AVATARS[0].id;
+    }
     if (!G.completedAreaStages) G.completedAreaStages = {};
     if (!G.printSheetCodes) G.printSheetCodes = {};
     if (!G.usedPrintCodes) G.usedPrintCodes = [];
@@ -2546,7 +2549,7 @@ function listSaveSlots(){
       slots.push({
         key,
         name: data.playerName || 'ぼうけんしゃ',
-        avatar: data.avatar || 'hero_male_1',
+        avatar: data.avatar || (data.player && data.player.avatar) || HERO_AVATARS[0].id,
         lvl: p.lvl || 1,
         gold: p.gold || 0,
         baseStats: {
