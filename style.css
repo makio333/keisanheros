@@ -720,6 +720,7 @@ body {
   box-shadow: 0 0 0 3px var(--panel-border-dark), var(--shadow);
   border-radius: var(--border-radius);
   padding: 16px 20px;
+  position: relative;
 }
 .log-box {
   background: transparent;
@@ -2514,9 +2515,9 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 }
 .status-stand-image {
   position: absolute;
-  bottom: calc(100% - 10px); /* ウィンドウの上に配置（少しウィンドウにかぶるように） */
-  left: 10px;
-  height: 240px; /* 全体画像が出るように大きく */
+  bottom: 85%; /* ウィンドウ上端から少し下（15%）にめり込むように配置 */
+  left: -20px; /* 少し左に飛び出させる */
+  height: 220px; /* 適度な大きさ */
   max-width: 200px;
   object-fit: contain;
   object-position: bottom left;
@@ -2525,7 +2526,7 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   z-index: 10;
   transform-origin: bottom left;
   transition: transform 0.2s, filter 0.2s;
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5)); /* キャラに影をつける */
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
 }
 .status-stand-image:hover {
   transform: scale(1.05);
