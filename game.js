@@ -2864,6 +2864,17 @@ function updateHud(){
     const mpMaxEl = $(`${prefix}-player-mp-max`);
     const expNumEl = $(`${prefix}-player-exp-num`);
     const expMaxEl = $(`${prefix}-player-exp-max`);
+    const avatarEl = $(`${prefix}-player-avatar`);
+
+    if (avatarEl) {
+      const avDef = getHeroAvatar(G.avatar);
+      if (avDef && avDef.image) {
+        avatarEl.src = av(avDef.image);
+        avatarEl.style.display = 'block';
+      } else {
+        avatarEl.style.display = 'none';
+      }
+    }
 
     if (nameEl) nameEl.textContent = (G.playerName || 'ゆうしゃ') + (G.isTestMode ? ' [テスト]' : '');
     if (lvEl) lvEl.textContent = 'Lv' + p.lvl;

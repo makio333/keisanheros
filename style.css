@@ -2512,6 +2512,16 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   gap: 6px;
   margin-bottom: 2px;
 }
+.status-avatar-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--accent);
+  background: var(--btn-grad-end);
+  flex-shrink: 0;
+  display: none; /* デフォルト非表示、画像がある場合のみJSで表示 */
+}
 
 .btn-status-toggle {
   background: rgba(255, 255, 255, 0.12);
