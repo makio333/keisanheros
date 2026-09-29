@@ -2845,8 +2845,8 @@ function updateHud(){
   }
   const p = G.player;
 
-  // バトル画面と拠点のステータスウィンドウ更新
-  ['battle', 'home'].forEach(prefix => {
+  // バトル画面、拠点、自分の部屋のステータスウィンドウ（およびアバター等）更新
+  ['battle', 'home', 'room'].forEach(prefix => {
     const nameEl = $(`${prefix}-player-name`);
     const lvEl = $(`${prefix}-player-lv`);
     const goldEl = $(`${prefix}-player-gold`);
@@ -7464,7 +7464,7 @@ function bindEvents(){
     SM.playBeep('cancel');
     $('avatar-change-modal').classList.add('hidden');
   });
-  on('btn-change-avatar', () => {
+  window.showAvatarChangeModal = function() {
     SM.playBeep('select');
     const modal = $('avatar-change-modal');
     const list = $('avatar-change-list');
@@ -7505,14 +7505,22 @@ function bindEvents(){
         modal.classList.add('hidden');
         save();
         updateHud();
-        showStatus();
+        if ($('screen-status') && !$('screen-status').classList.contains('hidden')) {
+            showStatus();
+        }
       };
       
       list.appendChild(btn);
     });
     
     modal.classList.remove('hidden');
-  });
+  };
+
+  on('btn-change-avatar', showAvatarChangeModal);
+  on('home-player-avatar', showAvatarChangeModal);
+  on('battle-player-avatar', showAvatarChangeModal);
+  on('room-player-avatar', showAvatarChangeModal);
+
   on('btn-gacha-back', showHome);
   on('btn-item-shop-back', showHome);
   on('btn-item-shop-goto-use', showItems);

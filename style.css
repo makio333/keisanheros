@@ -2522,6 +2522,12 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   background: var(--btn-grad-end);
   flex-shrink: 0;
   display: none;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.status-avatar-icon:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
 }
 
 .btn-status-toggle {

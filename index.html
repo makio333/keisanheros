@@ -261,7 +261,7 @@
         <div class="town-status-cluster">
           <div class="status-window town-status-overlay" id="home-player-window">
             <div class="status-header-row">
-              <img id="home-player-avatar" class="status-avatar-icon" src="" alt="">
+              <img id="home-player-avatar" class="status-avatar-icon" src="" alt="" title="クリックでスキンを変更">
               <div class="status-line"><span id="home-player-name">ゆうしゃ</span><span id="home-player-lv"></span></div>
               <button id="btn-toggle-home-status" class="btn-status-toggle" title="ステータスをおりたたむ">➖</button>
             </div>
@@ -544,7 +544,10 @@
                     <div class="equip-slot" id="slot-armor"></div>
                     <div class="equip-slot" id="slot-accessory"></div>
                   </div>
-                  <button id="btn-change-avatar" class="btn" style="margin-top:20px; width:100%; background:linear-gradient(135deg, #f39c12, #d35400); color:white;">🌟 みた目を変更する</button>
+                  <div class="room-avatar-preview" style="text-align: center; margin-top: 20px;">
+                    <img id="room-player-avatar" src="" alt="スキン" style="width: 96px; height: 96px; object-fit: cover; object-position: top; border-radius: 50%; border: 3px solid var(--accent); cursor: pointer; background: var(--btn-grad-end); display: none; margin: 0 auto;" title="クリックでスキンを変更">
+                  </div>
+                  <button id="btn-change-avatar" class="btn" style="margin-top:15px; width:100%; background:linear-gradient(135deg, #f39c12, #d35400); color:white;">🌟 スキンを変更する</button>
                 </div>
               </div>
             </div>
@@ -621,10 +624,10 @@
           </div>
         </div>
         
-        <!-- 見た目変更モーダル -->
+        <!-- スキン変更モーダル -->
         <div id="avatar-change-modal" class="modal-overlay hidden">
           <div class="modal-panel" style="max-width: 400px;">
-            <h3>みた目を変更する</h3>
+            <h3>スキンを変更する</h3>
             <div id="avatar-change-list" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin: 15px 0;"></div>
             <button id="btn-avatar-change-close" class="btn" style="width:100%;">とじる</button>
           </div>
@@ -699,7 +702,7 @@
           <div class="floor-window" id="battle-floor-title">とう 1かい／10</div>
           <div class="status-window" id="battle-player-window">
             <div class="status-header-row">
-              <img id="battle-player-avatar" class="status-avatar-icon" src="" alt="">
+              <img id="battle-player-avatar" class="status-avatar-icon" src="" alt="" title="クリックでスキンを変更">
               <div class="status-line"><span id="battle-player-name">ゆうしゃ</span><span id="battle-player-lv"></span></div>
             </div>
             <div class="stat-bar-wrap">
