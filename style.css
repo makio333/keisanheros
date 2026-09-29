@@ -2514,8 +2514,8 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 }
 .status-avatar-icon {
   width: 64px;
-  height: 64px;
-  border-radius: 50%;
+  height: 96px; /* 縦長（ゲージ群と並ぶくらいの高さ） */
+  border-radius: 6px;
   object-fit: cover;
   object-position: top; /* 顔周辺が見えるように上寄せ */
   border: 2px solid var(--accent);
