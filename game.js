@@ -2113,11 +2113,32 @@ const HERO_AVATARS = [
   { id: 'hero_male_1', name: '青年の騎士', gender: 'male', job: '騎士・勇者', desc: '聖剣をたずさえた誇り高き青年騎士', image: 'assets/characters/hero_male_1.png' },
   { id: 'hero_male_2', name: '少年の冒険者', gender: 'male', job: '冒険者・シーフ', desc: 'ゴーグルと身軽な動きで挑む元気な少年', image: 'assets/characters/hero_male_2.png' },
   { id: 'hero_female_2', name: '星詠みの少女', gender: 'female', job: '魔法使い', desc: '星空のローブと水晶の杖を持つ神秘的な少女', image: 'assets/characters/hero_female_2.png' },
+  { id: 'ai_hero_boy', name: '異世界の少年', gender: 'male', job: '冒険者', desc: '不思議な世界から来た少年', image: 'assets/characters/ai_hero_boy.png' },
+  { id: 'ai_hero_youngman', name: '異世界の青年', gender: 'male', job: '剣士', desc: '不思議な世界から来た青年', image: 'assets/characters/ai_hero_youngman.png' },
+  { id: 'ai_hero_girl', name: '異世界の少女', gender: 'female', job: '魔法使い', desc: '不思議な世界から来た少女', image: 'assets/characters/ai_hero_girl.png' },
+  { id: 'ai_hero_woman', name: '異世界の女性', gender: 'female', job: '弓使い', desc: '不思議な世界から来た女性', image: 'assets/characters/ai_hero_woman.png' },
 ];
 
 function getHeroAvatar(avatarId) {
   return HERO_AVATARS.find(a => a.id === avatarId) || HERO_AVATARS[0];
 }
+
+// 既存のセーブデータに対して、ランダムにAIアバターを割り当てるマイグレーション
+try {
+  for (let i = 0; i < 4; i++) {
+    const saveKey = 'typing_rpg_save_slot_' + i;
+    let s = localStorage.getItem(saveKey);
+    if (s) {
+      let d = JSON.parse(s);
+      if (!d.migratedToAiAvatar) {
+        d.migratedToAiAvatar = true;
+        const aiAvatars = ['ai_hero_boy', 'ai_hero_youngman', 'ai_hero_girl', 'ai_hero_woman'];
+        d.avatar = aiAvatars[Math.floor(Math.random() * aiAvatars.length)];
+        localStorage.setItem(saveKey, JSON.stringify(d));
+      }
+    }
+  }
+} catch(e) {}
 
 /* ==========================================================
    装備データ（ベース）
@@ -7428,6 +7449,59 @@ function bindEvents(){
   on('btn-skills-back', showHome);
   on('btn-items-back', showHome);
   on('btn-equip-select-close', closeEquipSelectModal);
+  on('btn-avatar-change-close', () => {
+    SM.playBeep('cancel');
+    $('avatar-change-modal').classList.add('hidden');
+  });
+  on('btn-change-avatar', () => {
+    SM.playBeep('select');
+    const modal = $('avatar-change-modal');
+    const list = $('avatar-change-list');
+    list.innerHTML = '';
+    
+    HERO_AVATARS.forEach(avatar => {
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.style.width = '80px';
+      btn.style.height = '100px';
+      btn.style.padding = '5px';
+      btn.style.display = 'flex';
+      btn.style.flexDirection = 'column';
+      btn.style.alignItems = 'center';
+      
+      const img = document.createElement('img');
+      img.src = avatar.image;
+      img.style.width = '60px';
+      img.style.height = '60px';
+      img.style.objectFit = 'contain';
+      
+      const name = document.createElement('span');
+      name.textContent = avatar.name;
+      name.style.fontSize = '10px';
+      name.style.marginTop = '4px';
+      
+      btn.appendChild(img);
+      btn.appendChild(name);
+      
+      if (player.avatar === avatar.id) {
+        btn.style.border = '2px solid #f1c40f';
+        btn.style.background = 'rgba(241, 196, 15, 0.2)';
+      }
+      
+      btn.onclick = () => {
+        SM.playBeep('equip');
+        player.avatar = avatar.id;
+        modal.classList.add('hidden');
+        saveGame();
+        renderRoomStatus();
+        renderHomeStatus();
+      };
+      
+      list.appendChild(btn);
+    });
+    
+    modal.classList.remove('hidden');
+  });
   on('btn-gacha-back', showHome);
   on('btn-item-shop-back', showHome);
   on('btn-item-shop-goto-use', showItems);

@@ -543,6 +543,7 @@
                     <div class="equip-slot" id="slot-armor"></div>
                     <div class="equip-slot" id="slot-accessory"></div>
                   </div>
+                  <button id="btn-change-avatar" class="btn" style="margin-top:20px; width:100%; background:linear-gradient(135deg, #f39c12, #d35400); color:white;">🌟 みた目を変更する</button>
                 </div>
               </div>
             </div>
@@ -616,6 +617,15 @@
             <h3 id="equip-select-title">そうびをえらぶ</h3>
             <div id="equip-select-list" class="inventory-list"></div>
             <button id="btn-equip-select-close" class="btn" style="margin-top:10px;">とじる</button>
+          </div>
+        </div>
+        
+        <!-- 見た目変更モーダル -->
+        <div id="avatar-change-modal" class="modal-overlay hidden">
+          <div class="modal-panel" style="max-width: 400px;">
+            <h3>みた目を変更する</h3>
+            <div id="avatar-change-list" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin: 15px 0;"></div>
+            <button id="btn-avatar-change-close" class="btn" style="width:100%;">とじる</button>
           </div>
         </div>
       </div>
