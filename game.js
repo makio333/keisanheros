@@ -4780,7 +4780,7 @@ function renderLoadSaveSlots(onSelectCb){
 
       <!-- 2段目: 立ち絵エリア -->
       <div class="save-slot-avatar-frame">
-        <img src="${avatar.image}" class="save-slot-avatar-img" alt="キャラクター">
+        <img src="${av(avatar.image)}" class="save-slot-avatar-img" alt="キャラクター">
       </div>
 
       <!-- 3段目: ステータス縦並び ＆ 装備アイコン縦並び -->
@@ -7291,7 +7291,7 @@ function bindEvents(){
       imgEl.style.transform = 'scale(0.88)';
       imgEl.style.opacity = '0.5';
       setTimeout(() => {
-        imgEl.src = hero.image;
+        imgEl.src = av(hero.image);
         imgEl.alt = 'キャラクター';
         imgEl.style.transform = 'scale(1)';
         imgEl.style.opacity = '1';
@@ -7312,7 +7312,7 @@ function bindEvents(){
       thumbsContainer.innerHTML = HERO_AVATARS.map((hero, i) => `
         <button type="button" class="hero-thumb-btn ${i === 0 ? 'is-active' : ''}" data-index="${i}">
           <div class="hero-thumb-img-wrap">
-            <img src="${hero.image}" alt="アバター">
+            <img src="${av(hero.image)}" alt="アバター">
           </div>
         </button>
       `).join('');
@@ -7470,7 +7470,7 @@ function bindEvents(){
       btn.style.alignItems = 'center';
       
       const img = document.createElement('img');
-      img.src = avatar.image;
+      img.src = av(avatar.image);
       img.style.width = '60px';
       img.style.height = '60px';
       img.style.objectFit = 'contain';
@@ -7492,9 +7492,9 @@ function bindEvents(){
         SM.playBeep('equip');
         G.player.avatar = avatar.id;
         modal.classList.add('hidden');
-        saveGame();
-        renderRoomStatus();
-        renderHomeStatus();
+        save();
+        updateHud();
+        showStatus();
       };
       
       list.appendChild(btn);
