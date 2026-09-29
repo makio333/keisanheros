@@ -258,15 +258,17 @@
 
       <div class="town-map" id="town-map">
         <img src="./画像/ステージ/拠点.jpg" class="town-map-img" alt="拠点" loading="eager" fetchpriority="high">
-        <div class="town-status-cluster" style="flex-direction: column; align-items: flex-start; gap: 4px;">
-          <!-- スキン表示用独立ウィンドウ（上に乗る） -->
-          <div class="status-window avatar-window" id="home-avatar-window" style="margin-left: 10px; margin-bottom: -10px; z-index: 10; width: 130px; height: 160px;">
-            <div class="avatar-bg"></div>
-            <img id="home-player-avatar" class="avatar-img-layer" src="" alt="" title="クリックでスキンを変更" style="display: none;">
-          </div>
+        <div class="town-status-cluster">
+          <!-- スキンとHP/MPを縦にまとめるコンテナ -->
+          <div class="player-status-group" style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
+            <!-- スキン表示用独立ウィンドウ（上に乗る） -->
+            <div class="status-window avatar-window" id="home-avatar-window" style="margin-left: 10px; margin-bottom: -10px; z-index: 10; width: 130px; height: 160px;">
+              <div class="avatar-bg"></div>
+              <img id="home-player-avatar" class="avatar-img-layer" src="" alt="" title="クリックでスキンを変更" style="display: none;">
+            </div>
 
-          <!-- 従来のステータス情報 -->
-          <div class="status-window town-status-overlay" id="home-player-window" style="z-index: 1;">
+            <!-- 従来のステータス情報 -->
+            <div class="status-window town-status-overlay" id="home-player-window" style="z-index: 1;">
             <div class="status-header-row">
               <div class="status-line"><span id="home-player-name">ゆうしゃ</span><span id="home-player-lv"></span></div>
               <button id="btn-toggle-home-status" class="btn-status-toggle" title="ステータスをおりたたむ">➖</button>
@@ -300,6 +302,7 @@
               <div class="stat-bar atb"><div id="home-player-atb" class="stat-bar-fill atb"></div></div>
             </div>
           </div>
+          </div> <!-- /.player-status-group -->
           <div class="town-equip-icons" id="home-equip-icons"></div>
         </div>
         <button id="hotspot-training" class="town-hotspot" style="left:13%; top:10%;">
