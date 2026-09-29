@@ -2521,7 +2521,10 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  position: relative;
+  position: relative !important; /* .status-window の fixed を打ち消す */
+  top: auto !important;
+  left: auto !important;
+  margin: 0;
   flex-shrink: 0;
   border-radius: var(--border-radius);
   cursor: pointer;
