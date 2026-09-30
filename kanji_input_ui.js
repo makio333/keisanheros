@@ -156,7 +156,7 @@ function setupKanjiChallenge(problemData) {
   currentAcceptedAnswers = kanjiAcceptedAnswers(problemData.text, problemData.answer);
   
   const tierStr = String(problemData.tier || '');
-  const locProb = tierStr.startsWith('kana') ? (typeof createKanaLocationProblem === 'function' ? createKanaLocationProblem(problemData) : null) : null;
+  const locProb = tierStr.startsWith('kana') ? ((window.createKanaLocationProblem || createKanaLocationProblem)(problemData)) : null;
   
   const normalDisplay = document.getElementById('kanji-normal-display');
   const locDisplay = document.getElementById('kana-location-display');

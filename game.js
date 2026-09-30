@@ -3076,31 +3076,36 @@ function getChallengePrompt(problem, isAttack = false) {
 // 促音・長音などの「場所当て問題」用データを生成する
 // 促音・長音などの「場所当て問題」用データを生成する
 // problemData は kanji_data.js の { answer: '...', text: '...', special: '...' } の形式
+// 促音・長音などの「場所当て問題」用データを生成する
+// problemData は { text, answer, special?, tier? } または文字列
 function createKanaLocationProblem(problemData) {
-  if (typeof problemData === 'string') {
-     // プリント出力など文字列しか渡されない場合のフォールバック
-     const word = problemData;
-     const specialChars = ['っ', 'ッ', 'ー', 'ゃ', 'ゅ', 'ょ', 'ャ', 'ュ', 'ョ'];
-     let special = '';
-     let specialIndex = -1;
-     for (let i = 0; i < word.length; i++) {
-       if (specialChars.includes(word[i])) {
-         special = word[i];
-         specialIndex = i;
-         break;
-       }
-     }
-     if (!special) return null;
-     const chars = word.split('');
-     chars.splice(specialIndex, 1);
-     return { original: word, specialChar: special, baseChars: chars, correctIndex: specialIndex };
+  // 特殊文字リスト（長音あいうえおは data.special で指定される）
+  const autoDetectChars = ['っ', 'ッ', 'ー', 'ゃ', 'ゅ', 'ょ', 'ャ', 'ュ', 'ョ'];
+  
+  const word = typeof problemData === 'string' ? problemData : (problemData && problemData.text ? problemData.text : '');
+  if (!word) return null;
+  
+  // special プロパティがあればそれを使う（長音あいうえおも含む）
+  let special = (typeof problemData === 'object' && problemData && problemData.special) ? problemData.special : '';
+  let specialIndex = -1;
+  
+  if (special) {
+    // 指定された特殊文字の位置を探す
+    specialIndex = word.indexOf(special);
   }
   
-  if (!problemData || !problemData.special) return null;
-  const word = problemData.text;
-  const special = problemData.special;
-  const specialIndex = word.indexOf(special);
-  if (specialIndex === -1) return null;
+  // specialが未設定か見つからなければ自動検出
+  if (!special || specialIndex === -1) {
+    for (let i = 0; i < word.length; i++) {
+      if (autoDetectChars.includes(word[i])) {
+        special = word[i];
+        specialIndex = i;
+        break;
+      }
+    }
+  }
+  
+  if (!special || specialIndex === -1) return null;
   
   const chars = word.split('');
   chars.splice(specialIndex, 1);
@@ -3111,6 +3116,8 @@ function createKanaLocationProblem(problemData) {
     correctIndex: specialIndex
   };
 }
+// グローバルに登録（kanji_input_ui.js からも参照できるようにする）
+window.createKanaLocationProblem = createKanaLocationProblem;
 
 function startChallenge(container, opts, cb){
   destroyChallenge();
@@ -10116,7 +10123,7 @@ function printAreaStage(areaId, idx) {
               const locProb = typeof createKanaLocationProblem === 'function' ? createKanaLocationProblem(p) : null;
               if (locProb) {
                 displayText = locProb.baseChars.join('　');
-                hintHtml = `<div class="p-hint">「${locProb.specialChar}」<br>を<br>い<br>れ<br>る</div>`;
+                hintHtml = `<div class="p-hint">「${locProb.specialChar}」をいれる</div>`;
               }
             }
             
@@ -10125,7 +10132,7 @@ function printAreaStage(areaId, idx) {
           const p1 = problems.slice(0, 5).map((p, i) => makeRow(p, i)).join('');
           const p2 = problems.slice(5, 10).map((p, i) => makeRow(p, i + 5)).join('');
           
-          const playerName = (typeof G !== "undefined" && G && G.player) ? G.player.name : "";
+          const playerName = (typeof G !== "undefined" && G) ? (G.playerName || "") : "";
           const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
           const printId = addPrintCode(areaId + '_' + idx, pCode, { type: 'stage', problems, name: printName, areaId, stageIndex: idx, kanjiMode: variant.type });
           save();
@@ -10189,7 +10196,7 @@ function printAreaStage(areaId, idx) {
           save();
           openPrintWindow(`
             <div class="p-title">【エリア${numPrefix}-${idx+1}】 ${printName} ${label}</div>
-            <div class="p-name-box">なまえ：<span class="p-name-line" style="position:relative;"><span style="position:absolute; bottom:2px; left:4px; font-size:18px;">${typeof G !== "undefined" && G && G.player ? G.player.name : ""}</span></span></div>
+            <div class="p-name-box">なまえ：<span class="p-name-line" style="position:relative;"><span style="position:absolute; bottom:2px; left:4px; font-size:18px;">${(typeof G !== "undefined" && G) ? (G.playerName || "") : ""}</span></span></div>
             <div class="p-bonus-banner">🎉 プリントでクリアすると 通常の<b>3倍以上</b>の報酬が もらえるぞ！</div>
             <div class="p-desc">プリント番号: ${printId}</div>
             <div class="p-cols">
@@ -10244,7 +10251,7 @@ function printAreaBoss(areaId) {
               const locProb = typeof createKanaLocationProblem === 'function' ? createKanaLocationProblem(p) : null;
               if (locProb) {
                 displayText = locProb.baseChars.join('　');
-                hintHtml = `<div class="p-hint">「${locProb.specialChar}」<br>を<br>い<br>れ<br>る</div>`;
+                hintHtml = `<div class="p-hint">「${locProb.specialChar}」をいれる</div>`;
               }
             }
             
@@ -10253,7 +10260,7 @@ function printAreaBoss(areaId) {
           const p1 = problems.slice(0, 5).map((p, i) => makeRow(p, i)).join('');
           const p2 = problems.slice(5, 10).map((p, i) => makeRow(p, i + 5)).join('');
           
-          const playerName = (typeof G !== "undefined" && G && G.player) ? G.player.name : "";
+          const playerName = (typeof G !== "undefined" && G) ? (G.playerName || "") : "";
           const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
           const printId = addPrintCode(areaId + '_boss', pCode, { type: 'boss', problems, name: printName, areaId, kanjiMode: variant.type });
           save();
@@ -10317,7 +10324,7 @@ function printAreaBoss(areaId) {
           save();
           openPrintWindow(`
             <div class="p-title">【エリア${numPrefix}】 ${printName} ${label}</div>
-            <div class="p-name-box">なまえ：<span class="p-name-line" style="position:relative;"><span style="position:absolute; bottom:2px; left:4px; font-size:18px;">${typeof G !== "undefined" && G && G.player ? G.player.name : ""}</span></span></div>
+            <div class="p-name-box">なまえ：<span class="p-name-line" style="position:relative;"><span style="position:absolute; bottom:2px; left:4px; font-size:18px;">${(typeof G !== "undefined" && G) ? (G.playerName || "") : ""}</span></span></div>
             <div class="p-bonus-banner">🎉 プリントでクリアすると 通常の<b>3倍以上</b>の報酬が もらえるぞ！</div>
             <div class="p-desc">プリント番号: ${printId}</div>
             <div class="p-cols">
