@@ -160,6 +160,14 @@ function setupKanjiChallenge(problemData) {
   const inputEl = document.getElementById('challenge-input');
   if(inputEl) {
     inputEl.value = '';
+    const tierStr = String(problemData.tier || '');
+    if (tierStr.startsWith('kana_kata')) {
+      inputEl.placeholder = 'カタカナで入力';
+    } else if (tierStr.startsWith('kana_hira')) {
+      inputEl.placeholder = 'そのまま入力';
+    } else {
+      inputEl.placeholder = 'ひらがなで入力';
+    }
     if(isFlickMode) inputEl.focus();
   }
 }

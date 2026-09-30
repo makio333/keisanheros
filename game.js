@@ -3060,6 +3060,18 @@ function isKanjiProblem(problem) {
 }
 
 
+
+function getChallengePrompt(problem, isAttack = false) {
+  if (isKanjiProblem(problem)) {
+    const tierStr = String(problem.tier || '');
+    if (tierStr.startsWith('kana')) {
+      return isAttack ? 'こうげき！ もじを そのまま にゅうりょく！' : 'もじを そのまま にゅうりょく！';
+    }
+    return isAttack ? 'こうげき！ かんじの よみかたを にゅうりょく！' : 'かんじの よみかたを にゅうりょく！';
+  }
+  return isAttack ? 'こうげき！ けいさんの こたえを にゅうりょく！' : 'けいさんの こたえを にゅうりょく！';
+}
+
 function startChallenge(container, opts, cb){
   destroyChallenge();
   const timeLimit = opts.timeLimit || 8000;
@@ -3152,7 +3164,7 @@ function startChallenge(container, opts, cb){
 
   const challengeMainHTML = `
     <div class="challenge-main">
-      <div class="challenge-prompt">${opts.prompt || 'けいさんの こたえを にゅうりょく！'}</div>
+      <div class=\"challenge-prompt\">${opts.prompt || getChallengePrompt(opts.problem, false)}</div>
       <div class="challenge-problem${problem.isWordProblem ? ' challenge-problem-word' : ''}">${problem.text}${equationJoin}<span class="challenge-word" id="ch-word">？</span></div>
       ${assistHtml}
       <form id="ch-form" autocomplete="off">
@@ -3578,7 +3590,7 @@ function getOrGenerateTurnProblem(){
 function doAttack(){
   const { problem, timeLimit } = getOrGenerateTurnProblem();
   startChallenge($('battle-challenge'),
-    { problem, timeLimit, prompt: 'こうげき！ けいさんの こたえを にゅうりょく！', showBattleCommands: true },
+    { problem, timeLimit, prompt: getChallengePrompt(problem, true), showBattleCommands: true },
     (res) => {
       destroyChallenge();
       const atk = effectiveAtk();
@@ -6469,8 +6481,9 @@ function startEquipFlow(owned, db){
   $('training-title').textContent = `「${db.name}」を そうびする`;
   $('training-progress').textContent = `けいさん（${OP_LABELS[db.opTier]}）に せいかいして そうびしよう！`;
   const tier = db.opTier || 'add1';
+  const _prob = generateProblem(tier);
   startChallenge($('training-challenge'),
-    { problem:generateProblem(tier), timeLimit:problemTimeLimit(tier) + 4000, prompt:'けいさんの こたえを にゅうりょく！' },
+    { problem:_prob, timeLimit:problemTimeLimit(tier) + 4000, prompt:getChallengePrompt(_prob) },
     (res) => {
       destroyChallenge();
       if (res.success){
