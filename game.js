@@ -10001,100 +10001,9 @@ function printAreaStage(areaId, idx) {
 
   if (isKanji) {
     const variants = [
-      { label: '🅰 読み（よみ）', type: 'yomi' },
-      { label: '🅱 書き（かき）', type: 'kaki' },
-      { label: '🅲 読み書きミックス', type: 'mix' }
-    ].map(variant => {
-      const problems = [];
-      for (let i = 0; i < count; i++) problems.push(stage.generateProblem());
-      return {
-        problems,
-        opLabel: stage.name,
-        onSelect: () => {
-          const makeRow = (p, i) => {
-            // yomi: 漢字 -> ひらがな
-            // kaki: ひらがな -> 漢字
-            let qText = p.text;
-            let mode = variant.type;
-            if (mode === 'mix') mode = (i % 2 === 0) ? 'yomi' : 'kaki';
-            
-            if (mode === 'yomi') {
-              return `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr" style="font-size:24px;">${p.text}</span><span class="p-blank" style="width:120px; border-bottom:1px dashed #000; margin-left:10px;"></span></div>`;
-            } else {
-              return `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr" style="font-size:20px;">${p.answer}</span><span class="p-blank" style="width:50px; height:50px; border:1px solid #000; margin-left:10px; display:inline-block; vertical-align:middle;"></span></div>`;
-            }
-          };
-          const p1 = problems.slice(0, 5).map((p, i) => makeRow(p, i)).join('');
-          const p2 = problems.slice(5, 10).map((p, i) => makeRow(p, i + 5)).join('');
-          
-          const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
-          const printId = addPrintCode(areaId + '_' + idx, pCode, { type: 'stage', problems, name: printName, areaId, stageIndex: idx, kanjiMode: variant.type });
-          save();
-          openPrintWindow(`
-            <div class="p-title">【エリア${numPrefix}-${idx+1}】 ${printName} ${variant.label}</div>
-            <div class="p-name-box">なまえ：<span class="p-name-line"></span></div>
-            <div class="p-bonus-banner">🎉 プリントでクリアすると 通常の<b>3倍以上</b>の報酬が もらえるぞ！</div>
-            <div class="p-desc">プリント番号: ${printId}</div>
-            <div class="p-cols">
-              <div class="p-col">${p1}</div>
-              <div class="p-col">${p2}</div>
-            </div>
-          `);
-        }
-      };
-    });
-    showPrintChoiceModal(variants);
-  } else {
-    // 算数の場合
-    const variants = ['🅰 Aセット', '🅱 Bセット', '🅲 Cセット'].map((label, vi) => {
-      const problems = [];
-      for (let i = 0; i < count; i++) problems.push(stage.generateProblem());
-      return {
-        problems,
-        opLabel: stage.name,
-        onSelect: () => {
-          const p1 = problems.slice(0, 5).map((p, i) =>
-            `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
-          ).join('');
-          const p2 = problems.slice(5, 10).map((p, i) =>
-            `<div class="p-row"><span class="p-num">${i + 6}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
-          ).join('');
-          const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
-          const printId = addPrintCode(areaId + '_' + idx, pCode, { type: 'stage', problems, name: printName, areaId, stageIndex: idx });
-          save();
-          openPrintWindow(`
-            <div class="p-title">【エリア${numPrefix}-${idx+1}】 ${printName} ${label}</div>
-            <div class="p-name-box">なまえ：<span class="p-name-line"></span></div>
-            <div class="p-bonus-banner">🎉 プリントでクリアすると 通常の<b>3倍以上</b>の報酬が もらえるぞ！</div>
-            <div class="p-desc">プリント番号: ${printId}</div>
-            <div class="p-cols">
-              <div class="p-col">${p1}</div>
-              <div class="p-col">${p2}</div>
-            </div>
-          `);
-        }
-      };
-    });
-    showPrintChoiceModal(variants);
-  }
-}
-
-
-
-function printAreaBoss(areaId) {
-  const area = AREA_STAGES[areaId];
-  const count = 10;
-  const numPrefix = area.displayNum || areaId.replace('area', '');
-  const printName = `${area.name} ボス戦`;
-
-  const sampleP = area.bossPhase1Problem();
-  const isKanji = isKanjiProblem(sampleP) || ['area5','area6','area7','area8','area9','area10','area14','area15'].includes(areaId);
-
-  if (isKanji) {
-    const variants = [
-      { label: '🅰 読み（よみ）', type: 'yomi' },
-      { label: '🅱 書き（かき）', type: 'kaki' },
-      { label: '🅲 読み書きミックス', type: 'mix' }
+      { label: '読み（よみ）', type: 'yomi' },
+      { label: '書き（かき）', type: 'kaki' },
+      { label: '読み書きミックス', type: 'mix' }
     ].map(variant => {
       const problems = [];
       for (let i = 0; i < 5; i++) problems.push(area.bossPhase1Problem());
@@ -10106,10 +10015,11 @@ function printAreaBoss(areaId) {
           const makeRow = (p, i) => {
             let mode = variant.type;
             if (mode === 'mix') mode = (i % 2 === 0) ? 'yomi' : 'kaki';
+            
             if (mode === 'yomi') {
-              return `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr" style="font-size:24px;">${p.text}</span><span class="p-blank" style="width:120px; border-bottom:1px dashed #000; margin-left:10px;"></span></div>`;
+              return `<div class="p-row-kanji"><span class="p-num-kanji">${i + 1}.</span><span class="p-expr-kanji" style="font-size:24px; font-weight:bold;">${p.text}</span><span class="p-blank-kanji" style="height:120px; width:40px; border:1px dashed #888; margin-top:16px;"></span></div>`;
             } else {
-              return `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr" style="font-size:20px;">${p.answer}</span><span class="p-blank" style="width:50px; height:50px; border:1px solid #000; margin-left:10px; display:inline-block; vertical-align:middle;"></span></div>`;
+              return `<div class="p-row-kanji"><span class="p-num-kanji">${i + 1}.</span><span class="p-expr-kanji" style="font-size:20px;">${p.answer}</span><span class="p-blank-kanji" style="height:60px; width:60px; border:2px solid #333; margin-top:16px; display:flex; align-items:center; justify-content:center;"></span></div>`;
             }
           };
           const p1 = problems.slice(0, 5).map((p, i) => makeRow(p, i)).join('');
@@ -10119,20 +10029,38 @@ function printAreaBoss(areaId) {
           const printId = addPrintCode(areaId + '_boss', pCode, { type: 'boss', problems, name: printName, areaId, kanjiMode: variant.type });
           save();
           openPrintWindow(`
-            <div class="p-title">【エリア${numPrefix}】 ${printName} ${variant.label}</div>
-            <div class="p-name-box">なまえ：<span class="p-name-line"></span></div>
-            <div class="p-bonus-banner">🎉 プリントでクリアすると 通常の<b>3倍以上</b>の報酬が もらえるぞ！</div>
-            <div class="p-desc">プリント番号: ${printId}</div>
-            <div class="p-cols">
-              <div class="p-col">${p1}</div>
-              <div class="p-col">${p2}</div>
+            <style>
+              @page { size: A4 landscape; margin: 10mm; }
+              body { writing-mode: vertical-lr; padding: 0; font-family: sans-serif; }
+              .p-wrapper-kanji { display: flex; flex-direction: column; width: 100%; height: 100%; justify-content: space-between; }
+              .p-header-kanji { writing-mode: vertical-lr; display: flex; align-items: flex-start; justify-content: flex-start; margin-right: 20px; }
+              .p-title { font-size: 22px; font-weight: bold; margin-bottom: 16px; }
+              .p-name-box { font-size: 16px; margin-bottom: 24px; }
+              .p-name-line { display: inline-block; height: 150px; border-left: 1px solid #222; margin-top: 8px; }
+              .p-desc { font-size: 14px; color: #555; }
+              .p-cols-kanji { display: flex; flex-direction: row; gap: 40px; justify-content: space-around; flex: 1; }
+              .p-col-kanji { display: flex; flex-direction: row; gap: 30px; }
+              .p-row-kanji { display: flex; flex-direction: column; align-items: center; border-left: 1px dotted #ccc; padding-left: 10px; }
+              .p-num-kanji { color: #888; font-size: 16px; margin-bottom: 12px; }
+              .p-expr-kanji { letter-spacing: 0.2em; text-orientation: upright; }
+            </style>
+            <div class="p-wrapper-kanji">
+              <div class="p-header-kanji">
+                <div class="p-title">【エリア${numPrefix}】 ${printName} ${variant.label}</div>
+                <div class="p-name-box">なまえ：<span class="p-name-line"></span></div>
+                <div class="p-desc">プリント番号: ${printId}</div>
+              </div>
+              <div class="p-cols-kanji">
+                <div class="p-col-kanji">${p1}</div>
+                <div class="p-col-kanji">${p2}</div>
+              </div>
             </div>
           `);
         }
       };
     });
     showPrintChoiceModal(variants);
-  } else {
+} else {
     const variants = ['🅰 Aセット', '🅱 Bセット', '🅲 Cセット'].map((label, vi) => {
       const problems = [];
       for (let i = 0; i < 5; i++) problems.push(area.bossPhase1Problem());
