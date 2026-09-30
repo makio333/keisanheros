@@ -3337,9 +3337,11 @@ const STAGE_STARS_TO_UNLOCK_NEXT = 3;
 function isGrassStageUnlocked(zone){
   const idx = GRASS_AREA_ORDER.indexOf(zone);
   if (idx <= 0) return true;
+  if (!G || !G.clearCounts) return false;
   return (G.clearCounts[GRASS_AREA_ORDER[idx - 1]] || 0) >= STAGE_STARS_TO_UNLOCK_NEXT;
 }
 function zoneStarsHtml(zone){
+  if (!G || !G.clearCounts) return '☆'.repeat(STAGE_STARS_TO_UNLOCK_NEXT);
   const count = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, G.clearCounts[zone] || 0);
   return '★'.repeat(count) + '☆'.repeat(STAGE_STARS_TO_UNLOCK_NEXT - count);
 }
