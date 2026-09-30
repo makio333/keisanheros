@@ -6560,9 +6560,6 @@ function showSkills(){
 
 /* 別ウィンドウを開いてプリント内容だけを印刷する（超高速）*/
 function openPrintWindow(htmlContent, bgUrl) {
-  if (bgUrl) {
-    htmlContent = `<div class="print-bg" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; -webkit-print-color-adjust: exact; print-color-adjust: exact;"><img src="${bgUrl}" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.15; -webkit-print-color-adjust: exact; print-color-adjust: exact;"></div>` + htmlContent;
-  }
 
   const printCSS = `
     @page { size: A4; margin: 8mm; }
@@ -10058,10 +10055,16 @@ function printAreaStage(areaId, idx) {
             let mode = variant.type;
             if (mode === 'mix') mode = (i % 2 === 0) ? 'yomi' : 'kaki';
             
+            const length = Math.max(3, p.answer ? p.answer.length : 3);
+            let cells = '';
+            for (let c = 0; c < length; c++) {
+              cells += '<div class="p-box-cell"></div>';
+            }
+            
             if (mode === 'yomi') {
-              return `<div class="p-row-kanji"><span class="p-num-kanji">${i + 1}.</span><span class="p-expr-kanji" style="font-size:24px; font-weight:bold;">${p.text}</span><span class="p-blank-kanji" style="height:120px; width:40px; border:1px dashed #888; margin-top:16px;"></span></div>`;
+              return `<div class="p-row-kanji"><span class="p-num-kanji">(${i + 1})</span><span class="p-expr-kanji">${p.text}</span><div style="font-size:24px; margin-bottom:8px;">⇩</div><div class="p-box-container">${cells}</div></div>`;
             } else {
-              return `<div class="p-row-kanji"><span class="p-num-kanji">${i + 1}.</span><span class="p-expr-kanji" style="font-size:20px;">${p.answer}</span><span class="p-blank-kanji" style="height:60px; width:60px; border:2px solid #333; margin-top:16px; display:flex; align-items:center; justify-content:center;"></span></div>`;
+              return `<div class="p-row-kanji"><span class="p-num-kanji">(${i + 1})</span><span class="p-expr-kanji">${p.answer}</span><div style="font-size:24px; margin-bottom:8px;">⇩</div><div class="p-box-container">${cells}</div></div>`;
             }
           };
           const p1 = problems.slice(0, 5).map((p, i) => makeRow(p, i)).join('');
@@ -10073,9 +10076,9 @@ function printAreaStage(areaId, idx) {
           openPrintWindow(`
             <style>
               @page { size: A4 landscape; margin: 10mm; }
-              body { writing-mode: vertical-lr; padding: 0; font-family: sans-serif; }
+              body { writing-mode: vertical-rl; padding: 0; font-family: sans-serif; }
               .p-wrapper-kanji { display: flex; flex-direction: column; width: 100%; height: 100%; justify-content: space-between; }
-              .p-header-kanji { writing-mode: vertical-lr; display: flex; align-items: flex-start; justify-content: flex-start; margin-right: 20px; }
+              .p-header-kanji { writing-mode: vertical-rl; display: flex; align-items: flex-start; justify-content: flex-start; margin-left: 30px; }
               .p-title { font-size: 22px; font-weight: bold; margin-bottom: 16px; }
               .p-name-box { font-size: 16px; margin-bottom: 24px; }
               .p-name-line { display: inline-block; height: 150px; border-left: 1px solid #222; margin-top: 8px; }
@@ -10089,7 +10092,7 @@ function printAreaStage(areaId, idx) {
             <div class="p-wrapper-kanji">
               <div class="p-header-kanji">
                 <div class="p-title">【エリア${numPrefix}】 ${printName} ${variant.label}</div>
-                <div class="p-name-box">なまえ：<span class="p-name-line"></span></div>
+                <div class="p-name-box">なまえ：<span class="p-name-line"><span>${typeof G !== "undefined" && G && G.player ? G.player.name : ""}</span></span></div>
                 <div class="p-desc">プリント番号: ${printId}</div>
               </div>
               <div class="p-cols-kanji">
@@ -10122,7 +10125,7 @@ function printAreaStage(areaId, idx) {
           save();
           openPrintWindow(`
             <div class="p-title">【エリア${numPrefix}】 ${printName} ${label}</div>
-            <div class="p-name-box">なまえ：<span class="p-name-line"></span></div>
+            <div class="p-name-box">なまえ：<span class="p-name-line" style="position:relative;"><span style="position:absolute; bottom:2px; left:4px; font-size:18px;">${typeof G !== "undefined" && G && G.player ? G.player.name : ""}</span></span></div>
             <div class="p-bonus-banner">🎉 プリントでクリアすると 通常の<b>3倍以上</b>の報酬が もらえるぞ！</div>
             <div class="p-desc">プリント番号: ${printId}</div>
             <div class="p-cols">
