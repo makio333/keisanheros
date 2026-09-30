@@ -6,6 +6,61 @@
 //   tier の なまえ: 'kanji_g3_2' → 3年の ステージ2 ／ 'kanji_g3' → 3年 ぜんぶ
 // ==========================================
 
+
+/* ================= ひらがな（長音・促音・拗音・特殊） ================= */
+const KANA_HIRA_S1 = [
+  { answer: 'おかあさん', text: 'おかあさん' }, { answer: 'おにいさん', text: 'おにいさん' },
+  { answer: 'おねえさん', text: 'おねえさん' }, { answer: 'こおり', text: 'こおり' },
+  { answer: 'ふうせん', text: 'ふうせん' }, { answer: 'ほうき', text: 'ほうき' },
+];
+const KANA_HIRA_S2 = [
+  { answer: 'きっぷ', text: 'きっぷ' }, { answer: 'らっぱ', text: 'らっぱ' },
+  { answer: 'がっこう', text: 'がっこう' }, { answer: 'きって', text: 'きって' },
+  { answer: 'ばった', text: 'ばった' }, { answer: 'けっこん', text: 'けっこん' },
+];
+const KANA_HIRA_S3 = [
+  { answer: 'きゅうり', text: 'きゅうり' }, { answer: 'にんじゃ', text: 'にんじゃ' },
+  { answer: 'きゃく', text: 'きゃく' }, { answer: 'きんぎょ', text: 'きんぎょ' },
+  { answer: 'ちゅうしゃ', text: 'ちゅうしゃ' }, { answer: 'でんしゃ', text: 'でんしゃ' },
+];
+const KANA_HIRA_S4 = [
+  { answer: 'おばあさん', text: 'おばあさん' }, { answer: 'おとうさん', text: 'おとうさん' },
+  { answer: 'しょくどう', text: 'しょくどう' }, { answer: 'びょういん', text: 'びょういん' },
+  { answer: 'じどうしゃ', text: 'じどうしゃ' }, { answer: 'しょうぼうしゃ', text: 'しょうぼうしゃ' },
+];
+const KANA_HIRA_S5 = [
+  { answer: 'こんにちは', text: 'こんにちは' }, { answer: 'こんばんは', text: 'こんばんは' },
+  { answer: 'わたしは', text: 'わたしは' }, { answer: 'えへ', text: 'えへ' },
+  { answer: 'おとうと', text: 'おとうと' }, { answer: 'いもうと', text: 'いもうと' },
+];
+
+/* ================= カタカナ（長音・促音・拗音・外来音） ================= */
+const KANA_KATA_S1 = [
+  { answer: 'ケーキ', text: 'ケーキ' }, { answer: 'ジュース', text: 'ジュース' },
+  { answer: 'ノート', text: 'ノート' }, { answer: 'ゲーム', text: 'ゲーム' },
+  { answer: 'スポーツ', text: 'スポーツ' }, { answer: 'プール', text: 'プール' },
+];
+const KANA_KATA_S2 = [
+  { answer: 'コップ', text: 'コップ' }, { answer: 'ベッド', text: 'ベッド' },
+  { answer: 'ヨット', text: 'ヨット' }, { answer: 'ロボット', text: 'ロボット' },
+  { answer: 'ペット', text: 'ペット' }, { answer: 'チケット', text: 'チケット' },
+];
+const KANA_KATA_S3 = [
+  { answer: 'シャツ', text: 'シャツ' }, { answer: 'チョコ', text: 'チョコ' },
+  { answer: 'ジャム', text: 'ジャム' }, { answer: 'カメラ', text: 'カメラ' },
+  { answer: 'パンダ', text: 'パンダ' }, { answer: 'メロン', text: 'メロン' },
+];
+const KANA_KATA_S4 = [
+  { answer: 'コンピューター', text: 'コンピューター' }, { answer: 'チョコレート', text: 'チョコレート' },
+  { answer: 'ハンバーグ', text: 'ハンバーグ' }, { answer: 'サンドイッチ', text: 'サンドイッチ' },
+  { answer: 'レストラン', text: 'レストラン' }, { answer: 'カレンダー', text: 'カレンダー' },
+];
+const KANA_KATA_S5 = [
+  { answer: 'パーティー', text: 'パーティー' }, { answer: 'ファイト', text: 'ファイト' },
+  { answer: 'ウェディング', text: 'ウェディング' }, { answer: 'ウォーター', text: 'ウォーター' },
+  { answer: 'チェック', text: 'チェック' }, { answer: 'シェフ', text: 'シェフ' },
+];
+
 /* ================= 1年（80字） ================= */
 const KANJI_G1_S1 = [
   { answer: 'ひとつ', text: '一つ' }, { answer: 'ふたつ', text: '二つ' }, { answer: 'みっつ', text: '三つ' },
@@ -437,6 +492,10 @@ const KANJI_WORDS_G2 = [...KANJI_G2_S1, ...KANJI_G2_S2, ...KANJI_G2_S3, ...KANJI
 const KANJI_WORDS_G3 = [...KANJI_G3_S1, ...KANJI_G3_S2, ...KANJI_G3_S3, ...KANJI_G3_S4, ...KANJI_G3_S5];
 const KANJI_WORDS_G4 = [...KANJI_G4_S1, ...KANJI_G4_S2, ...KANJI_G4_S3, ...KANJI_G4_S4, ...KANJI_G4_S5];
 const KANJI_WORDS_G5 = [...KANJI_G5_S1, ...KANJI_G5_S2, ...KANJI_G5_S3, ...KANJI_G5_S4, ...KANJI_G5_S5];
+
+const KANA_WORDS_HIRA = [...KANA_HIRA_S1, ...KANA_HIRA_S2, ...KANA_HIRA_S3, ...KANA_HIRA_S4, ...KANA_HIRA_S5];
+const KANA_WORDS_KATA = [...KANA_KATA_S1, ...KANA_KATA_S2, ...KANA_KATA_S3, ...KANA_KATA_S4, ...KANA_KATA_S5];
+
 const KANJI_WORDS_G6 = [...KANJI_G6_S1, ...KANJI_G6_S2, ...KANJI_G6_S3, ...KANJI_G6_S4, ...KANJI_G6_S5];
 
 /* がくねん（tier）と ことばリストの たいおうひょう。
@@ -453,6 +512,11 @@ const KANJI_POOLS = {
   kanji_g3_1: KANJI_G3_S1, kanji_g3_2: KANJI_G3_S2, kanji_g3_3: KANJI_G3_S3, kanji_g3_4: KANJI_G3_S4, kanji_g3_5: KANJI_G3_S5,
   kanji_g4_1: KANJI_G4_S1, kanji_g4_2: KANJI_G4_S2, kanji_g4_3: KANJI_G4_S3, kanji_g4_4: KANJI_G4_S4, kanji_g4_5: KANJI_G4_S5,
   kanji_g5_1: KANJI_G5_S1, kanji_g5_2: KANJI_G5_S2, kanji_g5_3: KANJI_G5_S3, kanji_g5_4: KANJI_G5_S4, kanji_g5_5: KANJI_G5_S5,
+  
+  kana_hira: KANA_WORDS_HIRA,
+  kana_kata: KANA_WORDS_KATA,
+  kana_hira_1: KANA_HIRA_S1, kana_hira_2: KANA_HIRA_S2, kana_hira_3: KANA_HIRA_S3, kana_hira_4: KANA_HIRA_S4, kana_hira_5: KANA_HIRA_S5,
+  kana_kata_1: KANA_KATA_S1, kana_kata_2: KANA_KATA_S2, kana_kata_3: KANA_KATA_S3, kana_kata_4: KANA_KATA_S4, kana_kata_5: KANA_KATA_S5,
   kanji_g6_1: KANJI_G6_S1, kanji_g6_2: KANJI_G6_S2, kanji_g6_3: KANJI_G6_S3, kanji_g6_4: KANJI_G6_S4, kanji_g6_5: KANJI_G6_S5,
 };
 
@@ -464,6 +528,9 @@ const KANJI_STAGE_LABELS = {
   g4: ['その1', 'その2', 'その3', 'その4', 'その5'],
   g5: ['その1', 'その2', 'その3', 'その4', 'その5'],
   g6: ['その1', 'その2', 'その3', 'その4', 'その5'],
+  kana_hira: ['長音', '促音', '拗音', '複合', '特殊・助詞'],
+  kana_kata: ['長音', '促音', '拗音・その他', '複合１', '複合２'],
+
 };
 
 /**
