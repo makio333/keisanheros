@@ -154,26 +154,90 @@ function toggleInputMode() {
 function setupKanjiChallenge(problemData) {
   currentChallengeAnswer = problemData.answer;
   currentAcceptedAnswers = kanjiAcceptedAnswers(problemData.text, problemData.answer);
-  const textEl = document.getElementById('challenge-problem-text');
-  if(textEl) textEl.textContent = problemData.text;
   
-  const inputEl = document.getElementById('challenge-input');
-  if(inputEl) {
-    inputEl.value = '';
-    const tierStr = String(problemData.tier || '');
-    if (tierStr.startsWith('kana_kata')) {
-      inputEl.placeholder = 'カタカナで入力';
-    } else if (tierStr.startsWith('kana_hira')) {
-      inputEl.placeholder = 'そのまま入力';
-    } else {
-      inputEl.placeholder = 'ひらがなで入力';
+  const tierStr = String(problemData.tier || '');
+  const locProb = tierStr.startsWith('kana') ? (typeof createKanaLocationProblem === 'function' ? createKanaLocationProblem(problemData.text) : null) : null;
+  
+  const normalDisplay = document.getElementById('kanji-normal-display');
+  const locDisplay = document.getElementById('kana-location-display');
+  const inputDisplay = document.getElementById('kanji-input-display');
+  const inputToggle = document.getElementById('kanji-input-toggle');
+  const keyboard = document.getElementById('kanji-challenge'); // ソフトウェアキーボードのコンテナ
+  
+  if (locProb) {
+    // 場所当てモード
+    if (normalDisplay) normalDisplay.classList.add('hidden');
+    if (locDisplay) locDisplay.classList.remove('hidden');
+    if (inputDisplay) inputDisplay.classList.add('hidden');
+    if (inputToggle) inputToggle.classList.add('hidden');
+    if (keyboard) keyboard.classList.add('hidden'); // キーボード隠す
+    
+    document.getElementById('kana-location-question').textContent = `「${locProb.specialChar}」が はいるのは どこ？`;
+    
+    const btnContainer = document.getElementById('kana-location-buttons');
+    btnContainer.innerHTML = '';
+    
+    // ボタンの生成 (文字と隙間のボタンを交互に配置)
+    for (let i = 0; i <= locProb.baseChars.length; i++) {
+      // 隙間ボタン (ここに入るか？)
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-primary';
+      btn.style.padding = '10px 15px';
+      btn.style.fontSize = '20px';
+      btn.textContent = 'ここ';
+      btn.onclick = () => {
+        if (i === locProb.correctIndex) {
+          submitKanjiAnswer(true); // 正解
+        } else {
+          submitKanjiAnswer(false); // 不正解
+        }
+      };
+      btnContainer.appendChild(btn);
+      
+      if (i < locProb.baseChars.length) {
+        // 文字ラベル
+        const span = document.createElement('span');
+        span.style.fontSize = '28px';
+        span.style.fontWeight = 'bold';
+        span.textContent = locProb.baseChars[i];
+        btnContainer.appendChild(span);
+      }
     }
-    if(isFlickMode) inputEl.focus();
+  } else {
+    // 通常入力モード
+    if (normalDisplay) normalDisplay.classList.remove('hidden');
+    if (locDisplay) locDisplay.classList.add('hidden');
+    if (inputDisplay) inputDisplay.classList.remove('hidden');
+    if (inputToggle) inputToggle.classList.remove('hidden');
+    if (keyboard && !isFlickMode) keyboard.classList.remove('hidden'); // ソフトウェアキーボード表示 (フリックモード等に応じて)
+    
+    const textEl = document.getElementById('challenge-problem-text');
+    if(textEl) textEl.textContent = problemData.text;
+    
+    const inputEl = document.getElementById('challenge-input');
+    if(inputEl) {
+      inputEl.value = '';
+      if (tierStr.startsWith('kana_kata')) {
+        inputEl.placeholder = 'カタカナで入力';
+      } else if (tierStr.startsWith('kana_hira')) {
+        inputEl.placeholder = 'そのまま入力';
+      } else {
+        inputEl.placeholder = 'ひらがなで入力';
+      }
+      if(isFlickMode) inputEl.focus();
+    }
   }
 }
 
-function submitKanjiAnswer() {
+
+function submitKanjiAnswer(forceResult) {
   if (!currentChallengeAnswer) return;
+  
+  if (typeof forceResult === 'boolean') {
+    if (onAnswerCallback) onAnswerCallback(forceResult);
+    currentChallengeAnswer = null;
+    return;
+  }
   
   const inputEl = document.getElementById('challenge-input');
   if (!inputEl) return;

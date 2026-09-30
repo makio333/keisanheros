@@ -776,15 +776,19 @@
         <!-- お題も 入力らんも ATBゲージの した。五十音ボードだけ みぎに だす -->
         <div id="kanji-problem-center" class="hidden">
           <div id="kanji-prompt" class="kanji-prompt hidden"></div>
-          <div class="problem-display">
+          <div class="problem-display" id="kanji-normal-display">
             <div id="challenge-problem-text" class="problem-text">漢字</div>
           </div>
+          <div class="problem-display hidden" id="kana-location-display" style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
+             <div id="kana-location-question" style="font-size: 24px; font-weight: bold;"></div>
+             <div id="kana-location-buttons" style="display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap;"></div>
+          </div>
           <div id="kanji-hint" class="kanji-hint hidden"></div>
-          <div class="input-display">
+          <div class="input-display" id="kanji-input-display">
             <input type="text" id="challenge-input" placeholder="ひらがなで入力" autocomplete="off" inputmode="text" enterkeyhint="send" readonly>
             <button id="btn-submit-answer" class="submit-btn">決定</button>
           </div>
-          <div class="input-mode-toggle">
+          <div class="input-mode-toggle" id="kanji-input-toggle">
             <button id="btn-toggle-input" class="toggle-btn">入力切替：五十音</button>
           </div>
           <div id="kanji-battle-commands" class="battle-inline-commands hidden" style="margin-top: 10px; display: flex; gap: 8px; justify-content: center;">

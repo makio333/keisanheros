@@ -3072,6 +3072,34 @@ function getChallengePrompt(problem, isAttack = false) {
   return isAttack ? 'こうげき！ けいさんの こたえを にゅうりょく！' : 'けいさんの こたえを にゅうりょく！';
 }
 
+
+// 促音・長音などの「場所当て問題」用データを生成する
+function createKanaLocationProblem(word) {
+  const specialChars = ['っ', 'ッ', 'ー', 'ゃ', 'ゅ', 'ょ', 'ャ', 'ュ', 'ョ'];
+  let special = '';
+  let specialIndex = -1;
+  
+  for (let i = 0; i < word.length; i++) {
+    if (specialChars.includes(word[i])) {
+      special = word[i];
+      specialIndex = i;
+      break;
+    }
+  }
+  
+  if (!special) return null;
+  
+  const chars = word.split('');
+  chars.splice(specialIndex, 1);
+  
+  return {
+    original: word,
+    specialChar: special,
+    baseChars: chars,
+    correctIndex: specialIndex // 0から始まる挿入位置。 baseChars.length までのどこか。
+  };
+}
+
 function startChallenge(container, opts, cb){
   destroyChallenge();
   const timeLimit = opts.timeLimit || 8000;
@@ -10061,11 +10089,18 @@ function printAreaStage(areaId, idx) {
               cells += '<div class="p-box-cell"></div>';
             }
             
-            if (mode === 'yomi') {
-              return `<div class="p-row-kanji"><span class="p-num-kanji">(${i + 1})</span><span class="p-expr-kanji">${p.text}</span><div style="font-size:24px; margin-bottom:8px;">⇩</div><div class="p-box-container">${cells}</div></div>`;
-            } else {
-              return `<div class="p-row-kanji"><span class="p-num-kanji">(${i + 1})</span><span class="p-expr-kanji">${p.answer}</span><div style="font-size:24px; margin-bottom:8px;">⇩</div><div class="p-box-container">${cells}</div></div>`;
+            let displayText = mode === 'yomi' ? p.text : p.answer;
+            let hintText = '';
+            const tierStr = String(p.tier || '');
+            if (tierStr.startsWith('kana')) {
+              const locProb = typeof createKanaLocationProblem === 'function' ? createKanaLocationProblem(displayText) : null;
+              if (locProb) {
+                displayText = locProb.baseChars.join('　'); // 間をあける
+                hintText = `<div style="font-size:16px; border:1px solid #555; padding:4px; border-radius:4px; margin-bottom:8px;">「${locProb.specialChar}」<br>を<br>い<br>れ<br>る</div>`;
+              }
             }
+            
+            return `<div class="p-row-kanji"><span class="p-num-kanji">(${i + 1})</span><span class="p-expr-kanji">${displayText}</span>${hintText}<div style="font-size:24px; margin-bottom:8px;">⇩</div><div class="p-box-container">${cells}</div></div>`;
           };
           const p1 = problems.slice(0, 5).map((p, i) => makeRow(p, i)).join('');
           const p2 = problems.slice(5, 10).map((p, i) => makeRow(p, i + 5)).join('');
@@ -10105,8 +10140,103 @@ function printAreaStage(areaId, idx) {
       };
     });
     showPrintChoiceModal(variants);
+  }
+}
+
+function printAreaBoss(areaId) {
+  const area = AREA_STAGES[areaId];
+  const count = 10;
+  const numPrefix = area.displayNum || areaId.replace('area', '');
+  const printName = `${area.name} ボス戦`;
+
+  const sampleP = area.bossPhase1Problem();
+  const isKanji = isKanjiProblem(sampleP) || ['area5','area6','area7','area8','area9','area10','area14','area15'].includes(areaId);
+
+  if (isKanji) {
+    const variants = [
+      { label: '読み（よみ）', type: 'yomi' },
+      { label: '書き（かき）', type: 'kaki' },
+      { label: '読み書きミックス', type: 'mix' }
+    ].map(variant => {
+      const problems = [];
+      for (let i = 0; i < 5; i++) problems.push(area.bossPhase1Problem());
+      for (let i = 0; i < 5; i++) problems.push(area.bossPhase2Problem());
+      return {
+        problems,
+        opLabel: 'ボス戦',
+        onSelect: () => {
+          const makeRow = (p, i) => {
+            let mode = variant.type;
+            if (mode === 'mix') mode = (i % 2 === 0) ? 'yomi' : 'kaki';
+            
+            const length = Math.max(3, p.answer ? p.answer.length : 3);
+            let cells = '';
+            for (let c = 0; c < length; c++) {
+              cells += '<div class="p-box-cell"></div>';
+            }
+            
+            let displayText = mode === 'yomi' ? p.text : p.answer;
+            let hintText = '';
+            const tierStr = String(p.tier || '');
+            if (tierStr.startsWith('kana')) {
+              const locProb = typeof createKanaLocationProblem === 'function' ? createKanaLocationProblem(displayText) : null;
+              if (locProb) {
+                displayText = locProb.baseChars.join('　'); // 間をあける
+                hintText = `<div style="font-size:16px; border:1px solid #555; padding:4px; border-radius:4px; margin-bottom:8px;">「${locProb.specialChar}」<br>を<br>い<br>れ<br>る</div>`;
+              }
+            }
+            
+            return `<div class="p-row-kanji"><span class="p-num-kanji">(${i + 1})</span><span class="p-expr-kanji">${displayText}</span>${hintText}<div style="font-size:24px; margin-bottom:8px;">⇩</div><div class="p-box-container">${cells}</div></div>`;
+          };
+          const p1 = problems.slice(0, 5).map((p, i) => makeRow(p, i)).join('');
+          const p2 = problems.slice(5, 10).map((p, i) => makeRow(p, i + 5)).join('');
+          
+          const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
+          const printId = addPrintCode(areaId + '_boss', pCode, { type: 'boss', problems, name: printName, areaId, kanjiMode: variant.type });
+          save();
+          openPrintWindow(`
+            <style>
+              @page { size: A4 landscape; margin: 10mm; }
+              body { writing-mode: vertical-rl; padding: 0; font-family: "Yu Mincho", "MS Mincho", serif; }
+              .p-wrapper-kanji { display: flex; flex-direction: column; width: 100%; height: 100%; justify-content: space-between; }
+              .p-header-kanji { writing-mode: vertical-rl; display: flex; align-items: flex-start; justify-content: flex-start; margin-left: 30px; }
+              .p-title { font-size: 22px; font-weight: bold; margin-bottom: 16px; }
+              .p-name-box { font-size: 16px; margin-bottom: 24px; }
+              .p-name-line { display: inline-block; height: 150px; border-left: 1px solid #222; margin-top: 8px; position:relative; }
+              .p-name-line span { position:absolute; top:10px; right:4px; font-size:18px; }
+              .p-desc { font-size: 14px; color: #555; }
+              .p-cols-kanji { display: flex; flex-direction: row; gap: 40px; justify-content: space-around; flex: 1; }
+              .p-col-kanji { display: flex; flex-direction: row; gap: 30px; }
+              .p-row-kanji { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; border-right: 1px dotted #ccc; padding-right: 10px; }
+              .p-num-kanji { color: #888; font-size: 16px; margin-bottom: 12px; }
+              .p-expr-kanji { letter-spacing: 0.3em; text-orientation: upright; margin-bottom: 16px; font-size: 24px; font-weight: bold; }
+              /* 箱のスタイル（縦並びの四角） */
+              .p-box-container { display: flex; flex-direction: column; border: 2px solid #33a1dd; }
+              .p-box-cell { width: 40px; height: 40px; border-bottom: 1px dashed #33a1dd; box-sizing: border-box; }
+              .p-box-cell:last-child { border-bottom: none; }
+              /* 中心の点線 */
+              .p-box-cell { position: relative; }
+              .p-box-cell::before { content: ""; position: absolute; top: 50%; left: 0; right: 0; border-top: 1px dotted #a8d5ef; }
+              .p-box-cell::after { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; border-left: 1px dotted #a8d5ef; }
+            </style>
+            <div class="p-wrapper-kanji">
+              <div class="p-header-kanji">
+                <div class="p-title">【エリア${numPrefix}】 ${printName} ${variant.label}</div>
+                <div class="p-name-box">なまえ：<span class="p-name-line"><span>${typeof G !== "undefined" && G && G.player ? G.player.name : ""}</span></span></div>
+                <div class="p-desc">プリント番号: ${printId}</div>
+              </div>
+              <div class="p-cols-kanji">
+                <div class="p-col-kanji">${p1}</div>
+                <div class="p-col-kanji">${p2}</div>
+              </div>
+            </div>
+          `);
+        }
+      };
+    });
+    showPrintChoiceModal(variants);
 } else {
-    const variants = ['🅰 Aセット', '🅱 Bセット', '🅲 Cセット'].map((label, vi) => {
+    const variants = ['Aセット', 'Bセット', 'Cセット'].map((label, vi) => {
       const problems = [];
       for (let i = 0; i < 5; i++) problems.push(area.bossPhase1Problem());
       for (let i = 0; i < 5; i++) problems.push(area.bossPhase2Problem());
@@ -10132,12 +10262,10 @@ function printAreaStage(areaId, idx) {
               <div class="p-col">${p1}</div>
               <div class="p-col">${p2}</div>
             </div>
-          `, area.bgImage ? av(area.bgImage) : null);
+          `);
         }
       };
     });
     showPrintChoiceModal(variants);
   }
 }
-
-
