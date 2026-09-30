@@ -5050,6 +5050,16 @@ function showStageSelect(){
   if ($('stage-status-area12')) $('stage-status-area12').innerHTML = `推奨Lv:25 / 小6算数（比・速さ）　${zoneStarsHtml('castle')}`;
 
   // こくご（漢字）エリア
+
+  if ($('stage-status-area14')) {
+    const area = AREA_STAGES['area14'];
+    $('stage-status-area14').innerHTML = `推奨Lv:${area ? area.recLv : 1} / ひらがな　${zoneStarsHtml('kanji1')}`;
+  }
+  if ($('stage-status-area15')) {
+    const area = AREA_STAGES['area15'];
+    $('stage-status-area15').innerHTML = `推奨Lv:${area ? area.recLv : 1} / カタカナ　${zoneStarsHtml('kanji2')}`;
+  }
+
   for (let i = 5; i <= 10; i++) {
     const el = $(`stage-status-area${i}`);
     if (el) {
@@ -5486,7 +5496,7 @@ function printQuestSheet(q){
     <div class="p-sheet" style="grid-template-columns:1fr; margin-top:12px;">
       ${rows}
     </div>
-  `);
+  `, av('画像/ステージ/かけ算の森.jpg'));
 }
 
 const STAT_DEFS = [
@@ -6534,7 +6544,11 @@ function showSkills(){
    ========================================================== */
 
 /* 別ウィンドウを開いてプリント内容だけを印刷する（超高速）*/
-function openPrintWindow(htmlContent) {
+function openPrintWindow(htmlContent, bgUrl) {
+  if (bgUrl) {
+    htmlContent = `<div class="print-bg" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; -webkit-print-color-adjust: exact; print-color-adjust: exact;"><img src="${bgUrl}" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.15; -webkit-print-color-adjust: exact; print-color-adjust: exact;"></div>` + htmlContent;
+  }
+
   const printCSS = `
     @page { size: A4; margin: 8mm; }
     body { font-family: sans-serif; background: #fff; color: #222; padding: 6mm; }
@@ -6629,7 +6643,7 @@ function printTrainingSheet(s){
           <div class="p-sub">えんざん：${OP_LABELS[tier]}／${label}／ぜんぶで ${count}もん</div>
           <div class="p-sub" style="font-size:20px; font-weight:bold;">【プリント番号: ${printId}】</div>
           <div class="p-sheet">${p1}${p2}</div>
-        `);
+        `, av('画像/ステージ/試練の塔.jpg'));
       }
     };
   });
@@ -6733,7 +6747,7 @@ function printBlueprintSheet(bp, uid){
           <div class="p-sub">えんざん：${OP_LABELS[bp.tier]}／${label}／${count}もん／「${equipDb.name}」を かいどく！</div>
           <div class="p-sub" style="font-size:20px; font-weight:bold;">【プリント番号: ${printId}】</div>
           <div class="p-sheet">${p1}${p2}</div>
-        `);
+        `, av('画像/ステージ/沼地.jpg'));
       }
     };
   });
@@ -6853,7 +6867,7 @@ function printDemonCastleSheet(){
           <div class="p-sub" style="margin-top: 10px;">魔王の秘宝を手に入れるための特別問題／ぜんぶで ${count}もん／${label}</div>
           <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>
           <div class="p-sheet">${p1}${p2}</div>
-        `);
+        `, av('画像/ステージ/魔王城.jpg'));
         
         const hint = $('demon-sheet-status-hint');
         if (hint) {
@@ -7479,7 +7493,20 @@ function bindEvents(){
   on('stage-card-area12', () => showStageSelectNew('area12'));
 
   // こくご（漢字）エリア
+
+  if ($('stage-status-area14')) {
+    const area = AREA_STAGES['area14'];
+    $('stage-status-area14').innerHTML = `推奨Lv:${area ? area.recLv : 1} / ひらがな　${zoneStarsHtml('kanji1')}`;
+  }
+  if ($('stage-status-area15')) {
+    const area = AREA_STAGES['area15'];
+    $('stage-status-area15').innerHTML = `推奨Lv:${area ? area.recLv : 1} / カタカナ　${zoneStarsHtml('kanji2')}`;
+  }
+
   on('stage-card-area5', () => showStageSelectNew('area5'));
+  on('stage-card-area14', () => showStageSelectNew('area14'));
+  on('stage-card-area15', () => showStageSelectNew('area15'));
+
   on('stage-card-area6', () => showStageSelectNew('area6'));
   on('stage-card-area7', () => showStageSelectNew('area7'));
   on('stage-card-area8', () => showStageSelectNew('area8'));
@@ -10055,7 +10082,7 @@ function printAreaStage(areaId, idx) {
                 <div class="p-col-kanji">${p2}</div>
               </div>
             </div>
-          `);
+          `, area.bgImage ? av(area.bgImage) : null);
         }
       };
     });
@@ -10087,7 +10114,7 @@ function printAreaStage(areaId, idx) {
               <div class="p-col">${p1}</div>
               <div class="p-col">${p2}</div>
             </div>
-          `);
+          `, area.bgImage ? av(area.bgImage) : null);
         }
       };
     });
