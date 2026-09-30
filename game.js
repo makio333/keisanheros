@@ -3051,12 +3051,14 @@ function assistVisualHtml(problem){
    ========================================================== */
 let currentChallenge = null;
 
+
 function isKanjiProblem(problem) {
   if (!problem) return false;
-  if (problem.tier && String(problem.tier).startsWith('kanji')) return true;
-  if (explore && explore.areaId && ['area5','area6','area7','area8','area9','area10'].includes(explore.areaId)) return true;
+  if (problem.tier && (String(problem.tier).startsWith('kanji') || String(problem.tier).startsWith('kana'))) return true;
+  if (explore && explore.areaId && ['area5','area6','area7','area8','area9','area10','area14','area15'].includes(explore.areaId)) return true;
   return false;
 }
+
 
 function startChallenge(container, opts, cb){
   destroyChallenge();
@@ -9995,7 +9997,7 @@ function printAreaStage(areaId, idx) {
 
   // 1つ試しに生成して、漢字かどうか判定
   const sampleP = stage.generateProblem();
-  const isKanji = sampleP.tier !== undefined || sampleP.text.match(/[一-龠ぁ-んァ-ヶ]/); // 簡易判定
+  const isKanji = isKanjiProblem(sampleP) || ['area5','area6','area7','area8','area9','area10','area14','area15'].includes(areaId);
 
   if (isKanji) {
     const variants = [
@@ -10086,7 +10088,7 @@ function printAreaBoss(areaId) {
   const printName = `${area.name} ボス戦`;
 
   const sampleP = area.bossPhase1Problem();
-  const isKanji = sampleP.tier !== undefined || sampleP.text.match(/[一-龠ぁ-んァ-ヶ]/);
+  const isKanji = isKanjiProblem(sampleP) || ['area5','area6','area7','area8','area9','area10','area14','area15'].includes(areaId);
 
   if (isKanji) {
     const variants = [
