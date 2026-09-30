@@ -3074,29 +3074,41 @@ function getChallengePrompt(problem, isAttack = false) {
 
 
 // 促音・長音などの「場所当て問題」用データを生成する
-function createKanaLocationProblem(word) {
-  const specialChars = ['っ', 'ッ', 'ー', 'ゃ', 'ゅ', 'ょ', 'ャ', 'ュ', 'ョ'];
-  let special = '';
-  let specialIndex = -1;
-  
-  for (let i = 0; i < word.length; i++) {
-    if (specialChars.includes(word[i])) {
-      special = word[i];
-      specialIndex = i;
-      break;
-    }
+// 促音・長音などの「場所当て問題」用データを生成する
+// problemData は kanji_data.js の { answer: '...', text: '...', special: '...' } の形式
+function createKanaLocationProblem(problemData) {
+  if (typeof problemData === 'string') {
+     // プリント出力など文字列しか渡されない場合のフォールバック
+     const word = problemData;
+     const specialChars = ['っ', 'ッ', 'ー', 'ゃ', 'ゅ', 'ょ', 'ャ', 'ュ', 'ョ'];
+     let special = '';
+     let specialIndex = -1;
+     for (let i = 0; i < word.length; i++) {
+       if (specialChars.includes(word[i])) {
+         special = word[i];
+         specialIndex = i;
+         break;
+       }
+     }
+     if (!special) return null;
+     const chars = word.split('');
+     chars.splice(specialIndex, 1);
+     return { original: word, specialChar: special, baseChars: chars, correctIndex: specialIndex };
   }
   
-  if (!special) return null;
+  if (!problemData || !problemData.special) return null;
+  const word = problemData.text;
+  const special = problemData.special;
+  const specialIndex = word.indexOf(special);
+  if (specialIndex === -1) return null;
   
   const chars = word.split('');
   chars.splice(specialIndex, 1);
-  
   return {
     original: word,
     specialChar: special,
     baseChars: chars,
-    correctIndex: specialIndex // 0から始まる挿入位置。 baseChars.length までのどこか。
+    correctIndex: specialIndex
   };
 }
 
@@ -10093,7 +10105,7 @@ function printAreaStage(areaId, idx) {
             let hintText = '';
             const tierStr = String(p.tier || '');
             if (tierStr.startsWith('kana')) {
-              const locProb = typeof createKanaLocationProblem === 'function' ? createKanaLocationProblem(displayText) : null;
+              const locProb = typeof createKanaLocationProblem === 'function' ? createKanaLocationProblem(p) : null;
               if (locProb) {
                 displayText = locProb.baseChars.join('　'); // 間をあける
                 hintText = `<div style="font-size:16px; border:1px solid #555; padding:4px; border-radius:4px; margin-bottom:8px;">「${locProb.specialChar}」<br>を<br>い<br>れ<br>る</div>`;
@@ -10179,7 +10191,7 @@ function printAreaBoss(areaId) {
             let hintText = '';
             const tierStr = String(p.tier || '');
             if (tierStr.startsWith('kana')) {
-              const locProb = typeof createKanaLocationProblem === 'function' ? createKanaLocationProblem(displayText) : null;
+              const locProb = typeof createKanaLocationProblem === 'function' ? createKanaLocationProblem(p) : null;
               if (locProb) {
                 displayText = locProb.baseChars.join('　'); // 間をあける
                 hintText = `<div style="font-size:16px; border:1px solid #555; padding:4px; border-radius:4px; margin-bottom:8px;">「${locProb.specialChar}」<br>を<br>い<br>れ<br>る</div>`;
