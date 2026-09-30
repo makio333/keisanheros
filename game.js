@@ -3118,6 +3118,43 @@ function createKanaLocationProblem(problemData) {
 }
 // グローバルに登録（kanji_input_ui.js からも参照できるようにする）
 window.createKanaLocationProblem = createKanaLocationProblem;
+// 促音の2択問題を生成する（正しい書き方はどっち？A/B形式）
+// 不正解選択肢: っ/ッ を末尾に移動した文字列
+function createSokuonChoiceProblem(problemData) {
+  const word = typeof problemData === 'string' ? problemData : (problemData && problemData.text ? problemData.text : '');
+  if (!word) return null;
+
+  const sokuonChar = (typeof problemData === 'object' && problemData && problemData.special) ? problemData.special : null;
+  // 促音(っ/ッ)のみ対象
+  const targetChars = ['っ', 'ッ'];
+  const char = sokuonChar || targetChars.find(c => word.includes(c));
+  if (!char) return null;
+
+  const idx = word.indexOf(char);
+  if (idx === -1) return null;
+
+  // 不正解: っを末尾に移動
+  const chars = word.split('');
+  chars.splice(idx, 1);
+  if (idx === chars.length) {
+    chars.unshift(char); // 既に末尾なら先頭に
+  } else {
+    chars.push(char);
+  }
+  const wrongAnswer = chars.join('');
+
+  // A/B どちらが正解かランダム
+  const correctIsA = Math.random() < 0.5;
+  return {
+    correctWord: word,
+    optionA: correctIsA ? word : wrongAnswer,
+    optionB: correctIsA ? wrongAnswer : word,
+    correctOption: correctIsA ? 'A' : 'B'
+  };
+}
+window.createSokuonChoiceProblem = createSokuonChoiceProblem;
+
+
 
 function startChallenge(container, opts, cb){
   destroyChallenge();

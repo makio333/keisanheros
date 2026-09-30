@@ -156,21 +156,62 @@ function setupKanjiChallenge(problemData) {
   currentAcceptedAnswers = kanjiAcceptedAnswers(problemData.text, problemData.answer);
   
   const tierStr = String(problemData.tier || '');
-  const locProb = tierStr.startsWith('kana') ? ((window.createKanaLocationProblem || createKanaLocationProblem)(problemData)) : null;
+  
+  // 促音ステージ（2択形式）か判定
+  const isSokuonStage = tierStr === 'kana_hira_2' || tierStr === 'kana_kata_2';
+  const choiceProb = isSokuonStage ? ((window.createSokuonChoiceProblem || createSokuonChoiceProblem)(problemData)) : null;
+  
+  // 場所当てモード（促音以外のkanaステージ）
+  const locProb = !choiceProb && tierStr.startsWith('kana') ? ((window.createKanaLocationProblem || createKanaLocationProblem)(problemData)) : null;
   
   const normalDisplay = document.getElementById('kanji-normal-display');
   const locDisplay = document.getElementById('kana-location-display');
+  const choiceDisplay = document.getElementById('kana-choice-display');
   const inputDisplay = document.getElementById('kanji-input-display');
   const inputToggle = document.getElementById('kanji-input-toggle');
   const keyboard = document.getElementById('kanji-challenge'); // ソフトウェアキーボードのコンテナ
   
-  if (locProb) {
-    // 場所当てモード
+  // 全モード非表示にリセット
+  const hideAll = () => {
     if (normalDisplay) normalDisplay.classList.add('hidden');
-    if (locDisplay) { locDisplay.classList.remove('hidden'); locDisplay.style.display = 'flex'; }
+    if (locDisplay) { locDisplay.classList.add('hidden'); locDisplay.style.display = ''; }
+    if (choiceDisplay) { choiceDisplay.classList.add('hidden'); choiceDisplay.style.display = ''; }
     if (inputDisplay) inputDisplay.classList.add('hidden');
     if (inputToggle) inputToggle.classList.add('hidden');
-    if (keyboard) keyboard.classList.add('hidden'); // キーボード隠す
+    if (keyboard) keyboard.classList.add('hidden');
+  };
+  
+  if (choiceProb) {
+    // ===== 促音2択モード =====
+    hideAll();
+    if (choiceDisplay) { choiceDisplay.classList.remove('hidden'); choiceDisplay.style.display = 'flex'; }
+    
+    const btnContainer = document.getElementById('kana-choice-buttons');
+    btnContainer.innerHTML = '';
+    
+    // Aボタン
+    const btnA = document.createElement('button');
+    btnA.style.cssText = 'font-size:28px; font-weight:bold; padding:16px 28px; border-radius:12px; background:#3a5fc8; color:#fff; border:3px solid #6a8fff; cursor:pointer; min-width:120px;';
+    btnA.innerHTML = `<span style="font-size:14px;color:#adf;">Ａ</span><br>${choiceProb.optionA}`;
+    btnA.onclick = () => {
+      submitKanjiAnswer(choiceProb.correctOption === 'A');
+    };
+    
+    // Bボタン
+    const btnB = document.createElement('button');
+    btnB.style.cssText = 'font-size:28px; font-weight:bold; padding:16px 28px; border-radius:12px; background:#c85a3a; color:#fff; border:3px solid #ff9a6a; cursor:pointer; min-width:120px;';
+    btnB.innerHTML = `<span style="font-size:14px;color:#ffd;">Ｂ</span><br>${choiceProb.optionB}`;
+    btnB.onclick = () => {
+      submitKanjiAnswer(choiceProb.correctOption === 'B');
+    };
+    
+    btnContainer.appendChild(btnA);
+    btnContainer.appendChild(btnB);
+
+  } else if (locProb) {
+    // ===== 場所当てモード（促音以外のkana） =====
+    hideAll();
+    if (locDisplay) { locDisplay.classList.remove('hidden'); locDisplay.style.display = 'flex'; }
     
     document.getElementById('kana-location-question').textContent = `「${locProb.specialChar}」が はいるのは どこ？`;
     
@@ -179,7 +220,6 @@ function setupKanjiChallenge(problemData) {
     
     // ボタンの生成 (文字と隙間のボタンを交互に配置)
     for (let i = 0; i <= locProb.baseChars.length; i++) {
-      // 隙間ボタン (ここに入るか？)
       const btn = document.createElement('button');
       btn.className = 'btn btn-primary';
       btn.style.padding = '10px 15px';
@@ -187,15 +227,14 @@ function setupKanjiChallenge(problemData) {
       btn.textContent = 'ここ';
       btn.onclick = () => {
         if (i === locProb.correctIndex) {
-          submitKanjiAnswer(true); // 正解
+          submitKanjiAnswer(true);
         } else {
-          submitKanjiAnswer(false); // 不正解
+          submitKanjiAnswer(false);
         }
       };
       btnContainer.appendChild(btn);
       
       if (i < locProb.baseChars.length) {
-        // 文字ラベル
         const span = document.createElement('span');
         span.style.fontSize = '28px';
         span.style.fontWeight = 'bold';
@@ -204,12 +243,13 @@ function setupKanjiChallenge(problemData) {
       }
     }
   } else {
-    // 通常入力モード
+    // ===== 通常入力モード =====
     if (normalDisplay) normalDisplay.classList.remove('hidden');
     if (locDisplay) { locDisplay.classList.add('hidden'); locDisplay.style.display = ''; }
+    if (choiceDisplay) { choiceDisplay.classList.add('hidden'); choiceDisplay.style.display = ''; }
     if (inputDisplay) inputDisplay.classList.remove('hidden');
     if (inputToggle) inputToggle.classList.remove('hidden');
-    if (keyboard && !isFlickMode) keyboard.classList.remove('hidden'); // ソフトウェアキーボード表示 (フリックモード等に応じて)
+    if (keyboard && !isFlickMode) keyboard.classList.remove('hidden');
     
     const textEl = document.getElementById('challenge-problem-text');
     if(textEl) textEl.textContent = problemData.text;
@@ -228,6 +268,7 @@ function setupKanjiChallenge(problemData) {
     }
   }
 }
+
 
 
 function submitKanjiAnswer(forceResult) {
