@@ -6599,27 +6599,36 @@ function showSkills(){
    ========================================================== */
 
 /* 別ウィンドウを開いてプリント内容だけを印刷する（超高速）*/
-function openPrintWindow(htmlContent, bgUrl) {
-
-  const printCSS = `
-    @page { size: A4; margin: 8mm; }
-    body { font-family: sans-serif; background: #fff; color: #222; padding: 6mm; }
-    h1 { font-size: 26px; margin-bottom: 6px; }
-    .p-sub { font-size: 15px; color: #555; margin-bottom: 16px; }
-    .p-sheet { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 60px; }
-    .p-row { font-size: 24px; display: flex; align-items: baseline; gap: 12px; padding: 6px 0; border-bottom: 1px dotted #aaa; }
-    .p-num { width: auto; min-width: 34px; color: #888; font-size: 16px; white-space: nowrap; }
-    .p-expr { white-space: nowrap; }
-    .p-blank { flex: 1; border-bottom: 1px solid #222; min-width: 70px; height: 1.1em; }
-    .p-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 60px; }
-    .p-meta { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 40px; font-size: 16px; margin-bottom: 18px; }
-    .p-meta-name { border-bottom: 1px solid #222; padding: 0 160px 4px 4px; }
-    .p-title { font-size: 22px; font-weight: bold; margin-bottom: 8px; }
-    .p-name-box { font-size: 16px; margin-bottom: 12px; }
-    .p-name-line { display: inline-block; width: 200px; border-bottom: 1px solid #222; }
-    .p-desc { font-size: 14px; color: #555; margin-bottom: 16px; }
-    .p-bonus-banner { background: #fffde7; border: 2px solid #f9a825; border-radius: 8px; padding: 8px 12px; margin-bottom: 16px; font-size: 15px; }
-  `;
+function openPrintWindow(htmlContent, bgUrl, isLandscape) {
+  // 国語系プリントは htmlContent 内に <style> を持つため、
+  // isLandscape=true の場合は最小限のリセットのみ行う
+  let printCSS;
+  if (isLandscape) {
+    printCSS = `
+      @page { size: A4 landscape; margin: 10mm; }
+      body { margin: 0; padding: 0; }
+    `;
+  } else {
+    printCSS = `
+      @page { size: A4; margin: 8mm; }
+      body { font-family: sans-serif; background: #fff; color: #222; padding: 6mm; }
+      h1 { font-size: 26px; margin-bottom: 6px; }
+      .p-sub { font-size: 15px; color: #555; margin-bottom: 16px; }
+      .p-sheet { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 60px; }
+      .p-row { font-size: 24px; display: flex; align-items: baseline; gap: 12px; padding: 6px 0; border-bottom: 1px dotted #aaa; }
+      .p-num { width: auto; min-width: 34px; color: #888; font-size: 16px; white-space: nowrap; }
+      .p-expr { white-space: nowrap; }
+      .p-blank { flex: 1; border-bottom: 1px solid #222; min-width: 70px; height: 1.1em; }
+      .p-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 60px; }
+      .p-meta { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 40px; font-size: 16px; margin-bottom: 18px; }
+      .p-meta-name { border-bottom: 1px solid #222; padding: 0 160px 4px 4px; }
+      .p-title { font-size: 22px; font-weight: bold; margin-bottom: 8px; }
+      .p-name-box { font-size: 16px; margin-bottom: 12px; }
+      .p-name-line { display: inline-block; width: 200px; border-bottom: 1px solid #222; }
+      .p-desc { font-size: 14px; color: #555; margin-bottom: 16px; }
+      .p-bonus-banner { background: #fffde7; border: 2px solid #f9a825; border-radius: 8px; padding: 8px 12px; margin-bottom: 16px; font-size: 15px; }
+    `;
+  }
   const pw = window.open('', '_blank', 'width=800,height=900');
   if (!pw) { alert('ポップアップがブロックされました。許可してください。'); return; }
   pw.document.open();
@@ -10093,66 +10102,69 @@ function printAreaStage(areaId, idx) {
             let mode = variant.type;
             if (mode === 'mix') mode = (i % 2 === 0) ? 'yomi' : 'kaki';
             
-            const length = Math.max(3, p.answer ? p.answer.length : 3);
+            const cellCount = Math.max(3, p.answer ? p.answer.length : 3);
             let cells = '';
-            for (let c = 0; c < length; c++) {
-              cells += '<div class="p-box-cell"></div>';
+            for (let c = 0; c < cellCount; c++) {
+              cells += '<div class="p-cell"></div>';
             }
             
-            let displayText = mode === 'yomi' ? p.text : p.answer;
-            let hintText = '';
             const tierStr = String(p.tier || '');
+            let displayText = mode === 'yomi' ? p.text : p.answer;
+            let hintHtml = '';
+            
             if (tierStr.startsWith('kana')) {
               const locProb = typeof createKanaLocationProblem === 'function' ? createKanaLocationProblem(p) : null;
               if (locProb) {
                 displayText = locProb.baseChars.join('　');
-                hintText = `<div style="font-size:16px; border:1px solid #555; padding:4px; border-radius:4px; margin-bottom:8px;">「${locProb.specialChar}」<br>を<br>い<br>れ<br>る</div>`;
+                hintHtml = `<div class="p-hint">「${locProb.specialChar}」<br>を<br>い<br>れ<br>る</div>`;
               }
             }
             
-            return `<div class="p-row-kanji"><span class="p-num-kanji">(${i + 1})</span><span class="p-expr-kanji">${displayText}</span>${hintText}<div style="font-size:24px; margin-bottom:8px;">⇩</div><div class="p-box-container">${cells}</div></div>`;
+            return `<div class="p-item"><div class="p-num">(${i + 1})</div><div class="p-word">${displayText}</div>${hintHtml}<div class="p-arrow">↓</div><div class="p-answer-box">${cells}</div></div>`;
           };
           const p1 = problems.slice(0, 5).map((p, i) => makeRow(p, i)).join('');
           const p2 = problems.slice(5, 10).map((p, i) => makeRow(p, i + 5)).join('');
           
+          const playerName = (typeof G !== "undefined" && G && G.player) ? G.player.name : "";
           const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
           const printId = addPrintCode(areaId + '_' + idx, pCode, { type: 'stage', problems, name: printName, areaId, stageIndex: idx, kanjiMode: variant.type });
           save();
-          openPrintWindow(`
-            <style>
-              @page { size: A4 landscape; margin: 10mm; }
-              body { writing-mode: vertical-rl; padding: 0; font-family: "Yu Mincho", "MS Mincho", serif; }
-              .p-wrapper-kanji { display: flex; flex-direction: column; width: 100%; height: 100%; justify-content: space-between; }
-              .p-header-kanji { writing-mode: vertical-rl; display: flex; align-items: flex-start; justify-content: flex-start; margin-left: 30px; }
-              .p-title { font-size: 22px; font-weight: bold; margin-bottom: 16px; }
-              .p-name-box { font-size: 16px; margin-bottom: 24px; }
-              .p-name-line { display: inline-block; height: 150px; border-left: 1px solid #222; margin-top: 8px; position:relative; }
-              .p-name-line span { position:absolute; top:10px; right:4px; font-size:18px; }
-              .p-desc { font-size: 14px; color: #555; }
-              .p-cols-kanji { display: flex; flex-direction: row; gap: 40px; justify-content: space-around; flex: 1; }
-              .p-col-kanji { display: flex; flex-direction: row; gap: 30px; }
-              .p-row-kanji { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; border-right: 1px dotted #ccc; padding-right: 10px; }
-              .p-num-kanji { color: #888; font-size: 16px; margin-bottom: 12px; }
-              .p-expr-kanji { letter-spacing: 0.3em; text-orientation: upright; margin-bottom: 16px; font-size: 24px; font-weight: bold; }
-              .p-box-container { display: flex; flex-direction: column; border: 2px solid #33a1dd; }
-              .p-box-cell { width: 40px; height: 40px; border-bottom: 1px dashed #33a1dd; box-sizing: border-box; }
-              .p-box-cell:last-child { border-bottom: none; }
-              .p-box-cell { position: relative; }
-              .p-box-cell::before { content: ""; position: absolute; top: 50%; left: 0; right: 0; border-top: 1px dotted #a8d5ef; }
-              .p-box-cell::after { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; border-left: 1px dotted #a8d5ef; }
+          const instrText = variant.type === 'yomi' ? 'つぎのことばをひらがなで　かきましょう' : variant.type === 'kaki' ? 'つぎのことばを　かんじで　かきましょう' : 'つぎのことば　よみ・かきに　こたえましょう';
+          openPrintWindow(`<style>
+              body { margin: 0; padding: 0; font-family: "Yu Mincho","MS Mincho","Hiragino Mincho ProN",serif; display: flex; flex-direction: row; width: 297mm; height: 210mm; box-sizing: border-box; }
+              .p-sidebar { width: 55px; border-left: 2px solid #333; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 8px 4px; writing-mode: vertical-rl; }
+              .p-sidebar-title { font-size: 14px; font-weight: bold; }
+              .p-sidebar-meta { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+              .p-name-label { font-size: 13px; }
+              .p-name-value { border-top: 1px solid #333; width: 90px; font-size: 16px; min-height: 14px; }
+              .p-print-id { font-size: 10px; color: #999; }
+              .p-cols-area { flex: 1; display: flex; flex-direction: row; padding: 8px; gap: 6px; overflow: hidden; }
+              .p-instruction { width: 70px; writing-mode: vertical-rl; font-size: 14px; display: flex; align-items: center; justify-content: center; color: #333; border-right: 1px solid #ccc; padding-right: 6px; flex-shrink: 0; }
+              .p-col-group { display: flex; flex-direction: row-reverse; gap: 6px; flex: 1; justify-content: flex-end; }
+              .p-item { display: flex; flex-direction: column; align-items: center; border-left: 1px dotted #bbb; padding: 4px 6px; min-width: 50px; }
+              .p-num { font-size: 13px; color: #888; writing-mode: vertical-rl; margin-bottom: 4px; }
+              .p-word { writing-mode: vertical-rl; font-size: 24px; font-weight: bold; letter-spacing: 0.2em; text-orientation: upright; margin-bottom: 8px; }
+              .p-arrow { font-size: 12px; margin-bottom: 4px; }
+              .p-answer-box { display: flex; flex-direction: column; border: 2px solid #3a9fdd; }
+              .p-cell { width: 36px; height: 36px; border-bottom: 1px dashed #3a9fdd; box-sizing: border-box; position: relative; }
+              .p-cell:last-child { border-bottom: none; }
+              .p-cell::before { content:""; position:absolute; top:50%; left:0; right:0; border-top:1px dotted #c0dff0; }
+              .p-cell::after { content:""; position:absolute; top:0; bottom:0; left:50%; border-left:1px dotted #c0dff0; }
+              .p-hint { writing-mode: vertical-rl; font-size: 12px; border: 1px solid #666; padding: 2px; border-radius: 3px; margin-bottom: 4px; }
+              @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
             </style>
-            <div class="p-wrapper-kanji">
-              <div class="p-header-kanji">
-                <div class="p-title">【エリア${numPrefix}-${idx+1}】 ${printName} ${variant.label}</div>
-                <div class="p-name-box">なまえ：<span class="p-name-line"><span>${typeof G !== "undefined" && G && G.player ? G.player.name : ""}</span></span></div>
-                <div class="p-desc">プリント番号: ${printId}</div>
-              </div>
-              <div class="p-cols-kanji">
-                <div class="p-col-kanji">${p1}</div>
-                <div class="p-col-kanji">${p2}</div>
-              </div>
+            <div class="p-cols-area">
+              <div class="p-instruction">${instrText}</div>
+              <div class="p-col-group">${p1}${p2}</div>
             </div>
-          `);
+            <div class="p-sidebar">
+              <div class="p-sidebar-title">【エリア${numPrefix}-${idx+1}】${printName}${variant.label}</div>
+              <div class="p-sidebar-meta">
+                <div class="p-name-label">なまえ</div>
+                <div class="p-name-value">${playerName}</div>
+                <div class="p-print-id">No.${printId}</div>
+              </div>
+            </div>`, null, true);
         }
       };
     });
@@ -10218,66 +10230,69 @@ function printAreaBoss(areaId) {
             let mode = variant.type;
             if (mode === 'mix') mode = (i % 2 === 0) ? 'yomi' : 'kaki';
             
-            const length = Math.max(3, p.answer ? p.answer.length : 3);
+            const cellCount = Math.max(3, p.answer ? p.answer.length : 3);
             let cells = '';
-            for (let c = 0; c < length; c++) {
-              cells += '<div class="p-box-cell"></div>';
+            for (let c = 0; c < cellCount; c++) {
+              cells += '<div class="p-cell"></div>';
             }
             
-            let displayText = mode === 'yomi' ? p.text : p.answer;
-            let hintText = '';
             const tierStr = String(p.tier || '');
+            let displayText = mode === 'yomi' ? p.text : p.answer;
+            let hintHtml = '';
+            
             if (tierStr.startsWith('kana')) {
               const locProb = typeof createKanaLocationProblem === 'function' ? createKanaLocationProblem(p) : null;
               if (locProb) {
                 displayText = locProb.baseChars.join('　');
-                hintText = `<div style="font-size:16px; border:1px solid #555; padding:4px; border-radius:4px; margin-bottom:8px;">「${locProb.specialChar}」<br>を<br>い<br>れ<br>る</div>`;
+                hintHtml = `<div class="p-hint">「${locProb.specialChar}」<br>を<br>い<br>れ<br>る</div>`;
               }
             }
             
-            return `<div class="p-row-kanji"><span class="p-num-kanji">(${i + 1})</span><span class="p-expr-kanji">${displayText}</span>${hintText}<div style="font-size:24px; margin-bottom:8px;">⇩</div><div class="p-box-container">${cells}</div></div>`;
+            return `<div class="p-item"><div class="p-num">(${i + 1})</div><div class="p-word">${displayText}</div>${hintHtml}<div class="p-arrow">↓</div><div class="p-answer-box">${cells}</div></div>`;
           };
           const p1 = problems.slice(0, 5).map((p, i) => makeRow(p, i)).join('');
           const p2 = problems.slice(5, 10).map((p, i) => makeRow(p, i + 5)).join('');
           
+          const playerName = (typeof G !== "undefined" && G && G.player) ? G.player.name : "";
           const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
           const printId = addPrintCode(areaId + '_boss', pCode, { type: 'boss', problems, name: printName, areaId, kanjiMode: variant.type });
           save();
-          openPrintWindow(`
-            <style>
-              @page { size: A4 landscape; margin: 10mm; }
-              body { writing-mode: vertical-rl; padding: 0; font-family: "Yu Mincho", "MS Mincho", serif; }
-              .p-wrapper-kanji { display: flex; flex-direction: column; width: 100%; height: 100%; justify-content: space-between; }
-              .p-header-kanji { writing-mode: vertical-rl; display: flex; align-items: flex-start; justify-content: flex-start; margin-left: 30px; }
-              .p-title { font-size: 22px; font-weight: bold; margin-bottom: 16px; }
-              .p-name-box { font-size: 16px; margin-bottom: 24px; }
-              .p-name-line { display: inline-block; height: 150px; border-left: 1px solid #222; margin-top: 8px; position:relative; }
-              .p-name-line span { position:absolute; top:10px; right:4px; font-size:18px; }
-              .p-desc { font-size: 14px; color: #555; }
-              .p-cols-kanji { display: flex; flex-direction: row; gap: 40px; justify-content: space-around; flex: 1; }
-              .p-col-kanji { display: flex; flex-direction: row; gap: 30px; }
-              .p-row-kanji { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; border-right: 1px dotted #ccc; padding-right: 10px; }
-              .p-num-kanji { color: #888; font-size: 16px; margin-bottom: 12px; }
-              .p-expr-kanji { letter-spacing: 0.3em; text-orientation: upright; margin-bottom: 16px; font-size: 24px; font-weight: bold; }
-              .p-box-container { display: flex; flex-direction: column; border: 2px solid #33a1dd; }
-              .p-box-cell { width: 40px; height: 40px; border-bottom: 1px dashed #33a1dd; box-sizing: border-box; }
-              .p-box-cell:last-child { border-bottom: none; }
-              .p-box-cell { position: relative; }
-              .p-box-cell::before { content: ""; position: absolute; top: 50%; left: 0; right: 0; border-top: 1px dotted #a8d5ef; }
-              .p-box-cell::after { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; border-left: 1px dotted #a8d5ef; }
+          const instrText = variant.type === 'yomi' ? 'つぎのことばをひらがなで　かきましょう' : variant.type === 'kaki' ? 'つぎのことばを　かんじで　かきましょう' : 'つぎのことば　よみ・かきに　こたえましょう';
+          openPrintWindow(`<style>
+              body { margin: 0; padding: 0; font-family: "Yu Mincho","MS Mincho","Hiragino Mincho ProN",serif; display: flex; flex-direction: row; width: 297mm; height: 210mm; box-sizing: border-box; }
+              .p-sidebar { width: 55px; border-left: 2px solid #333; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 8px 4px; writing-mode: vertical-rl; }
+              .p-sidebar-title { font-size: 14px; font-weight: bold; }
+              .p-sidebar-meta { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+              .p-name-label { font-size: 13px; }
+              .p-name-value { border-top: 1px solid #333; width: 90px; font-size: 16px; min-height: 14px; }
+              .p-print-id { font-size: 10px; color: #999; }
+              .p-cols-area { flex: 1; display: flex; flex-direction: row; padding: 8px; gap: 6px; overflow: hidden; }
+              .p-instruction { width: 70px; writing-mode: vertical-rl; font-size: 14px; display: flex; align-items: center; justify-content: center; color: #333; border-right: 1px solid #ccc; padding-right: 6px; flex-shrink: 0; }
+              .p-col-group { display: flex; flex-direction: row-reverse; gap: 6px; flex: 1; justify-content: flex-end; }
+              .p-item { display: flex; flex-direction: column; align-items: center; border-left: 1px dotted #bbb; padding: 4px 6px; min-width: 50px; }
+              .p-num { font-size: 13px; color: #888; writing-mode: vertical-rl; margin-bottom: 4px; }
+              .p-word { writing-mode: vertical-rl; font-size: 24px; font-weight: bold; letter-spacing: 0.2em; text-orientation: upright; margin-bottom: 8px; }
+              .p-arrow { font-size: 12px; margin-bottom: 4px; }
+              .p-answer-box { display: flex; flex-direction: column; border: 2px solid #3a9fdd; }
+              .p-cell { width: 36px; height: 36px; border-bottom: 1px dashed #3a9fdd; box-sizing: border-box; position: relative; }
+              .p-cell:last-child { border-bottom: none; }
+              .p-cell::before { content:""; position:absolute; top:50%; left:0; right:0; border-top:1px dotted #c0dff0; }
+              .p-cell::after { content:""; position:absolute; top:0; bottom:0; left:50%; border-left:1px dotted #c0dff0; }
+              .p-hint { writing-mode: vertical-rl; font-size: 12px; border: 1px solid #666; padding: 2px; border-radius: 3px; margin-bottom: 4px; }
+              @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
             </style>
-            <div class="p-wrapper-kanji">
-              <div class="p-header-kanji">
-                <div class="p-title">【エリア${numPrefix}】 ${printName} ${variant.label}</div>
-                <div class="p-name-box">なまえ：<span class="p-name-line"><span>${typeof G !== "undefined" && G && G.player ? G.player.name : ""}</span></span></div>
-                <div class="p-desc">プリント番号: ${printId}</div>
-              </div>
-              <div class="p-cols-kanji">
-                <div class="p-col-kanji">${p1}</div>
-                <div class="p-col-kanji">${p2}</div>
-              </div>
+            <div class="p-cols-area">
+              <div class="p-instruction">${instrText}</div>
+              <div class="p-col-group">${p1}${p2}</div>
             </div>
-          `);
+            <div class="p-sidebar">
+              <div class="p-sidebar-title">【エリア${numPrefix}】${printName}${variant.label}</div>
+              <div class="p-sidebar-meta">
+                <div class="p-name-label">なまえ</div>
+                <div class="p-name-value">${playerName}</div>
+                <div class="p-print-id">No.${printId}</div>
+              </div>
+            </div>`, null, true);
         }
       };
     });

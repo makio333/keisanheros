@@ -167,7 +167,7 @@ function setupKanjiChallenge(problemData) {
   if (locProb) {
     // 場所当てモード
     if (normalDisplay) normalDisplay.classList.add('hidden');
-    if (locDisplay) locDisplay.classList.remove('hidden');
+    if (locDisplay) { locDisplay.classList.remove('hidden'); locDisplay.style.display = 'flex'; }
     if (inputDisplay) inputDisplay.classList.add('hidden');
     if (inputToggle) inputToggle.classList.add('hidden');
     if (keyboard) keyboard.classList.add('hidden'); // キーボード隠す
@@ -206,7 +206,7 @@ function setupKanjiChallenge(problemData) {
   } else {
     // 通常入力モード
     if (normalDisplay) normalDisplay.classList.remove('hidden');
-    if (locDisplay) locDisplay.classList.add('hidden');
+    if (locDisplay) { locDisplay.classList.add('hidden'); locDisplay.style.display = ''; }
     if (inputDisplay) inputDisplay.classList.remove('hidden');
     if (inputToggle) inputToggle.classList.remove('hidden');
     if (keyboard && !isFlickMode) keyboard.classList.remove('hidden'); // ソフトウェアキーボード表示 (フリックモード等に応じて)
