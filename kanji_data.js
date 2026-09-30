@@ -547,6 +547,7 @@ function generateKanjiProblem(tier) {
   return {
     answer: data.answer,
     text: data.text,
+    special: data.special,
     tier: tier
   };
 }
