@@ -365,6 +365,19 @@ class CanvasManager {
   
   loop(time) {
     if (!this.running) return;
+    
+    // Canvasの表示サイズが変わっていれば内部サイズも同期する（エフェクトのズレ・歪み防止）
+    if (this.canvas) {
+      const rect = this.canvas.getBoundingClientRect();
+      const rw = Math.round(rect.width), rh = Math.round(rect.height);
+      if (rw > 0 && rh > 0 && (this.canvas.width !== rw || this.canvas.height !== rh)) {
+        this.canvas.width = rw;
+        this.canvas.height = rh;
+        this.width = rw;
+        this.height = rh;
+      }
+    }
+    
     const dt = (time - this.lastTime) / 1000;
     this.lastTime = time;
     
@@ -3013,33 +3026,44 @@ function hasAssist(){
 
 function assistVisualHtml(problem){
   const { a, b, op } = problem;
-  const dots = (n) => '<span class="assist-dot"></span>'.repeat(n);
+  
+  const groupedDots = (n, crossFromIndex = 999) => {
+    let res = '';
+    let currentBlock = '';
+    for (let i = 0; i < n; i++) {
+      currentBlock += `<span class="assist-dot${i >= crossFromIndex ? ' assist-dot-remove' : ''}"></span>`;
+      if ((i + 1) % 5 === 0) {
+        res += `<span class="assist-dot-group">${currentBlock}</span>`;
+        currentBlock = '';
+      }
+    }
+    if (currentBlock) res += `<span class="assist-dot-group">${currentBlock}</span>`;
+    return res;
+  };
+
   if (op === '+') {
-    return `<div class="assist-visual">
-      <span class="assist-group">${dots(a)}</span>
+    return `<div class="assist-visual" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px;">
+      <span class="assist-group" style="display:inline-flex; flex-wrap:wrap; justify-content:center;">${groupedDots(a)}</span>
       <span class="assist-op">+</span>
-      <span class="assist-group">${dots(b)}</span>
+      <span class="assist-group" style="display:inline-flex; flex-wrap:wrap; justify-content:center;">${groupedDots(b)}</span>
     </div>`;
   }
   if (op === '-') {
-    // a個のまるの うち、うしろのb個を うすくして「ひく」イメージにする
-    let d = '';
-    for (let i = 0; i < a; i++){
-      d += `<span class="assist-dot${i >= a - b ? ' assist-dot-remove' : ''}"></span>`;
-    }
-    return `<div class="assist-visual"><span class="assist-group">${d}</span></div>`;
+    return `<div class="assist-visual" style="display:flex; flex-wrap:wrap; justify-content:center;">
+      <span class="assist-group" style="display:inline-flex; flex-wrap:wrap; justify-content:center;">${groupedDots(a, a - b)}</span>
+    </div>`;
   }
   if (op === '×') {
-    // a行 × b列の まる
     let rows = '';
-    for (let i = 0; i < a; i++) rows += `<div class="assist-row">${dots(b)}</div>`;
-    return `<div class="assist-visual assist-grid">${p1}${p2}</div>`;
+    for (let i = 0; i < a; i++) rows += `<div class="assist-row" style="display:flex; justify-content:center;">${groupedDots(b)}</div>`;
+    return `<div class="assist-visual assist-grid">${rows}</div>`;
   }
   if (op === '÷') {
-    // a個のまるを bこずつの グループに わける
     let groups = '';
-    for (let i = 0; i < a; i += b) groups += `<span class="assist-group">${dots(Math.min(b, a - i))}</span>`;
-    return `<div class="assist-visual">${groups}</div>`;
+    for (let i = 0; i < a; i += b) {
+      groups += `<span class="assist-group" style="margin:4px; padding:4px; border:2px dashed rgba(255,255,255,0.3); border-radius:8px; display:inline-flex;">${groupedDots(Math.min(b, a - i))}</span>`;
+    }
+    return `<div class="assist-visual" style="display:flex; flex-wrap:wrap; justify-content:center;">${groups}</div>`;
   }
   return '';
 }
@@ -3203,8 +3227,8 @@ function startChallenge(container, opts, cb){
       initKanjiInputUI((isCorrect) => {
         if (done) return;
         done = true;
-        recordStudyAnswer(problem, isCorrect);
         const elapsed = Date.now() - start;
+        recordStudyAnswer(problem, isCorrect, elapsed, false);
         const timeFrac = Math.max(0, 1 - elapsed / timeLimit);
         if (isCorrect) {
           SM.play('se_type');
@@ -3293,10 +3317,10 @@ function startChallenge(container, opts, cb){
     }
   }
 
-  const input = $('ch-input');
-  const wordEl = $('ch-word');
+  const input = container.querySelector('#ch-input') || $('ch-input');
+  const wordEl = container.querySelector('#ch-word') || $('ch-word');
   const resultEl = container.querySelector('.result-text');
-  const submitBtn = $('ch-submit');
+  const submitBtn = container.querySelector('#ch-submit') || $('ch-submit');
 
   function renderTyped(){
     if (wordEl) {
@@ -3314,10 +3338,10 @@ function startChallenge(container, opts, cb){
   function finish(success){
     if (done) return;
     done = true;
-    recordStudyAnswer(problem, success);
+    const elapsed = Date.now() - start;
+    recordStudyAnswer(problem, success, elapsed, (typeof hasAssist === 'function' ? hasAssist() : false));
     if (input) input.disabled = true;
     if (submitBtn) submitBtn.disabled = true;
-    const elapsed = Date.now() - start;
     const timeFrac = Math.max(0, 1 - elapsed / timeLimit);
     if (success) {
       if (wordEl) {
@@ -3379,7 +3403,7 @@ function startChallenge(container, opts, cb){
     });
   }
 
-  const form = $('ch-form');
+  const form = container.querySelector('#ch-form') || $('ch-form');
   if (form) {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -3494,7 +3518,10 @@ function startBattle(animateFloor){
   blog(`<span class="bad">${enemy.name}</span>が あらわれた！`);
   updateBattleBars();
   battle.running = true;
-  battle.tickId = setInterval(battleTick, 80);
+  // ATBループの代わりに、開始後すぐにプレイヤーの行動選択へ移行する
+  setTimeout(() => {
+    openActionMenu();
+  }, 1000); // メッセージを少し見せるために1秒待つ
   CM.start();
   if (explore && explore.stageMode && !explore.isBoss && explore.stageKillCount === 0) {
     // ステージ突入時に「1 / 10」を表示
@@ -3517,24 +3544,7 @@ function updateBattleBars(){
 }
 
 function battleTick(){
-  if (!battle || !battle.running || battle.over) return;
-  battle.pGauge += (2 + totalStat('spd') * 0.55);
-  battle.eGauge += (2 + battle.enemy.spd * 0.55);
-  if (battle.pGauge >= 100){
-    battle.pGauge = 100;
-    battle.running = false;
-    updateBattleBars();
-    openActionMenu();
-    return;
-  }
-  if (battle.eGauge >= 100){
-    battle.eGauge = 100;
-    battle.running = false;
-    updateBattleBars();
-    setTimeout(enemyAct, 400);
-    return;
-  }
-  updateBattleBars();
+  // ターン制になったためATB更新は行わない
 }
 
 function hideBattleMenus(){
@@ -3556,16 +3566,14 @@ function openActionMenu(){
 
 function resumeBattle(actor){
   if (battle.over) return;
-  // 行動した側だけゲージをリセット。もう片方のゲージは溜まり具合を
-  // 持ち越す（すばやさが高いほど連続で行動できる、本来のATB挙動）
-  if (actor === 'player') {
-    battle.pGauge = 0;
-    battle.currentTurnProblem = null;
-  }
-  else battle.eGauge = 0;
-  hideBattleMenus();
+  // ターン制なので、常にプレイヤーのメニューを開き直す
+  battle.pGauge = 100;
+  battle.eGauge = 0;
+  battle.currentTurnProblem = null;
   updateBattleBars();
-  battle.running = true;
+  setTimeout(() => {
+    openActionMenu();
+  }, 100);
 }
 
 /* --- 戦う：即けいさん --- */
@@ -3682,14 +3690,16 @@ function doAttack(){
       const base = basicAttackDamage(atk, eDef);
       if (res.success){
         let dmg = Math.round(base * (1 + res.timeFrac * BALANCE.timeBonus));
-        // クリティカル判定（「会心のちから」で +10%）
         const critChance = BALANCE.critRate + (equippedAbilities().has('crit_up') ? 0.10 : 0);
         const isCrit = Math.random() < critChance;
         if (isCrit) dmg = Math.floor(dmg * BALANCE.critMult);
         dealToEnemy(dmg, 'こうげき', isCrit, () => afterPlayerAction());
       } else {
-        const chip = Math.max(1, Math.round(base * 0.3));
-        dealToEnemy(chip, 'あわてた こうげき', false, () => afterPlayerAction());
+        // 不正解の場合は敵の攻撃（ターン制）
+        blog(`<span class="bad">まちがえた！ てきの ターン！</span>`);
+        setTimeout(() => {
+          turnBasedEnemyAct(() => afterPlayerAction());
+        }, 500);
       }
     });
 }
@@ -3973,6 +3983,24 @@ function useItem(uid, db, inBattle = false){
 
 /* --- ダメージ処理 --- */
 function spawnFloatingDamage(targetEl, text, typeClass, manager = CM) {
+  if (String(typeClass).includes('player-dmg')) {
+    const dmg = document.createElement('div');
+    dmg.className = 'floating-damage ' + typeClass;
+    dmg.textContent = text;
+    dmg.style.color = '#ff4757';
+    dmg.style.textShadow = '0 2px 4px rgba(0,0,0,0.8)';
+    dmg.style.zIndex = '99999';
+    dmg.style.position = 'fixed'; // fixed to avoid relative clipping
+    // 画面の中心（やや上）に大きく表示する。アニメーションとの競合を防ぐためwidth=100%で中央揃え
+    dmg.style.left = '0';
+    dmg.style.top = '40%';
+    dmg.style.width = '100vw';
+    dmg.style.textAlign = 'center';
+    dmg.style.fontSize = '45px'; // 普段のダメージより大きく
+    document.body.appendChild(dmg);
+    setTimeout(() => { if (dmg.parentNode) dmg.parentNode.removeChild(dmg); }, 1000);
+    return;
+  }
   const mgr = manager || CM;
   if (!targetEl || !mgr || !mgr.running || !mgr.canvas) return;
   const rect = targetEl.getBoundingClientRect();
@@ -4005,9 +4033,12 @@ function getEnemyCanvasCoords() {
   if (frame && CM && CM.canvas) {
     const rect = frame.getBoundingClientRect();
     const canvasRect = CM.canvas.getBoundingClientRect();
+    // 内部サイズと表示サイズの違いを補正する
+    const scaleX = CM.canvas.width / (canvasRect.width || 1);
+    const scaleY = CM.canvas.height / (canvasRect.height || 1);
     return {
-      x: (rect.left - canvasRect.left) + rect.width / 2,
-      y: (rect.top - canvasRect.top) + rect.height / 2,
+      x: ((rect.left - canvasRect.left) + rect.width / 2) * scaleX,
+      y: ((rect.top - canvasRect.top) + rect.height / 2) * scaleY,
       frame
     };
   }
@@ -4147,6 +4178,45 @@ function triggerBossPhase2(){
   if (frame) frame.classList.add('boss-phase2-aura');
   blog(`<span class="accent">${battle.enemy.name}が ちからを かいほうした…！【フェーズ2：限界突破】</span>`);
   $('battle-floor-title').innerHTML = stageBattleTitleHtml(explore.areaId, explore.stageIndex, true, 2);
+}
+
+
+function turnBasedEnemyAct(callback){
+  if (!battle || battle.over) return;
+  
+  // 回避判定 (すばやさ × 1.5% の確率で回避と仮定)
+  const evadeChance = Math.min(60, totalStat('spd') * 1.5);
+  const isEvaded = (Math.random() * 100) < evadeChance;
+  const e = battle.enemy;
+
+  if (isEvaded) {
+    blog(`<span class="good">ゆうしゃは ${e.name}の こうげきを ひらりと かわした！</span>`);
+    spawnFloatingText($('battle-player-window'), 'MISS!', 'good');
+    SM.playBeep('miss'); // ※SEは仮
+    if (callback) setTimeout(callback, 800);
+    return;
+  }
+
+  playEnemyAttackAnim();
+  let dmg = Math.max(1, Math.round(e.atk * 1.5) - totalStat('def'));
+  if (equippedAbilities().has('guard')) dmg = Math.max(1, Math.round(dmg * 0.85));
+  G.player.hp -= dmg;
+  SM.playBeep('damage');
+  flashScreenRed();
+  spawnFloatingDamage($('battle-player-hp'), dmg, 'player-dmg');
+  blog(`<span class="bad">${e.name}の こうげき！ ゆうしゃは <b>${dmg}</b>の ダメージを うけた！</span>`);
+  const frame = $('battle-player-window');
+  frame.classList.remove('shake'); void frame.offsetWidth; frame.classList.add('shake');
+  updateBattleBars();
+  
+  if (G.player.hp <= 0){
+    endBattleLoop();
+    showPlayerDownOverlay();
+    setTimeout(loseBattle, 1400);
+    return;
+  }
+  
+  if (callback) setTimeout(callback, 800);
 }
 
 function afterPlayerAction(){
@@ -4304,6 +4374,12 @@ function winBattle(){
           const counts = getStageClearCounts(areaId);
           counts[stageIndex] = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, (counts[stageIndex] || 0) + 1);
           const stageRewards = { drops: explore.stageDrops || [], gold: explore.stageGold || 0, exp: explore.stageExp || 0 };
+          
+          // ステージクリア時にHP/MPを全回復させる
+          if (G && G.player) {
+            G.player.hp = totalMaxHp();
+            G.player.mp = totalMaxMp();
+          }
           save();
           showStageClearOverlay(AREA_STAGES[areaId], stageIndex, stageRewards,
             () => nextStage(),
@@ -5508,6 +5584,13 @@ function startQuestChallenge(q) {
           
           const playReward = () => {
             showQuestRewardToast(totalGold, totalExp, q.npc, completed, () => {
+              const nextStep = () => {
+                if (completed) {
+                  showQuestBoard(); // クエスト完了後はクエストボードに戻す
+                } else {
+                  startQuestChallenge(q); // 未完了なら次の問題へ連続で進む
+                }
+              };
               if (leveledUp){
                 const unlockedSkills = SKILL_DB.filter(s => (s.reqLvl || 1) > lvlBefore && (s.reqLvl || 1) <= G.player.lvl);
                 showLevelUpModal({
@@ -5515,7 +5598,9 @@ function startQuestChallenge(q) {
                   hpBefore: maxHpBefore, hpAfter: totalMaxHp(),
                   mpBefore: maxMpBefore, mpAfter: totalMaxMp(),
                   pointsGained, unlockedSkills,
-                }, showHome);
+                }, nextStep);
+              } else {
+                nextStep();
               }
             });
           };
@@ -6386,16 +6471,30 @@ function renderWeaponShopList(){
       cell.onmouseover = (e) => showTooltip(e, generateEquipDetailHtml(db, { isShop: true, rarity: 1 }));
       cell.onmouseout = () => hideTooltip();
       
-      if (canBuy) {
-        cell.onclick = () => {
-          hideTooltip();
+      cell.onclick = () => {
+        hideTooltip();
+        if (owned) {
+          showNotification('すでに もっているよ！');
+          return;
+        }
+        
+        const detailHtml = generateEquipDetailHtml(db, { isShop: true, rarity: 1 });
+        const messageHtml = `
+          <div style="text-align:left; margin-bottom: 12px; font-size:14px; max-height:40vh; overflow-y:auto; background:rgba(0,0,0,0.4); border-radius:8px; padding:8px;">
+            ${detailHtml}
+          </div>
+          <div style="font-weight:bold; color:#f1c40f; text-align:center;">
+            所持ゴールド：${G.player.gold}G ➔ <span style="${canBuy ? '' : 'color:#e74c3c;'}">${G.player.gold - db.price}G</span>
+          </div>
+          ${isOverCost ? `<div style="color:#e74c3c; margin-top:8px; text-align:center;">⚠️ 装備コストが 高いため、今は装備できません！<br>(コスト: ${db.cost} / 最大: ${costCap()})</div>` : ''}
+          ${!canBuy && !isOverCost ? `<div style="color:#e74c3c; margin-top:8px; text-align:center;">⚠️ ゴールドが たりません！</div>` : ''}
+          ${canBuy ? `<div style="margin-top: 12px; font-size: 18px; text-align:center;">これを 購入しますか？</div>` : ''}
+        `;
+
+        showConfirmModal(`「${db.name}」`, messageHtml, canBuy ? () => {
           buyEquip(db);
-        };
-      } else {
-        cell.onclick = () => {
-          if (!owned) SM.playBeep('error');
-        };
-      }
+        } : null);
+      };
     }
     list.appendChild(cell);
   }
@@ -7077,7 +7176,7 @@ function openDemonCastleCodeInput(){
 /* しゅぎょう画面の カカシに「あたった」えんしゅつを 1回 さいせいする */
 function hitTrainingDummy(skillId){
   const wrap = $('training-dummy-wrap');
-  if (!wrap) return;
+  if (!wrap || wrap.offsetParent === null) return; // 画面が非表示のときは描画・エフェクト処理をスキップしてクラッシュを防ぐ
   wrap.classList.remove('hit');
   void wrap.offsetWidth;
   wrap.classList.add('hit');
@@ -7942,7 +8041,7 @@ function getProblemUnitInfo(problem) {
   return { key: 'math_calc', label: '計算' };
 }
 
-function recordStudyAnswer(problem, isCorrect) {
+function recordStudyAnswer(problem, isCorrect, timeMs = 0, assistUsed = false) {
   if (!G) return;
   if (!G.studyStats) {
     G.studyStats = { totalAnswers: 0, totalCorrect: 0, units: {}, stageHistory: {} };
@@ -8007,8 +8106,35 @@ function renderStudySummary(prefix, stats) {
   if (totalEl) totalEl.textContent = total;
   if (overallEl) overallEl.textContent = overallRate;
 
-  // 平均成長率の算出
+  // 平均タイムとアシスト回数の算出
   const units = Object.values(stats.units || {});
+  let totalTime = 0;
+  let totalTimeCount = 0;
+  let totalAssist = 0;
+  units.forEach(u => {
+    if (u.totalTimeMs) {
+      totalTime += u.totalTimeMs;
+      totalTimeCount += u.total; // Use total as attempt count for time
+    }
+    if (u.assistUsed) {
+      totalAssist += u.assistUsed;
+    }
+  });
+  
+  const avgTimeEl = $(`${prefix}-stat-avg-time`);
+  const assistEl = $(`${prefix}-stat-assist-uses`);
+  if (avgTimeEl) {
+    if (totalTimeCount > 0) {
+      avgTimeEl.textContent = (totalTime / totalTimeCount / 1000).toFixed(1);
+    } else {
+      avgTimeEl.textContent = '-';
+    }
+  }
+  if (assistEl) {
+    assistEl.textContent = totalAssist;
+  }
+
+  // 平均成長率の算出
   let totalGrowth = 0;
   let growthCount = 0;
   units.forEach(u => {
@@ -10239,8 +10365,7 @@ function printAreaStage(areaId, idx) {
             <div class="p-cols">
               <div class="p-col">${p1}</div>
               <div class="p-col">${p2}</div>
-            </div>
-          `);
+            </div>`, area.bgImage ? (typeof av === 'function' ? av(area.bgImage) : area.bgImage) : null);
         }
       };
     });
@@ -10367,8 +10492,7 @@ function printAreaBoss(areaId) {
             <div class="p-cols">
               <div class="p-col">${p1}</div>
               <div class="p-col">${p2}</div>
-            </div>
-          `);
+            </div>`, area.bgImage ? (typeof av === 'function' ? av(area.bgImage) : area.bgImage) : null);
         }
       };
     });

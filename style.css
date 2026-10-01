@@ -1618,7 +1618,8 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 /* ===== おたすけ（アシスト）ビジュアル：まるの絵で もんだいを かしか ===== */
 .assist-visual { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px; margin:4px 0 10px; }
 .assist-group { display:flex; flex-wrap:wrap; align-content:flex-start; gap:3px; padding:5px; max-width:170px; border:2px dashed rgba(239,227,192,0.35); }
-.assist-dot { width:10px; height:10px; border-radius:50%; background: var(--accent); box-shadow: 0 0 3px rgba(0,0,0,0.4); flex-shrink:0; }
+.assist-dot { width:14px; height:14px; border-radius:50%; background: var(--accent); box-shadow: 0 0 3px rgba(0,0,0,0.4); flex-shrink:0; }
+.assist-dot-group { display: inline-flex; gap: 3px; margin-right: 12px; }
 .assist-dot.assist-dot-remove { background: rgba(239,227,192,0.15); box-shadow:none; }
 .assist-op { font-size:20px; font-weight:900; color:var(--text-light); }
 .assist-grid { flex-direction:column; gap:3px; }
