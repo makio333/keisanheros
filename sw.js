@@ -1,4 +1,4 @@
-const CACHE_NAME = 'legend-heroes-cache-v14';
+const CACHE_NAME = 'legend-heroes-cache-v21';
 const ASSETS_TO_CACHE = [
   './manifest.json',
   './icon-192.png',
@@ -10,7 +10,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker v9] Caching essential PWA assets');
+      console.log('[Service Worker v21] Caching essential PWA assets');
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
@@ -22,7 +22,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
-            console.log('[Service Worker v6] Removing old cache:', key);
+            console.log('[Service Worker v21] Removing old cache:', key);
             return caches.delete(key);
           }
         })
@@ -39,9 +39,9 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // HTML または ナビゲーションリクエストは必ず「ネットワーク優先（Network-First）」
-  // 端末がオンラインなら常に最新の index.html と最新バンドルを取得し、オフライン時のみキャッシュへフォールバック
-  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+  // HTML / JS / ナビゲーションリクエストは必ず「ネットワーク優先（Network-First）」
+  // 端末がオンラインなら常に最新のスクリプトとHTMLを取得し、オフライン時のみキャッシュへフォールバック
+  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html') || url.pathname.endsWith('.js')) {
     event.respondWith(
       fetch(event.request).then((networkResponse) => {
         if (networkResponse && networkResponse.status === 200) {

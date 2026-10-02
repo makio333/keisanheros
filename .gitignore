@@ -8,3 +8,16 @@ node_modules/
 dist/
 venv/
 *.log
+output/
+:memory:.ses
+patch_*.py
+fix_*.py
+clean_*.py
+test_*.py
+test_*.js
+boss.js
+boss_old.js
+full_boss.js
+original_print_funcs.js
+kanji_data_new.js
+kanji_data_patch.js

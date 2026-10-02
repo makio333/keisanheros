@@ -40,5 +40,14 @@ service cloud.firestore {
     match /official_show_rankings/{document} {
       allow read, write: if true;
     }
+    match /raidRankings/{document} {
+      allow read, write: if true;
+    }
+    match /raidGlobal/{document} {
+      allow read, write: if true;
+    }
+    match /raidClaims/{document} {
+      allow read, write: if true;
+    }
   }
 }

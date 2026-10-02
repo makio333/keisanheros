@@ -281,6 +281,14 @@ class SoundManager {
       gain.gain.exponentialRampToValueAtTime(0.01 * volBase, now + 0.35);
       osc.start(now);
       osc.stop(now + 0.35);
+    } else if (type === 'miss') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(750, now);
+      osc.frequency.exponentialRampToValueAtTime(320, now + 0.15);
+      gain.gain.setValueAtTime(0.35 * volBase, now);
+      gain.gain.exponentialRampToValueAtTime(0.01 * volBase, now + 0.15);
+      osc.start(now);
+      osc.stop(now + 0.15);
     }
   }
 }
@@ -2170,19 +2178,23 @@ function generateEnemy(zone, floor){
    プレイヤー アバター立ち絵データ（男女2パターンずつ）
    ========================================================== */
 const HERO_AVATARS = [
-  { id: 'hero_female_1', name: '少女の冒険者', gender: 'female', job: '剣士・戦士', desc: '活発なポニーテールと剣技が自慢の少女', image: 'assets/characters/hero_female_1.png' },
-  { id: 'hero_male_1', name: '青年の騎士', gender: 'male', job: '騎士・勇者', desc: '聖剣をたずさえた誇り高き青年騎士', image: 'assets/characters/hero_male_1.png' },
-  { id: 'hero_male_2', name: '少年の冒険者', gender: 'male', job: '冒険者・シーフ', desc: 'ゴーグルと身軽な動きで挑む元気な少年', image: 'assets/characters/hero_male_2.png' },
-  { id: 'hero_female_2', name: '星詠みの少女', gender: 'female', job: '魔法使い', desc: '星空のローブと水晶の杖を持つ神秘的な少女', image: 'assets/characters/hero_female_2.png' },
-  { id: 'ai_hero_boy', name: '異世界の少年', gender: 'male', job: '冒険者', desc: '不思議な世界から来た少年', image: 'assets/characters/ai_hero_boy.png' },
-  { id: 'ai_hero_youngman', name: '異世界の青年', gender: 'male', job: '剣士', desc: '不思議な世界から来た青年', image: 'assets/characters/ai_hero_youngman.png' },
-  { id: 'ai_hero_girl', name: '異世界の少女', gender: 'female', job: '魔法使い', desc: '不思議な世界から来た少女', image: 'assets/characters/ai_hero_girl.png' },
-  { id: 'ai_hero_woman', name: '異世界の女性', gender: 'female', job: '弓使い', desc: '不思議な世界から来た女性', image: 'assets/characters/ai_hero_woman.png' },
+  { id: 'hero_female_1', name: '少女の冒険者', gender: 'female', job: '剣士・戦士', desc: '活発なポニーテールと剣技が自慢の少女', image: 'assets/characters/hero_female_1_hd.png' },
+  { id: 'hero_male_1', name: '青年の騎士', gender: 'male', job: '騎士・勇者', desc: '聖剣をたずさえた誇り高き青年騎士', image: 'assets/characters/hero_male_1_hd.png' },
+  { id: 'hero_male_2', name: '少年の冒険者', gender: 'male', job: '冒険者・シーフ', desc: 'ゴーグルと身軽な動きで挑む元気な少年', image: 'assets/characters/hero_male_2_hd.png' },
+  { id: 'hero_female_2', name: '星詠みの少女', gender: 'female', job: '魔法使い', desc: '星空のローブと水晶の杖を持つ神秘的な少女', image: 'assets/characters/hero_female_2_hd.png' },
+  { id: 'ai_hero_boy', name: '異世界の少年', gender: 'male', job: '冒険者', desc: '不思議な世界から来た少年', image: 'assets/characters/ai_hero_boy_clean.png' },
+  { id: 'ai_hero_youngman', name: '異世界の青年', gender: 'male', job: '剣士', desc: '不思議な世界から来た青年', image: 'assets/characters/ai_hero_youngman_clean.png' },
+  { id: 'ai_hero_girl', name: '異世界の少女', gender: 'female', job: '魔法使い', desc: '不思議な世界から来た少女', image: 'assets/characters/ai_hero_girl_clean.png' },
+  { id: 'ai_hero_woman', name: '異世界の女性', gender: 'female', job: '弓使い', desc: '不思議な世界から来た女性', image: 'assets/characters/ai_hero_woman_clean.png' },
+  { id: 'ai_hero_spellblade', name: '風の魔法剣士', gender: 'male', job: '魔法剣士', desc: '風の魔法をまとったクリスタルレイピアで戦う少年', image: 'assets/characters/ai_hero_spellblade_transparent.png' },
+  { id: 'ai_hero_alchemist', name: '星薬の錬金術師', gender: 'female', job: '錬金術師', desc: '星のきらめきを込めた薬と杖で仲間を導く少女', image: 'assets/characters/ai_hero_alchemist_transparent.png' },
 ];
 
 function getHeroAvatar(avatarId) {
   return HERO_AVATARS.find(a => a.id === avatarId) || HERO_AVATARS[0];
 }
+
+let pendingAvatarId = null;
 
 // 既存のセーブデータに対して、ランダムにAIアバターを割り当てるマイグレーション
 try {
@@ -3598,11 +3610,24 @@ const BALANCE = {
   atkMinRatio:     0.3,   // ぼうぎょが かたい あいてでも これだけは とおる（こうげき力に たいする わりあい）
   timeBonus:       0.2,   // はやく こたえたときの ダメージボーナス（さいだい +20%）
   missDamageRatio: MISS_DAMAGE_RATIO,
-  critRate:        0.15,  // ふつうの こうげきの かいしんりつ
-  skillCritRate:   0.18,  // スキルの かいしんりつ（ふつうより ちょっと たかい）
+  critRate:        0.15,  // ふつうの こうげきの かいしんりつ（予備）
+  skillCritRate:   0.18,  // スキルの かいしんりつ（予備）
   critMult:        2.0,
   missGaugePenalty: 15,   // しっぱいすると てきの すばやさバーが すこし すすむ
 };
+
+/**
+ * すばやさ（SPD）から計算される確率（0.0〜1.0）
+ * ・すばやさ10ポイントで5%（1ptあたり0.5%）上昇
+ * ・30%（60pt）を超えると10ポイントで1%（1ptあたり0.1%）上昇
+ */
+function calcSpdRate(spd) {
+  const s = Math.max(0, Number(spd) || 0);
+  if (s <= 60) {
+    return (s * 0.5) / 100;
+  }
+  return (30 + (s - 60) * 0.1) / 100;
+}
 
 /* ふつうの こうげきの きほんダメージ。スキルの「さいていほしょう」にも つかう */
 function basicAttackDamage(atk, eDef){
@@ -3625,6 +3650,33 @@ function currentAttackProblem(){
   }
   if (!explore.usedProblems) {
     explore.usedProblems = new Set();
+  }
+
+  if (explore.isRaid) {
+    // 3問ごとに次のステージ、ステージが終われば次のエリアへ
+    if (explore.raidProbCount >= 1) {
+      explore.raidProbCount = 0;
+      explore.raidStageIdx++;
+      let area = AREA_STAGES[explore.raidAreaKeys[explore.raidAreaIdx]];
+      
+      // 現在のエリアのステージ数をオーバーしたら次のエリアへ
+      if (explore.raidStageIdx >= area.stages.length) {
+        explore.raidStageIdx = 0;
+        explore.raidAreaIdx++;
+        // すべて終わったら最初からループ
+        if (explore.raidAreaIdx >= explore.raidAreaKeys.length) {
+          explore.raidAreaIdx = 0;
+        }
+      }
+      explore.areaId = explore.raidAreaKeys[explore.raidAreaIdx];
+      explore.stageIndex = explore.raidStageIdx;
+      explore.usedProblems.clear(); // 新ステージなので履歴リセット
+      
+      const newArea = AREA_STAGES[explore.areaId];
+      const stageName = newArea.stages[explore.stageIndex].name;
+      blog(`<span class="heal">【レイド進行】${newArea.name} - ${stageName} の問題へ！</span>`);
+    }
+    explore.raidProbCount++;
   }
 
   const generateRaw = () => {
@@ -3690,7 +3742,16 @@ function doAttack(){
       const base = basicAttackDamage(atk, eDef);
       if (res.success){
         let dmg = Math.round(base * (1 + res.timeFrac * BALANCE.timeBonus));
-        const critChance = BALANCE.critRate + (equippedAbilities().has('crit_up') ? 0.10 : 0);
+        
+        // レイドボス戦時は進行度（エリア・ステージ）に応じてダメージにボーナス倍率！
+        if (explore && explore.isRaid) {
+          const areaBonus = (explore.raidAreaIdx || 0) * 0.5; // エリアが進むごとに +50%
+          const stageBonus = (explore.raidStageIdx || 0) * 0.1; // ステージが進むごとに +10%
+          const raidMult = 1.0 + areaBonus + stageBonus;
+          dmg = Math.round(dmg * raidMult);
+        }
+        
+        const critChance = calcSpdRate(totalStat('spd')) + (equippedAbilities().has('crit_up') ? 0.10 : 0);
         const isCrit = Math.random() < critChance;
         if (isCrit) dmg = Math.floor(dmg * BALANCE.critMult);
         dealToEnemy(dmg, 'こうげき', isCrit, () => afterPlayerAction());
@@ -3801,8 +3862,8 @@ function useSkill(s){
         dealToEnemy(chip, s.name, false, () => afterPlayerAction(), s.id);
         return;
       }
-      // スキルでもクリティカル
-      const critChance = BALANCE.skillCritRate + (equippedAbilities().has('crit_up') ? 0.08 : 0);
+      // スキルでもクリティカル（すばやさ確率＋スキルボーナス3%）
+      const critChance = calcSpdRate(totalStat('spd')) + 0.03 + (equippedAbilities().has('crit_up') ? 0.08 : 0);
       const isCrit = Math.random() < critChance;
       if (isCrit) dmg = Math.floor(dmg * BALANCE.critMult);
       dealToEnemy(dmg, s.name, isCrit, () => afterPlayerAction(), s.id);
@@ -3981,14 +4042,17 @@ function useItem(uid, db, inBattle = false){
   return { success: false, message: 'このアイテムは つかえない。' };
 }
 
-/* --- ダメージ処理 --- */
+/* --- ダメージ・ミス表示処理 --- */
 function spawnFloatingDamage(targetEl, text, typeClass, manager = CM) {
-  if (String(typeClass).includes('player-dmg')) {
+  if (String(typeClass).includes('player-dmg') || String(typeClass).includes('player-miss') || text === 'ミス！') {
+    const isMiss = String(typeClass).includes('player-miss') || text === 'ミス！';
     const dmg = document.createElement('div');
-    dmg.className = 'floating-damage ' + typeClass;
+    dmg.className = 'floating-damage ' + (isMiss ? 'player-miss' : typeClass);
     dmg.textContent = text;
-    dmg.style.color = '#ff4757';
-    dmg.style.textShadow = '0 2px 4px rgba(0,0,0,0.8)';
+    dmg.style.color = isMiss ? '#74b9ff' : '#ff4757';
+    dmg.style.textShadow = isMiss 
+      ? '0 0 16px rgba(116, 185, 255, 0.95), 0 2px 6px rgba(0,0,0,0.9)'
+      : '0 2px 4px rgba(0,0,0,0.8)';
     dmg.style.zIndex = '99999';
     dmg.style.position = 'fixed'; // fixed to avoid relative clipping
     // 画面の中心（やや上）に大きく表示する。アニメーションとの競合を防ぐためwidth=100%で中央揃え
@@ -3996,7 +4060,9 @@ function spawnFloatingDamage(targetEl, text, typeClass, manager = CM) {
     dmg.style.top = '40%';
     dmg.style.width = '100vw';
     dmg.style.textAlign = 'center';
-    dmg.style.fontSize = '45px'; // 普段のダメージより大きく
+    dmg.style.fontSize = isMiss ? '52px' : '45px'; // ミスはさらに見やすく
+    dmg.style.fontWeight = '900';
+    if (isMiss) dmg.style.letterSpacing = '3px';
     document.body.appendChild(dmg);
     setTimeout(() => { if (dmg.parentNode) dmg.parentNode.removeChild(dmg); }, 1000);
     return;
@@ -4009,6 +4075,16 @@ function spawnFloatingDamage(targetEl, text, typeClass, manager = CM) {
   const y = (rect.top - canvasRect.top) + rect.height / 2;
   mgr.addEffect(new DamageEffect(x, y, text, typeClass));
 }
+
+// 互換性・安全対策: spawnFloatingText のエイリアス
+function spawnFloatingText(targetEl, text, typeClass, manager = CM) {
+  if (text === 'MISS!' || text === 'ミス！') {
+    spawnFloatingDamage(targetEl, 'ミス！', 'player-miss', manager);
+  } else {
+    spawnFloatingDamage(targetEl, text, typeClass, manager);
+  }
+}
+if (typeof window !== 'undefined') window.spawnFloatingText = spawnFloatingText;
 
 function flashScreenRed() {
   const el = document.createElement('div');
@@ -4084,6 +4160,9 @@ function handlePostDamageEffects(dmg, cb) {
 }
 
 function dealToEnemy(dmg, label, isCrit, cb, skillId){
+  if (battle && battle.enemy && battle.enemy.isRaid) {
+    battle.raidDamageDealt = (battle.raidDamageDealt || 0) + dmg;
+  }
   const coords = getEnemyCanvasCoords();
   const frame = coords.frame || document.querySelector('.enemy-sprite');
 
@@ -4184,15 +4263,16 @@ function triggerBossPhase2(){
 function turnBasedEnemyAct(callback){
   if (!battle || battle.over) return;
   
-  // 回避判定 (すばやさ × 1.5% の確率で回避と仮定)
-  const evadeChance = Math.min(60, totalStat('spd') * 1.5);
-  const isEvaded = (Math.random() * 100) < evadeChance;
+  // 回避判定（すばやさから計算: 10ptで5%、30%を超えると10ptで1%）
+  const evadeChance = calcSpdRate(totalStat('spd')) + (equippedAbilities().has('dodge_up') ? 0.08 : 0);
+  const isEvaded = Math.random() < evadeChance;
   const e = battle.enemy;
 
   if (isEvaded) {
-    blog(`<span class="good">ゆうしゃは ${e.name}の こうげきを ひらりと かわした！</span>`);
-    spawnFloatingText($('battle-player-window'), 'MISS!', 'good');
-    SM.playBeep('miss'); // ※SEは仮
+    playEnemyAttackAnim();
+    blog(`<span class="good">ゆうしゃは ${e.name}の こうげきを ひらりと かわした！（ミス！）</span>`);
+    spawnFloatingDamage($('battle-player-hp'), 'ミス！', 'player-miss');
+    SM.playBeep('miss');
     if (callback) setTimeout(callback, 800);
     return;
   }
@@ -4237,8 +4317,21 @@ function afterPlayerAction(){
 
 function enemyAct(){
   if (!battle || battle.over) return;
-  playEnemyAttackAnim();
   const e = battle.enemy;
+  
+  // 回避判定（すばやさから計算: 10ptで5%、30%を超えると10ptで1%）
+  const evadeChance = calcSpdRate(totalStat('spd')) + (equippedAbilities().has('dodge_up') ? 0.08 : 0);
+  const isEvaded = Math.random() < evadeChance;
+  if (isEvaded) {
+    playEnemyAttackAnim();
+    blog(`<span class="good">ゆうしゃは ${e.name}の こうげきを ひらりと かわした！（ミス！）</span>`);
+    spawnFloatingDamage($('battle-player-hp'), 'ミス！', 'player-miss');
+    SM.playBeep('miss');
+    resumeBattle('enemy');
+    return;
+  }
+
+  playEnemyAttackAnim();
   let dmg = Math.max(1, Math.round(e.atk * 1.5) - totalStat('def'));
   // そうびの特殊能力「てっぺき」：うけるダメージ-15%
   if (equippedAbilities().has('guard')) dmg = Math.max(1, Math.round(dmg * 0.85));
@@ -4250,7 +4343,6 @@ function enemyAct(){
   const frame = $('battle-player-window');
   frame.classList.remove('shake'); void frame.offsetWidth; frame.classList.add('shake');
   updateBattleBars();
-  spawnFloatingDamage(frame, dmg, 'player-dmg');
   flashScreenRed();
   if (G.player.hp <= 0){
     endBattleLoop();
@@ -4296,6 +4388,18 @@ function grantExp(amount){
 
 function winBattle(){
   endBattleLoop();
+  if (battle && battle.enemy && battle.enemy.isRaid) {
+    // 見事倒した場合の処理
+    const dmg = battle.raidDamageDealt || 0;
+    G.player.hp = totalMaxHp();
+    showHome();
+    const eqW = G.ownedEquips.find(o=>o.uid===G.equipment.weapon?.uid); const eqA = G.ownedEquips.find(o=>o.uid===G.equipment.armor?.uid); const eqAcc = G.ownedEquips.find(o=>o.uid===G.equipment.accessory?.uid); recordRaidDamage(currentSlotKey, G.playerName || '勇者', dmg, G.avatar, G.player.lvl, { weaponId: eqW?.id, armorId: eqA?.id, accessoryId: eqAcc?.id });
+    showConfirmModal('レイド終了', `まさかの撃破！？<br>ダークバハムートに ${dmg} のダメージを与えた！<br>ランキングに登録されました！`, () => {
+      showRaidBossMenu();
+    });
+    explore = null;
+    return;
+  }
   const e = battle.enemy;
   const gold = rnd(e.goldMin, e.goldMax);
   G.player.gold += gold;
@@ -4573,6 +4677,20 @@ function showLevelUpModal(data, onClose){
 function loseBattle(){
   endBattleLoop();
   document.querySelector('.player-down-overlay')?.remove();
+  
+  if (battle && battle.enemy && battle.enemy.isRaid) {
+    const dmg = battle.raidDamageDealt || 0;
+    G.player.hp = totalMaxHp(); // 拠点で回復
+    showHome();
+    
+    // Submitting damage to Raid Boss API
+    const eqW = G.ownedEquips.find(o=>o.uid===G.equipment.weapon?.uid); const eqA = G.ownedEquips.find(o=>o.uid===G.equipment.armor?.uid); const eqAcc = G.ownedEquips.find(o=>o.uid===G.equipment.accessory?.uid); recordRaidDamage(currentSlotKey, G.playerName || '勇者', dmg, G.avatar, G.player.lvl, { weaponId: eqW?.id, armorId: eqA?.id, accessoryId: eqAcc?.id });
+    showConfirmModal('レイド終了', `ダークバハムートに ${dmg} のダメージを与えた！<br>ランキングに登録されました！`, () => {
+      showRaidBossMenu(); // 終わったらレイドメニューに戻す
+    });
+    explore = null;
+    return;
+  }
   G.player.hp = 1;
   const zone = explore ? explore.zone : null;
   if (zone && G.failTracking) {
@@ -5687,7 +5805,7 @@ const STAT_DEFS = [
   { key:'maxMp', name:'<img src="assets/ui_icons/ui_icon_6.png" class="stat-inline-icon"> MP', per:4, desc:'1スキルポイントで さいだいMP+4' },
   { key:'atk', name:'<img src="assets/ui_icons/ui_icon_2.png" class="stat-inline-icon"> こうげき力', per:1, desc:'1スキルポイントで こうげき力+1' },
   { key:'def', name:'<img src="assets/ui_icons/ui_icon_3.png" class="stat-inline-icon"> しゅび力', per:1, desc:'1スキルポイントで しゅび力+1' },
-  { key:'spd', name:'<img src="assets/ui_icons/ui_icon_1.png" class="stat-inline-icon"> すばやさ', per:1, desc:'1スキルポイントで すばやさ+1（バーの たまるはやさ）' },
+  { key:'spd', name:'<img src="assets/ui_icons/ui_icon_1.png" class="stat-inline-icon"> すばやさ', per:1, desc:'1スキルポイントで すばやさ+1（会心の一撃＆敵の攻撃をかわす確率がUP！）' },
 ];
 
 /* わりふりちゅうの スキルポイント（まだ G.player に はんえいしていない かりの わりあて）。
@@ -5891,7 +6009,7 @@ const STAT_RADAR_DEFS = [
     posClass: 'pos-top-left',
     fullName: '👟 すばやさ',
     desc: '1スキルポイントで すばやさ+1',
-    note: 'ATBゲージの溜まるスピードがアップ！'
+    note: '会心の一撃（クリティカル）と、相手の攻撃をかわす確率（ミス！）がアップ！<br><span style="color:#f1c40f; font-size:11px;">※10ポイントで+5%（30%を超えると10ポイントで+1%）</span>'
   },
 ];
 
@@ -5989,6 +6107,17 @@ function renderStatusPentagonUI(bonusMap, remaining){
       }
     }
 
+    let tooltipNoteHtml = item.note;
+    if (item.key === 'spd') {
+      const curPct = (calcSpdRate(curTotal) * 100).toFixed(1);
+      if (pendGain > 0) {
+        const nextPct = (calcSpdRate(previewTotal) * 100).toFixed(1);
+        tooltipNoteHtml += `<div style="margin-top:5px; font-weight:bold; color:#74b9ff; font-size:12px;">⚡ 会心・回避率: ${curPct}% → <span style="color:#55efc4;">${nextPct}%</span></div>`;
+      } else {
+        tooltipNoteHtml += `<div style="margin-top:5px; font-weight:bold; color:#74b9ff; font-size:12px;">⚡ 会心・回避率: ${curPct}%</div>`;
+      }
+    }
+
     nodeEl.innerHTML = `
       <div class="stat-node-header">
         <span class="stat-node-name"><img src="${item.iconImg}" class="stat-inline-icon"> ${item.name}</span>
@@ -6002,7 +6131,7 @@ function renderStatusPentagonUI(bonusMap, remaining){
       <div class="stat-node-tooltip">
         <div class="tooltip-title">${item.fullName}</div>
         <div class="tooltip-gain">✨ ${item.desc}</div>
-        <div class="tooltip-note">${item.note}</div>
+        <div class="tooltip-note">${tooltipNoteHtml}</div>
       </div>
     `;
 
@@ -7681,6 +7810,8 @@ function bindEvents(){
   on('hotspot-gacha', showGacha);
   on('hotspot-synthesis', showSynthesis);
   on('hotspot-quest-board', showQuestBoard);
+  on('hotspot-raid-boss', showRaidBossMenu);
+  on('btn-raid-challenge', startRaidBattle);
   on('hotspot-adventure', showStageSelect);
 
   // 教科タブ切り替え
@@ -7761,50 +7892,77 @@ function bindEvents(){
     SM.playBeep('cancel');
     $('avatar-change-modal').classList.add('hidden');
   });
-  window.showAvatarChangeModal = function() {
+  const closeAvatarPreview = (returnToList = false) => {
+    $('avatar-preview-modal').classList.add('hidden');
+    if (returnToList) $('avatar-change-modal').classList.remove('hidden');
+  };
+  const openAvatarPreview = (avatarId) => {
+    const avatar = getHeroAvatar(avatarId);
+    pendingAvatarId = avatar.id;
+    $('avatar-preview-title').textContent = `${avatar.name}をこのスキンにしますか？`;
+    $('avatar-preview-image').src = av(avatar.image);
+    $('avatar-preview-description').textContent = avatar.desc;
+    $('avatar-change-modal').classList.add('hidden');
+    $('avatar-preview-modal').classList.remove('hidden');
     SM.playBeep('select');
-    const modal = $('avatar-change-modal');
-    const list = $('avatar-change-list');
-    list.innerHTML = '';
-    
-    HERO_AVATARS.forEach(avatar => {
-      const btn = document.createElement('button');
-      btn.className = 'btn';
-      btn.style.width = '80px';
-      btn.style.height = '100px';
-      btn.style.padding = '5px';
-      btn.style.display = 'flex';
-      btn.style.flexDirection = 'column';
-      btn.style.alignItems = 'center';
-      
-      const img = document.createElement('img');
-      img.src = av(avatar.image);
-      img.style.width = '60px';
-      img.style.height = '60px';
-      img.style.objectFit = 'contain';
-      
-      const name = document.createElement('span');
-      name.textContent = avatar.name;
-      name.style.fontSize = '10px';
-      name.style.marginTop = '4px';
-      
-      btn.appendChild(img);
-      btn.appendChild(name);
-      
-      if (G.avatar === avatar.id) {
-        btn.style.border = '2px solid #f1c40f';
-        btn.style.background = 'rgba(241, 196, 15, 0.2)';
-      }
+  };
+  const applyAvatarPreview = () => {
+    if (!pendingAvatarId) return;
+    SM.playBeep('equip');
+    G.avatar = pendingAvatarId;
+    pendingAvatarId = null;
+    $('avatar-preview-modal').classList.add('hidden');
+    save();
+    updateHud();
+    // 自分の部屋で変更した場合は自分の部屋を再描画し、拠点で変更した場合はそのまま拠点にとどまる
+    if ($('screen-status') && $('screen-status').classList.contains('active')) {
+      showStatus();
+    }
+  };
+  on('btn-avatar-preview-close', () => {
+    SM.playBeep('cancel');
+    pendingAvatarId = null;
+    closeAvatarPreview();
+  });
+  on('btn-avatar-preview-cancel', () => {
+    SM.playBeep('cancel');
+    closeAvatarPreview(true);
+  });
+  on('btn-avatar-preview-apply', applyAvatarPreview);
+	  window.showAvatarChangeModal = function() {
+	    SM.playBeep('select');
+	    const modal = $('avatar-change-modal');
+	    const list = $('avatar-change-list');
+	    list.innerHTML = '';
+	    
+	    HERO_AVATARS.forEach(avatar => {
+	      const btn = document.createElement('button');
+	      btn.className = 'btn avatar-change-card';
+	      
+	      const imgWrap = document.createElement('div');
+	      imgWrap.className = 'avatar-change-img-wrap';
+
+	      const img = document.createElement('img');
+	      img.src = av(avatar.image);
+	      img.alt = avatar.name;
+	      img.loading = 'eager';
+	      img.decoding = 'async';
+	      img.className = 'avatar-change-img';
+	      
+	      const name = document.createElement('span');
+	      name.textContent = avatar.name;
+	      name.className = 'avatar-change-name';
+	      
+	      imgWrap.appendChild(img);
+	      btn.appendChild(imgWrap);
+	      btn.appendChild(name);
+	      
+	      if (G.avatar === avatar.id) {
+	        btn.classList.add('is-active');
+	      }
       
       btn.onclick = () => {
-        SM.playBeep('equip');
-        G.avatar = avatar.id;
-        modal.classList.add('hidden');
-        save();
-        updateHud();
-        if ($('screen-status') && !$('screen-status').classList.contains('hidden')) {
-            showStatus();
-        }
+        openAvatarPreview(avatar.id);
       };
       
       list.appendChild(btn);
@@ -10498,4 +10656,492 @@ function printAreaBoss(areaId) {
     });
     showPrintChoiceModal(variants);
   }
+}
+
+
+
+/* ==========================================================
+   レイドボス機能（ローカルストレージ版）
+   Firestoreを使わずlocalStorageで管理する
+   ========================================================== */
+const RAID_BOSS_ID = 'boss1';
+const RAID_MAX_HP = 1000;
+const RAID_STORAGE_KEY = 'raid_boss_v1_boss1';
+
+// --- ローカルRAIDデータ操作ユーティリティ ---
+
+function getRaidData() {
+  try {
+    return JSON.parse(localStorage.getItem(RAID_STORAGE_KEY) || '{}');
+  } catch(e) { return {}; }
+}
+
+function saveRaidData(data) {
+  localStorage.setItem(RAID_STORAGE_KEY, JSON.stringify(data));
+}
+
+// 自分のダメージを記録し、総ダメージも更新する
+function recordRaidDamage(slotKey, playerName, dmg, avatar, level, equipment) {
+  const data = getRaidData();
+  if (!data.rankings) data.rankings = {};
+  if (!data.totalDamage) data.totalDamage = 0;
+
+  const prev = data.rankings[slotKey] || { playerName, totalDamage: 0 };
+  prev.playerName = playerName || prev.playerName;
+  prev.totalDamage = (prev.totalDamage || 0) + dmg;
+  prev.slotKey = slotKey;
+  if (avatar) prev.avatar = avatar;
+  if (level !== undefined) prev.level = level;
+  if (equipment) prev.equipment = equipment;
+  data.rankings[slotKey] = prev;
+  data.totalDamage = (data.totalDamage || 0) + dmg;
+  saveRaidData(data);
+}
+
+// ランキング配列を取得（ダメージ降順）
+function getRaidRankings() {
+  const data = getRaidData();
+  return Object.values(data.rankings || {})
+    .sort((a, b) => (b.totalDamage || 0) - (a.totalDamage || 0));
+}
+
+// 総ダメージ（討伐進捗）を取得
+function getRaidTotalDamage() {
+  return getRaidData().totalDamage || 0;
+}
+
+// 報酬受け取り済み確認
+function isRaidRewardClaimed(slotKey) {
+  const data = getRaidData();
+  return !!(data.claimed && data.claimed[slotKey]);
+}
+
+// 報酬受け取りをマーク
+function markRaidRewardClaimed(slotKey) {
+  const data = getRaidData();
+  if (!data.claimed) data.claimed = {};
+  data.claimed[slotKey] = Date.now();
+  saveRaidData(data);
+}
+
+// --- 他の勇者へのエール（いいね！）機能 ---
+function sendRaidCheer(targetSlotKey, targetPlayerName, btnElement) {
+  if (!G || !currentSlotKey) return;
+  if (!targetSlotKey || targetSlotKey === currentSlotKey) return;
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  if (!G.cheerHistory || G.cheerHistory.date !== todayStr) {
+    G.cheerHistory = { date: todayStr, targets: [] };
+  }
+
+  if (G.cheerHistory.targets.includes(targetSlotKey)) {
+    return;
+  }
+
+  const cheerReward = 50; // 送信者・受信者ともに50G
+  G.player.gold = (G.player.gold || 0) + cheerReward;
+  G.cheerHistory.targets.push(targetSlotKey);
+  save();
+  updateHud();
+
+  // 相手のレイドランキングデータにエール回数 & 未受取ゴールドを加算
+  const rData = getRaidData();
+  let updatedCount = 1;
+  if (rData.rankings && rData.rankings[targetSlotKey]) {
+    const targetEntry = rData.rankings[targetSlotKey];
+    targetEntry.cheerCount = (targetEntry.cheerCount || 0) + 1;
+    targetEntry.unclaimedGold = (targetEntry.unclaimedGold || 0) + cheerReward;
+    updatedCount = targetEntry.cheerCount;
+    saveRaidData(rData);
+  }
+
+  // 相手がローカルの別スロットなら相手のセーブデータにも直接反映
+  try {
+    const rawTarget = storageGet(targetSlotKey);
+    if (rawTarget) {
+      const parsedTarget = JSON.parse(rawTarget);
+      if (parsedTarget && parsedTarget.player) {
+        parsedTarget.player.gold = (parsedTarget.player.gold || 0) + cheerReward;
+        storageSet(targetSlotKey, JSON.stringify(parsedTarget));
+      }
+    }
+  } catch(e) {}
+
+  SM.playBeep('heal');
+  if (btnElement) {
+    btnElement.disabled = true;
+    btnElement.innerHTML = `✅ 送信済 (👏 ${updatedCount})`;
+    btnElement.style.background = 'rgba(255,255,255,0.08)';
+    btnElement.style.color = '#888';
+    btnElement.style.borderColor = 'rgba(255,255,255,0.18)';
+    btnElement.style.cursor = 'default';
+    spawnFloatingDamage(btnElement, `+${cheerReward}G`, 'player-miss');
+  }
+}
+
+// --- 画面表示 ---
+
+function showRaidBossMenu() {
+  const modal = document.getElementById('screen-raid-boss');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+
+  const hpBar = document.getElementById('raid-boss-hp-bar');
+  const dmgText = document.getElementById('raid-boss-damage');
+  const listEl = document.getElementById('raid-ranking-list');
+  const btn = document.getElementById('btn-raid-challenge');
+
+  // 現在のプレイヤーが既にランキングにいれば、最新のアバター・レベル・装備情報を自動同期
+  if (currentSlotKey && G) {
+    const rData = getRaidData();
+    if (rData.rankings && rData.rankings[currentSlotKey]) {
+      const myEntry = rData.rankings[currentSlotKey];
+      myEntry.playerName = G.playerName || myEntry.playerName || '勇者';
+      myEntry.avatar = G.avatar;
+      myEntry.level = G.player?.lvl || 1;
+      const eqW = G.ownedEquips?.find(o => o.uid === G.equipment?.weapon?.uid);
+      const eqA = G.ownedEquips?.find(o => o.uid === G.equipment?.armor?.uid);
+      const eqAcc = G.ownedEquips?.find(o => o.uid === G.equipment?.accessory?.uid);
+      myEntry.equipment = {
+        weaponId: eqW?.id || null,
+        weaponRarity: eqW?.rarity || 1,
+        armorId: eqA?.id || null,
+        armorRarity: eqA?.rarity || 1,
+        accessoryId: eqAcc?.id || null,
+        accessoryRarity: eqAcc?.rarity || 1
+      };
+      saveRaidData(rData);
+    }
+  }
+
+  // 他の勇者からのエール受け取りチェック
+  if (currentSlotKey && G) {
+    const rData = getRaidData();
+    if (rData.rankings && rData.rankings[currentSlotKey]) {
+      const myEntry = rData.rankings[currentSlotKey];
+      const pendingGold = myEntry.unclaimedGold || 0;
+      if (pendingGold > 0) {
+        G.player.gold = (G.player.gold || 0) + pendingGold;
+        myEntry.unclaimedGold = 0;
+        saveRaidData(rData);
+        save();
+        updateHud();
+        SM.playBeep('heal');
+        setTimeout(() => {
+          showConfirmModal(
+            '👏 エールが届きました！',
+            `他の勇者たちから応援のエールが届いています！<br><br>💰 <b>+${pendingGold.toLocaleString()} G</b> を受け取りました！<br>（累計エール獲得数: <b>${myEntry.cheerCount || 0}</b> 回）`,
+            () => {}
+          );
+        }, 300);
+      }
+    }
+  }
+
+  const totalDmg = getRaidTotalDamage();
+  const remainHp = Math.max(0, RAID_MAX_HP - totalDmg);
+  const defeated = remainHp <= 0;
+
+  // HPバー更新
+  if (dmgText) {
+    dmgText.parentElement.firstElementChild.textContent = '残りHP';
+    if (defeated) {
+      dmgText.textContent = '🎊 討伐完了！';
+      dmgText.style.color = '#feca57';
+    } else {
+      dmgText.textContent = `${remainHp.toLocaleString()} / ${RAID_MAX_HP.toLocaleString()}`;
+      dmgText.style.color = '#ff7675';
+    }
+  }
+  const pct = Math.max(0, (remainHp / RAID_MAX_HP) * 100);
+  if (hpBar) hpBar.style.width = pct + '%';
+
+  // ランキング表示
+  if (listEl) {
+    listEl.innerHTML = '';
+    const rankings = getRaidRankings();
+    if (rankings.length === 0) {
+      listEl.innerHTML = '<div style="text-align:center; color:#aaa; margin-top:20px;">まだ誰も挑戦していません！</div>';
+    } else {
+      const allSlots = (typeof listSaveSlots === 'function') ? listSaveSlots() : [];
+      const todayStr = new Date().toISOString().slice(0, 10);
+
+      rankings.forEach((r, i) => {
+        let rankMedal = `${i+1}位`;
+        if (i===0) rankMedal = '🥇1位';
+        if (i===1) rankMedal = '🥈2位';
+        if (i===2) rankMedal = '🥉3位';
+
+        const isMe = (r.slotKey === currentSlotKey) || (!r.slotKey && r.playerName === G?.playerName);
+        let nameColor = i < 3 ? '#feca57' : '#fff';
+        if (isMe) nameColor = '#74b9ff';
+
+        // プレイヤー情報補完
+        let avatarId = r.avatar;
+        let level = r.level;
+        let weaponId = r.equipment?.weaponId;
+        let weaponRarity = r.equipment?.weaponRarity || 1;
+        let armorId = r.equipment?.armorId;
+        let armorRarity = r.equipment?.armorRarity || 1;
+        let accessoryId = r.equipment?.accessoryId;
+        let accessoryRarity = r.equipment?.accessoryRarity || 1;
+
+        if (isMe && G) {
+          avatarId = G.avatar || avatarId;
+          level = G.player?.lvl ?? level;
+          const eqW = G.ownedEquips?.find(o => o.uid === G.equipment?.weapon?.uid);
+          const eqA = G.ownedEquips?.find(o => o.uid === G.equipment?.armor?.uid);
+          const eqAcc = G.ownedEquips?.find(o => o.uid === G.equipment?.accessory?.uid);
+          if (eqW) { weaponId = eqW.id; weaponRarity = eqW.rarity || 1; }
+          if (eqA) { armorId = eqA.id; armorRarity = eqA.rarity || 1; }
+          if (eqAcc) { accessoryId = eqAcc.id; accessoryRarity = eqAcc.rarity || 1; }
+        } else {
+          const matchedSlot = allSlots.find(s => s.key === r.slotKey || s.name === r.playerName);
+          if (matchedSlot) {
+            avatarId = avatarId || matchedSlot.avatar;
+            level = level ?? matchedSlot.lvl;
+            if (matchedSlot.equippedWeapon) { weaponId = matchedSlot.equippedWeapon.id; weaponRarity = matchedSlot.equippedWeapon.rarity || 1; }
+            if (matchedSlot.equippedArmor) { armorId = matchedSlot.equippedArmor.id; armorRarity = matchedSlot.equippedArmor.rarity || 1; }
+            if (matchedSlot.equippedAccessory) { accessoryId = matchedSlot.equippedAccessory.id; accessoryRarity = matchedSlot.equippedAccessory.rarity || 1; }
+          }
+        }
+
+        // デフォルトフォールバック
+        if (!avatarId && G) avatarId = G.avatar;
+        level = level || 1;
+
+        // アバター画像の解決
+        let heroDef = getHeroAvatar(avatarId);
+        if (!heroDef || !heroDef.image) heroDef = HERO_AVATARS[0];
+        const avatarImgSrc = av(heroDef.image);
+
+        // 装備アイコン生成ヘルパー
+        const makeEquipBox = (eqId, slotType, rarity) => {
+          const emptyIcons = { weapon: '⚔️', armor: '🛡️', accessory: '💍' };
+          const emptyLabels = { weapon: '武器', armor: '防具', accessory: 'アクセ' };
+          if (!eqId) {
+            return `<div style="width:26px; height:26px; background:rgba(15,12,25,0.7); border:1px dashed rgba(255,255,255,0.2); border-radius:5px; display:flex; align-items:center; justify-content:center; font-size:12px; opacity:0.35;" title="${emptyLabels[slotType]}: 未装備">${emptyIcons[slotType]}</div>`;
+          }
+          const item = getEquipTemplate(eqId);
+          if (!item) {
+            return `<div style="width:26px; height:26px; background:rgba(15,12,25,0.7); border:1px dashed rgba(255,255,255,0.2); border-radius:5px; display:flex; align-items:center; justify-content:center; font-size:12px; opacity:0.35;">${emptyIcons[slotType]}</div>`;
+          }
+          const rarityColors = { 1:'#b0bec5', 2:'#2ecc71', 3:'#3498db', 4:'#e74c3c', 5:'#9b59b6' };
+          const borderColor = rarityColors[rarity] || '#b0bec5';
+          const innerHtml = item.emoji && item.emoji.indexOf('/') >= 0
+            ? `<img src="${av(item.emoji)}" style="width:80%; height:80%; object-fit:contain;" alt="">`
+            : `<span style="font-size:13px; line-height:1;">${item.emoji || '🎁'}</span>`;
+
+          return `<div style="width:26px; height:26px; background:rgba(15,12,25,0.85); border:1.5px solid ${borderColor}; border-radius:5px; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.5);" title="${emptyLabels[slotType]}: ${item.name}">${innerHtml}</div>`;
+        };
+
+        // エールアクション表示
+        const hasCheeredToday = (G?.cheerHistory?.date === todayStr) && (G?.cheerHistory?.targets?.includes(r.slotKey));
+        const cheerCount = r.cheerCount || 0;
+
+        let cheerActionHtml = '';
+        if (isMe) {
+          cheerActionHtml = `
+            <div style="display:flex; align-items:center; gap:3px; background:rgba(254, 202, 87, 0.15); border:1px solid #feca57; border-radius:12px; padding:2px 8px; font-size:11px; color:#feca57; font-weight:bold; white-space:nowrap;">
+              <span>👏</span> <span>${cheerCount} エール獲得</span>
+            </div>
+          `;
+        } else {
+          if (hasCheeredToday) {
+            cheerActionHtml = `
+              <button disabled style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:12px; padding:2px 8px; font-size:11px; color:#888; font-weight:bold; cursor:default; white-space:nowrap;">
+                ✅ 送信済 (👏 ${cheerCount})
+              </button>
+            `;
+          } else {
+            cheerActionHtml = `
+              <button class="btn-cheer-action" data-slot="${r.slotKey || ''}" data-name="${encodeURIComponent(r.playerName || '')}" style="background:linear-gradient(135deg, #f39c12 0%, #e67e22 100%); border:1px solid #f1c40f; border-radius:12px; padding:2px 9px; font-size:11px; color:#fff; font-weight:bold; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.4); white-space:nowrap;">
+                👏 エール (+50G)
+              </button>
+            `;
+          }
+        }
+
+        const row = document.createElement('div');
+        row.className = 'save-slot-card';
+        row.style.cssText = `margin-bottom: 8px; padding: 8px 10px; cursor: default; display: flex; flex-direction: row; align-items: center; background: linear-gradient(135deg, rgba(32, 25, 52, 0.95) 0%, rgba(18, 15, 32, 0.95) 100%); border-radius: 8px; border: 1.5px solid ${isMe ? '#74b9ff' : (i < 3 ? 'rgba(254, 202, 87, 0.4)' : 'rgba(255,255,255,0.12)')}; gap: 10px;`;
+
+        row.innerHTML = `
+          <!-- スキン（アバター） -->
+          <div style="flex-shrink: 0; width: 52px; height: 52px; background: radial-gradient(circle, rgba(90, 65, 140, 0.5) 0%, rgba(20, 15, 35, 0.8) 100%); border-radius: 8px; overflow: hidden; border: 2px solid ${nameColor}; display: flex; align-items: center; justify-content: center;">
+            <img src="${avatarImgSrc}" style="width: 100%; height: 100%; object-fit: contain; object-position: center;">
+          </div>
+          <!-- プレイヤー情報 -->
+          <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; gap: 4px; min-width: 0;">
+            <!-- 1行目: 順位、名前、レベル、ダメージ -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+              <div style="display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden;">
+                <span style="color: ${nameColor}; font-size: 14px; font-weight: bold; white-space: nowrap;">${rankMedal} ${r.playerName}</span>
+                <span style="background: rgba(255,255,255,0.15); color: #ecf0f1; font-size: 11px; font-weight: bold; padding: 1px 5px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.25); white-space: nowrap;">Lv.${level}</span>
+              </div>
+              <div style="flex-shrink: 0;">
+                <span style="background: #e74c3c; color: white; padding: 2px 8px; border-radius: 5px; font-size: 12px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.5); white-space: nowrap;">
+                  ⚔️ ${(r.totalDamage || 0).toLocaleString()}
+                </span>
+              </div>
+            </div>
+            <!-- 2行目: 3種の装備（横並び） & エールアクション -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: 2px;">
+              <div style="display: flex; align-items: center; gap: 5px;">
+                <span style="font-size: 10px; color: #aaa; white-space: nowrap;">装備:</span>
+                <div style="display: flex; gap: 4px;">
+                  ${makeEquipBox(weaponId, 'weapon', weaponRarity)}
+                  ${makeEquipBox(armorId, 'armor', armorRarity)}
+                  ${makeEquipBox(accessoryId, 'accessory', accessoryRarity)}
+                </div>
+              </div>
+              <div style="flex-shrink: 0;">
+                ${cheerActionHtml}
+              </div>
+            </div>
+          </div>
+        `;
+        listEl.appendChild(row);
+      });
+
+      // エールボタンのイベント登録
+      listEl.querySelectorAll('.btn-cheer-action').forEach(b => {
+        b.onclick = (e) => {
+          e.stopPropagation();
+          const targetKey = b.dataset.slot;
+          const targetName = decodeURIComponent(b.dataset.name || '');
+          sendRaidCheer(targetKey, targetName, b);
+        };
+      });
+    }
+  }
+
+  // ボタン状態
+  if (btn) {
+    btn.style.display = 'block';
+    if (!defeated) {
+      btn.disabled = false;
+      btn.textContent = '⚔ レイドボスに挑戦する';
+      btn.style.background = 'linear-gradient(to bottom, #d35400, #c0392b)';
+      btn.onclick = startRaidBattle;
+    } else {
+      // 討伐済み --- 報酬確認
+      const rankings = getRaidRankings();
+      const myRank = rankings.findIndex(r => r.slotKey === currentSlotKey) + 1;
+      const claimed = isRaidRewardClaimed(currentSlotKey);
+
+      if (myRank > 0 && !claimed) {
+        btn.disabled = false;
+        btn.textContent = `🎁 報酬を受け取る (${myRank}位)`;
+        btn.style.background = 'linear-gradient(to bottom, #f1c40f, #e67e22)';
+        btn.onclick = () => claimRaidReward(myRank);
+      } else if (claimed) {
+        btn.disabled = true;
+        btn.textContent = '🎁 報酬受け取り済み';
+        btn.style.background = '#555';
+      } else {
+        btn.disabled = true;
+        btn.textContent = '討伐済み（未参加）';
+        btn.style.background = '#555';
+      }
+    }
+  }
+}
+
+function claimRaidReward(rank) {
+  // ランキングに応じた報酬設定
+  let goldReward = 500;
+  let expReward = 300;
+  let itemLabel = '回復薬 ×3';
+
+  if (rank === 1) {
+    goldReward = 5000; expReward = 2000; itemLabel = '【伝説】竜殺しの剣';
+  } else if (rank === 2) {
+    goldReward = 3000; expReward = 1000; itemLabel = '【激レア】竜の鱗の鎧';
+  } else if (rank === 3) {
+    goldReward = 2000; expReward = 800;  itemLabel = '【レア】魔導師のローブ';
+  } else if (rank <= 10) {
+    goldReward = 1000; expReward = 500;  itemLabel = '【レア】鉄の剣';
+  }
+
+  markRaidRewardClaimed(currentSlotKey);
+
+  if (G && G.player) {
+    G.player.gold = (G.player.gold || 0) + goldReward;
+    // EXP加算して必要ならLVアップ
+    G.player.exp = (G.player.exp || 0) + expReward;
+    while (G.player.exp >= expNeeded(G.player.lvl)) {
+      G.player.exp -= expNeeded(G.player.lvl);
+      G.player.lvl++;
+    }
+  }
+
+  showConfirmModal(
+    '報酬獲得！',
+    `🐉 レイドボス討伐報酬！<br>ランキング: ${rank}位<br><br>💰 ${goldReward.toLocaleString()} G<br>🌟 ${expReward.toLocaleString()} EXP<br>🎁 ${itemLabel}<br><br>ありがとう、勇者よ！`,
+    () => {
+      saveGame(currentSlotKey);
+      showRaidBossMenu();
+    }
+  );
+}
+
+function startRaidBattle() {
+  document.getElementById('screen-raid-boss').classList.add('hidden');
+
+  const totalDmg = getRaidTotalDamage();
+  const remainHp = Math.max(1, RAID_MAX_HP - totalDmg);
+
+  explore = {
+    isRaid: true,
+    stageMode: true,
+    raidAreaKeys: ['area1', 'area13', 'area2', 'area3', 'area4', 'area11', 'area12', 'area14', 'area15'],
+    raidAreaIdx: 0,
+    raidStageIdx: 0,
+    raidProbCount: 0,
+    areaId: 'area1',
+    stageIndex: 0,
+    isBoss: false
+  };
+
+  const enemy = {
+    name: '【レイドボス】ダークバハムート',
+    emoji: 'assets/raid/raid_boss_dark_bahamut_blueflame_pixel_v2.png',
+    maxHp: RAID_MAX_HP,
+    hp: remainHp,
+    atk: 100,
+    def: 15,
+    spd: 20,
+    goldMin: 0, goldMax: 0, exp: 0,
+    isBoss: true,
+    isRaid: true
+  };
+
+  battle = {
+    enemy,
+    pGauge: 0, eGauge: 0,
+    running: false,
+    tickId: null,
+    over: false,
+    currentTurnProblem: null,
+    raidDamageDealt: 0
+  };
+
+  showScreen('screen-battle');
+  document.getElementById('screen-battle').style.backgroundImage = `url("${av('assets/raid/raid_bg_magma_pixel.jpg')}")`;
+  document.getElementById('battle-floor-title').innerHTML = '👿 レイドボス挑戦！ 全力でダメージを与えろ！';
+
+  updateBattleBars();
+  $('battle-enemy-name').textContent = enemy.name;
+  $('battle-enemy-emoji').innerHTML = `<img src="${av(enemy.emoji)}" alt="${enemy.name}">`;
+  $('battle-enemy-emoji').className = 'enemy-sprite boss-sprite';
+
+  SM.playBGM('bgm_stage1'); // bgm_bossは未定義のためbgm_stage1を使用
+
+  setTimeout(() => {
+    alert(`レイドボス戦 開始！\n・ボスの残りHP: ${remainHp}\n・自分が倒されるまで戦い、与えたダメージがランキングに記録されます！`);
+    battle.running = true;
+    setTimeout(() => { openActionMenu(); }, 1000);
+    CM.start();
+  }, 100);
 }

@@ -1,14 +1,18 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics, isSupported } from "firebase/analytics";
 import { 
-  getFirestore, 
+  initializeFirestore, 
   doc, 
   setDoc, 
   getDoc, 
   getDocs, 
   collection, 
-  deleteDoc,
-  onSnapshot 
+  deleteDoc, 
+  onSnapshot, 
+  query, 
+  orderBy, 
+  limit, 
+  increment 
 } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -23,7 +27,10 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// Safari等のCORS・アクセス制御チェックエラーを防止するためLong-Pollingを使用
+const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+});
 
 // Initialize Analytics (ブラウザ環境でサポートされている場合のみ)
 isSupported().then((supported) => {
@@ -267,3 +274,88 @@ window.addEventListener('pagehide', () => {
 window.addEventListener('beforeunload', () => {
   if (window.CloudSave) window.CloudSave.flush();
 });
+
+// Global Raid Boss API
+window.RaidBossAPI = {
+  async submitDamage(slotKey, playerName, damage) {
+    if (!slotKey || !damage) return;
+    try {
+      const docId = slotKeyToDocId(slotKey);
+      const docRef = doc(db, "raidRankings", docId);
+      
+      // We also update the global boss HP (optional, but good for community feel)
+      const globalRef = doc(db, "raidGlobal", "currentBoss");
+      
+      await setDoc(docRef, {
+        slotKey,
+        playerName: playerName || '名無し',
+        totalDamage: increment(damage),
+        lastUpdated: Date.now()
+      }, { merge: true });
+      
+      await setDoc(globalRef, {
+        totalDamageDealt: increment(damage)
+      }, { merge: true });
+      
+      return true;
+    } catch(err) {
+      console.error("[RaidBoss] Failed to submit damage:", err);
+      return false;
+    }
+  },
+  
+  async getRankings() {
+    try {
+      const colRef = collection(db, "raidRankings");
+      const q = query(colRef, orderBy("totalDamage", "desc"), limit(20));
+      const snap = await getDocs(q);
+      const results = [];
+      snap.forEach(docSnap => {
+        results.push(docSnap.data());
+      });
+      return results;
+    } catch(err) {
+      console.error("[RaidBoss] Failed to fetch rankings:", err);
+      return [];
+    }
+  },
+  
+  async getGlobalBoss() {
+    try {
+      const docRef = doc(db, "raidGlobal", "currentBoss");
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        return snap.data();
+      }
+      return { totalDamageDealt: 0 };
+    } catch(err) {
+      return { totalDamageDealt: 0 };
+    }
+  },
+  
+  async checkRewardClaimed(slotKey, bossId) {
+    if (!slotKey) return true;
+    try {
+      const docId = slotKeyToDocId(slotKey) + "_" + bossId;
+      const docRef = doc(db, "raidClaims", docId);
+      const snap = await getDoc(docRef);
+      return snap.exists();
+    } catch(err) {
+      console.error(err);
+      return true; // fail safe
+    }
+  },
+  
+  async claimReward(slotKey, bossId) {
+    if (!slotKey) return false;
+    try {
+      const docId = slotKeyToDocId(slotKey) + "_" + bossId;
+      const docRef = doc(db, "raidClaims", docId);
+      await setDoc(docRef, { claimedAt: Date.now() });
+      return true;
+    } catch(err) {
+      console.error(err);
+      return false;
+    }
+  }
+};
