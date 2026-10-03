@@ -252,7 +252,13 @@ function setupKanjiChallenge(problemData) {
     if (keyboard && !isFlickMode) keyboard.classList.remove('hidden');
     
     const textEl = document.getElementById('challenge-problem-text');
-    if(textEl) textEl.textContent = problemData.text;
+    if(textEl) {
+      if (typeof window.renderReadingHints === 'function') {
+        textEl.innerHTML = window.renderReadingHints(problemData.text, { [problemData.text]: problemData.answer });
+      } else {
+        textEl.textContent = problemData.text;
+      }
+    }
     
     const inputEl = document.getElementById('challenge-input');
     if(inputEl) {

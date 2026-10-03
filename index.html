@@ -249,6 +249,13 @@
         <button id="btn-load-save-back" class="window-nav-btn window-back-btn">← もどる</button>
         <h2>＊セーブデータを えらぶ＊</h2>
         <div id="save-sync-status" style="text-align:right; font-size:13px; color:#3498db; margin-bottom:8px; min-height:18px;"></div>
+        <div class="admin-save-tools save-list-tools">
+          <label class="save-search-field" for="load-save-search"><span aria-hidden="true">⌕</span><input id="load-save-search" type="search" placeholder="プレイヤー名で検索" autocomplete="off"></label>
+          <label class="save-sort-field" for="load-save-sort"><span>並べ替え</span><select id="load-save-sort">
+            <option value="recent">最近プレイした順</option>
+            <option value="name">名前順</option>
+          </select></label>
+        </div>
         <div id="save-slot-list" class="save-slots-container"></div>
       </div>
     </section>
@@ -476,19 +483,66 @@
 
     <!-- ガチャ -->
     <section id="screen-gacha" class="screen">
-      <div class="panel" style="position: relative;">
-        <button id="btn-gacha-back" class="window-nav-btn window-back-btn">← もどる</button>
-        <h2>＊ガチャ＊</h2>
-        <p class="flavor">ゴールドを消費してアイテムや装備を手に入れよう！</p>
-        <div class="gold-badge"><span class="gold-badge-icon">💰</span><span id="gacha-current-gold" class="gold-badge-num">0</span><span class="gold-badge-unit">G</span></div>
-        <div class="menu-grid">
-          <button id="btn-gacha-1" class="btn">1回引く (150G)</button>
-          <button id="btn-gacha-6" class="btn">6回引く (750G)</button>
-          <button id="btn-gacha-13" class="btn">13回引く (1400G)</button>
+      <div class="gacha-page">
+        <header class="gacha-page-header">
+          <button id="btn-gacha-back" class="window-nav-btn window-back-btn">← もどる</button>
+          <h2>ガチャ</h2>
+          <div class="gacha-wallet"><span>所持ゴールド</span><strong><b id="gacha-current-gold">0</b> G</strong></div>
+        </header>
+        <div class="gacha-page-tabs" role="tablist" aria-label="ガチャの種類">
+          <button id="btn-gacha-tab-skins" type="button" role="tab" aria-controls="skin-gacha-section" aria-selected="true">背景スキンガチャ</button>
+          <button id="btn-gacha-tab-items" type="button" role="tab" aria-controls="gacha-item-section" aria-selected="false">装備ガチャ</button>
         </div>
-        <div id="gacha-results" class="log-box" style="margin-top:15px; min-height:100px;"></div>
+        <section id="skin-gacha-section" class="skin-gacha-panel" role="tabpanel" aria-labelledby="btn-gacha-tab-skins">
+          <div class="gacha-showcase">
+            <img id="skin-gacha-title" class="gacha-logo" src="assets/ui/background_skin_gacha_logo.png" alt="背景スキンガチャ">
+            <div class="gacha-feature-lineup">
+              <button class="gacha-feature-entry skin-gacha-preview-trigger" type="button" data-preview-kind="character" data-preview-id="skin_fire_lancer_m" aria-label="炎竜の槍士を拡大表示"><img class="gacha-feature-character" src="assets/characters/skin_fire_lancer_m.png" alt="炎竜の槍士"></button>
+              <button class="gacha-feature-entry skin-gacha-preview-trigger" type="button" data-preview-kind="character" data-preview-id="skin_tide_cleric_f" aria-label="潮流の巫女を拡大表示"><img class="gacha-feature-character" src="assets/characters/skin_tide_cleric_f.png" alt="潮流の巫女"></button>
+              <button class="gacha-feature-entry skin-gacha-preview-trigger" type="button" data-preview-kind="character" data-preview-id="ai_hero_spellblade" aria-label="風の魔法剣士を拡大表示"><img class="gacha-feature-character" src="assets/characters/ai_hero_spellblade_transparent.png" alt="風の魔法剣士"></button>
+              <button class="gacha-feature-entry skin-gacha-preview-trigger" type="button" data-preview-kind="character" data-preview-id="skin_forest_scout_f" aria-label="森の弓使いを拡大表示"><img class="gacha-feature-character" src="assets/characters/skin_forest_scout_f.png" alt="森の弓使い"></button>
+            </div>
+          </div>
+          <div class="gacha-summon-bar">
+            <div class="skin-gacha-balance">所持チケット <b id="skin-gacha-tickets">0</b> 枚</div>
+          <div class="skin-gacha-draw-actions">
+            <button id="btn-skin-gacha-draw" class="btn btn-primary" type="button">500Gで1回引く</button>
+            <button id="btn-skin-gacha-ticket" class="btn" type="button">チケット1枚で1回引く</button>
+          </div>
+          <div id="skin-gacha-status" class="flavor" aria-live="polite"></div>
+          </div>
+          <div class="gacha-collection-heading"><h3>ラインナップ</h3><span>キャラクター・背景</span></div>
+          <div id="skin-gacha-collection" class="skin-gacha-collection" aria-live="polite"></div>
+        </section>
+        <section id="gacha-item-section" class="gacha-item-section hidden" role="tabpanel" aria-labelledby="btn-gacha-tab-items">
+          <div class="equipment-gacha-showcase">
+            <img id="equipment-gacha-title" class="equipment-gacha-logo" src="assets/ui/equipment_gacha_logo.png" alt="装備ガチャ">
+            <div class="gacha-collection-heading"><h3>ガチャ限定装備</h3><span>星晶・鳳凰・月光</span></div>
+            <div id="equipment-gacha-featured" class="equipment-gacha-featured"></div>
+          </div>
+          <div class="menu-grid">
+            <button id="btn-gacha-1" class="btn">1回引く (150G)</button>
+            <button id="btn-gacha-6" class="btn">6回引く (750G)</button>
+            <button id="btn-gacha-13" class="btn">13回引く (1400G)</button>
+          </div>
+          <div id="gacha-results" class="log-box" style="margin-top:15px; min-height:100px;"></div>
+          <div class="gacha-collection-heading"><h3>通常装備</h3><span>ぶき・よろい・アクセサリ</span></div>
+          <div id="equipment-gacha-collection" class="equipment-gacha-collection"></div>
+        </section>
       </div>
     </section>
+
+    <div id="skin-gacha-preview-modal" class="modal-overlay hidden skin-gacha-preview-modal" role="dialog" aria-modal="true" aria-labelledby="skin-gacha-preview-title">
+      <div class="skin-gacha-preview-panel">
+        <button id="btn-skin-gacha-preview-close" class="window-nav-btn" type="button">✕ とじる</button>
+        <h3 id="skin-gacha-preview-title"></h3>
+        <div class="skin-gacha-preview-art">
+          <div id="skin-gacha-preview-bg" class="avatar-composite-bg"></div>
+          <img id="skin-gacha-preview-image" src="" alt="">
+        </div>
+        <p id="skin-gacha-preview-description"></p>
+      </div>
+    </div>
 
     <!-- 合成 -->
     <section id="screen-synthesis" class="screen">
@@ -507,10 +561,20 @@
       <div class="modal-panel" style="width:90%; max-width:800px; max-height:80vh; overflow-y:auto; background: linear-gradient(to bottom, #2c3e50, #000000); color: #fff; border: 4px solid #c0392b; position: relative;">
         <button class="window-nav-btn window-close-btn" onclick="document.getElementById('screen-raid-boss').classList.add('hidden')">✕ とじる</button>
         <h2 style="color: #ff7675; text-shadow: 0 0 10px #d63031; border-bottom: 2px solid #e74c3c; padding-bottom: 10px;">👿 ワールド・レイドボス</h2>
+        <section class="raid-how-to-play" aria-labelledby="raid-how-to-play-title">
+          <h3 id="raid-how-to-play-title">あそびかた</h3>
+          <ol>
+            <li><b>ちょうせんする</b><span>問題に答えると、ボスに攻撃！</span></li>
+            <li><b>力を出しきろう</b><span>自分のHPが0になるまで戦うよ。負けても、あたえたダメージは記録されるよ。</span></li>
+            <li><b>みんなで協力</b><span>みんなのダメージでボスのHPをへらそう。ダメージはランキングにのり、ボスを倒すと参加者は順位に応じた報酬を受け取れるよ。</span></li>
+          </ol>
+        </section>
         <div style="display:flex; justify-content:space-between; margin-top: 15px; flex-wrap: wrap; gap: 15px;">
           <!-- ボス情報 -->
           <div style="flex:1; min-width:300px; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 15px; text-align: center;">
-            <div style="font-size: 80px; margin-bottom: 10px; animation: float 3s ease-in-out infinite;">🐉</div>
+            <div style="width: 190px; height: 150px; margin: 0 auto 10px; animation: float 3s ease-in-out infinite; display: flex; align-items: center; justify-content: center;">
+              <img src="assets/raid/raid_boss_dark_bahamut_blueflame_pixel_v2.png" alt="ダークバハムート" style="width: 100%; height: 100%; object-fit: contain; object-position: center; filter: drop-shadow(0 0 16px rgba(0, 149, 255, 0.75)) drop-shadow(0 8px 14px rgba(0,0,0,0.85)); image-rendering: auto;">
+            </div>
             <h3 style="margin: 0 0 10px 0; color: #ff9f43; font-size: 24px;">暗黒竜 ダークバハムート</h3>
             <p style="font-size: 14px; margin-bottom: 5px;">世界中の勇者と協力して、強大なボスに挑もう！</p>
             <div style="margin: 15px 0;">
@@ -1098,7 +1162,7 @@
               <div style="margin-top:20px; padding:16px; background:rgba(0,0,0,0.3); border:1.5px solid var(--panel-border); border-radius:12px; display:flex; flex-direction:column; gap:12px;">
                 <h3 style="margin:0; font-size:16px; color:var(--accent);">🛠️ 管理・デバッグ操作</h3>
                 <button id="btn-admin-get-gold" class="btn" style="background-color: var(--atb); color: var(--text);">💰 10,000ゴールド獲得</button>
-                <button id="btn-admin-delete-save" class="btn bad">🗑️ セーブデータを削除する</button>
+                <button id="btn-admin-delete-save" class="btn bad">🗂️ セーブデータを管理する</button>
               </div>
             </div>
           </main>
@@ -1110,12 +1174,23 @@
     <div id="admin-save-manage-modal" class="modal-overlay hidden" style="position:fixed; z-index:99999;">
       <div class="modal-panel study-stats-modal-panel" style="position: relative;">
         <button id="btn-admin-cancel-delete-save" class="window-nav-btn window-close-btn">✕ とじる</button>
-        <h2>🗑️ セーブデータの さくじょ</h2>
-        <p class="flavor">さくじょする セーブデータを えらんでください。</p>
+        <h2>🗂️ セーブデータの 管理</h2>
+        <p class="flavor">アーカイブすると「つづきから」の一覧には出なくなります。必要になったらここから戻せます。</p>
+        <div class="admin-save-tools">
+          <label class="admin-save-search-label" for="admin-save-search">名前で検索</label>
+          <input id="admin-save-search" type="search" placeholder="プレイヤー名を入力" autocomplete="off">
+          <label class="admin-save-sort-label" for="admin-save-sort">ならび順</label>
+          <select id="admin-save-sort">
+            <option value="recent">最近プレイした順</option>
+            <option value="name">名前順</option>
+          </select>
+        </div>
         <div id="admin-save-list" class="inventory-list" style="margin-top:10px; max-height:300px; overflow-y:auto; text-align:left;">
         </div>
-        <div style="display:flex; gap:10px; margin-top:20px;">
-          <button id="btn-admin-exec-delete-save" class="btn bad" style="flex:1;">えらんだデータをさくじょ</button>
+        <div style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
+          <button id="btn-admin-archive-save" class="btn" style="flex:1; min-width:160px;">えらんだデータをアーカイブ</button>
+          <button id="btn-admin-unarchive-save" class="btn good" style="flex:1; min-width:160px;">アーカイブから戻す</button>
+          <button id="btn-admin-exec-delete-save" class="btn bad" style="flex:1; min-width:160px;">完全にさくじょ</button>
         </div>
       </div>
     </div>
@@ -1182,25 +1257,39 @@
 
     <!-- スキン変更モーダル -->
     <div id="avatar-change-modal" class="modal-overlay hidden" style="z-index: 15000;">
-      <div class="modal-panel" style="max-width: 400px; position: relative;">
-        <button id="btn-avatar-change-close" class="window-nav-btn window-close-btn">✕ とじる</button>
-        <h3>スキンを変更する</h3>
-        <div id="avatar-change-list" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin: 15px 0;"></div>
-      </div>
-    </div>
-
-    <!-- スキン確認モーダル -->
-    <div id="avatar-preview-modal" class="modal-overlay hidden" style="z-index: 15010;">
-      <div class="modal-panel avatar-preview-panel">
-        <button id="btn-avatar-preview-close" class="window-nav-btn window-close-btn">✕ とじる</button>
-        <h3 id="avatar-preview-title">このスキンを使いますか？</h3>
-        <div class="avatar-preview-stage">
-          <img id="avatar-preview-image" src="" alt="選択中のスキン">
+      <div class="modal-panel avatar-selector-panel">
+        <header class="avatar-selector-header">
+          <div><span>プレイヤーカスタマイズ</span><h3>スキンと背景をえらぶ</h3></div>
+          <button id="btn-avatar-change-close" class="window-nav-btn">✕ とじる</button>
+        </header>
+        <div class="avatar-selector-layout">
+          <aside class="avatar-selector-sidebar">
+            <div class="avatar-selector-tabs" role="tablist" aria-label="表示するグループ">
+              <button id="btn-avatar-tab-characters" class="is-active" type="button" role="tab" aria-selected="true">キャラクター</button>
+              <button id="btn-avatar-tab-backgrounds" type="button" role="tab" aria-selected="false">背景</button>
+            </div>
+            <div id="avatar-change-list" class="avatar-selector-options" role="tabpanel"></div>
+            <div id="avatar-background-list" class="avatar-selector-options hidden" role="tabpanel"></div>
+            <p id="avatar-background-locked-note" class="avatar-background-locked-note"></p>
+          </aside>
+          <section class="avatar-selector-preview-column" aria-label="組み合わせプレビュー">
+            <div class="avatar-selector-preview">
+              <div id="avatar-selector-preview-bg" class="avatar-composite-bg"></div>
+              <img id="avatar-selector-preview-image" src="" alt="選択中のキャラクター">
+              <span class="avatar-selector-preview-label">プレビュー</span>
+            </div>
+            <div class="avatar-selector-caption">
+              <strong id="avatar-selector-character-name"></strong>
+              <span id="avatar-selector-background-name"></span>
+            </div>
+          </section>
         </div>
-        <p id="avatar-preview-description" class="avatar-preview-description"></p>
-        <div class="avatar-preview-actions">
-          <button id="btn-avatar-preview-cancel" class="btn">↩ もどる</button>
-          <button id="btn-avatar-preview-apply" class="btn btn-primary">✓ このスキンにする</button>
+        <footer class="avatar-selector-footer">
+          <button id="btn-avatar-preview-apply" class="btn btn-primary" type="button">この組み合わせにする</button>
+        </footer>
+        <div id="avatar-confirm-popover" class="avatar-confirm-popover hidden" role="dialog" aria-labelledby="avatar-confirm-title">
+          <strong id="avatar-confirm-title">この組み合わせで決定しますか？</strong>
+          <div><button id="btn-avatar-confirm-cancel" class="btn" type="button">もどる</button><button id="btn-avatar-confirm-apply" class="btn btn-primary" type="button">決定する</button></div>
         </div>
       </div>
     </div>
