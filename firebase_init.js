@@ -11,8 +11,8 @@ import {
   onSnapshot, 
   query, 
   orderBy, 
-  limit, 
-  increment 
+  increment,
+  runTransaction
 } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -277,6 +277,132 @@ window.addEventListener('beforeunload', () => {
 
 // Global Raid Boss API
 window.RaidBossAPI = {
+  async syncPlayer(slotKey, profile, progress = {}) {
+    const rankRef = doc(db, 'raidRankings', slotKeyToDocId(slotKey));
+    const globalRef = doc(db, 'raidGlobal', 'currentBoss');
+    const claimRef = doc(db, 'raidClaims', slotKeyToDocId(slotKey) + '_boss1');
+    return runTransaction(db, async transaction => {
+      const rankSnap = await transaction.get(rankRef);
+      const globalSnap = await transaction.get(globalRef);
+      const claimSnap = await transaction.get(claimRef);
+      const previous = rankSnap.exists() ? rankSnap.data() : {};
+      const global = globalSnap.exists() ? globalSnap.data() : {};
+      const appliedEvents = { ...(previous.appliedEvents || {}) };
+      // Legacy totals may exist on multiple browsers. Import only the highest baseline.
+      const oldBaseline = previous.legacyDamage ?? previous.totalDamage ?? 0;
+      const legacyDamage = Math.max(oldBaseline, Number(progress.legacyDamage) || 0);
+      let addedDamage = legacyDamage - oldBaseline;
+      for (const event of progress.events || []) {
+        if (!event.id || appliedEvents[event.id]) continue;
+        addedDamage += Math.max(0, Math.round(Number(event.damage) || 0));
+        appliedEvents[event.id] = true;
+      }
+      if (global.defeatedAt) addedDamage = 0;
+      const participated = previous.participated || (!global.defeatedAt && progress.participated) || legacyDamage > 0 || Object.keys(appliedEvents).length > 0;
+      const nextTotal = (previous.totalDamage || 0) + addedDamage;
+      let finalRankings = null;
+      let rankingQuerySnap = null;
+      const nextGlobalTotal = (global.totalDamageDealt || 0) + addedDamage;
+      if (!global.defeatedAt && addedDamage > 0 && nextGlobalTotal >= 1000) {
+        rankingQuerySnap = await transaction.get(query(collection(db, 'raidRankings'), orderBy('totalDamage', 'desc')));
+        const rows = new Map();
+        rankingQuerySnap.forEach(snap => rows.set(snap.id, { ...snap.data(), slotKey: snap.data().slotKey || snap.id }));
+        rows.set(slotKeyToDocId(slotKey), { ...previous, slotKey, participated: true, totalDamage: nextTotal });
+        finalRankings = [...rows.values()]
+          .filter(row => row.participated || (row.totalDamage || 0) > 0)
+          .sort((a, b) => (b.totalDamage || 0) - (a.totalDamage || 0) || String(a.slotKey || '').localeCompare(String(b.slotKey || '')))
+          .map(row => [row.slotKey, row.totalDamage || 0]);
+      }
+      if (rankSnap.exists() || participated) {
+        if (!global.defeatedAt || rankSnap.exists()) {
+          const appearance = { playerName: profile.playerName || '勇者', avatar: profile.avatar || '', avatarBackground: profile.avatarBackground || 'default', avatarHolographic: !!profile.avatarHolographic, avatarBackgroundHolographic: !!profile.avatarBackgroundHolographic, level: profile.level || 1, equipment: profile.equipment || {} };
+          transaction.set(rankRef, { ...appearance, slotKey, participated: !!participated, totalDamage: nextTotal, legacyDamage, appliedEvents, lastUpdated: Date.now() }, { merge: true });
+        }
+      }
+      if (addedDamage > 0) {
+        transaction.set(globalRef, { totalDamageDealt: nextGlobalTotal, ...(finalRankings ? { defeatedAt: Date.now(), finalRankings } : {}) }, { merge: true });
+      }
+      if (progress.claimed && !claimSnap.exists()) {
+        transaction.set(claimRef, { ...progress.claimed, migrated: true });
+      }
+      return { acknowledged: (progress.events || []).map(event => event.id), claimed: claimSnap.exists() || !!progress.claimed, finalRankings };
+    });
+  },
+
+  watchBoss(onChange, onError) {
+    return onSnapshot(doc(db, 'raidGlobal', 'currentBoss'), { includeMetadataChanges: true }, snapshot => {
+      if (!snapshot.metadata.fromCache) onChange();
+    }, onError);
+  },
+
+  async settleReward(slotKey, bossId, fallbackState, applyReward) {
+    const claimRef = doc(db, 'raidClaims', slotKeyToDocId(slotKey) + '_' + bossId);
+    const saveRef = doc(db, 'saves', slotKeyToDocId(slotKey));
+    const globalRef = doc(db, 'raidGlobal', 'currentBoss');
+    const rankRef = doc(db, 'raidRankings', slotKeyToDocId(slotKey));
+    return runTransaction(db, async transaction => {
+      const claim = await transaction.get(claimRef);
+      const saved = await transaction.get(saveRef);
+      const global = await transaction.get(globalRef);
+      const rank = await transaction.get(rankRef);
+      if (!global.exists() || !global.data().defeatedAt || !rank.exists()) return { eligible: false, state: fallbackState };
+      const finalRankings = global.data().finalRankings || [];
+      const rankIndex = finalRankings.findIndex(entry => (Array.isArray(entry) ? entry[0] : entry.slotKey) === slotKey);
+      if (rankIndex < 0) return { eligible: false, state: fallbackState };
+      const finalRank = rankIndex + 1;
+      const state = saved.exists() && saved.data().gameData ? JSON.parse(saved.data().gameData) : JSON.parse(JSON.stringify(fallbackState));
+      const reward = finalRank === 1 ? { gold: 5000, seeds: 3, tickets: 1 } : finalRank === 2 ? { gold: 3000, seeds: 3, tickets: 1 } : finalRank === 3 ? { gold: 2000, seeds: 3, tickets: 1 } : finalRank <= 10 ? { gold: 1000, seeds: 1, tickets: 0 } : { gold: 500, seeds: 1, tickets: 0 };
+      if (claim.exists()) return { eligible: true, alreadyClaimed: true, rank: finalRank, reward, state };
+      if (applyReward) applyReward(state);
+      else {
+        state.player.gold = (state.player.gold || 0) + reward.gold;
+        state.skinGachaTickets = (state.skinGachaTickets || 0) + reward.tickets;
+        state.items ||= [];
+        const seed = state.items.find(item => item.id === 'cost_seed');
+        if (seed) seed.count = (seed.count || 0) + reward.seeds;
+        else {
+          state.nextUid = Number.isFinite(state.nextUid) ? state.nextUid : 1;
+          state.items.push({ uid: state.nextUid++, id: 'cost_seed', count: reward.seeds });
+        }
+      }
+      state.updatedAt = Date.now();
+      transaction.set(saveRef, { slotKey, playerName: state.playerName, lvl: state.player.lvl, gold: state.player.gold, updatedAt: state.updatedAt, gameData: JSON.stringify(state), deleted: false }, { merge: true });
+      transaction.set(claimRef, { claimedAt: Date.now(), version: 2, applied: true });
+      return { eligible: true, alreadyClaimed: false, rank: finalRank, reward, state };
+    });
+  },
+
+  async sendCheer(senderKey, targetKey, date) {
+    const senderRef = doc(db, 'raidRankings', slotKeyToDocId(senderKey));
+    const targetRef = doc(db, 'raidRankings', slotKeyToDocId(targetKey));
+    return runTransaction(db, async transaction => {
+      const sender = await transaction.get(senderRef);
+      const target = await transaction.get(targetRef);
+      if (!target.exists() || senderKey === targetKey) return false;
+      const history = sender.exists() ? sender.data().cheersSent || {} : {};
+      if (history[date]?.includes(targetKey)) return false;
+      transaction.set(senderRef, { cheersSent: { ...history, [date]: [...(history[date] || []), targetKey] } }, { merge: true });
+      transaction.set(targetRef, { cheerCount: (target.data().cheerCount || 0) + 1, unclaimedGold: (target.data().unclaimedGold || 0) + 50 }, { merge: true });
+      return true;
+    });
+  },
+
+  async receiveCheers(slotKey, fallbackState) {
+    const rankRef = doc(db, 'raidRankings', slotKeyToDocId(slotKey));
+    const saveRef = doc(db, 'saves', slotKeyToDocId(slotKey));
+    return runTransaction(db, async transaction => {
+      const rank = await transaction.get(rankRef);
+      const saved = await transaction.get(saveRef);
+      const gold = rank.exists() ? rank.data().unclaimedGold || 0 : 0;
+      if (!gold) return 0;
+      const state = saved.exists() && saved.data().gameData ? JSON.parse(saved.data().gameData) : JSON.parse(JSON.stringify(fallbackState));
+      state.player.gold = (state.player.gold || 0) + gold;
+      state.updatedAt = Date.now();
+      transaction.set(saveRef, { gameData: JSON.stringify(state), gold: state.player.gold, updatedAt: state.updatedAt }, { merge: true });
+      transaction.set(rankRef, { unclaimedGold: 0 }, { merge: true });
+      return gold;
+    });
+  },
   async submitDamage(slotKey, playerName, damage) {
     if (!slotKey || !damage) return;
     try {
@@ -307,7 +433,7 @@ window.RaidBossAPI = {
   async getRankings() {
     try {
       const colRef = collection(db, "raidRankings");
-      const q = query(colRef, orderBy("totalDamage", "desc"), limit(20));
+      const q = query(colRef, orderBy("totalDamage", "desc"));
       const snap = await getDocs(q);
       const results = [];
       snap.forEach(docSnap => {
@@ -316,7 +442,7 @@ window.RaidBossAPI = {
       return results;
     } catch(err) {
       console.error("[RaidBoss] Failed to fetch rankings:", err);
-      return [];
+      throw err;
     }
   },
   
@@ -329,7 +455,7 @@ window.RaidBossAPI = {
       }
       return { totalDamageDealt: 0 };
     } catch(err) {
-      return { totalDamageDealt: 0 };
+      throw err;
     }
   },
   

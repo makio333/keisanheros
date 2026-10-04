@@ -36,15 +36,6 @@
 </head>
 <body>
 <div id="debug-error-banner" style="display:none; position:fixed; top:0; left:0; width:100%; background:rgba(220,20,20,0.95); color:#fff; z-index:9999999999; padding:12px; font-size:14px; box-sizing:border-box; word-break:break-all;"></div>
-<!-- iPad / タブレット用 横向き誘導画面 -->
-<div id="orientation-guard">
-  <div class="guard-content">
-    <div class="rotate-icon">📱 ⤹</div>
-    <h2>がめんを よこむき に してね！</h2>
-    <p>このゲームは よこがめん（ランドスケープ）専用です。<br>iPad／端末を 横向きにして あそんでください。</p>
-  </div>
-</div>
-
 <!-- ゲーム起動時 ロード画面 ＆ スタート画面 -->
 <div id="boot-loader-screen" class="boot-loader-screen">
   <div class="boot-loader-content">
@@ -504,7 +495,7 @@
             </div>
           </div>
           <div class="gacha-summon-bar">
-            <div class="skin-gacha-balance">所持チケット <b id="skin-gacha-tickets">0</b> 枚</div>
+            <div class="skin-gacha-balance"><img class="skin-ticket-icon" src="assets/items/background_skin_ticket.png" alt="背景スキンガチャチケット">所持チケット <b id="skin-gacha-tickets">0</b> 枚</div>
           <div class="skin-gacha-draw-actions">
             <button id="btn-skin-gacha-draw" class="btn btn-primary" type="button">500Gで1回引く</button>
             <button id="btn-skin-gacha-ticket" class="btn" type="button">チケット1枚で1回引く</button>
@@ -517,7 +508,7 @@
         <section id="gacha-item-section" class="gacha-item-section hidden" role="tabpanel" aria-labelledby="btn-gacha-tab-items">
           <div class="equipment-gacha-showcase">
             <img id="equipment-gacha-title" class="equipment-gacha-logo" src="assets/ui/equipment_gacha_logo.png" alt="装備ガチャ">
-            <div class="gacha-collection-heading"><h3>ガチャ限定装備</h3><span>星晶・鳳凰・月光</span></div>
+          <div class="gacha-collection-heading"><h3>ガチャ限定装備</h3><span>★1 60%・★2 30%・★3 9%・★4 0.7%・★5 0.3%</span></div>
             <div id="equipment-gacha-featured" class="equipment-gacha-featured"></div>
           </div>
           <div class="menu-grid">
@@ -526,7 +517,7 @@
             <button id="btn-gacha-13" class="btn">13回引く (1400G)</button>
           </div>
           <div id="gacha-results" class="log-box" style="margin-top:15px; min-height:100px;"></div>
-          <div class="gacha-collection-heading"><h3>通常装備</h3><span>ぶき・よろい・アクセサリ</span></div>
+          <div class="gacha-collection-heading"><h3>通常装備</h3><span>ぶき・よろい・アクセサリ / ★3〜★5も抽選</span></div>
           <div id="equipment-gacha-collection" class="equipment-gacha-collection"></div>
         </section>
       </div>
@@ -539,6 +530,11 @@
         <div class="skin-gacha-preview-art">
           <div id="skin-gacha-preview-bg" class="avatar-composite-bg"></div>
           <img id="skin-gacha-preview-image" src="" alt="">
+        </div>
+        <div id="equipment-preview-rarities" class="equipment-preview-rarities hidden" role="group" aria-label="表示するレアリティ">
+          <button type="button" data-rarity="3" class="rarity-3">★3 激レア</button>
+          <button type="button" data-rarity="4" class="rarity-4">★4 超激レア</button>
+          <button type="button" data-rarity="5" class="rarity-5">★5 レジェンド</button>
         </div>
         <p id="skin-gacha-preview-description"></p>
       </div>
@@ -558,44 +554,53 @@
     
     <!-- レイドボス・メニュー -->
     <div id="screen-raid-boss" class="modal-overlay hidden" style="position:fixed; z-index:90;">
-      <div class="modal-panel" style="width:90%; max-width:800px; max-height:80vh; overflow-y:auto; background: linear-gradient(to bottom, #2c3e50, #000000); color: #fff; border: 4px solid #c0392b; position: relative;">
-        <button class="window-nav-btn window-close-btn" onclick="document.getElementById('screen-raid-boss').classList.add('hidden')">✕ とじる</button>
-        <h2 style="color: #ff7675; text-shadow: 0 0 10px #d63031; border-bottom: 2px solid #e74c3c; padding-bottom: 10px;">👿 ワールド・レイドボス</h2>
-        <section class="raid-how-to-play" aria-labelledby="raid-how-to-play-title">
-          <h3 id="raid-how-to-play-title">あそびかた</h3>
+      <div class="modal-panel raid-menu-panel">
+        <header class="raid-menu-header">
+          <button class="window-nav-btn window-close-btn" onclick="document.getElementById('screen-raid-boss').classList.add('hidden')">✕ とじる</button>
+          <h2 class="raid-menu-title">ワールド・レイドボス</h2>
+          <button id="btn-raid-rules" class="btn" aria-expanded="false" aria-controls="raid-rules">レイドのルールは？</button>
+        </header>
+        <section id="raid-rules" class="raid-how-to-play hidden" aria-labelledby="raid-how-to-play-title">
+          <h3 id="raid-how-to-play-title">レイドのルール</h3>
           <ol>
             <li><b>ちょうせんする</b><span>問題に答えると、ボスに攻撃！</span></li>
-            <li><b>力を出しきろう</b><span>自分のHPが0になるまで戦うよ。負けても、あたえたダメージは記録されるよ。</span></li>
-            <li><b>みんなで協力</b><span>みんなのダメージでボスのHPをへらそう。ダメージはランキングにのり、ボスを倒すと参加者は順位に応じた報酬を受け取れるよ。</span></li>
+            <li><b>力を出しきろう</b><span>1問ごとに次のステージの問題へ。まちがえると反撃されるよ。自分のHPが0になっても、あたえたダメージは記録されるよ。</span></li>
+            <li><b>ランキングに挑戦</b><span>何回も挑戦して、合計ダメージをのばそう！ ボスを倒すと、参加者は順位に応じた報酬を受け取れるよ。参加するだけでマグマの背景ももらえるよ。</span></li>
           </ol>
+          <p>ランキングとボスのHPは、ほかの端末とも共有されるよ。通信できないときの記録は、再接続すると送られるよ。</p>
         </section>
-        <div style="display:flex; justify-content:space-between; margin-top: 15px; flex-wrap: wrap; gap: 15px;">
-          <!-- ボス情報 -->
-          <div style="flex:1; min-width:300px; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 15px; text-align: center;">
-            <div style="width: 190px; height: 150px; margin: 0 auto 10px; animation: float 3s ease-in-out infinite; display: flex; align-items: center; justify-content: center;">
-              <img src="assets/raid/raid_boss_dark_bahamut_blueflame_pixel_v2.png" alt="ダークバハムート" style="width: 100%; height: 100%; object-fit: contain; object-position: center; filter: drop-shadow(0 0 16px rgba(0, 149, 255, 0.75)) drop-shadow(0 8px 14px rgba(0,0,0,0.85)); image-rendering: auto;">
+        <section class="raid-boss-overview">
+            <div class="raid-boss-portrait">
+              <img src="assets/raid/raid_boss_dark_bahamut_blueflame_pixel_v2.png" alt="青い炎をまとう暗黒竜ダークバハムートの顔">
             </div>
-            <h3 style="margin: 0 0 10px 0; color: #ff9f43; font-size: 24px;">暗黒竜 ダークバハムート</h3>
-            <p style="font-size: 14px; margin-bottom: 5px;">世界中の勇者と協力して、強大なボスに挑もう！</p>
-            <div style="margin: 15px 0;">
-              <div style="display:flex; justify-content:space-between; font-size: 14px; margin-bottom: 4px;">
+            <div class="raid-boss-summary">
+            <div class="raid-boss-stats">
+            <h3>暗黒竜 ダークバハムート</h3>
+            <div class="raid-hp-status">
+              <div class="raid-hp-labels">
                 <span>総ダメージ</span>
-                <span id="raid-boss-damage" style="color: #ff7675; font-weight: bold; font-size: 18px;">---</span>
+                <span id="raid-boss-damage">---</span>
               </div>
-              <div style="width: 100%; background: #444; border-radius: 4px; overflow: hidden; height: 12px;">
+              <div class="raid-hp-track">
                 <div id="raid-boss-hp-bar" style="width: 100%; height: 100%; background: linear-gradient(90deg, #ff4757, #ff6b81); transition: width 0.5s;"></div>
               </div>
             </div>
-            <button id="btn-raid-challenge" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 18px; margin-top: 10px; background: linear-gradient(to bottom, #d35400, #c0392b);">⚔ レイドボスに挑戦する</button>
-          </div>
-          <!-- ランキング -->
-          <div style="flex:1; min-width:300px; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 15px;">
-            <h3 style="margin: 0 0 15px 0; text-align: center; color: #feca57; border-bottom: 1px dashed #555; padding-bottom: 10px;">👑 ダメージランキング</h3>
-            <div id="raid-ranking-list" style="max-height: 250px; overflow-y: auto;">
+            </div>
+            <button id="btn-raid-challenge" class="btn btn-primary">⚔ レイドボスに挑戦する</button>
+            </div>
+            <div class="raid-participation-reward">
+              <img src="assets/raid/raid_bg_magma_pixel.jpg" alt="参加特典のマグマ背景">
+              <div><b>参加特典：マグマの火山</b><p id="raid-participation-status"></p></div>
+            </div>
+        </section>
+        <section class="raid-ranking-section">
+            <h3>ダメージランキング</h3>
+            <div class="raid-sync-line"><span id="raid-sync-status" role="status" aria-live="polite"></span><button id="btn-raid-sync-retry" type="button">再同期</button></div>
+            <div id="raid-learning-recommendation" class="raid-learning-recommendation" role="status" aria-live="polite"></div>
+            <div id="raid-ranking-list" aria-label="合計ダメージ順のランキング">
               <div style="text-align: center; color: #aaa; margin-top: 20px;">ロード中...</div>
             </div>
-          </div>
-        </div>
+        </section>
       </div>
     </div>
     <div id="screen-quest-board" class="modal-overlay hidden" style="position:fixed; z-index:90;">

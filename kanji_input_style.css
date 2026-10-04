@@ -483,3 +483,26 @@
     flex-direction: column;
   }
 }
+
+@media screen and (orientation: portrait) {
+  body:has(#kanji-challenge:not(.hidden)) .menu-button,
+  body:has(#kanji-challenge:not(.hidden)) .mute-button { display: flex; }
+  #screen-battle #kanji-challenge,
+  #screen-battle:has(#kanji-prompt:not(.hidden)) #kanji-challenge {
+    position: static;
+    width: auto;
+    height: 280px;
+    max-height: none;
+    margin: 0 8px;
+    flex: 0 0 auto;
+  }
+  #screen-battle #kanji-problem-center { width: auto; margin: 0 8px; flex: none; }
+  #kanji-problem-center .problem-text { font-size: 28px; overflow-wrap: anywhere; }
+  #kanji-problem-center .input-display input { font-size: 16px; }
+  #screen-battle.kanji-battle .battle-field { height: 160px; min-height: 160px; flex: none; }
+  #screen-battle.kanji-battle .enemy-sprite { width: 110px; height: 110px; }
+  #screen-battle.kanji-battle .battle-atb-compare { margin: 0 8px !important; }
+  #kanji-challenge .key-btn { font-size: 14px; min-height: 32px; }
+  #kanji-challenge .control-btn { min-height: 36px; font-size: 12px; }
+  .kana-choice-btn { min-width: 0; }
+}

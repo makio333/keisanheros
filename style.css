@@ -2278,6 +2278,15 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   align-items: center;
   gap: 14px;
 }
+.equip-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 2px solid var(--panel-border);
+  border-radius: 8px;
+}
+.equip-icon:focus-visible { outline: 2px solid white; outline-offset: 3px; }
 .equip-slot .equip-icon {
   width: 58px;
   height: 58px;
@@ -3177,6 +3186,8 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 #skin-gacha-section .skin-gacha-collection { max-width: none; max-height: 340px; margin: 12px 20px 20px; grid-template-columns: repeat(6, minmax(0, 1fr)); }
 #skin-gacha-section .skin-gacha-theme { background: #1c2925; border-color: #4b5b50; padding: 10px 6px; }
 #skin-gacha-section .skin-gacha-theme img { width: 100%; height: 105px; }
+#skin-gacha-section .skin-gacha-character-art { width: 76px; height: 76px; }
+#skin-gacha-section .skin-gacha-character-art img { width: 100%; height: 100%; height: 76px; margin: 0; object-fit: contain; object-position: center; }
 #skin-gacha-section .skin-gacha-theme b { font-size: 12px; }
 #skin-gacha-section .skin-gacha-theme:hover { border-color: #e6c46b; }
 .gacha-item-section { padding: 28px 20px; background: #1c222a; min-height: 450px; }
@@ -3211,6 +3222,8 @@ body:has(#screen-gacha.active) :is(#analog-clock-widget, #btn-menu, #menu-dropdo
   .gacha-feature-lineup { inset: 80px 8px 6px; }
   #skin-gacha-section .skin-gacha-collection { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 10px; }
   #skin-gacha-section .skin-gacha-theme img { height: 80px; }
+  #skin-gacha-section .skin-gacha-character-art { width: 76px; height: 76px; }
+  #skin-gacha-section .skin-gacha-character-art img { width: 100%; height: 76px; }
   .gacha-summon-bar { padding: 10px; }
   .gacha-summon-bar .btn { font-size: 13px; padding: 10px 8px; }
 }
@@ -3269,6 +3282,48 @@ body:has(#screen-gacha.active) :is(#analog-clock-widget, #btn-menu, #menu-dropdo
   object-fit: contain;
   object-position: center;
 }
+.skin-gacha-character-art { position: relative; display: block; width: 76px; height: 76px; margin: 0 auto 4px; }
+.skin-gacha-character-art img { width: 100%; height: 100%; margin: 0; }
+.avatar-selector-holo-art { position: relative; display: block; width: 64px; height: 64px; flex: 0 0 64px; }
+.avatar-selector-holo-art img { width: 100%; height: 100%; margin: 0; }
+.holo-artwork, .holo-character-stage { position: relative; overflow: hidden; isolation: isolate; }
+.holo-artwork::before, .holo-character-stage::before {
+  content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background:
+    repeating-conic-gradient(from 18deg at 51% 48%, rgba(82,245,255,.58) 0deg 1.3deg, transparent 1.5deg 15deg, rgba(255,73,197,.55) 15.4deg 16.7deg, transparent 17deg 31deg, rgba(255,229,96,.6) 31.4deg 32.8deg, transparent 33deg 48deg),
+    linear-gradient(124deg, rgba(255,91,177,.16), rgba(255,235,114,.12) 27%, rgba(91,255,196,.17) 50%, rgba(92,201,255,.2) 72%, rgba(188,113,255,.18));
+  background-size: 175% 175%, 240% 240%; background-position: 0% 0%, 0% 50%;
+  mix-blend-mode: screen; opacity: .3; animation: card-foil 5s ease-in-out infinite alternate;
+}
+.holo-artwork::after, .holo-character-stage::after, .skin-gacha-result-art.is-holographic::after {
+  content: ""; position: absolute; inset: -8% -35%; z-index: 4; pointer-events: none;
+  background:
+    radial-gradient(circle at 22% 40%, rgba(255,255,255,.95) 0 1px, transparent 2px),
+    radial-gradient(circle at 62% 68%, rgba(255,255,255,.9) 0 1px, transparent 2px),
+    radial-gradient(circle at 82% 25%, rgba(255,255,255,.95) 0 1px, transparent 2px),
+    linear-gradient(112deg, transparent 35%, rgba(255,255,255,.06) 43%, rgba(255,255,255,.9) 49%, rgba(122,248,255,.6) 50.5%, rgba(255,138,224,.56) 52%, transparent 61%);
+  background-size: 100% 100%; mix-blend-mode: screen; opacity: .75; transform: translateX(-75%) skewX(-12deg); animation: foil-glint 3.4s ease-in-out infinite;
+}
+.skin-gacha-background-swatch.holo-artwork::after { border-radius: inherit; }
+.avatar-holographic { filter: saturate(1.28) contrast(1.08) drop-shadow(0 0 1px rgba(255,255,255,.75)); animation: foil-color 3.6s ease-in-out infinite alternate; }
+.holo-surface { position: relative; overflow: hidden; isolation: isolate; }
+.holo-surface::after {
+  content: ""; position: absolute; inset: -20% -35%; z-index: 2; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(255,255,255,.08) 0 1px, transparent 1px 4px), linear-gradient(118deg, rgba(255,64,143,.34), rgba(255,226,97,.26) 22%, rgba(102,255,187,.3) 43%, rgba(73,218,255,.38) 64%, rgba(193,104,255,.35) 84%);
+  background-size: 100% 100%, 240% 240%; background-position: 0 0, 0% 50%; mix-blend-mode: color-dodge; opacity: .48; animation: card-foil 3.4s ease-in-out infinite alternate;
+}
+@keyframes card-foil { from { background-position: 0% 0%, 0% 50%; } to { background-position: 100% 100%, 100% 50%; } }
+@keyframes foil-glint { 0% { transform: translateX(-75%) skewX(-12deg); opacity: .15; } 42% { opacity: .85; } 100% { transform: translateX(75%) skewX(-12deg); opacity: .2; } }
+@keyframes foil-color { from { filter: saturate(1.15) contrast(1.04) hue-rotate(-8deg) drop-shadow(0 0 1px rgba(255,255,255,.6)); } to { filter: saturate(1.42) contrast(1.1) hue-rotate(12deg) drop-shadow(0 0 2px rgba(255,255,255,.9)); } }
+@media (prefers-reduced-motion: reduce) {
+  .holo-artwork::before, .holo-artwork::after, .holo-character-stage::before, .holo-character-stage::after,
+  .skin-gacha-result-art.is-holographic::after, .holo-surface::after, .avatar-holographic { animation: none !important; }
+}
+.equipment-gacha-rates { display: flex !important; justify-content: center; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.equipment-gacha-rates i { padding: 2px 4px; border: 1px solid currentColor; border-radius: 4px; font-size: 10px; font-style: normal; line-height: 1.2; white-space: nowrap; }
+.equipment-preview-rarities { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.equipment-preview-rarities button { padding: 7px 10px; border: 1px solid currentColor; border-radius: 5px; background: #1c1729; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.equipment-preview-rarities button[aria-pressed="true"] { background: #382c4a; box-shadow: 0 0 0 2px currentColor; }
 .skin-gacha-background-swatch {
   width: min(100%, 108px);
   aspect-ratio: 1;
@@ -3509,6 +3564,7 @@ body:has(#avatar-change-modal:not(.hidden)) :is(#analog-clock-widget, #btn-menu,
   text-align: left;
 }
 .skin-gacha-result-art { position: relative; width: min(440px, calc(100dvh - 110px), 100%); aspect-ratio: 1; margin: auto; overflow: hidden; border-radius: 8px; animation: skin-result-emerge .7s ease-out both; }
+.skin-gacha-result-art.is-background-result { background: #171323; border: 1px solid rgba(255, 215, 120, .7); }
 .skin-gacha-reveal-panel .skin-gacha-result-art img {
   position: absolute;
   inset: 4%;
@@ -3518,6 +3574,7 @@ body:has(#avatar-change-modal:not(.hidden)) :is(#analog-clock-widget, #btn-menu,
   object-fit: contain;
   object-position: center;
 }
+.skin-gacha-reveal-panel .skin-gacha-result-art.is-background-result img { inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .skin-gacha-result-details { min-width: 0; animation: skin-result-details .6s .2s ease-out both; }
 .skin-gacha-new-badge { display: inline-block; color: #13241c; background: #ffde78; font-size: 18px; font-weight: bold; padding: 4px 16px; border-radius: 4px; }
 .skin-gacha-reveal-panel h2 { color: #fff0bf; font-size: 24px; margin: 16px 0; }
@@ -5648,13 +5705,6 @@ body:has(.stage-clear-overlay) .volume-control-container { display: none; }
   100% { transform: rotate(0deg); }
 }
 
-/* 縦向き（portrait）のときに表示 */
-@media screen and (orientation: portrait) {
-  #orientation-guard {
-    display: flex !important;
-  }
-}
-
 /* ==========================================================
    バーチャルコントローラー (D-Pad & アクションボタン)
    ========================================================== */
@@ -5846,6 +5896,15 @@ body:has(.stage-clear-overlay) .volume-control-container { display: none; }
 }
 
 /* 統一装備詳細カード（武器屋・スロット・モーダル共通） */
+#global-tooltip[data-equip-rarity="1"] { --tooltip-rarity-color: var(--rarity-1); }
+#global-tooltip[data-equip-rarity="2"] { --tooltip-rarity-color: var(--rarity-2); }
+#global-tooltip[data-equip-rarity="3"] { --tooltip-rarity-color: var(--rarity-3); }
+#global-tooltip[data-equip-rarity="4"] { --tooltip-rarity-color: var(--rarity-4); }
+#global-tooltip[data-equip-rarity="5"] { --tooltip-rarity-color: var(--rarity-5); }
+#global-tooltip[data-equip-rarity] {
+  border-color: var(--tooltip-rarity-color);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85), 0 0 16px color-mix(in srgb, var(--tooltip-rarity-color) 35%, transparent);
+}
 .equip-unified-card {
   display: flex;
   flex-direction: column;
@@ -6826,4 +6885,244 @@ body:has(.stage-clear-overlay) .volume-control-container { display: none; }
     padding-left: 60px;
     padding-right: 60px;
   }
+}
+
+.raid-participation-reward { display: flex; align-items: center; gap: 10px; padding-top: 14px; text-align: left; font-size: 13px; }
+.raid-participation-reward img { width: 72px; height: 72px; object-fit: cover; border: 1px solid #ff9f43; border-radius: 6px; flex-shrink: 0; image-rendering: pixelated; }
+.raid-participation-reward b { color: #ffce77; }
+.raid-participation-reward p { margin: 4px 0 0; line-height: 1.5; }
+.raid-result-overlay { z-index: 16000; padding: 16px; background: rgba(7, 6, 12, .88); }
+body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volume-control-container) { visibility: hidden; pointer-events: none; }
+.raid-result-panel { width: min(600px, 100%); max-height: calc(100dvh - 32px); overflow-y: auto; box-sizing: border-box; padding: 24px; text-align: center; background: #211923; border: 3px solid #ffcf78; border-radius: 8px; box-shadow: 0 12px 48px rgba(0,0,0,.5); animation: raid-reward-in .35s ease-out both; }
+.raid-result-label { color: #ffbd78; font-size: 14px; }
+.raid-result-panel h2 { margin: 8px 0 16px; font-size: 24px; color: #ffe291; }
+.raid-result-background { display: block; width: 100%; max-height: 42dvh; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 6px; }
+.raid-result-panel h3 { margin: 12px 0 8px; font-size: 20px; color: #ffbd78; }
+.raid-result-panel p { margin: 8px 0; font-size: 14px; line-height: 1.6; }
+.raid-result-summary b { color: #ffe291; font-size: 20px; }
+.raid-result-panel .btn { width: 100%; margin-top: 14px; min-height: 48px; }
+@keyframes raid-reward-in { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .raid-result-panel { animation: none; } }
+@media (max-width: 480px) { .raid-result-panel { padding: 16px; } .raid-result-panel h2 { font-size: 20px; } }
+
+/* Portrait layouts stay in document flow so short screens can scroll. */
+@media screen and (orientation: portrait) {
+  .screen.active { min-height: 100dvh; }
+  #screen-home.active, #screen-battle.active { height: auto; min-height: 100dvh; }
+  .screen > .panel { width: calc(100% - 24px); max-width: 760px; padding: 16px; margin: 12px auto; box-sizing: border-box; }
+  .panel > h2, .modal-panel > h2, .modal-panel > h3 { padding: 0; font-size: 20px; overflow-wrap: anywhere; }
+  .panel > .window-nav-btn, .modal-panel > .window-nav-btn { position: static; width: auto; max-width: 100%; margin-bottom: 12px; }
+  #screen-title.active { min-height: 100dvh; }
+  .title-panel { width: 100%; }
+  .title-logo-wrapper { width: 440px; max-width: 100%; }
+  #screen-load-save.active, #screen-new-save.active { justify-content: flex-start; padding: 74px 0 16px; }
+  #screen-load-save .panel, #screen-new-save .panel { width: calc(100% - 24px) !important; max-height: none; }
+  .save-slots-container { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: none; overflow: visible; }
+  .save-list-tools { flex-wrap: wrap; }
+  .save-search-field, .save-sort-field { min-width: 0; width: 100%; }
+  .save-sort-field select { flex: 1; min-width: 0; }
+  .analog-clock-widget { top: max(8px, env(safe-area-inset-top)); right: 8px; width: 52px; padding: 4px; }
+  .analog-clock-svg { width: 42px; height: 42px; }
+  .clock-digital { font-size: 10px; }
+  .menu-container, body:has(#screen-battle.active) .menu-container { top: max(12px, env(safe-area-inset-top)); left: 12px; right: auto; bottom: auto; }
+  .volume-control-container, body:has(#screen-battle.active) .volume-control-container { top: max(12px, env(safe-area-inset-top)); right: 78px; bottom: auto; }
+  .menu-button, .mute-button, body:has(#screen-battle.active) .menu-button, body:has(#screen-battle.active) .mute-button { width: 44px; height: 44px; font-size: 22px; }
+  .menu-dropdown { top: 54px; bottom: auto; left: 0; right: auto; width: min(270px, calc(100vw - 24px)); }
+  body:has(.modal-overlay:not(.hidden):not(#equip-select-modal)) :is(#analog-clock-widget, #menu-container, #volume-control-container) { visibility: hidden; pointer-events: none; }
+  body:has(.screen.active:not(#screen-home):not(#screen-battle):not(#screen-title)) :is(#analog-clock-widget, #menu-container, #volume-control-container) { visibility: hidden; pointer-events: none; }
+
+  #town-map { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-content: start; padding: 84px 16px 24px; min-height: 100dvh; box-sizing: border-box; }
+  #town-map .town-map-img { object-position: center; }
+  #town-map .town-status-cluster { position: relative; left: auto; bottom: auto; grid-column: 1 / -1; max-width: none; flex-direction: column; align-items: stretch; margin-bottom: 12px; }
+  #town-map .player-status-group { flex-direction: row !important; align-items: stretch !important; gap: 12px !important; }
+  #town-map #home-avatar-window { width: 96px !important; height: 136px !important; margin: 0 !important; }
+  #town-map .town-status-overlay { flex: 1; width: auto; min-width: 0; padding: 8px; }
+  #town-map .town-equip-icons { width: auto; display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+  #town-map .town-equip-icon-slot { width: 44px; height: 44px; box-sizing: border-box; }
+  #town-map .town-hotspot { position: relative; left: auto !important; top: auto !important; transform: none; min-width: 0; z-index: 2; }
+  #town-map .hotspot-tag { display: flex; align-items: center; justify-content: center; min-height: 56px; width: 100%; padding: 8px; box-sizing: border-box; border-radius: 8px; font-size: 14px; white-space: normal; animation: none; }
+  #town-map .town-hotspot-adventure { grid-column: 1 / -1; }
+  .stage-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stage-card { min-width: 0; }
+  .stage-card-name { font-size: 18px; }
+  .stage-card-desc { white-space: normal; }
+  #grass-substage-map .town-hotspot { left: 50% !important; }
+  #substage-card-crypt { top: 30% !important; }
+  #substage-card-tower { top: 50% !important; }
+  #substage-card-bandit { top: 70% !important; }
+  .stage-vertical-list { width: calc(100% - 32px); top: 90px; }
+  .stage-select-line { align-items: stretch; }
+  .stage-reward-pair { flex-wrap: wrap; }
+
+  .gacha-page-header { flex-wrap: wrap; padding: 12px; gap: 8px; }
+  .gacha-page-header h2 { font-size: 20px; }
+  .gacha-page-tabs button { min-width: 0; font-size: 14px; padding: 12px 6px; }
+  .gacha-showcase { height: 280px; }
+  .gacha-logo { max-width: 92%; }
+  .gacha-feature-lineup { gap: 0; padding: 0 6px; }
+  .gacha-summon-bar { padding: 14px 12px; }
+  .skin-gacha-draw-actions { flex-direction: column; }
+  .skin-gacha-draw-actions .btn { min-width: 0; width: 100%; }
+  #skin-gacha-section .skin-gacha-collection { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 0; margin: 12px; max-height: none; }
+  .equipment-gacha-featured { gap: 8px; }
+  .equipment-gacha-featured .skin-gacha-theme { padding: 8px 4px; }
+  .equipment-gacha-featured .skin-gacha-theme img { height: 108px; }
+  .equipment-gacha-featured .skin-gacha-theme b { font-size: 13px; }
+  .equipment-gacha-logo { width: 100%; height: 110px; }
+  .gacha-item-section { padding: 16px 12px; }
+  .gacha-item-section .menu-grid { grid-template-columns: 1fr; }
+  .gacha-collection-heading { flex-wrap: wrap; gap: 4px; }
+  .equipment-gacha-collection { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .skin-gacha-reveal-panel { grid-template-columns: 1fr; gap: 12px; text-align: center; padding: 12px; }
+  .skin-gacha-result-art { width: min(360px, 38dvh, 100%); }
+  .skin-gacha-reveal-panel h2 { font-size: 20px; margin: 8px 0; }
+  .skin-gacha-reveal-panel strong { font-size: 24px; }
+  .skin-gacha-reveal-actions { margin-top: 12px; }
+  .modal-overlay { padding: 12px; box-sizing: border-box; }
+  .modal-panel { width: 100% !important; max-height: calc(100dvh - 24px) !important; padding: 16px; box-sizing: border-box; overflow-y: auto; }
+  #screen-raid-boss .modal-panel > div > div { min-width: 0 !important; flex-basis: 100% !important; }
+  #screen-raid-boss .modal-panel h3 { font-size: 20px !important; }
+  .room-container { flex-direction: column; min-height: 0; }
+  .room-sidebar { width: 100%; box-sizing: border-box; }
+  .room-nav { flex-direction: row; flex-wrap: wrap; }
+  .room-content { min-width: 0; padding: 12px; }
+  .skill-row { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 12px; padding: 12px; }
+  .skill-row .info { min-width: 0; }
+  .skill-row .skill-row-btns { grid-column: 1 / -1; flex-direction: row; }
+  .skill-row-btns .btn { flex: 1; min-width: 0; min-height: 44px; }
+  .status-pentagon-wrap { height: auto; padding: 10px; box-sizing: border-box; }
+  .status-radar-chart { position: relative; height: 190px; }
+  .status-nodes-container { position: static; height: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .status-nodes-container .stat-radar-node { position: relative; inset: auto; width: 100%; transform: none; min-width: 0; }
+  .status-nodes-container .stat-radar-node:hover { transform: none; }
+  .status-nodes-container .stat-radar-node.pos-top { grid-column: 1 / -1; }
+  .stat-node-controls .btn { min-height: 36px; }
+  .status-nodes-container .stat-radar-node .stat-node-tooltip { position: fixed; inset: auto 16px 16px; width: auto; transform: none; box-sizing: border-box; }
+  #avatar-change-modal .avatar-selector-panel { width: 100%; padding: 12px; height: calc(100dvh - 24px); max-height: calc(100dvh - 24px); }
+  .avatar-selector-layout { grid-template-columns: 1fr; grid-template-rows: minmax(150px, .65fr) minmax(200px, 1fr); }
+  .avatar-selector-header { gap: 8px; }
+  .avatar-selector-preview-column { padding: 6px; }
+  .avatar-selector-footer .btn { width: 100%; }
+  .skin-gacha-preview-panel { width: 100%; max-height: calc(100dvh - 24px); padding: 12px; box-sizing: border-box; overflow-y: auto; }
+  .hero-selector-stage { min-width: 0; }
+  .hero-stage-portrait-frame { width: min(240px, 55vw); height: 240px; }
+  .hero-thumbs-list { flex-wrap: wrap; }
+  #screen-intro .panel > div { flex-wrap: wrap; gap: 12px !important; }
+
+  #screen-battle.active { overflow: visible; }
+  #screen-battle .battle-wrap { height: auto; min-height: 100dvh; overflow: visible; padding: 74px 0 16px; box-sizing: border-box; gap: 8px; }
+  #screen-battle .battle-top { position: static; width: 100%; max-width: none; padding: 0 8px; flex-direction: column; gap: 6px; flex: 0 0 auto; }
+  #screen-battle .battle-top > .floor-window, #screen-battle .battle-top > .status-window { width: 100%; flex: none; }
+  #screen-battle .battle-top > .status-window { display: flex; flex-direction: row; flex-wrap: wrap; gap: 4px 8px; padding: 8px; }
+  #screen-battle .battle-top > .status-window > .status-line { width: 100%; }
+  #screen-battle .battle-top > .status-window > .stat-bar-wrap { flex: 1 1 40%; min-width: 0; }
+  #screen-battle .battle-field, #screen-battle:has(#battle-challenge:not(.hidden)) .battle-field { flex: 0 0 auto; height: 180px; min-height: 180px; padding: 0 8px; }
+  #screen-battle .enemy-sprite, #screen-battle:has(#battle-challenge:not(.hidden)) .enemy-sprite { width: 130px; height: 130px; }
+  #screen-battle.raid-battle-screen .enemy-sprite.boss-sprite { width: 180px; height: 180px; }
+  #screen-battle.raid-battle-screen .battle-field { height: 230px; min-height: 230px; }
+  #screen-battle .battle-atb-compare { margin: 0 8px !important; width: auto !important; }
+  #screen-battle #calc-problem-center { width: auto; margin: 0 8px; }
+  #screen-battle #battle-challenge, #screen-battle:has(#battle-challenge:not(.hidden)) #battle-challenge { position: static; width: auto; height: auto; max-height: none; overflow: visible; margin: 0 8px; padding: 8px; order: 0; flex: none; }
+  #screen-battle #battle-sub-menu { position: static; width: auto; margin: 0 8px; max-height: none; }
+  #screen-battle #battle-log, #screen-battle:has(#battle-challenge:not(.hidden)) #battle-log { position: static; width: auto; margin: 0 8px; order: 0; max-height: 64px; flex: none; overflow-y: auto; }
+  #screen-battle .challenge-problem { font-size: 24px; overflow-wrap: anywhere; }
+  #screen-battle .challenge-main { width: 100%; min-width: 0; }
+  #screen-battle .challenge-input { font-size: 16px; }
+  #screen-battle .challenge-body form { display: flex; gap: 6px; }
+  #screen-battle .challenge-submit-btn { min-width: 80px; padding: 10px; }
+  .calc-pad { max-width: 360px; gap: 6px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .calc-key { min-height: 44px; padding: 10px 0; font-size: 20px; letter-spacing: 0; }
+  #screen-battle .result-text:empty { display: none; }
+  #screen-battle .battle-inline-commands { position: static; margin-top: 4px; flex-direction: row; justify-content: center; }
+}
+@media screen and (orientation: portrait) and (max-width: 480px) {
+  .save-slots-container, .stage-list { grid-template-columns: 1fr; }
+  .save-slot-avatar-frame { height: 210px; }
+  .subject-tab { min-width: 0; padding: 10px 6px; }
+  .subject-tab-label { font-size: 16px; }
+  .subject-tab-sub { font-size: 11px; }
+  #screen-battle .battle-field, #screen-battle:has(#battle-challenge:not(.hidden)) .battle-field { height: 140px; min-height: 140px; }
+  #screen-battle .enemy-sprite, #screen-battle:has(#battle-challenge:not(.hidden)) .enemy-sprite { width: 100px; height: 100px; }
+}
+
+#stage-button-container { width: min(94%, 980px); gap: 10px; }
+.stage-select-line { display: grid; grid-template-columns: minmax(0, 1fr) 300px 40px; gap: 10px; align-items: stretch; }
+.stage-select-line .stage-select-row { width: 100%; box-sizing: border-box; min-height: 84px; border-radius: 8px; flex-wrap: nowrap; padding: 12px; gap: 10px; }
+.stage-select-line .stage-select-name { flex: 1; min-width: 0; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.stage-select-line .stage-select-status { flex-shrink: 0; }
+.stage-select-line .stage-reward-pair { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 6px; order: initial; }
+.stage-select-line .stage-reward-badge { min-width: 0; box-sizing: border-box; padding: 4px 0; justify-content: center; align-items: center; font-size: 12px; white-space: normal; line-height: 1.4; background: none; border: 0; gap: 4px; }
+.stage-select-line .stage-reward-badge > b { font-size: 12px; }
+
+#screen-raid-boss .raid-menu-panel { width: min(940px, 94%); max-width: 940px; max-height: 92dvh; overflow-y: auto; position: relative; background: #17191e; color: #fff; border: 3px solid #c0392b; box-sizing: border-box; }
+.raid-menu-header { display: flex; align-items: center; gap: 12px; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid #e74c3c; }
+.raid-menu-header .window-close-btn { position: static; flex-shrink: 0; margin: 0; padding: 6px 10px; font-size: 13px; min-height: 34px; }
+.raid-menu-title { flex: 1; color: #ff8e82; margin: 0; padding: 0; border: 0; font-size: 20px; text-align: center; }
+.raid-menu-header #btn-raid-rules { width: auto; flex-shrink: 0; margin: 0; min-height: 34px; padding: 6px 10px; font-size: 13px; border-radius: 6px; }
+.skin-ticket-icon { width: 52px; height: 52px; object-fit: contain; image-rendering: pixelated; vertical-align: middle; margin-right: 8px; }
+.raid-boss-overview { text-align: center; }
+.raid-boss-portrait { position: relative; width: 760px; max-width: 100%; height: 120px; margin: 0 auto; overflow: hidden; border: 2px solid #ff9f43; border-radius: 6px; background: #261b19 url('./assets/raid/raid_bg_magma_pixel.jpg') center 55% / cover; box-sizing: border-box; }
+.raid-boss-portrait img { position: absolute; width: 600px; height: 600px; max-width: none; left: 50%; top: -110px; transform: translateX(-50%); object-fit: contain; image-rendering: pixelated; }
+.raid-boss-summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 16px; max-width: 760px; margin: 8px auto 0; text-align: left; }
+.raid-boss-stats > h3 { color: #ffb66c; font-size: 17px; margin: 0 0 4px; }
+.raid-hp-status { margin: 0; }
+.raid-hp-labels { display: flex; justify-content: space-between; gap: 6px; font-size: 11px; margin-bottom: 3px; }
+#raid-boss-damage { color: #ff7675; font-weight: 700; font-size: 14px; }
+.raid-hp-track { height: 6px; width: 100%; background: #444; border-radius: 3px; overflow: hidden; }
+.raid-boss-overview #btn-raid-challenge { width: auto; margin: 0; padding: 8px 14px; font-size: 14px; min-height: 38px; border-radius: 6px; }
+.raid-boss-overview .raid-participation-reward { justify-content: center; padding: 6px 0; gap: 6px; font-size: 11px; }
+.raid-boss-overview .raid-participation-reward img { width: 28px; height: 28px; border-radius: 4px; }
+.raid-participation-reward > div { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.raid-boss-overview .raid-participation-reward p { margin: 0; color: #b8dcae; }
+.raid-ranking-section { border-top: 1px solid #555; padding-top: 8px; }
+.raid-ranking-section > h3 { text-align: center; color: #feca57; font-size: 18px; margin: 0 0 8px; }
+#raid-ranking-list { display: flex; flex-direction: column; gap: 6px; }
+.raid-learning-recommendation { display: flex; align-items: baseline; justify-content: center; flex-wrap: wrap; gap: 5px 12px; margin-top: 8px; padding: 7px 10px; border-top: 1px solid rgba(255,255,255,0.12); color: #b9c0c6; font-size: 12px; text-align: center; }
+.raid-learning-recommendation:empty { display: none; }
+.raid-learning-recommendation.has-recommendation { color: #f4d58a; background: rgba(254,202,87,0.08); border: 1px solid rgba(254,202,87,0.28); border-radius: 5px; }
+.raid-learning-recommendation b { color: #feca57; }
+.raid-learning-recommendation span { color: #fff; font-weight: 700; }
+.raid-learning-recommendation small { color: #c5cbd2; font-size: 11px; }
+.raid-sync-line { display: flex; justify-content: flex-end; gap: 8px; align-items: center; margin-bottom: 6px; color: #b9d6dc; font-size: 11px; }
+.raid-sync-line button { border: 1px solid #666; border-radius: 4px; background: #242932; color: #eee; padding: 3px 6px; font-size: 11px; cursor: pointer; flex-shrink: 0; }
+.raid-empty-ranking { padding: 16px 8px; text-align: center; color: #b9c0c6; font-size: 14px; }
+.raid-ranking-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid; border-radius: 6px; background: #11141a; min-width: 0; }
+.raid-ranking-avatar { display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; flex: 0 0 56px; overflow: hidden; border: 2px solid; border-radius: 6px; box-sizing: border-box; }
+.raid-ranking-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.raid-ranking-main, .raid-ranking-secondary { display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; }
+.raid-ranking-player { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; min-width: 0; }
+.raid-ranking-name { font-size: 18px; font-weight: 700; overflow-wrap: anywhere; }
+.raid-ranking-level { font-size: 11px; padding: 1px 4px; border-radius: 3px; background: #343a43; white-space: nowrap; }
+.raid-ranking-damage { font-size: 22px; font-weight: 700; color: #ff9c93; white-space: nowrap; }
+.raid-ranking-equip { width: 26px; height: 26px; background: #201e28; }
+.raid-ranking-secondary button { min-height: 28px; font-size: 11px !important; }
+@media (max-width: 600px) {
+  .raid-menu-header { flex-wrap: wrap; gap: 6px; }
+  .raid-menu-title { flex-basis: 100%; order: -1; font-size: 17px; }
+  .raid-menu-header #btn-raid-rules { margin-left: auto; }
+  .raid-boss-portrait { height: 90px; }
+  .raid-boss-portrait img { width: 440px; height: 440px; top: -80px; }
+  .raid-boss-summary { gap: 6px; grid-template-columns: 1fr; }
+  #screen-raid-boss .raid-boss-stats > h3 { font-size: 15px !important; margin-bottom: 3px; }
+  .raid-boss-overview #btn-raid-challenge { min-height: 34px; padding: 5px 8px; font-size: 13px; }
+  .raid-ranking-row { padding: 6px; gap: 6px; }
+  .raid-ranking-avatar { width: 40px; height: 48px; flex-basis: 40px; }
+  .raid-ranking-name { font-size: 14px; }
+  .raid-ranking-damage { font-size: 18px; }
+  .raid-ranking-info { gap: 2px; }
+}
+.stage-reward-icons { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.stage-reward-icon { display: flex; align-items: center; justify-content: center; width: 72px; height: 72px; flex: 0 0 72px; padding: 4px; box-sizing: border-box; border: 2px solid var(--panel-border); border-radius: 8px; background: rgba(13,10,24,.9); cursor: pointer; font-size: 42px; }
+.stage-select-line .stage-reward-icon img { width: 56px; height: 56px; object-fit: contain; image-rendering: pixelated; }
+.stage-reward-icon:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.stage-reward-gold { display: flex; flex-direction: column; align-items: center; color: #ffe08a; }
+.stage-reward-gold > span { font-size: 30px; }
+.stage-reward-gold > b { font-size: 15px; }
+.stage-select-line .stage-reward-badge strong { color: #83e4a1; font-size: 11px; }
+.stage-select-line .stage-print-btn { border-radius: 8px; align-self: center; }
+@media (max-width: 600px) {
+  .stage-select-line { grid-template-columns: minmax(0, 1fr) 40px; gap: 6px; }
+  .stage-select-line .stage-reward-pair { grid-column: 1 / -1; grid-row: 2; }
+  .stage-select-line .stage-print-btn { grid-column: 2; grid-row: 1; }
+  .stage-select-line .stage-select-row { min-height: 72px; }
 }
