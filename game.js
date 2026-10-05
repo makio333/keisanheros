@@ -11797,8 +11797,11 @@ const RAID_STORAGE_KEY = 'raid_boss_v1_boss1';
 let raidSyncStatus = 'idle';
 let raidSyncPromise = null;
 let raidSyncSlotKey = null;
+let raidRefreshRequested = false;
 let raidWatchStop = null;
 let raidStarting = false;
+let raidSettlementTimer = null;
+let raidCountdownTimer = null;
 
 function raidPlayerProfile() {
   const equipment = {};
@@ -11814,9 +11817,18 @@ function raidPlayerProgress() {
   if (!G.raidProgress || G.raidProgress.bossId !== RAID_BOSS_ID) {
     const local = getRaidData();
     const entry = local.rankings?.[currentSlotKey];
-    G.raidProgress = { bossId: RAID_BOSS_ID, participated: !!entry || (G.unlockedAvatarBackgrounds || []).includes('raid_magma'), legacyDamage: local.cloudSynced ? 0 : (entry?.totalDamage || 0), totalDamage: entry?.totalDamage || 0, pendingEvents: [] };
+    G.raidProgress = { bossId: RAID_BOSS_ID, participated: !!entry || (G.unlockedAvatarBackgrounds || []).includes('raid_magma'), participationAt: 0, legacyDamage: local.cloudSynced ? 0 : (entry?.totalDamage || 0), totalDamage: entry?.totalDamage || 0, pendingEvents: [] };
   }
   return G.raidProgress;
+}
+
+function scheduleRaidSettlement(settlesAt) {
+  clearTimeout(raidSettlementTimer);
+  if (!settlesAt || getRaidData().finalizedAt) return;
+  raidSettlementTimer = setTimeout(() => {
+    raidSettlementTimer = null;
+    if (G) syncRaidState();
+  }, Math.max(250, settlesAt - Date.now() + 250));
 }
 
 async function syncRaidState() {
@@ -11859,7 +11871,7 @@ async function syncRaidState() {
       const global = await window.RaidBossAPI.getGlobalBoss();
       if (G !== game || currentSlotKey !== slotKey) return false;
       let payout = null;
-      if (global.defeatedAt && window.RaidBossAPI.settleReward) {
+      if (global.finalizedAt && window.RaidBossAPI.settleReward) {
         payout = await window.RaidBossAPI.settleReward(slotKey, RAID_BOSS_ID, game);
         if (payout.eligible) {
           Object.assign(game, payout.state);
@@ -11876,6 +11888,11 @@ async function syncRaidState() {
       data.rankings = Object.fromEntries(rankings.map(entry => [entry.slotKey, entry]));
       data.totalDamage = (global.totalDamageDealt || 0) + progress.pendingEvents.reduce((sum, event) => sum + event.damage, 0);
       if (global.finalRankings) data.finalRankings = global.finalRankings.map(entry => Array.isArray(entry) ? entry : [entry.slotKey, entry.totalDamage || 0]);
+      data.defeatedAt = global.defeatedAt || null;
+      data.settlesAt = global.settlesAt || null;
+      data.finalizedAt = global.finalizedAt || null;
+      data.finisherSlotKeys = global.finisherSlotKeys || [];
+      data.finalHitters = global.finalHitters || [];
       data.cloudSynced = true;
       data.legacyImports = local.legacyImports;
       if (result.claimed || payout?.eligible) {
@@ -11885,6 +11902,8 @@ async function syncRaidState() {
       const own = data.rankings[slotKey];
       if (own) { progress.participated = true; progress.totalDamage = own.totalDamage || 0; }
       saveRaidData(data);
+      if (data.defeatedAt && !data.finalizedAt) scheduleRaidSettlement(data.settlesAt || data.defeatedAt + 10 * 60 * 1000);
+      else clearTimeout(raidSettlementTimer);
       save(true);
       raidSyncStatus = 'ready';
       return true;
@@ -11893,11 +11912,15 @@ async function syncRaidState() {
       if (G === game) raidSyncStatus = error.code === 'permission-denied' ? 'denied' : 'offline';
       return false;
     } finally {
+      const refreshAgain = raidRefreshRequested;
+      raidRefreshRequested = false;
       raidSyncPromise = null;
-      if (G === game && !$('screen-raid-boss').classList.contains('hidden')) {
+      const raidMenuOpen = G === game && !$('screen-raid-boss').classList.contains('hidden');
+      if (raidMenuOpen) {
         renderRaidBossMenu();
-        if (payoutNotice) showConfirmModal('レイド報酬を獲得！', `${payoutNotice.rank}位の報酬<br>💰 ${payoutNotice.gold.toLocaleString()}G<br>🌱 コストプラスのたね ×${payoutNotice.seeds}${payoutNotice.tickets ? `<br>🎟 背景スキンガチャチケット ×${payoutNotice.tickets}` : ''}`, () => { save(true); showRaidBossMenu(); });
+        if (payoutNotice) showConfirmModal('レイド報酬を獲得！', `${payoutNotice.rank}位の報酬<br>💰 ${payoutNotice.gold.toLocaleString()}G<br>🌱 コストプラスのたね ×${payoutNotice.seeds}${payoutNotice.tickets ? `<br>🎟 背景スキンガチャチケット ×${payoutNotice.tickets}${payoutNotice.finisherBonus ? '（撃破ボーナスを含む）' : ''}` : ''}`, () => { save(true); showRaidBossMenu(); });
       }
+      if (refreshAgain && raidMenuOpen) setTimeout(() => syncRaidState(), 0);
     }
   })();
   return raidSyncPromise;
@@ -11912,7 +11935,9 @@ window.addEventListener('online', () => { if (G) syncRaidState(); });
 
 function grantRaidParticipationBackground() {
   if (!G || !currentSlotKey || G.isTestMode) return false;
-  raidPlayerProgress().participated = true;
+  const progress = raidPlayerProgress();
+  progress.participated = true;
+  if (!progress.participationAt) progress.participationAt = Date.now();
   if ((G.unlockedAvatarBackgrounds || []).includes('raid_magma')) return false;
   G.unlockedAvatarBackgrounds = [...new Set(['default', ...(G.unlockedAvatarBackgrounds || []), 'raid_magma'])];
   save(true);
@@ -11923,15 +11948,21 @@ function showRaidBattleResult(damage, defeated) {
   document.querySelector('.raid-result-overlay')?.remove();
   const showBackground = (G?.unlockedAvatarBackgrounds || []).includes('raid_magma') && !G.raidMagmaNoticeSeen;
   const background = getAvatarBackground('raid_magma');
+  const rankings = getRaidRankings();
+  const myRank = rankings.findIndex(entry => entry.slotKey === currentSlotKey) + 1;
+  const rankLabel = myRank > 0 ? `${myRank === 1 ? '🥇' : myRank === 2 ? '🥈' : myRank === 3 ? '🥉' : '🏅'} ${myRank}位` : '集計中';
   save(true);
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay raid-result-overlay';
   overlay.innerHTML = `
     <section class="raid-result-panel" role="dialog" aria-modal="true" aria-labelledby="raid-result-title">
-      <span class="raid-result-label">${showBackground ? 'レイド参加特典' : 'レイドのけっか'}</span>
-      <h2 id="raid-result-title">${showBackground ? '背景スキンを ゲット！' : defeated ? 'ボスを たおした！' : 'ちょうせん ありがとう！'}</h2>
+      <div class="raid-result-confetti" aria-hidden="true">${Array.from({ length: 18 }, (_, i) => `<i style="--i:${i};left:${(i * 37) % 100}%;animation-delay:${(i % 7) * 45}ms"></i>`).join('')}</div>
+      <span class="raid-result-label">${showBackground ? 'レイド参加特典' : defeated ? 'レイドボス討伐！' : '今回のレイド結果'}</span>
+      <h2 id="raid-result-title">${showBackground ? '背景スキンを ゲット！' : defeated ? 'みんなで ボスを たおした！' : 'ナイスチャレンジ！'}</h2>
       ${showBackground ? `<img class="raid-result-background" src="${av(background.image)}" alt="獲得したマグマの火山の背景"><h3>${background.name}</h3><p>きみのキャラクターの背景に えらべるよ！</p>` : ''}
-      <p class="raid-result-summary">${defeated && showBackground ? 'ボスを たおした！<br>' : ''}ボスに <b>${Math.max(0, Math.round(damage)).toLocaleString()}</b> ダメージ！<br>ランキングに 記録したよ。</p>
+      <p class="raid-result-summary">今回のダメージ <b>${Math.max(0, Math.round(damage)).toLocaleString()}</b></p>
+      <div class="raid-result-rank"><span>${defeated ? '暫定ランキング' : '現在のランキング'}</span><strong>${rankLabel}</strong></div>
+      <p class="raid-result-encouragement">${defeated ? '最終順位は10分後に確定！討伐前から進行中だった戦闘も集計するよ。' : '開催期間中は何度でも挑戦して、ランキング上位を目指そう！'}</p>
       <button type="button" id="btn-raid-result-close" class="btn btn-primary">レイドに もどる</button>
     </section>`;
   const close = () => {
@@ -11970,7 +12001,7 @@ function recordRaidDamage(slotKey, playerName, dmg, avatar, level, equipment, av
     const progress = raidPlayerProgress();
     progress.participated = true;
     const id = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint32Array(4)), n => n.toString(16)).join('-');
-    progress.pendingEvents.push({ id, damage: dmg });
+    progress.pendingEvents.push({ id, damage: dmg, fightStartedAt: battle?.raidStartedAt || Date.now(), createdAt: Date.now() });
     progress.totalDamage += dmg;
   }
   const data = getRaidData();
@@ -12082,6 +12113,29 @@ async function sendRaidCheer(targetSlotKey, targetPlayerName, btnElement) {
   }
 }
 
+function renderRaidFinalResult() {
+  const el = document.getElementById('raid-final-result');
+  if (!el) return;
+  clearTimeout(raidCountdownTimer);
+  const data = getRaidData();
+  if (!data.defeatedAt) { el.innerHTML = ''; el.classList.add('hidden'); return; }
+  el.classList.remove('hidden');
+  if (!data.finalizedAt) {
+    const secondsLeft = Math.max(0, Math.ceil(((data.settlesAt || data.defeatedAt + 10 * 60 * 1000) - Date.now()) / 1000));
+    const countdown = `${String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:${String(secondsLeft % 60).padStart(2, '0')}`;
+    el.innerHTML = `<b>🎉 レイド討伐！ 討伐後10分間、集計中</b><span>同時に挑戦していた戦闘を確認中。最終ランキング発表まで <strong>${countdown}</strong></span>`;
+    raidCountdownTimer = setTimeout(renderRaidFinalResult, 1000);
+    return;
+  }
+  const rankings = (data.finalRankings || []).slice(0, 3).map(([slotKey, damage], index) => {
+    const player = data.rankings?.[slotKey];
+    const medal = ['🥇', '🥈', '🥉'][index];
+    return `<li><span>${medal} ${escapeHtml(player?.playerName || '勇者')}</span><b>${Number(damage || 0).toLocaleString()} ダメージ</b></li>`;
+  }).join('');
+  const hitters = (data.finalHitters || []).map(player => escapeHtml(player.playerName || '勇者')).join('・') || '記録なし';
+  el.innerHTML = `<b>🏆 レイド最終結果</b><ol>${rankings || '<li>ランキング記録なし</li>'}</ol><span class="raid-final-hitters">⚔ 最後の一撃：${hitters}</span><small>撃破者には撃破ボーナスチケットをプレゼント！</small>`;
+}
+
 // --- 画面表示 ---
 
 function showRaidBossMenu() {
@@ -12091,7 +12145,10 @@ function showRaidBossMenu() {
   syncRaidState();
   if (!raidWatchStop && window.RaidBossAPI?.watchBoss) {
     raidWatchStop = window.RaidBossAPI.watchBoss(() => {
-      if (G && !$('screen-raid-boss').classList.contains('hidden') && !raidSyncPromise) syncRaidState();
+      if (G && !$('screen-raid-boss').classList.contains('hidden')) {
+        if (raidSyncPromise) raidRefreshRequested = true;
+        else syncRaidState();
+      }
     }, error => { raidSyncStatus = error.code === 'permission-denied' ? 'denied' : 'offline'; renderRaidSyncStatus(); });
   }
 }
@@ -12325,6 +12382,7 @@ function renderRaidBossMenu() {
   }
 
   renderRaidLearningRecommendation();
+  renderRaidFinalResult();
 
   // ボタン状態
   if (btn) {
@@ -12372,7 +12430,7 @@ async function startRaidBattle() {
   await syncRaidState();
   raidStarting = false;
   if (G !== game) return;
-  if (getRaidTotalDamage() >= RAID_MAX_HP) { showRaidBossMenu(); return; }
+  if (getRaidData().defeatedAt || getRaidTotalDamage() >= RAID_MAX_HP) { showRaidBossMenu(); return; }
   grantRaidParticipationBackground();
   syncRaidState();
   hideBattleMenus();
@@ -12413,7 +12471,8 @@ async function startRaidBattle() {
     tickId: null,
     over: false,
     currentTurnProblem: null,
-    raidDamageDealt: 0
+    raidDamageDealt: 0,
+    raidStartedAt: Date.now()
   };
 
   showScreen('screen-battle');

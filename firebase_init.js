@@ -291,41 +291,70 @@ window.RaidBossAPI = {
       // Legacy totals may exist on multiple browsers. Import only the highest baseline.
       const oldBaseline = previous.legacyDamage ?? previous.totalDamage ?? 0;
       const legacyDamage = Math.max(oldBaseline, Number(progress.legacyDamage) || 0);
-      let addedDamage = legacyDamage - oldBaseline;
+      const now = Date.now();
+      const defeatedAt = Number(global.defeatedAt) || null;
+      const settlesAt = Number(global.settlesAt) || (defeatedAt || null);
+      const acceptingDamage = !global.finalizedAt && (!defeatedAt || now <= settlesAt);
+      let addedDamage = acceptingDamage && !defeatedAt ? legacyDamage - oldBaseline : 0;
+      let acceptedEvents = 0;
       for (const event of progress.events || []) {
         if (!event.id || appliedEvents[event.id]) continue;
-        addedDamage += Math.max(0, Math.round(Number(event.damage) || 0));
+        const fightStartedAt = Number(event.fightStartedAt) || Number(event.createdAt) || now;
+        if (acceptingDamage && (!defeatedAt || fightStartedAt <= defeatedAt)) {
+          addedDamage += Math.max(0, Math.round(Number(event.damage) || 0));
+          acceptedEvents++;
+        }
         appliedEvents[event.id] = true;
       }
-      if (global.defeatedAt) addedDamage = 0;
-      const participated = previous.participated || (!global.defeatedAt && progress.participated) || legacyDamage > 0 || Object.keys(appliedEvents).length > 0;
+      const participationAt = Number(progress.participationAt) || now;
+      const participatedBeforeDefeat = !!progress.participated && (!defeatedAt || participationAt <= defeatedAt);
+      const participated = previous.participated || participatedBeforeDefeat || legacyDamage > 0 || acceptedEvents > 0;
       const nextTotal = (previous.totalDamage || 0) + addedDamage;
-      let finalRankings = null;
-      let rankingQuerySnap = null;
       const nextGlobalTotal = (global.totalDamageDealt || 0) + addedDamage;
-      if (!global.defeatedAt && addedDamage > 0 && nextGlobalTotal >= 1000) {
-        rankingQuerySnap = await transaction.get(query(collection(db, 'raidRankings'), orderBy('totalDamage', 'desc')));
+      const startsSettlement = !defeatedAt && addedDamage > 0 && nextGlobalTotal >= 1000;
+      const finalDefeatedAt = defeatedAt || (startsSettlement ? now : null);
+      const finalSettlesAt = settlesAt || (startsSettlement ? now + 10 * 60 * 1000 : null);
+      const finisherSlotKeys = [...new Set(global.finisherSlotKeys || [])];
+      if (addedDamage > 0 && (startsSettlement || (defeatedAt && acceptingDamage && acceptedEvents > 0))) {
+        if (!finisherSlotKeys.includes(slotKey)) finisherSlotKeys.push(slotKey);
+      }
+      const finalize = !!finalDefeatedAt && !global.finalizedAt && now >= finalSettlesAt;
+      let finalRankings = null;
+      let finalHitters = null;
+      if (finalize) {
+        const rankingSnap = await transaction.get(query(collection(db, 'raidRankings'), orderBy('totalDamage', 'desc')));
         const rows = new Map();
-        rankingQuerySnap.forEach(snap => rows.set(snap.id, { ...snap.data(), slotKey: snap.data().slotKey || snap.id }));
-        rows.set(slotKeyToDocId(slotKey), { ...previous, slotKey, participated: true, totalDamage: nextTotal });
-        finalRankings = [...rows.values()]
+        rankingSnap.forEach(snap => rows.set(snap.id, { ...snap.data(), slotKey: snap.data().slotKey || snap.id }));
+        if (rankSnap.exists() || participated || addedDamage > 0) {
+          rows.set(slotKeyToDocId(slotKey), { ...previous, ...profile, slotKey, participated: true, totalDamage: nextTotal });
+        }
+        const orderedRows = [...rows.values()]
           .filter(row => row.participated || (row.totalDamage || 0) > 0)
-          .sort((a, b) => (b.totalDamage || 0) - (a.totalDamage || 0) || String(a.slotKey || '').localeCompare(String(b.slotKey || '')))
-          .map(row => [row.slotKey, row.totalDamage || 0]);
+          .sort((a, b) => (b.totalDamage || 0) - (a.totalDamage || 0) || String(a.slotKey || '').localeCompare(String(b.slotKey || '')));
+        finalRankings = orderedRows.map(row => [row.slotKey, row.totalDamage || 0]);
+        finalHitters = finisherSlotKeys.map(key => {
+          const row = orderedRows.find(entry => entry.slotKey === key);
+          return { slotKey: key, playerName: row?.playerName || (key === slotKey ? profile.playerName : '勇者') };
+        });
       }
       if (rankSnap.exists() || participated) {
-        if (!global.defeatedAt || rankSnap.exists()) {
+        if (!global.finalizedAt && (!defeatedAt || now <= finalSettlesAt) && participated) {
           const appearance = { playerName: profile.playerName || '勇者', avatar: profile.avatar || '', avatarBackground: profile.avatarBackground || 'default', avatarHolographic: !!profile.avatarHolographic, avatarBackgroundHolographic: !!profile.avatarBackgroundHolographic, level: profile.level || 1, equipment: profile.equipment || {} };
           transaction.set(rankRef, { ...appearance, slotKey, participated: !!participated, totalDamage: nextTotal, legacyDamage, appliedEvents, lastUpdated: Date.now() }, { merge: true });
         }
       }
-      if (addedDamage > 0) {
-        transaction.set(globalRef, { totalDamageDealt: nextGlobalTotal, ...(finalRankings ? { defeatedAt: Date.now(), finalRankings } : {}) }, { merge: true });
+      if (addedDamage > 0 || startsSettlement || finalize) {
+        transaction.set(globalRef, {
+          totalDamageDealt: nextGlobalTotal,
+          ...(startsSettlement ? { defeatedAt: now, settlesAt: now + 10 * 60 * 1000 } : {}),
+          ...(finisherSlotKeys.length ? { finisherSlotKeys } : {}),
+          ...(finalize ? { finalizedAt: now, finalRankings, finalHitters } : {})
+        }, { merge: true });
       }
       if (progress.claimed && !claimSnap.exists()) {
         transaction.set(claimRef, { ...progress.claimed, migrated: true });
       }
-      return { acknowledged: (progress.events || []).map(event => event.id), claimed: claimSnap.exists() || !!progress.claimed, finalRankings };
+      return { acknowledged: (progress.events || []).map(event => event.id), claimed: claimSnap.exists() || !!progress.claimed, defeatedAt: finalDefeatedAt, settlesAt: finalSettlesAt, finalizedAt: finalize ? now : global.finalizedAt || null, finalRankings };
     });
   },
 
@@ -345,13 +374,14 @@ window.RaidBossAPI = {
       const saved = await transaction.get(saveRef);
       const global = await transaction.get(globalRef);
       const rank = await transaction.get(rankRef);
-      if (!global.exists() || !global.data().defeatedAt || !rank.exists()) return { eligible: false, state: fallbackState };
+      if (!global.exists() || !global.data().finalizedAt || !rank.exists()) return { eligible: false, state: fallbackState };
       const finalRankings = global.data().finalRankings || [];
       const rankIndex = finalRankings.findIndex(entry => (Array.isArray(entry) ? entry[0] : entry.slotKey) === slotKey);
       if (rankIndex < 0) return { eligible: false, state: fallbackState };
       const finalRank = rankIndex + 1;
       const state = saved.exists() && saved.data().gameData ? JSON.parse(saved.data().gameData) : JSON.parse(JSON.stringify(fallbackState));
-      const reward = finalRank === 1 ? { gold: 5000, seeds: 3, tickets: 1 } : finalRank === 2 ? { gold: 3000, seeds: 3, tickets: 1 } : finalRank === 3 ? { gold: 2000, seeds: 3, tickets: 1 } : finalRank <= 10 ? { gold: 1000, seeds: 1, tickets: 0 } : { gold: 500, seeds: 1, tickets: 0 };
+      const finisherBonus = (global.data().finisherSlotKeys || []).includes(slotKey);
+      const reward = finalRank === 1 ? { gold: 5000, seeds: 3, tickets: 1 + Number(finisherBonus), finisherBonus } : finalRank === 2 ? { gold: 3000, seeds: 3, tickets: 1 + Number(finisherBonus), finisherBonus } : finalRank === 3 ? { gold: 2000, seeds: 3, tickets: 1 + Number(finisherBonus), finisherBonus } : finalRank <= 10 ? { gold: 1000, seeds: 1, tickets: Number(finisherBonus), finisherBonus } : { gold: 500, seeds: 1, tickets: Number(finisherBonus), finisherBonus };
       if (claim.exists()) return { eligible: true, alreadyClaimed: true, rank: finalRank, reward, state };
       if (applyReward) applyReward(state);
       else {
