@@ -3376,7 +3376,7 @@ body:has(#screen-gacha.active) :is(#analog-clock-widget, #btn-menu, #menu-dropdo
   border-radius: 8px;
   background: #171222;
 }
-.skin-gacha-preview-art .avatar-composite-bg { position: absolute; inset: 0; }
+
 .skin-gacha-preview-art img {
   position: absolute;
   inset: 5%;
@@ -3484,7 +3484,7 @@ body:has(#avatar-change-modal:not(.hidden)) :is(#analog-clock-widget, #btn-menu,
   border-radius: 7px;
   background: #171222;
 }
-.avatar-selector-preview .avatar-composite-bg { position: absolute; inset: 0; }
+
 .avatar-selector-preview > img { position: absolute; inset: 4%; z-index: 1; width: 92%; height: 92%; object-fit: contain; }
 .avatar-selector-preview-label { position: absolute; z-index: 2; top: 8px; left: 8px; padding: 3px 7px; border-radius: 4px; color: #fff; background: rgba(10,8,18,.72); font-size: 11px; }
 .avatar-selector-caption { display: flex; flex-direction: column; flex-shrink: 0; gap: 4px; padding: 10px 2px 0; color: #f3e9ca; font-size: 14px; line-height: 1.4; }
@@ -7146,3 +7146,5 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
   .stage-select-line .stage-print-btn { grid-column: 2; grid-row: 1; }
   .stage-select-line .stage-select-row { min-height: 72px; }
 }
+
+.avatar-composite-bg { position: absolute !important; inset: 0; z-index: 0; border-radius: inherit; }

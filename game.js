@@ -2280,7 +2280,7 @@ function applyAvatarBackground(element, backgroundId) {
   element.style.backgroundImage = background.image ? `url("${av(background.image)}")` : '';
   element.style.backgroundSize = 'cover';
   element.style.backgroundPosition = 'center';
-  element.classList.toggle('holo-surface', !!(G?.avatarBackgroundHolographic && background.id === G.avatarBackground));
+  element.classList.toggle('holo-artwork', !!(G?.avatarBackgroundHolographic && background.id === G.avatarBackground));
 }
 
 let pendingAvatarId = null;
@@ -2501,6 +2501,7 @@ function skillIsLearned(s){
    クラウドの保存先に移行できるように まどぐち関数を分けてある。
    ========================================================== */
 const SAVE_PREFIX = 'typing_rpg_save_v3::';
+const TEST_SLOT_KEY = SAVE_PREFIX + 'admin_test_mode';
 const LEGACY_SAVE_KEY = 'typing_rpg_save_v3';
 const LEGACY_OLD_SAVE_KEY = 'typing_rpg_save_v2';
 
@@ -5918,10 +5919,12 @@ function stageWeaponReward(areaId, stageIndex){
   return reward;
 }
 
-const STAGE_REWARD_AREA_ORDER = ['area1', 'area13', 'area2', 'area3', 'area4', 'area5', 'area6', 'area7', 'area8', 'area9', 'area10', 'area11', 'area12', 'area14', 'area15'];
+const STAGE_REWARD_MATH_ORDER = ['area1', 'area13', 'area2', 'area3', 'area4', 'area11', 'area12'];
+const STAGE_REWARD_LANG_ORDER = ['area14', 'area15', 'area5', 'area6', 'area7', 'area8', 'area9', 'area10'];
 function stageRewardOrdinal(areaId, stageIndex){
   let ordinal = 0;
-  for (const id of STAGE_REWARD_AREA_ORDER) {
+  const order = STAGE_REWARD_LANG_ORDER.includes(areaId) ? STAGE_REWARD_LANG_ORDER : STAGE_REWARD_MATH_ORDER;
+  for (const id of order) {
     if (id === areaId) return ordinal + stageIndex;
     ordinal += AREA_STAGES[id]?.stages?.length || 0;
   }
@@ -8300,7 +8303,7 @@ function openSkinGachaPreview(kind, id) {
   $('skin-gacha-preview-image').classList.toggle('avatar-holographic', holographic);
   $('skin-gacha-preview-image').closest('.avatar-composite-preview, .avatar-selector-preview, .skin-gacha-preview-art')?.classList.toggle('holo-character-stage', holographic && !isBackground);
   applyAvatarBackground($('skin-gacha-preview-bg'), background.id);
-  $('skin-gacha-preview-bg').classList.toggle('holo-surface', isBackground && holographic);
+  $('skin-gacha-preview-bg').classList.toggle('holo-artwork', isBackground && holographic);
   $('skin-gacha-preview-image').classList.toggle('hidden', isBackground);
   $('skin-gacha-preview-modal').classList.remove('hidden');
 }
@@ -8444,7 +8447,7 @@ function showSkinGachaSummon(prize, hero) {
     </div>`;
   document.body.appendChild(overlay);
   const backdrop = overlay.querySelector('.avatar-composite-bg');
-  backdrop.classList.toggle('holo-surface', isBackground && isHolographic);
+  backdrop.classList.toggle('holo-artwork', isBackground && isHolographic);
   const stopMagic = startSkinGachaMagic(overlay.querySelector('canvas'), reducedMotion);
   SM.play('se_decide');
   let timer;
@@ -8756,6 +8759,38 @@ function bindEvents(){
   on('hotspot-synthesis', showSynthesis);
   on('hotspot-quest-board', showQuestBoard);
   on('hotspot-raid-boss', showRaidBossMenu);
+  
+on('btn-raid-history', async () => {
+  $('raid-history-modal').classList.remove('hidden');
+  const list = $('raid-history-list');
+  list.innerHTML = '<div style="text-align:center;">よみこみ中...</div>';
+  try {
+    const history = await window.RaidBossAPI.getHistory();
+    if (!history || history.length === 0) {
+      list.innerHTML = '<div style="text-align:center;">まだ討伐履歴がありません。</div>';
+      return;
+    }
+    list.innerHTML = history.map(h => {
+      const level = h.bossLevel || 50;
+      const date = h.defeatedAt ? new Date(h.defeatedAt).toLocaleString('ja-JP') : '不明';
+      const maxHp = (h.maxHp || 1000).toLocaleString();
+      const finishers = (h.finalHitters || []).map(f => escapeHtml(f.playerName)).join(', ') || 'なし';
+      const rankings = (h.finalRankings || []).slice(0, 3).map((r, i) => `${i+1}位: ${r.totalDamage.toLocaleString()}D`).join(' / ') || 'なし';
+      
+      return `<div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; margin-bottom: 10px;">
+        <div style="font-weight: bold; font-size: 1.1em; color: #ffd34e;">暗黒竜 ダークバハムート Lv${level}</div>
+        <div style="font-size: 0.9em; margin-top: 5px;">討伐日時: ${date}</div>
+        <div style="font-size: 0.9em;">最大HP: ${maxHp}</div>
+        <div style="font-size: 0.9em; color: #ff7675; margin-top: 5px;">🔥 トドメをさした勇者: ${finishers}</div>
+        <div style="font-size: 0.9em; margin-top: 5px;">🏆 トップランカー: ${rankings}</div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    list.innerHTML = '<div style="text-align:center; color: #ff7675;">エラーが発生しました。</div>';
+    console.error(e);
+  }
+});
+
   on('btn-raid-rules', () => {
     const button = $('btn-raid-rules');
     const expanded = button.getAttribute('aria-expanded') !== 'true';
@@ -8849,7 +8884,7 @@ function bindEvents(){
 	    $('avatar-selector-preview-image').classList.toggle('avatar-holographic', pendingAvatarHolographic);
 	    $('avatar-selector-preview-image').closest('.avatar-selector-preview')?.classList.toggle('holo-character-stage', pendingAvatarHolographic);
 	    applyAvatarBackground($('avatar-selector-preview-bg'), background.id);
-	    $('avatar-selector-preview-bg').classList.toggle('holo-surface', pendingBackgroundHolographic);
+	    $('avatar-selector-preview-bg').classList.toggle('holo-artwork', pendingBackgroundHolographic);
 	    $('avatar-selector-character-name').textContent = `${pendingAvatarHolographic ? 'ホログラム・' : ''}${avatar.name}`;
 	    $('avatar-selector-background-name').textContent = `${pendingBackgroundHolographic ? 'ホログラム・' : ''}${background.name}`;
 	  };
@@ -9072,6 +9107,20 @@ function bindEvents(){
       save();
       alert('10,000ゴールドを獲得しました！');
     }
+  });
+
+  on('btn-admin-gift-send', sendAdminGiftFromUI);
+  on('btn-admin-gift-add-item', addAdminGiftItemRow);
+  
+  $('admin-gift-select-all')?.addEventListener('change', (e) => {
+    const listEl = $('admin-gift-target-list');
+    if (!listEl) return;
+    const isChecked = e.target.checked;
+    listEl.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = isChecked);
+  });
+  
+  $('admin-gift-target-search')?.addEventListener('input', () => {
+    renderAdminGiftTargets();
   });
 
   on('btn-admin-delete-save', () => {
@@ -11902,7 +11951,7 @@ async function syncRaidState() {
       const own = data.rankings[slotKey];
       if (own) { progress.participated = true; progress.totalDamage = own.totalDamage || 0; }
       saveRaidData(data);
-      if (data.defeatedAt && !data.finalizedAt) scheduleRaidSettlement(data.settlesAt || data.defeatedAt + 10 * 60 * 1000);
+      if (data.defeatedAt && !data.finalizedAt) scheduleRaidSettlement(data.settlesAt || data.defeatedAt + 2 * 60 * 1000);
       else clearTimeout(raidSettlementTimer);
       save(true);
       raidSyncStatus = 'ready';
@@ -12121,9 +12170,9 @@ function renderRaidFinalResult() {
   if (!data.defeatedAt) { el.innerHTML = ''; el.classList.add('hidden'); return; }
   el.classList.remove('hidden');
   if (!data.finalizedAt) {
-    const secondsLeft = Math.max(0, Math.ceil(((data.settlesAt || data.defeatedAt + 10 * 60 * 1000) - Date.now()) / 1000));
+    const secondsLeft = Math.max(0, Math.ceil(((data.settlesAt || data.defeatedAt + 2 * 60 * 1000) - Date.now()) / 1000));
     const countdown = `${String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:${String(secondsLeft % 60).padStart(2, '0')}`;
-    el.innerHTML = `<b>🎉 レイド討伐！ 討伐後10分間、集計中</b><span>同時に挑戦していた戦闘を確認中。最終ランキング発表まで <strong>${countdown}</strong></span>`;
+    el.innerHTML = `<b>🎉 レイド討伐！ 討伐後2分間、集計中</b><span>同時に挑戦していた戦闘を確認中。最終ランキング発表まで <strong>${countdown}</strong></span>`;
     raidCountdownTimer = setTimeout(renderRaidFinalResult, 1000);
     return;
   }
@@ -12454,7 +12503,7 @@ async function startRaidBattle() {
   const enemy = {
     name: '【レイドボス】ダークバハムート',
     emoji: 'assets/raid/raid_boss_dark_bahamut_blueflame_pixel_v2.png',
-    maxHp: RAID_MAX_HP,
+    maxHp: (getRaidData().maxHp || 1000),
     hp: remainHp,
     atk: 100,
     def: 15,
@@ -12493,4 +12542,190 @@ async function startRaidBattle() {
     setTimeout(() => { openActionMenu(); }, 1000);
     CM.start();
   }, 100);
+}
+
+
+let adminGiftCheckSlotKey = null;
+let adminGiftChecking = false;
+
+function getGiftableItemDefs() {
+  return ITEM_DB.filter(d => !d.internal && d.id !== 'ticket');
+}
+
+function renderAdminGiftTargets() {
+  const listEl = $('admin-gift-target-list');
+  if (!listEl) return;
+  const selected = new Set(Array.from(listEl.querySelectorAll('input:checked'), input => input.value));
+  const search = ($('admin-gift-target-search')?.value || '').trim().toLocaleLowerCase('ja');
+  const slots = listSaveSlots().filter(slot => slot.name.toLocaleLowerCase('ja').includes(search));
+  if (slots.length === 0) {
+    listEl.innerHTML = `<div class="admin-gift-empty">${search ? 'あてはまる セーブデータが ありません。' : 'セーブデータが ありません。'}</div>`;
+    return;
+  }
+  listEl.innerHTML = slots.map(slot => `
+    <label class="admin-gift-target">
+      <input type="checkbox" class="admin-gift-target-cb" value="${escapeHtml(slot.key)}" data-name="${escapeHtml(slot.name)}" ${selected.has(slot.key) ? 'checked' : ''}>
+      <span>${escapeHtml(slot.name)}</span><small>Lv ${slot.lvl}${slot.key === TEST_SLOT_KEY ? '・テスト' : ''}</small>
+    </label>`).join('');
+  const all = $('admin-gift-select-all');
+  if (all) all.checked = slots.length > 0 && slots.every(slot => selected.has(slot.key));
+}
+
+async function renderAdminGiftHistory() {
+  const el = $('admin-gift-history-list');
+  if (!el || !window.AdminGiftAPI) return;
+  el.innerHTML = '<div class="admin-gift-empty">よみこみ中...</div>';
+  try {
+    const rows = await window.AdminGiftAPI.listRecent(30);
+    if (!rows.length) { el.innerHTML = '<div class="admin-gift-empty">まだ履歴がありません。</div>'; return; }
+    el.innerHTML = rows.map(r => `<div class="admin-gift-history-item">
+      <div class="meta">${new Date(r.createdAt).toLocaleString('ja-JP')} 宛先: <b>${escapeHtml(r.playerName)}</b></div>
+      <div class="details">
+        ${r.gold ? `<span>💰${Number(r.gold).toLocaleString()}G</span>` : ''}
+        ${(r.items || []).map(it => { const def = getItemTemplate(it.id); return `<span>${giftItemIconHtml(def)} ${def?.name||it.id} x${it.count}</span>`; }).join('')}
+      </div>
+      <div class="status">${r.claimed ? '✅ 受取済' : '⏳ 未受取'}</div>
+    </div>`).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="admin-gift-empty">エラーが発生しました</div>';
+  }
+}
+
+function giftItemIconHtml(def) {
+  if (!def) return '📦';
+  if (def.emoji) return def.emoji;
+  return '📦';
+}
+
+function addAdminGiftItemRow() {
+  const container = $('admin-gift-item-rows');
+  if (!container) return;
+  const row = document.createElement('div');
+  row.className = 'admin-gift-item-row';
+  row.innerHTML = `
+    <select class="admin-gift-item-select">
+      <option value="">-- アイテムをえらぶ --</option>
+      ${getGiftableItemDefs().map(d => `<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('')}
+    </select>
+    <input type="number" class="admin-gift-item-count" min="1" max="999" value="1" inputmode="numeric">
+    <button type="button" class="btn admin-gift-small-btn admin-gift-del-btn">×</button>
+  `;
+  row.querySelector('.admin-gift-del-btn').onclick = () => row.remove();
+  container.appendChild(row);
+}
+
+function renderAdminGiftPanel() {
+  renderAdminGiftTargets();
+  const rows = $('admin-gift-item-rows');
+  if (rows && !rows.children.length) addAdminGiftItemRow();
+  if (typeof syncCloudSaves === 'function') syncCloudSaves(() => renderAdminGiftTargets());
+}
+
+async function sendAdminGiftFromUI() {
+  const status = $('admin-gift-status');
+  const setStatus = (text, kind = '') => { if (status) { status.textContent = text; status.dataset.kind = kind; } };
+  const targets = Array.from(document.querySelectorAll('#admin-gift-target-list input:checked'), input => ({ slotKey: input.value, playerName: input.dataset.name || '' }));
+  const gold = Math.max(0, Math.floor(Number($('admin-gift-gold')?.value) || 0));
+  const itemMap = new Map();
+  document.querySelectorAll('#admin-gift-item-rows .admin-gift-item-row').forEach(row => {
+    const id = row.querySelector('select').value;
+    const count = Math.max(0, Math.floor(Number(row.querySelector('input').value) || 0));
+    if (id && count > 0) itemMap.set(id, (itemMap.get(id) || 0) + count);
+  });
+  const items = [...itemMap].map(([id, count]) => ({ id, count }));
+  const message = ($('admin-gift-message')?.value || '').trim();
+
+  if (!targets.length) { setStatus('宛先が ありません。', 'error'); return; }
+  if (!gold && !items.length) { setStatus('ゴールド か アイテムを 1つ以上 えらんでね。', 'error'); return; }
+  if (!window.AdminGiftAPI) { setStatus('クラウドに接続できません。', 'error'); return; }
+
+  const btn = $('btn-admin-gift-send');
+  if (btn) btn.disabled = true;
+  setStatus('そうしん中...', 'working');
+
+  try {
+    for (const target of targets) {
+      await window.AdminGiftAPI.send(target.slotKey, target.playerName, gold, items, message);
+    }
+    setStatus('プレゼントを おくりました！', 'success');
+    $('admin-gift-gold').value = 0;
+    $('admin-gift-item-rows').innerHTML = '';
+    addAdminGiftItemRow();
+    $('admin-gift-message').value = '';
+    renderAdminGiftHistory();
+  } catch (err) {
+    console.error('AdminGift send error:', err);
+    setStatus('エラーが おきました。', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function showAdminGiftNotice(gifts) {
+  document.querySelector('.admin-gift-notice-overlay')?.remove();
+  const totalGold = gifts.reduce((sum, gift) => sum + (Number(gift.gold) || 0), 0);
+  const itemTotals = new Map();
+  gifts.forEach(gift => (gift.items || []).forEach(item => itemTotals.set(item.id, (itemTotals.get(item.id) || 0) + (Number(item.count) || 0))));
+  const messages = gifts.map(gift => String(gift.message || '').trim()).filter(Boolean);
+  const rows = [
+    totalGold ? `<li><span class="admin-gift-item-icon">💰</span><span>ゴールド</span><b>${totalGold.toLocaleString()} G</b></li>` : '',
+    ...[...itemTotals].map(([id, count]) => {
+      const def = getItemTemplate(id);
+      return `<li>${giftItemIconHtml(def)}<span>${escapeHtml(def?.name || id)}</span><b>x ${count}</b></li>`;
+    })
+  ].join('');
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay admin-gift-notice-overlay active';
+  overlay.innerHTML = `
+    <section class="modal-panel admin-gift-notice" role="dialog" aria-modal="true" aria-labelledby="admin-gift-notice-title" style="max-width: 400px; text-align: center;">
+      <div class="admin-gift-notice-badge" aria-hidden="true" style="font-size: 3rem; margin-bottom: 10px;">🎁</div>
+      <h2 id="admin-gift-notice-title">プレゼントが とどいたよ！</h2>
+      <p class="admin-gift-notice-sub">管理者から プレゼントを うけとりました。</p>
+      <ul class="admin-gift-notice-list" style="text-align: left; list-style: none; padding: 0; margin: 15px 0;">${rows}</ul>
+      ${messages.length ? `<div class="admin-gift-notice-message" style="margin-bottom: 15px;">${messages.map(text => `<p>💌 ${escapeHtml(text)}</p>`).join('')}</div>` : ''}
+      <button type="button" class="btn btn-primary" id="btn-admin-gift-notice-ok">受け取る</button>
+    </section>`;
+  
+  const app = document.getElementById('app') || document.body;
+  app.appendChild(overlay);
+  
+  if (typeof SM !== 'undefined' && SM.playBeep) SM.playBeep('heal');
+  const ok = overlay.querySelector('#btn-admin-gift-notice-ok');
+  ok.onclick = () => overlay.remove();
+  ok.focus();
+}
+
+async function checkAdminGifts() {
+  if (!G || !currentSlotKey || adminGiftChecking || !window.AdminGiftAPI) return;
+  if (adminGiftCheckSlotKey === currentSlotKey) return;
+  
+  const game = G;
+  const slotKey = currentSlotKey;
+  adminGiftChecking = true;
+  try {
+    const pending = await window.AdminGiftAPI.fetchPending(slotKey);
+    const received = [];
+    for (const gift of pending) {
+      if (G !== game || currentSlotKey !== slotKey) break;
+      if (!await window.AdminGiftAPI.claim(gift.id)) continue;
+      game.player.gold = (game.player.gold || 0) + (Number(gift.gold) || 0);
+      (gift.items || []).forEach(item => {
+        if (item?.id && Number(item.count) > 0) addItem(item.id, Math.floor(Number(item.count)));
+      });
+      received.push(gift);
+    }
+    
+    if (G === game && currentSlotKey === slotKey) {
+      adminGiftCheckSlotKey = slotKey;
+    }
+    
+    if (!received.length) return;
+    save(true);
+    updateHud();
+    showAdminGiftNotice(received);
+  } catch (error) {
+    console.warn('[AdminGift] check failed:', error);
+  } finally {
+    adminGiftChecking = false;
+  }
 }

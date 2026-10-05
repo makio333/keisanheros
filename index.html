@@ -317,7 +317,7 @@
           <span class="hotspot-tag">🏠 自分の部屋</span>
         </button>
         <button id="hotspot-gacha" class="town-hotspot" style="left:50%; top:49%;">
-          <span class="hotspot-tag">🎰 ガチャ</span>
+          <span class="hotspot-tag">🎰 ガチャ<br><span style="font-size:0.75em; color:#ffd34e; font-weight:bold; text-shadow: 0 0 5px rgba(255,211,78,0.8); animation: pulse 1s infinite alternate;">UP! アップデート</span></span>
         </button>
         <button id="hotspot-synthesis" class="town-hotspot" style="left:36%; top:37%;">
           <span class="hotspot-tag">🌀 合成</span>
@@ -559,13 +559,14 @@
           <button class="window-nav-btn window-close-btn" onclick="document.getElementById('screen-raid-boss').classList.add('hidden')">✕ とじる</button>
           <h2 class="raid-menu-title">ワールド・レイドボス</h2>
           <button id="btn-raid-rules" class="btn" aria-expanded="false" aria-controls="raid-rules">レイドのルールは？</button>
+          <button id="btn-raid-history" class="btn" style="margin-left:8px;">��������</button>
         </header>
         <section id="raid-rules" class="raid-how-to-play hidden" aria-labelledby="raid-how-to-play-title">
           <h3 id="raid-how-to-play-title">レイドのルール</h3>
           <ol>
             <li><b>ちょうせんする</b><span>問題に答えると、ボスに攻撃！</span></li>
             <li><b>力を出しきろう</b><span>1問ごとに次のステージの問題へ。まちがえると反撃されるよ。自分のHPが0になっても、あたえたダメージは記録されるよ。</span></li>
-            <li><b>ランキングに挑戦</b><span>開催中は何回でも挑戦して、合計ダメージをのばそう！ ボス討伐後10分で最終順位を集計するよ。最後の一撃を与えた人（同時なら複数）には、撃破ボーナスチケットもプレゼント！参加するだけでマグマの背景ももらえるよ。</span></li>
+            <li><b>ランキングに挑戦</b><span>開催中は何回でも挑戦して、合計ダメージをのばそう！ ボス討伐後2分で最終順位を集計するよ。最後の一撃を与えた人（同時なら複数）には、撃破ボーナスチケットもプレゼント！参加するだけでマグマの背景ももらえるよ。</span></li>
           </ol>
           <p>ランキングとボスのHPは、ほかの端末とも共有されるよ。通信できないときの記録は、再接続すると送られるよ。</p>
         </section>
@@ -575,7 +576,7 @@
             </div>
             <div class="raid-boss-summary">
             <div class="raid-boss-stats">
-            <h3>暗黒竜 ダークバハムート</h3>
+            <h3 id="raid-boss-name">暗黒竜 ダークバハムート</h3>
             <div class="raid-hp-status">
               <div class="raid-hp-labels">
                 <span>総ダメージ</span>
@@ -1170,6 +1171,50 @@
                 <button id="btn-admin-get-gold" class="btn" style="background-color: var(--atb); color: var(--text);">💰 10,000ゴールド獲得</button>
                 <button id="btn-admin-delete-save" class="btn bad">🗂️ セーブデータを管理する</button>
               </div>
+
+              <!-- 管理者からのプレゼント -->
+              <div id="admin-gift-section" class="admin-gift-section">
+                <h3>🎁 プレゼントを送る</h3>
+                <p class="flavor">えらんだセーブデータに ゴールドやアイテムを送ります。受け取った人は 次にログインしたとき、画面の真ん中でお知らせされます。</p>
+
+                <div class="admin-gift-block">
+                  <div class="admin-gift-block-head">
+                    <b>送る相手</b>
+                    <label class="admin-gift-all"><input type="checkbox" id="admin-gift-select-all"> 全員をえらぶ</label>
+                  </div>
+                  <input id="admin-gift-target-search" type="search" placeholder="プレイヤー名で検索" autocomplete="off">
+                  <div id="admin-gift-target-list" class="admin-gift-target-list"></div>
+                </div>
+
+                <div class="admin-gift-block">
+                  <b>ゴールド</b>
+                  <div class="admin-gift-gold-row">
+                    <input id="admin-gift-gold" type="number" min="0" step="100" value="0" inputmode="numeric">
+                    <span>G</span>
+                  </div>
+                </div>
+
+                <div class="admin-gift-block">
+                  <div class="admin-gift-block-head">
+                    <b>アイテム</b>
+                    <button id="btn-admin-gift-add-item" type="button" class="btn admin-gift-small-btn">＋ アイテムを追加</button>
+                  </div>
+                  <div id="admin-gift-item-rows" class="admin-gift-item-rows"></div>
+                </div>
+
+                <div class="admin-gift-block">
+                  <b>メッセージ（任意）</b>
+                  <textarea id="admin-gift-message" maxlength="200" rows="2" placeholder="例：いつも がんばっているね！"></textarea>
+                </div>
+
+                <button id="btn-admin-gift-send" type="button" class="btn btn-primary admin-gift-send-btn">🎁 プレゼントを送る</button>
+                <div id="admin-gift-status" class="admin-gift-status" role="status" aria-live="polite"></div>
+
+                <details class="admin-gift-history">
+                  <summary>送信履歴</summary>
+                  <div id="admin-gift-history-list"></div>
+                </details>
+              </div>
             </div>
           </main>
         </div>
@@ -1300,6 +1345,17 @@
       </div>
     </div>
 
+
+
+  <div id="raid-history-modal" class="modal-overlay hidden">
+    <div class="modal-panel" style="max-width: 600px; max-height: 80vh; display: flex; flex-direction: column;">
+      <h2>レイド討伐履歴</h2>
+      <div id="raid-history-list" style="flex: 1; overflow-y: auto; margin-top: 15px;">
+        <div style="text-align:center;">よみこみ中...</div>
+      </div>
+      <button type="button" class="btn btn-primary" onclick="document.getElementById('raid-history-modal').classList.add('hidden')" style="margin-top: 15px;">とじる</button>
+    </div>
+  </div>
 
 </body>
 </html>
