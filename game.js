@@ -11952,6 +11952,7 @@ let raidRefreshRequested = false;
 let raidWatchStop = null;
 let raidStarting = false;
 let raidSettlementTimer = null;
+let raidLastSettleKick = 0;
 let raidCountdownTimer = null;
 
 function raidPlayerProfile() {
@@ -11980,6 +11981,24 @@ function scheduleRaidSettlement(settlesAt) {
     raidSettlementTimer = null;
     if (G) syncRaidState();
   }, Math.max(250, settlesAt - Date.now() + 250));
+}
+
+// 通信が固まっても集計同期が永久に待ち続けないよう、各API呼び出しに期限をつける
+function raidWithTimeout(promise, ms = 20000) {
+  let timer;
+  const timeout = new Promise((_, reject) => { timer = setTimeout(() => reject(Object.assign(new Error('Raid sync timed out'), { code: 'timeout' })), ms); });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+// 集計の締め切りを過ぎてもまだ確定していない時は、確定するまで定期的に再同期する
+function retryRaidSettlementIfPending() {
+  const data = getRaidData();
+  if (!G || !data.defeatedAt || data.finalizedAt) return;
+  clearTimeout(raidSettlementTimer);
+  raidSettlementTimer = setTimeout(() => {
+    raidSettlementTimer = null;
+    if (G) syncRaidState();
+  }, 15000);
 }
 
 async function syncRaidState() {
@@ -12016,7 +12035,7 @@ async function syncRaidState() {
       }
       const events = [...(progress.pendingEvents || [])];
       const localClaim = local.claimed?.[`${progress.bossId}:${slotKey}`] || (local.bossId === progress.bossId ? local.claimed?.[slotKey] : null);
-      const result = await window.RaidBossAPI.syncPlayer(slotKey, profile, { bossId: progress.bossId, participated: progress.participated, participationAt: progress.participationAt, legacyDamage: progress.legacyDamage || 0, events, claimed: localClaim?.applied ? localClaim : null, state: game });
+      const result = await raidWithTimeout(window.RaidBossAPI.syncPlayer(slotKey, profile, { bossId: progress.bossId, participated: progress.participated, participationAt: progress.participationAt, legacyDamage: progress.legacyDamage || 0, events, claimed: localClaim?.applied ? localClaim : null, state: game }));
       progress.pendingEvents = (progress.pendingEvents || []).filter(event => !result.acknowledged.includes(event.id));
       progress.challengeCount = Math.max(Number(progress.challengeCount) || 0, Number(result.challengeCount) || 0);
       if (Number.isFinite(result.challenge2SeedCount)) {
@@ -12049,13 +12068,15 @@ async function syncRaidState() {
         }
       }
       const cheerGold = await window.RaidBossAPI.receiveCheers(slotKey, game);
-      const global = await window.RaidBossAPI.getGlobalBoss();
+      const global = await raidWithTimeout(window.RaidBossAPI.getGlobalBoss());
       if (G !== game || currentSlotKey !== slotKey) return false;
-      const rankings = await window.RaidBossAPI.getRankings(result.bossId || global.bossId);
+      const rankings = await raidWithTimeout(window.RaidBossAPI.getRankings(result.bossId || global.bossId));
       let payout = null;
-      const rewardBossId = result.settledBossId || (global.finalizedAt ? global.bossId : null);
+      // 他の人の同期で既に次のボスへ進んでいても、自分が参加していた前のボスの報酬を受け取る
+      const staleBossId = progress.bossId && result.bossId && progress.bossId !== result.bossId && progress.participated ? progress.bossId : null;
+      const rewardBossId = result.settledBossId || (global.finalizedAt ? global.bossId : null) || staleBossId;
       if (rewardBossId && window.RaidBossAPI.settleReward) {
-        payout = await window.RaidBossAPI.settleReward(slotKey, rewardBossId, game);
+        payout = await raidWithTimeout(window.RaidBossAPI.settleReward(slotKey, rewardBossId, game));
         if (payout.eligible) {
           Object.assign(game, payout.state);
           if (game.raidProgress?.bossId === rewardBossId) game.raidProgress.pendingEvents = [];
@@ -12092,7 +12113,12 @@ async function syncRaidState() {
       const own = data.rankings[slotKey];
       if (own) { progress.participated = true; progress.totalDamage = own.totalDamage || 0; }
       saveRaidData(data);
-      if (data.defeatedAt && !data.finalizedAt) scheduleRaidSettlement(data.settlesAt || data.defeatedAt + 10 * 60 * 1000);
+      if (data.defeatedAt && !data.finalizedAt) {
+        const due = data.settlesAt || data.defeatedAt + 10 * 60 * 1000;
+        // 締め切り後もまだ確定していない場合は、15秒ごとに再確認する
+        if (Date.now() > due + 1000) retryRaidSettlementIfPending();
+        else scheduleRaidSettlement(due);
+      }
       else clearTimeout(raidSettlementTimer);
       save(true);
       raidSyncStatus = 'ready';
@@ -12100,6 +12126,7 @@ async function syncRaidState() {
     } catch (error) {
       console.warn('[Raid] Shared data unavailable; keeping local records:', error);
       if (G === game) raidSyncStatus = error.code === 'permission-denied' ? 'denied' : 'offline';
+      if (error.code !== 'permission-denied') retryRaidSettlementIfPending();
       return false;
     } finally {
       const refreshAgain = raidRefreshRequested;
@@ -12323,6 +12350,7 @@ function renderRaidFinalResult() {
     const secondsLeft = Math.max(0, Math.ceil(((data.settlesAt || data.defeatedAt + 10 * 60 * 1000) - Date.now()) / 1000));
     const countdown = `${String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:${String(secondsLeft % 60).padStart(2, '0')}`;
     el.innerHTML = `<b>🎉 レイド討伐！ 討伐後10分間、集計中</b><span>同時に挑戦していた戦闘を確認中。最終ランキング発表まで <strong>${countdown}</strong></span>`;
+    if (secondsLeft <= 0 && !raidSyncPromise && Date.now() - raidLastSettleKick > 10000) { raidLastSettleKick = Date.now(); syncRaidState(); }
     raidCountdownTimer = setTimeout(renderRaidFinalResult, 1000);
     return;
   }
