@@ -432,15 +432,7 @@ window.RaidBossAPI = {
       if (archivedBoss) transaction.set(doc(db, 'raidHistory', settledBossId), archivedBoss);
       
       if (archivedBoss || addedDamage > 0 || startsSettlement || finalize || !globalSnap.exists()) {
-        transaction.set(globalRef, {
-          bossLevel,
-          bossId,
-          maxHp,
-          totalDamageDealt: nextGlobalTotal,
-          ...(startsSettlement ? { defeatedAt: now, settlesAt: now + RAID_SETTLEMENT_MS } : {}),
-          ...(finisherSlotKeys.length ? { finisherSlotKeys } : {}),
-          ...(finalize ? { finalizedAt: now, finalRankings, finalHitters, startsAt: nextStartsAt } : {})
-        }, { merge: true });
+        const payload = { bossLevel, bossId, maxHp, totalDamageDealt: nextGlobalTotal, ...(startsSettlement ? { defeatedAt: now, settlesAt: now + RAID_SETTLEMENT_MS } : {}), ...(finisherSlotKeys.length ? { finisherSlotKeys } : {}), ...(finalize ? { finalizedAt: now, finalRankings, finalHitters, startsAt: nextStartsAt } : {}) }; if (archivedBoss) { payload.defeatedAt = null; payload.settlesAt = null; payload.finalizedAt = null; payload.finalRankings = null; payload.finalHitters = null; payload.startsAt = null; payload.finisherSlotKeys = []; } transaction.set(globalRef, payload, { merge: true });
       }
 
       if ((shouldGrantChallenge2 || shouldGrantChallenge3) && challengeSave?.player) {

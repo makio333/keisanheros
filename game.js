@@ -3140,7 +3140,7 @@ function updateHud(){
       const avatarStage = prefix === 'home' ? $('home-avatar-character-stage') : prefix === 'room' ? avatarEl.parentElement : null;
       if (prefix === 'home' && avatarStage && avDef?.image) avatarStage.style.setProperty('--character-foil-mask', `url("${av(avDef.image)}")`);
       avatarStage?.classList.toggle(prefix === 'home' ? 'holo-character-prism' : 'holo-character-stage', !!G.avatarHolographic);
-      if (prefix === 'home') avatarStage?.classList.toggle('avatar-fire-stage', isFireCharacter(G.avatar));
+      
       avatarEl.classList.toggle('avatar-holographic', !!G.avatarHolographic);
       if (avDef && avDef.image) {
         avatarEl.src = av(avDef.image);
@@ -5676,8 +5676,7 @@ function renderLoadSaveSlots(onSelectCb){
       <!-- 2段目: 立ち絵エリア -->
       <div class="save-slot-avatar-frame">
         <div class="save-slot-avatar-bg"></div>
-        <div class="save-slot-avatar-character${slot.avatarHolographic ? ' holo-character-prism' : ''}${isFireCharacter(slot.avatar) ? ' avatar-fire-stage' : ''}" style="${slot.avatarHolographic ? characterFoilMaskStyle(avatar.image) : ''}">
-          ${isFireCharacter(slot.avatar) ? '<div class="avatar-fire-aura" aria-hidden="true"></div>' : ''}
+        <div class="save-slot-avatar-character" style="${slot.avatarHolographic ? characterFoilMaskStyle(avatar.image) : ''}">
           <img src="${av(avatar.image)}" class="save-slot-avatar-img${slot.avatarHolographic ? ' avatar-holographic' : ''}" alt="キャラクター">
         </div>
       </div>
@@ -8306,7 +8305,7 @@ function renderSkinGachaControls(){
     collection.innerHTML = prizes.map(prize => {
       const artwork = prize.kind.includes('background')
         ? `<div class="skin-gacha-background-swatch${prize.holographic ? ' holo-artwork' : ''}" style="background-image:url('${av(prize.image)}')"></div>`
-        : `<span class="skin-gacha-character-art${prize.holographic ? ' holo-character-prism' : ''}${isFireCharacter(prize.id) ? ' avatar-fire-stage' : ''}" style="${prize.holographic ? characterFoilMaskStyle(prize.image) : ''}">${isFireCharacter(prize.id) ? '<span class="avatar-fire-aura" aria-hidden="true"></span>' : ''}<img src="${av(prize.image)}" alt=""></span>`;
+        : `<span class="skin-gacha-character-art" style="${prize.holographic ? characterFoilMaskStyle(prize.image) : ''}"><img src="${av(prize.image)}" alt=""></span>`;
       return `<button type="button" class="skin-gacha-theme skin-gacha-preview-trigger" data-preview-kind="${prize.kind}" data-preview-id="${prize.id}" aria-label="${prize.name}を拡大表示">${artwork}<b>${prize.name}</b><span class="${prize.owned ? 'is-owned' : ''}">${prize.owned ? '獲得済み' : '未獲得'}</span></button>`;
     }).join('');
   }
@@ -8329,7 +8328,7 @@ function openSkinGachaPreview(kind, id) {
   $('skin-gacha-preview-image').classList.toggle('avatar-holographic', holographic);
   const characterPreview = $('skin-gacha-preview-image').closest('.avatar-composite-preview, .avatar-selector-preview, .skin-gacha-preview-art');
   characterPreview?.classList.toggle('holo-character-prism', holographic && !isBackground);
-  characterPreview?.classList.toggle('avatar-fire-stage', isFireCharacter(hero.id) && !isBackground);
+  
   if (characterPreview) characterPreview.style.setProperty('--character-foil-mask', `url("${av(hero.image)}")`);
   applyAvatarBackground($('skin-gacha-preview-bg'), background.id, isBackground && holographic);
   $('skin-gacha-preview-image').classList.toggle('hidden', isBackground);
@@ -8407,7 +8406,7 @@ function showSkinGachaTenResults(prizes){
     const bg = prize.kind.includes('background');
     const hero = bg ? null : getHeroAvatar(prize.id);
     const image = bg ? prize.image : hero.image;
-    return `<article class="skin-gacha-ten-card"><div class="skin-gacha-ten-art${bg ? ' is-background-result' : ''}${prize.holographic && !bg ? ' holo-character-prism' : ''}${isFireCharacter(prize.id) && !bg ? ' avatar-fire-stage' : ''}" style="${prize.holographic && !bg ? characterFoilMaskStyle(image) : ''}">${isFireCharacter(prize.id) && !bg ? '<div class="avatar-fire-aura" aria-hidden="true"></div>' : ''}${bg ? '' : `<img class="${prize.holographic ? 'avatar-holographic' : ''}" src="${av(image)}" alt="">`}<div class="avatar-composite-bg${bg ? '' : ' hidden'}${prize.holographic && bg ? ' holo-artwork' : ''}" style="${bg ? `background-image:url('${av(image)}')` : ''}"></div></div><b>${prize.name}</b></article>`;
+    return `<article class="skin-gacha-ten-card"><div class="skin-gacha-ten-art${bg ? ' is-background-result' : ''}" style="${prize.holographic && !bg ? characterFoilMaskStyle(image) : ''}">${bg ? '' : `<img class="${prize.holographic ? 'avatar-holographic' : ''}" src="${av(image)}" alt="">`}<div class="avatar-composite-bg${bg ? '' : ' hidden'}${prize.holographic && bg ? ' holo-artwork' : ''}" style="${bg ? `background-image:url('${av(image)}')` : ''}"></div></div><b>${prize.name}</b></article>`;
   }).join('')}</div><p>${prizes.length < 10 ? `未所持の景品が残り${prizes.length}種のため、${prizes.length}回分を獲得しました。` : '重複なしで10種を獲得しました。'}</p><button class="btn btn-primary" type="button" data-action="close">ガチャへ戻る</button></section>`;
   document.body.appendChild(overlay);
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -8526,7 +8525,7 @@ function showSkinGachaSummon(prize, hero) {
       <button class="btn skin-gacha-skip" type="button" data-action="skip">スキップ</button>
     </div>
     <div class="skin-gacha-reveal-panel hidden">
-      <div class="skin-gacha-result-art${isHolographic ? ' is-holographic' : ''}${isHolographic && !isBackground ? ' holo-character-prism' : ''}${isFireCharacter(hero.id) && !isBackground ? ' avatar-fire-stage' : ''}${isBackground ? ' is-background-result' : ''}" style="${isHolographic && !isBackground ? characterFoilMaskStyle(hero.image) : ''}">${isFireCharacter(hero.id) && !isBackground ? '<div class="avatar-fire-aura" aria-hidden="true"></div>' : ''}<div class="avatar-composite-bg${isBackground ? ' hidden' : ''}"></div><img class="${isHolographic && !isBackground ? 'avatar-holographic' : ''}" src="${av(isBackground ? prize.image : hero.image)}" alt="${isBackground ? prize.name : hero.name}"></div>
+      <div class="skin-gacha-result-art${isHolographic ? ' is-holographic' : ''}${isBackground ? ' is-background-result' : ''}" style="${isHolographic && !isBackground ? characterFoilMaskStyle(hero.image) : ''}"><div class="avatar-composite-bg${isBackground ? ' hidden' : ''}"></div><img class="${isHolographic && !isBackground ? 'avatar-holographic' : ''}" src="${av(isBackground ? prize.image : hero.image)}" alt="${isBackground ? prize.name : hero.name}"></div>
       <div class="skin-gacha-result-details">
         <span class="skin-gacha-new-badge">NEW</span>
         <h2>${isBackground ? '新しい背景を獲得！' : '新しいスキンを獲得！'}</h2>
@@ -8974,7 +8973,7 @@ on('btn-raid-history', async () => {
 	    $('avatar-selector-preview-image').classList.toggle('avatar-holographic', pendingAvatarHolographic);
     const characterPreview = $('avatar-selector-preview-image').closest('.avatar-selector-preview');
     characterPreview?.classList.toggle('holo-character-prism', pendingAvatarHolographic);
-    characterPreview?.classList.toggle('avatar-fire-stage', isFireCharacter(avatar.id));
+    
     if (characterPreview) characterPreview.style.setProperty('--character-foil-mask', `url("${av(avatar.image)}")`);
 	    applyAvatarBackground($('avatar-selector-preview-bg'), background.id, pendingBackgroundHolographic);
 	    $('avatar-selector-character-name').textContent = `${pendingAvatarHolographic ? 'ホログラム・' : ''}${avatar.name}`;
