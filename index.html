@@ -263,7 +263,10 @@
             <!-- スキン表示用独立ウィンドウ（上に乗る） -->
             <div class="status-window avatar-window" id="home-avatar-window" style="margin-left: 10px; margin-bottom: -10px; z-index: 10; width: 130px; height: 160px;">
               <div class="avatar-bg"></div>
-              <img id="home-player-avatar" class="avatar-img-layer" src="" alt="" title="クリックでスキンを変更" style="display: none;">
+              <div class="avatar-character-stage" id="home-avatar-character-stage">
+                <div class="avatar-fire-aura" aria-hidden="true"></div>
+                <img id="home-player-avatar" class="avatar-img-layer" src="" alt="" title="クリックでスキンを変更" style="display: none;">
+              </div>
             </div>
 
             <!-- 従来のステータス情報 -->
@@ -497,10 +500,12 @@
           <div class="gacha-summon-bar">
             <div class="skin-gacha-balance"><img class="skin-ticket-icon" src="assets/items/background_skin_ticket.png" alt="背景スキンガチャチケット">所持チケット <b id="skin-gacha-tickets">0</b> 枚</div>
           <div class="skin-gacha-draw-actions">
-            <button id="btn-skin-gacha-draw" class="btn btn-primary" type="button">500Gで1回引く</button>
-            <button id="btn-skin-gacha-ticket" class="btn" type="button">チケット1枚で1回引く</button>
+              <button id="btn-skin-gacha-draw" class="btn btn-primary" type="button">1000Gで1回引く</button>
+              <button id="btn-skin-gacha-ticket" class="btn" type="button">チケット1枚で1回引く</button>
+              <button id="btn-skin-gacha-ten-ticket" class="btn" type="button">10連チケット <b id="skin-gacha-ten-tickets">0</b> 枚</button>
           </div>
           <div id="skin-gacha-status" class="flavor" aria-live="polite"></div>
+          <div id="skin-gacha-rates" class="skin-gacha-rates" aria-label="スキンガチャの排出率">通常スキン 99% ／ ホログラム仕様 1%</div>
           </div>
           <div class="gacha-collection-heading"><h3>ラインナップ</h3><span>キャラクター・背景</span></div>
           <div id="skin-gacha-collection" class="skin-gacha-collection" aria-live="polite"></div>
@@ -529,6 +534,7 @@
         <h3 id="skin-gacha-preview-title"></h3>
         <div class="skin-gacha-preview-art">
           <div id="skin-gacha-preview-bg" class="avatar-composite-bg"></div>
+          <div class="avatar-fire-aura" aria-hidden="true"></div>
           <img id="skin-gacha-preview-image" src="" alt="">
         </div>
         <div id="equipment-preview-rarities" class="equipment-preview-rarities hidden" role="group" aria-label="表示するレアリティ">
@@ -566,7 +572,7 @@
           <ol>
             <li><b>ちょうせんする</b><span>問題に答えると、ボスに攻撃！</span></li>
             <li><b>力を出しきろう</b><span>1問ごとに次のステージの問題へ。まちがえると反撃されるよ。自分のHPが0になっても、あたえたダメージは記録されるよ。</span></li>
-            <li><b>ランキングに挑戦</b><span>開催中は何回でも挑戦して、合計ダメージをのばそう！ ボス討伐後2分で最終順位を集計するよ。最後の一撃を与えた人（同時なら複数）には、撃破ボーナスチケットもプレゼント！参加するだけでマグマの背景ももらえるよ。</span></li>
+            <li><b>ランキングに挑戦</b><span>開催中は何回でも挑戦して、合計ダメージをのばそう！ ボス討伐後10分で最終順位を集計し、集計が終わると次のレベルがすぐ始まるよ。最後の一撃を与えた人（同時なら複数）には、撃破ボーナスチケットもプレゼント！参加するだけでマグマの背景ももらえるよ。</span></li>
           </ol>
           <p>ランキングとボスのHPは、ほかの端末とも共有されるよ。通信できないときの記録は、再接続すると送られるよ。</p>
         </section>
@@ -1326,6 +1332,7 @@
           <section class="avatar-selector-preview-column" aria-label="組み合わせプレビュー">
             <div class="avatar-selector-preview">
               <div id="avatar-selector-preview-bg" class="avatar-composite-bg"></div>
+              <div class="avatar-fire-aura" aria-hidden="true"></div>
               <img id="avatar-selector-preview-image" src="" alt="選択中のキャラクター">
               <span class="avatar-selector-preview-label">プレビュー</span>
             </div>

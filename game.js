@@ -92,6 +92,10 @@ function av(path){
   }
   return path + (path.includes('?') ? '&' : '?') + 'v=' + ASSET_V;
 }
+function characterFoilMaskStyle(image){
+  return `--character-foil-mask:url("${av(image)}")`;
+}
+function isFireCharacter(id){ return String(id || '').startsWith('skin_fire_lancer_'); }
 
 /* ==========================================================
    サウンド管理 (Web Audio API)
@@ -2273,14 +2277,15 @@ function getSelectableAvatarBackgrounds() {
   return AVATAR_BACKGROUNDS.filter(background => unlocked.includes(background.id));
 }
 
-function applyAvatarBackground(element, backgroundId) {
+function applyAvatarBackground(element, backgroundId, holographic) {
   if (!element) return;
   const background = getAvatarBackground(backgroundId);
+  const useHolographic = holographic ?? (!!G?.avatarBackgroundHolographic && background.id === G.avatarBackground);
   element.style.backgroundColor = background.color;
   element.style.backgroundImage = background.image ? `url("${av(background.image)}")` : '';
   element.style.backgroundSize = 'cover';
   element.style.backgroundPosition = 'center';
-  element.classList.toggle('holo-artwork', !!(G?.avatarBackgroundHolographic && background.id === G.avatarBackground));
+  element.classList.toggle('holo-background-surface', !!useHolographic);
 }
 
 let pendingAvatarId = null;
@@ -2534,6 +2539,7 @@ function newGameState(name, avatarId){
     stageRewardClaims: {},
     areaBossClearCounts: {},
     skinGachaTickets: 0,
+    skinGachaTenPullTickets: 0,
     skinGachaGender: 'female',
     skinGachaCategory: 'female',
     rescued: [],
@@ -2663,6 +2669,7 @@ function loadSlot(key, options = {}){
     if (!G.stageRewardClaims) G.stageRewardClaims = {};
     if (!G.areaBossClearCounts) G.areaBossClearCounts = {};
     if (!Number.isFinite(G.skinGachaTickets)) G.skinGachaTickets = 0;
+    if (!Number.isFinite(G.skinGachaTenPullTickets)) G.skinGachaTenPullTickets = 0;
     if (!Array.isArray(G.holographicSkins)) G.holographicSkins = [];
     if (!Array.isArray(G.holographicAvatarBackgrounds)) G.holographicAvatarBackgrounds = [];
     G.avatarHolographic = !!G.avatarHolographic && G.holographicSkins.includes(G.avatar);
@@ -2772,6 +2779,8 @@ function listSaveSlots(options = {}){
         name: data.playerName || 'ぼうけんしゃ',
         avatar: data.avatar || (data.player && data.player.avatar) || HERO_AVATARS[0].id,
         avatarBackground: data.avatarBackground || 'default',
+        avatarHolographic: !!data.avatarHolographic,
+        avatarBackgroundHolographic: !!data.avatarBackgroundHolographic,
         lvl: p.lvl || 1,
         gold: p.gold || 0,
         baseStats: {
@@ -3125,12 +3134,14 @@ function updateHud(){
     const avatarEl = $(`${prefix}-player-avatar`);
 
     if (avatarEl) {
-      if (prefix === 'home') applyAvatarBackground($('home-avatar-window')?.querySelector('.avatar-bg'), G.avatarBackground);
+      if (prefix === 'home') applyAvatarBackground($('home-avatar-window')?.querySelector('.avatar-bg'), G.avatarBackground, G.avatarBackgroundHolographic);
       if (prefix === 'room') applyAvatarBackground(avatarEl, G.avatarBackground);
-      const avatarStage = prefix === 'home' ? $('home-avatar-window') : prefix === 'room' ? avatarEl.parentElement : null;
-      avatarStage?.classList.toggle('holo-character-stage', !!G.avatarHolographic);
-      avatarEl.classList.toggle('avatar-holographic', !!G.avatarHolographic);
       const avDef = getHeroAvatar(G.avatar);
+      const avatarStage = prefix === 'home' ? $('home-avatar-character-stage') : prefix === 'room' ? avatarEl.parentElement : null;
+      if (prefix === 'home' && avatarStage && avDef?.image) avatarStage.style.setProperty('--character-foil-mask', `url("${av(avDef.image)}")`);
+      avatarStage?.classList.toggle(prefix === 'home' ? 'holo-character-prism' : 'holo-character-stage', !!G.avatarHolographic);
+      if (prefix === 'home') avatarStage?.classList.toggle('avatar-fire-stage', isFireCharacter(G.avatar));
+      avatarEl.classList.toggle('avatar-holographic', !!G.avatarHolographic);
       if (avDef && avDef.image) {
         avatarEl.src = av(avDef.image);
         avatarEl.style.display = 'block';
@@ -5665,7 +5676,10 @@ function renderLoadSaveSlots(onSelectCb){
       <!-- 2段目: 立ち絵エリア -->
       <div class="save-slot-avatar-frame">
         <div class="save-slot-avatar-bg"></div>
-        <img src="${av(avatar.image)}" class="save-slot-avatar-img" alt="キャラクター">
+        <div class="save-slot-avatar-character${slot.avatarHolographic ? ' holo-character-prism' : ''}${isFireCharacter(slot.avatar) ? ' avatar-fire-stage' : ''}" style="${slot.avatarHolographic ? characterFoilMaskStyle(avatar.image) : ''}">
+          ${isFireCharacter(slot.avatar) ? '<div class="avatar-fire-aura" aria-hidden="true"></div>' : ''}
+          <img src="${av(avatar.image)}" class="save-slot-avatar-img${slot.avatarHolographic ? ' avatar-holographic' : ''}" alt="キャラクター">
+        </div>
       </div>
 
       <!-- 3段目: ステータス縦並び ＆ 装備アイコン縦並び -->
@@ -5727,7 +5741,7 @@ function renderLoadSaveSlots(onSelectCb){
       </div>
     `;
 
-    applyAvatarBackground(card.querySelector('.save-slot-avatar-bg'), slot.avatarBackground);
+    applyAvatarBackground(card.querySelector('.save-slot-avatar-bg'), slot.avatarBackground, slot.avatarBackgroundHolographic);
     const btn = card.querySelector('.btn-save-select');
     if (btn) {
       btn.onclick = () => {
@@ -8239,7 +8253,8 @@ function renderEquipmentGachaPreviewRarity() {
   $('skin-gacha-preview-description').textContent = `★${equipmentPreviewRarity} ${rarityNames[equipmentPreviewRarity]} / ${SLOT_LABELS[db.slot]} / コスト ${equipCost(db, equipmentPreviewRarity)} / ${Object.entries(rarityStats).map(([key, value]) => `${names[key]} +${value}`).join('・')}`;
 }
 
-const SKIN_GACHA_GOLD_COST = 500;
+const SKIN_GACHA_GOLD_COST = 1000;
+const SKIN_GACHA_HOLOGRAM_RATE = 0.01;
 const SKIN_GACHA_TICKET_DROP_RATES = { normal: 0.1, boss: 0.25 };
 
 function rollAdventureSkinGachaTicket(enemy) {
@@ -8268,10 +8283,21 @@ function getSkinGachaPrizes() {
 function renderSkinGachaControls(){
   const prizes = getSkinGachaPrizes();
   const locked = prizes.filter(prize => !prize.owned);
+  const hasStandard = locked.some(prize => !prize.holographic);
+  const hasHolographic = locked.some(prize => prize.holographic);
   $('skin-gacha-tickets').textContent = G.skinGachaTickets || 0;
+  $('skin-gacha-ten-tickets').textContent = G.skinGachaTenPullTickets || 0;
   $('gacha-current-gold').textContent = G.player.gold;
+  const rates = $('skin-gacha-rates');
+  if (rates) rates.textContent = !locked.length
+    ? 'ラインナップをすべて獲得済み'
+    : hasStandard && hasHolographic
+      ? `通常スキン ${Math.round((1 - SKIN_GACHA_HOLOGRAM_RATE) * 100)}% ／ ホログラム仕様 ${SKIN_GACHA_HOLOGRAM_RATE * 100}%`
+      : hasHolographic ? 'ホログラム仕様 100%（通常スキンは獲得済み）' : '通常スキン 100%（ホログラム仕様は獲得済み）';
+  $('btn-skin-gacha-draw').textContent = `${SKIN_GACHA_GOLD_COST}Gで1回引く`;
   $('btn-skin-gacha-draw').disabled = !locked.length || G.player.gold < SKIN_GACHA_GOLD_COST;
   $('btn-skin-gacha-ticket').disabled = !locked.length || !(G.skinGachaTickets > 0);
+  $('btn-skin-gacha-ten-ticket').disabled = !locked.length || !(G.skinGachaTenPullTickets > 0);
   $('skin-gacha-status').textContent = locked.length
     ? `キャラ・背景の未所持：${locked.length}種。重複は出ません。`
     : 'キャラクターと背景をすべて獲得しました！';
@@ -8280,7 +8306,7 @@ function renderSkinGachaControls(){
     collection.innerHTML = prizes.map(prize => {
       const artwork = prize.kind.includes('background')
         ? `<div class="skin-gacha-background-swatch${prize.holographic ? ' holo-artwork' : ''}" style="background-image:url('${av(prize.image)}')"></div>`
-        : `<span class="skin-gacha-character-art${prize.holographic ? ' holo-artwork' : ''}"><img src="${av(prize.image)}" alt=""></span>`;
+        : `<span class="skin-gacha-character-art${prize.holographic ? ' holo-character-prism' : ''}${isFireCharacter(prize.id) ? ' avatar-fire-stage' : ''}" style="${prize.holographic ? characterFoilMaskStyle(prize.image) : ''}">${isFireCharacter(prize.id) ? '<span class="avatar-fire-aura" aria-hidden="true"></span>' : ''}<img src="${av(prize.image)}" alt=""></span>`;
       return `<button type="button" class="skin-gacha-theme skin-gacha-preview-trigger" data-preview-kind="${prize.kind}" data-preview-id="${prize.id}" aria-label="${prize.name}を拡大表示">${artwork}<b>${prize.name}</b><span class="${prize.owned ? 'is-owned' : ''}">${prize.owned ? '獲得済み' : '未獲得'}</span></button>`;
     }).join('');
   }
@@ -8301,9 +8327,11 @@ function openSkinGachaPreview(kind, id) {
   $('skin-gacha-preview-image').src = av(hero.image);
   $('skin-gacha-preview-image').alt = hero.name;
   $('skin-gacha-preview-image').classList.toggle('avatar-holographic', holographic);
-  $('skin-gacha-preview-image').closest('.avatar-composite-preview, .avatar-selector-preview, .skin-gacha-preview-art')?.classList.toggle('holo-character-stage', holographic && !isBackground);
-  applyAvatarBackground($('skin-gacha-preview-bg'), background.id);
-  $('skin-gacha-preview-bg').classList.toggle('holo-artwork', isBackground && holographic);
+  const characterPreview = $('skin-gacha-preview-image').closest('.avatar-composite-preview, .avatar-selector-preview, .skin-gacha-preview-art');
+  characterPreview?.classList.toggle('holo-character-prism', holographic && !isBackground);
+  characterPreview?.classList.toggle('avatar-fire-stage', isFireCharacter(hero.id) && !isBackground);
+  if (characterPreview) characterPreview.style.setProperty('--character-foil-mask', `url("${av(hero.image)}")`);
+  applyAvatarBackground($('skin-gacha-preview-bg'), background.id, isBackground && holographic);
   $('skin-gacha-preview-image').classList.toggle('hidden', isBackground);
   $('skin-gacha-preview-modal').classList.remove('hidden');
 }
@@ -8320,7 +8348,10 @@ function doSkinGacha(payment = 'gold'){
     if (G.player.gold < SKIN_GACHA_GOLD_COST) return;
     G.player.gold -= SKIN_GACHA_GOLD_COST;
   }
-  const prize = pick(locked);
+  const standardLocked = locked.filter(prize => !prize.holographic);
+  const holographicLocked = locked.filter(prize => prize.holographic);
+  const drawHolographic = holographicLocked.length > 0 && (!standardLocked.length || Math.random() < SKIN_GACHA_HOLOGRAM_RATE);
+  const prize = pick(drawHolographic ? holographicLocked : standardLocked);
   const isBackground = prize.kind.includes('background');
   const hero = isBackground ? getHeroAvatar(G.avatar) : prize;
   if (prize.holographic && isBackground) {
@@ -8334,6 +8365,65 @@ function doSkinGacha(payment = 'gold'){
   save();
   renderSkinGachaControls();
   showSkinGachaSummon(prize, hero);
+}
+
+function doSkinGachaTenPull(){
+  if (!G || equipmentGachaRolling || document.querySelector('.skin-gacha-reveal') || document.querySelector('.gacha-reveal-overlay') || !(G.skinGachaTenPullTickets > 0)) return;
+  const available = getSkinGachaPrizes().filter(prize => !prize.owned);
+  if (!available.length) return;
+  G.skinGachaTenPullTickets--;
+  const results = [];
+  while (available.length && results.length < 10) {
+    const standard = available.filter(prize => !prize.holographic);
+    const holographic = available.filter(prize => prize.holographic);
+    const drawHolographic = holographic.length > 0 && (!standard.length || Math.random() < SKIN_GACHA_HOLOGRAM_RATE);
+    const pool = drawHolographic ? holographic : standard;
+    const prize = pick(pool);
+    results.push(prize);
+    available.splice(available.findIndex(item => item.kind === prize.kind && item.id === prize.id), 1);
+    if (prize.holographic && prize.kind.includes('background')) {
+      G.holographicAvatarBackgrounds = [...new Set([...(G.holographicAvatarBackgrounds || []), prize.id])];
+      G.unlockedAvatarBackgrounds = [...new Set([...(G.unlockedAvatarBackgrounds || ['default']), prize.id])];
+    } else if (prize.holographic) {
+      G.holographicSkins = [...new Set([...(G.holographicSkins || []), prize.id])];
+      G.unlockedSkins = [...new Set([...(G.unlockedSkins || []), prize.id])];
+    } else if (prize.kind.includes('background')) G.unlockedAvatarBackgrounds = [...new Set([...(G.unlockedAvatarBackgrounds || ['default']), prize.id])];
+    else G.unlockedSkins = [...new Set([...(G.unlockedSkins || []), prize.id])];
+  }
+  save(true);
+  renderSkinGachaControls();
+  showSkinGachaTenResults(results);
+}
+
+function showSkinGachaTenResults(prizes){
+  const overlay = document.createElement('div');
+  overlay.className = 'skin-gacha-reveal skin-gacha-ten-reveal';
+  overlay.dataset.phase = 'summoning';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', '背景スキンガチャ10連の結果');
+  overlay.style.backgroundImage = `url("${av('assets/characters/bg_skin_starlight.png')}")`;
+  overlay.innerHTML = `<div class="skin-gacha-summoning"><canvas class="skin-gacha-magic" aria-hidden="true"></canvas><div class="skin-gacha-summon-label" role="status">10連召喚中…</div><button class="btn skin-gacha-skip" type="button" data-action="reveal">スキップ</button></div><section class="skin-gacha-ten-results hidden"><h2>10連ガチャ結果</h2><div class="skin-gacha-ten-grid">${prizes.map(prize => {
+    const bg = prize.kind.includes('background');
+    const hero = bg ? null : getHeroAvatar(prize.id);
+    const image = bg ? prize.image : hero.image;
+    return `<article class="skin-gacha-ten-card"><div class="skin-gacha-ten-art${bg ? ' is-background-result' : ''}${prize.holographic && !bg ? ' holo-character-prism' : ''}${isFireCharacter(prize.id) && !bg ? ' avatar-fire-stage' : ''}" style="${prize.holographic && !bg ? characterFoilMaskStyle(image) : ''}">${isFireCharacter(prize.id) && !bg ? '<div class="avatar-fire-aura" aria-hidden="true"></div>' : ''}${bg ? '' : `<img class="${prize.holographic ? 'avatar-holographic' : ''}" src="${av(image)}" alt="">`}<div class="avatar-composite-bg${bg ? '' : ' hidden'}${prize.holographic && bg ? ' holo-artwork' : ''}" style="${bg ? `background-image:url('${av(image)}')` : ''}"></div></div><b>${prize.name}</b></article>`;
+  }).join('')}</div><p>${prizes.length < 10 ? `未所持の景品が残り${prizes.length}種のため、${prizes.length}回分を獲得しました。` : '重複なしで10種を獲得しました。'}</p><button class="btn btn-primary" type="button" data-action="close">ガチャへ戻る</button></section>`;
+  document.body.appendChild(overlay);
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const stopMagic = startSkinGachaMagic(overlay.querySelector('canvas'), reducedMotion);
+  let timer;
+  const reveal = () => {
+    if (overlay.dataset.phase !== 'summoning') return;
+    clearTimeout(timer); stopMagic(); overlay.dataset.phase = 'revealed';
+    overlay.querySelector('.skin-gacha-summoning').classList.add('hidden');
+    overlay.querySelector('.skin-gacha-ten-results').classList.remove('hidden');
+    SM.play('se_gacha_result2'); overlay.querySelector('[data-action="close"]').focus({ preventScroll: true });
+  };
+  overlay.querySelector('[data-action="reveal"]').onclick = reveal;
+  overlay.querySelector('[data-action="close"]').onclick = () => { if (overlay.dataset.phase !== 'revealed') return; overlay.remove(); showGacha(); $('btn-skin-gacha-ten-ticket')?.focus({ preventScroll: true }); };
+  timer = setTimeout(reveal, reducedMotion ? 300 : 2600);
+  SM.play('se_decide');
 }
 
 function startSkinGachaMagic(canvas, reducedMotion) {
@@ -8436,7 +8526,7 @@ function showSkinGachaSummon(prize, hero) {
       <button class="btn skin-gacha-skip" type="button" data-action="skip">スキップ</button>
     </div>
     <div class="skin-gacha-reveal-panel hidden">
-      <div class="skin-gacha-result-art${isHolographic ? ' is-holographic holo-artwork' : ''}${isHolographic && !isBackground ? ' holo-character-stage' : ''}${isBackground ? ' is-background-result' : ''}"><div class="avatar-composite-bg${isBackground ? ' hidden' : ''}"></div><img class="${isHolographic && !isBackground ? 'avatar-holographic' : ''}" src="${av(isBackground ? prize.image : hero.image)}" alt="${isBackground ? prize.name : hero.name}"></div>
+      <div class="skin-gacha-result-art${isHolographic ? ' is-holographic' : ''}${isHolographic && !isBackground ? ' holo-character-prism' : ''}${isFireCharacter(hero.id) && !isBackground ? ' avatar-fire-stage' : ''}${isBackground ? ' is-background-result' : ''}" style="${isHolographic && !isBackground ? characterFoilMaskStyle(hero.image) : ''}">${isFireCharacter(hero.id) && !isBackground ? '<div class="avatar-fire-aura" aria-hidden="true"></div>' : ''}<div class="avatar-composite-bg${isBackground ? ' hidden' : ''}"></div><img class="${isHolographic && !isBackground ? 'avatar-holographic' : ''}" src="${av(isBackground ? prize.image : hero.image)}" alt="${isBackground ? prize.name : hero.name}"></div>
       <div class="skin-gacha-result-details">
         <span class="skin-gacha-new-badge">NEW</span>
         <h2>${isBackground ? '新しい背景を獲得！' : '新しいスキンを獲得！'}</h2>
@@ -8882,9 +8972,11 @@ on('btn-raid-history', async () => {
 	    $('avatar-selector-preview-image').src = av(avatar.image);
 	    $('avatar-selector-preview-image').alt = avatar.name;
 	    $('avatar-selector-preview-image').classList.toggle('avatar-holographic', pendingAvatarHolographic);
-	    $('avatar-selector-preview-image').closest('.avatar-selector-preview')?.classList.toggle('holo-character-stage', pendingAvatarHolographic);
-	    applyAvatarBackground($('avatar-selector-preview-bg'), background.id);
-	    $('avatar-selector-preview-bg').classList.toggle('holo-artwork', pendingBackgroundHolographic);
+    const characterPreview = $('avatar-selector-preview-image').closest('.avatar-selector-preview');
+    characterPreview?.classList.toggle('holo-character-prism', pendingAvatarHolographic);
+    characterPreview?.classList.toggle('avatar-fire-stage', isFireCharacter(avatar.id));
+    if (characterPreview) characterPreview.style.setProperty('--character-foil-mask', `url("${av(avatar.image)}")`);
+	    applyAvatarBackground($('avatar-selector-preview-bg'), background.id, pendingBackgroundHolographic);
 	    $('avatar-selector-character-name').textContent = `${pendingAvatarHolographic ? 'ホログラム・' : ''}${avatar.name}`;
 	    $('avatar-selector-background-name').textContent = `${pendingBackgroundHolographic ? 'ホログラム・' : ''}${background.name}`;
 	  };
@@ -8917,6 +9009,10 @@ on('btn-raid-history', async () => {
 	        const image = document.createElement('img');
 	        image.src = av(avatar.image);
 	        image.alt = '';
+	        if (isFireCharacter(avatar.id)) {
+	          option.classList.add('avatar-fire-stage');
+	          option.insertAdjacentHTML('afterbegin', '<span class="avatar-fire-aura" aria-hidden="true"></span>');
+	        }
 	        const name = document.createElement('span');
 	        name.textContent = avatar.name;
 	        option.append(image, name);
@@ -8927,7 +9023,13 @@ on('btn-raid-history', async () => {
 	          holoOption.classList.toggle('is-active', (pendingAvatarId || G.avatar) === avatar.id && pendingAvatarHolographic);
 	          holoOption.setAttribute('aria-pressed', String((pendingAvatarId || G.avatar) === avatar.id && pendingAvatarHolographic));
 	          const holoArt = document.createElement('span');
-	          holoArt.className = 'avatar-selector-holo-art holo-artwork';
+          holoArt.className = 'avatar-selector-holo-art holo-character-prism';
+          holoArt.style.setProperty('--character-foil-mask', `url("${av(avatar.image)}")`);
+	          if (isFireCharacter(avatar.id)) {
+	            holoOption.querySelector('.avatar-fire-aura')?.remove();
+	            holoArt.classList.add('avatar-fire-stage');
+	            holoArt.insertAdjacentHTML('afterbegin', '<span class="avatar-fire-aura" aria-hidden="true"></span>');
+	          }
 	          const holoImage = holoOption.querySelector('img');
 	          holoImage.classList.add('avatar-holographic');
 	          holoArt.appendChild(holoImage);
@@ -9046,6 +9148,7 @@ on('btn-raid-history', async () => {
   });
   on('btn-skin-gacha-draw', () => doSkinGacha('gold'));
   on('btn-skin-gacha-ticket', () => doSkinGacha('ticket'));
+  on('btn-skin-gacha-ten-ticket', doSkinGachaTenPull);
   on('btn-skin-gacha-preview-close', () => $('skin-gacha-preview-modal').classList.add('hidden'));
   $('equipment-preview-rarities')?.addEventListener('click', event => {
     const button = event.target.closest('button[data-rarity]');
@@ -11841,8 +11944,8 @@ function printAreaBoss(areaId) {
    レイドボス機能（クラウド共有＋未送信記録のローカル保存）
    ========================================================== */
 const RAID_BOSS_ID = 'boss1';
-const RAID_MAX_HP = 1000;
 const RAID_STORAGE_KEY = 'raid_boss_v1_boss1';
+function getRaidMaxHp() { return Math.max(1, Number(getRaidData().maxHp) || 1000); }
 let raidSyncStatus = 'idle';
 let raidSyncPromise = null;
 let raidSyncSlotKey = null;
@@ -11862,11 +11965,11 @@ function raidPlayerProfile() {
   return { playerName: G.playerName || '勇者', avatar: G.avatar, avatarBackground: G.avatarBackground || 'default', avatarHolographic: !!G.avatarHolographic, avatarBackgroundHolographic: !!G.avatarBackgroundHolographic, level: G.player?.lvl || 1, equipment };
 }
 
-function raidPlayerProgress() {
-  if (!G.raidProgress || G.raidProgress.bossId !== RAID_BOSS_ID) {
+function raidPlayerProgress(bossId = getRaidData().bossId || RAID_BOSS_ID) {
+  if (!G.raidProgress || G.raidProgress.bossId !== bossId) {
     const local = getRaidData();
     const entry = local.rankings?.[currentSlotKey];
-    G.raidProgress = { bossId: RAID_BOSS_ID, participated: !!entry || (G.unlockedAvatarBackgrounds || []).includes('raid_magma'), participationAt: 0, legacyDamage: local.cloudSynced ? 0 : (entry?.totalDamage || 0), totalDamage: entry?.totalDamage || 0, pendingEvents: [] };
+    G.raidProgress = { bossId, participated: !!entry, participationAt: 0, legacyDamage: local.cloudSynced ? 0 : (entry?.totalDamage || 0), totalDamage: entry?.totalDamage || 0, pendingEvents: [] };
   }
   return G.raidProgress;
 }
@@ -11890,7 +11993,7 @@ async function syncRaidState() {
   }
   const game = G;
   const slotKey = currentSlotKey;
-  const progress = raidPlayerProgress();
+  let progress = raidPlayerProgress();
   const profile = raidPlayerProfile();
   const local = getRaidData();
   if (!local.cloudSynced && !local.legacyImports) {
@@ -11913,18 +12016,50 @@ async function syncRaidState() {
         saveRaidData(latest);
       }
       const events = [...(progress.pendingEvents || [])];
-      const result = await window.RaidBossAPI.syncPlayer(slotKey, profile, { participated: progress.participated, legacyDamage: progress.legacyDamage || 0, events, claimed: local.claimed?.[slotKey]?.applied ? local.claimed[slotKey] : null });
+      const localClaim = local.claimed?.[`${progress.bossId}:${slotKey}`] || (local.bossId === progress.bossId ? local.claimed?.[slotKey] : null);
+      const result = await window.RaidBossAPI.syncPlayer(slotKey, profile, { bossId: progress.bossId, participated: progress.participated, participationAt: progress.participationAt, legacyDamage: progress.legacyDamage || 0, events, claimed: localClaim?.applied ? localClaim : null, state: game });
       progress.pendingEvents = (progress.pendingEvents || []).filter(event => !result.acknowledged.includes(event.id));
+      progress.challengeCount = Math.max(Number(progress.challengeCount) || 0, Number(result.challengeCount) || 0);
+      if (Number.isFinite(result.challenge2SeedCount)) {
+        game.items ||= [];
+        const seed = game.items.find(item => item.id === 'cost_seed');
+        if (seed) seed.count = Math.max(Number(seed.count) || 0, result.challenge2SeedCount);
+        else game.items.push({ uid: Number.isFinite(game.nextUid) ? game.nextUid++ : Date.now(), id: 'cost_seed', count: result.challenge2SeedCount });
+        game.raidChallenge2SeedNotice = true;
+      }
+      if (Number.isFinite(result.challenge3TicketCount)) {
+        game.skinGachaTenPullTickets = Math.max(Number(game.skinGachaTenPullTickets) || 0, result.challenge3TicketCount);
+        game.raidChallenge3TicketNotice = true;
+        const resultPanel = document.querySelector('.raid-result-panel');
+        if (resultPanel) {
+          const notice = document.createElement('p');
+          notice.className = 'raid-challenge-milestone';
+          notice.innerHTML = `${game.raidChallenge2SeedNotice ? '🎉 2回チャレンジ達成！コストプラスのたね×3を獲得！<br>' : ''}🎉 3回チャレンジ達成！10連ガチャチケットを獲得！`;
+          resultPanel.querySelector('.raid-challenge-milestone')?.remove();
+          resultPanel.querySelector('.raid-result-summary')?.after(notice);
+        }
+      }
+      if (Number.isFinite(result.challenge2SeedCount) && !Number.isFinite(result.challenge3TicketCount)) {
+        const resultPanel = document.querySelector('.raid-result-panel');
+        if (resultPanel) {
+          const notice = document.createElement('p');
+          notice.className = 'raid-challenge-milestone';
+          notice.textContent = '🎉 2回チャレンジ達成！コストプラスのたね×3を獲得！';
+          resultPanel.querySelector('.raid-challenge-milestone')?.remove();
+          resultPanel.querySelector('.raid-result-summary')?.after(notice);
+        }
+      }
       const cheerGold = await window.RaidBossAPI.receiveCheers(slotKey, game);
-      const rankings = await window.RaidBossAPI.getRankings();
       const global = await window.RaidBossAPI.getGlobalBoss();
       if (G !== game || currentSlotKey !== slotKey) return false;
+      const rankings = await window.RaidBossAPI.getRankings(result.bossId || global.bossId);
       let payout = null;
-      if (global.finalizedAt && window.RaidBossAPI.settleReward) {
-        payout = await window.RaidBossAPI.settleReward(slotKey, RAID_BOSS_ID, game);
+      const rewardBossId = result.settledBossId || (global.finalizedAt ? global.bossId : null);
+      if (rewardBossId && window.RaidBossAPI.settleReward) {
+        payout = await window.RaidBossAPI.settleReward(slotKey, rewardBossId, game);
         if (payout.eligible) {
           Object.assign(game, payout.state);
-          if (game.raidProgress?.bossId === RAID_BOSS_ID) game.raidProgress.pendingEvents = [];
+          if (game.raidProgress?.bossId === rewardBossId) game.raidProgress.pendingEvents = [];
           if (!payout.alreadyClaimed) {
             game.raidPayoutNotice = { ...payout.reward, rank: payout.rank, at: Date.now() };
             payoutNotice = game.raidPayoutNotice;
@@ -11933,10 +12068,17 @@ async function syncRaidState() {
         }
       }
       if (cheerGold) G.player.gold += cheerGold;
+      if (result.bossId && progress.bossId !== result.bossId) {
+        game.raidProgress = { bossId: result.bossId, participated: false, participationAt: 0, legacyDamage: 0, totalDamage: 0, pendingEvents: [] };
+        progress = game.raidProgress;
+      }
       const data = getRaidData();
       data.rankings = Object.fromEntries(rankings.map(entry => [entry.slotKey, entry]));
+      data.bossId = global.bossId || result.bossId || progress.bossId;
+      data.bossLevel = global.bossLevel || result.bossLevel || 50;
+      data.maxHp = global.maxHp || result.maxHp || 1000;
       data.totalDamage = (global.totalDamageDealt || 0) + progress.pendingEvents.reduce((sum, event) => sum + event.damage, 0);
-      if (global.finalRankings) data.finalRankings = global.finalRankings.map(entry => Array.isArray(entry) ? entry : [entry.slotKey, entry.totalDamage || 0]);
+      data.finalRankings = global.finalRankings ? global.finalRankings.map(entry => Array.isArray(entry) ? entry : [entry.slotKey, entry.totalDamage || 0]) : null;
       data.defeatedAt = global.defeatedAt || null;
       data.settlesAt = global.settlesAt || null;
       data.finalizedAt = global.finalizedAt || null;
@@ -11946,12 +12088,12 @@ async function syncRaidState() {
       data.legacyImports = local.legacyImports;
       if (result.claimed || payout?.eligible) {
         data.claimed ||= {};
-        data.claimed[slotKey] = { version: 2, applied: true, rank: payout?.rank || null, rewards: payout?.reward || null };
+        data.claimed[`${rewardBossId || data.bossId}:${slotKey}`] = { version: 2, applied: true, rank: payout?.rank || null, rewards: payout?.reward || null };
       }
       const own = data.rankings[slotKey];
       if (own) { progress.participated = true; progress.totalDamage = own.totalDamage || 0; }
       saveRaidData(data);
-      if (data.defeatedAt && !data.finalizedAt) scheduleRaidSettlement(data.settlesAt || data.defeatedAt + 2 * 60 * 1000);
+      if (data.defeatedAt && !data.finalizedAt) scheduleRaidSettlement(data.settlesAt || data.defeatedAt + 10 * 60 * 1000);
       else clearTimeout(raidSettlementTimer);
       save(true);
       raidSyncStatus = 'ready';
@@ -12010,6 +12152,8 @@ function showRaidBattleResult(damage, defeated) {
       <h2 id="raid-result-title">${showBackground ? '背景スキンを ゲット！' : defeated ? 'みんなで ボスを たおした！' : 'ナイスチャレンジ！'}</h2>
       ${showBackground ? `<img class="raid-result-background" src="${av(background.image)}" alt="獲得したマグマの火山の背景"><h3>${background.name}</h3><p>きみのキャラクターの背景に えらべるよ！</p>` : ''}
       <p class="raid-result-summary">今回のダメージ <b>${Math.max(0, Math.round(damage)).toLocaleString()}</b></p>
+      <p class="raid-gold-payout">💰 ダメージ報酬 +${Math.max(0, Math.round(damage)).toLocaleString()}G</p>
+      ${G.raidChallenge2SeedNotice || G.raidChallenge3TicketNotice ? `<p class="raid-challenge-milestone">${G.raidChallenge2SeedNotice ? '🎉 2回チャレンジ達成！コストプラスのたね×3を獲得！<br>' : ''}${G.raidChallenge3TicketNotice ? '🎉 3回チャレンジ達成！10連ガチャチケットを獲得！' : ''}</p>` : ''}
       <div class="raid-result-rank"><span>${defeated ? '暫定ランキング' : '現在のランキング'}</span><strong>${rankLabel}</strong></div>
       <p class="raid-result-encouragement">${defeated ? '最終順位は10分後に確定！討伐前から進行中だった戦闘も集計するよ。' : '開催期間中は何度でも挑戦して、ランキング上位を目指そう！'}</p>
       <button type="button" id="btn-raid-result-close" class="btn btn-primary">レイドに もどる</button>
@@ -12017,6 +12161,8 @@ function showRaidBattleResult(damage, defeated) {
   const close = () => {
     if (!overlay.isConnected) return;
     if (showBackground) { G.raidMagmaNoticeSeen = true; save(true); }
+    G.raidChallenge3TicketNotice = false;
+    G.raidChallenge2SeedNotice = false;
     overlay.remove();
     showRaidBossMenu();
     $('btn-raid-challenge')?.focus();
@@ -12050,8 +12196,13 @@ function recordRaidDamage(slotKey, playerName, dmg, avatar, level, equipment, av
     const progress = raidPlayerProgress();
     progress.participated = true;
     const id = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint32Array(4)), n => n.toString(16)).join('-');
-    progress.pendingEvents.push({ id, damage: dmg, fightStartedAt: battle?.raidStartedAt || Date.now(), createdAt: Date.now() });
+    progress.pendingEvents.push({ id, bossId: battle?.raidBossId || progress.bossId, damage: dmg, fightStartedAt: battle?.raidStartedAt || Date.now(), createdAt: Date.now() });
     progress.totalDamage += dmg;
+    progress.challengeCount = (Number(progress.challengeCount) || 0) + 1;
+    if (!battle?.raidGoldPaid) {
+      G.player.gold = (Number(G.player.gold) || 0) + dmg;
+      if (battle) battle.raidGoldPaid = true;
+    }
   }
   const data = getRaidData();
   if (!data.rankings) data.rankings = {};
@@ -12075,7 +12226,7 @@ function recordRaidDamage(slotKey, playerName, dmg, avatar, level, equipment, av
 function getRaidRankings() {
   const data = getRaidData();
   const rankings = Object.values(data.rankings || {});
-  if (G && currentSlotKey && ((G.unlockedAvatarBackgrounds || []).includes('raid_magma') || G.raidProgress?.participated) && !rankings.some(entry => entry.slotKey === currentSlotKey)) {
+  if (G && currentSlotKey && G.raidProgress?.participated && G.raidProgress.bossId === (data.bossId || RAID_BOSS_ID) && !rankings.some(entry => entry.slotKey === currentSlotKey)) {
     rankings.push({ ...raidPlayerProfile(), slotKey: currentSlotKey, totalDamage: G.raidProgress?.totalDamage || 0, participated: true });
   }
   if (Array.isArray(data.finalRankings)) {
@@ -12090,9 +12241,9 @@ function getRaidTotalDamage() {
 }
 
 // 報酬受け取り済み確認
-function isRaidRewardClaimed(slotKey) {
+function isRaidRewardClaimed(slotKey, bossId = getRaidData().bossId || RAID_BOSS_ID) {
   const data = getRaidData();
-  const claimed = data.claimed && data.claimed[slotKey];
+  const claimed = data.claimed && (data.claimed[`${bossId}:${slotKey}`] || (data.bossId === bossId ? data.claimed[slotKey] : null));
   return !!(claimed && typeof claimed === 'object' && claimed.version === 2 && claimed.applied);
 }
 
@@ -12170,9 +12321,9 @@ function renderRaidFinalResult() {
   if (!data.defeatedAt) { el.innerHTML = ''; el.classList.add('hidden'); return; }
   el.classList.remove('hidden');
   if (!data.finalizedAt) {
-    const secondsLeft = Math.max(0, Math.ceil(((data.settlesAt || data.defeatedAt + 2 * 60 * 1000) - Date.now()) / 1000));
+    const secondsLeft = Math.max(0, Math.ceil(((data.settlesAt || data.defeatedAt + 10 * 60 * 1000) - Date.now()) / 1000));
     const countdown = `${String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:${String(secondsLeft % 60).padStart(2, '0')}`;
-    el.innerHTML = `<b>🎉 レイド討伐！ 討伐後2分間、集計中</b><span>同時に挑戦していた戦闘を確認中。最終ランキング発表まで <strong>${countdown}</strong></span>`;
+    el.innerHTML = `<b>🎉 レイド討伐！ 討伐後10分間、集計中</b><span>同時に挑戦していた戦闘を確認中。最終ランキング発表まで <strong>${countdown}</strong></span>`;
     raidCountdownTimer = setTimeout(renderRaidFinalResult, 1000);
     return;
   }
@@ -12190,8 +12341,8 @@ function renderRaidFinalResult() {
 function showRaidBossMenu() {
   $('raid-rules').classList.add('hidden');
   $('btn-raid-rules').setAttribute('aria-expanded', 'false');
-  renderRaidBossMenu();
   syncRaidState();
+  renderRaidBossMenu();
   if (!raidWatchStop && window.RaidBossAPI?.watchBoss) {
     raidWatchStop = window.RaidBossAPI.watchBoss(() => {
       if (G && !$('screen-raid-boss').classList.contains('hidden')) {
@@ -12214,6 +12365,9 @@ function renderRaidBossMenu() {
   const btn = document.getElementById('btn-raid-challenge');
   if (getRaidData().rankings?.[currentSlotKey]) grantRaidParticipationBackground();
   const participationStatus = $('raid-participation-status');
+  const bossName = $('raid-boss-name');
+  const raidData = getRaidData();
+  if (bossName) bossName.textContent = `暗黒竜 ダークバハムート Lv.${raidData.bossLevel || 50}`;
   if (participationStatus) participationStatus.textContent = (G?.unlockedAvatarBackgrounds || []).includes('raid_magma') ? '獲得済み' : '参加でもらえる';
 
   // 現在のプレイヤーが既にランキングにいれば、最新のアバター・レベル・装備情報を自動同期
@@ -12243,7 +12397,8 @@ function renderRaidBossMenu() {
   }
 
   const totalDmg = getRaidTotalDamage();
-  const remainHp = Math.max(0, RAID_MAX_HP - totalDmg);
+  const maxHp = getRaidMaxHp();
+  const remainHp = Math.max(0, maxHp - totalDmg);
   const defeated = remainHp <= 0;
 
   // HPバー更新
@@ -12253,12 +12408,11 @@ function renderRaidBossMenu() {
       dmgText.textContent = '🎊 討伐完了！';
       dmgText.style.color = '#feca57';
     } else {
-      dmgText.textContent = `${remainHp.toLocaleString()} / ${RAID_MAX_HP.toLocaleString()}`;
+      dmgText.textContent = `${remainHp.toLocaleString()} / ${maxHp.toLocaleString()}`;
       dmgText.style.color = '#ff7675';
     }
   }
-  const pct = Math.max(0, (remainHp / RAID_MAX_HP) * 100);
-  if (hpBar) hpBar.style.width = pct + '%';
+  if (hpBar) hpBar.style.width = `${Math.max(0, Math.min(100, (remainHp / maxHp) * 100))}%`;
 
   // ランキング表示
   if (listEl) {
@@ -12437,10 +12591,11 @@ function renderRaidBossMenu() {
   if (btn) {
     btn.style.display = 'block';
     if (!defeated) {
-      btn.disabled = false;
-      btn.textContent = '⚔ レイドボスに挑戦する';
-      btn.style.background = 'linear-gradient(to bottom, #d35400, #c0392b)';
-      btn.onclick = startRaidBattle;
+      const statusReady = raidSyncStatus === 'ready' || G?.isTestMode;
+      btn.disabled = !statusReady;
+      btn.textContent = statusReady ? '⚔ レイドボスに挑戦する' : raidSyncStatus === 'offline' || raidSyncStatus === 'denied' ? '共有状況を確認できません' : '討伐状況を確認中…';
+      btn.style.background = statusReady ? 'linear-gradient(to bottom, #d35400, #c0392b)' : '#555';
+      btn.onclick = statusReady ? startRaidBattle : null;
     } else {
       // 討伐済み --- 報酬確認
       const rankings = getRaidRankings();
@@ -12473,20 +12628,21 @@ async function claimRaidReward() {
 
 async function startRaidBattle() {
   if (!G || !currentSlotKey) return;
+  if (raidSyncStatus !== 'ready' && !G.isTestMode) return;
   if (raidStarting) return;
   raidStarting = true;
   const game = G;
   await syncRaidState();
   raidStarting = false;
   if (G !== game) return;
-  if (getRaidData().defeatedAt || getRaidTotalDamage() >= RAID_MAX_HP) { showRaidBossMenu(); return; }
+  if (getRaidData().defeatedAt || getRaidTotalDamage() >= getRaidMaxHp()) { showRaidBossMenu(); return; }
   grantRaidParticipationBackground();
   syncRaidState();
   hideBattleMenus();
   document.getElementById('screen-raid-boss').classList.add('hidden');
 
   const totalDmg = getRaidTotalDamage();
-  const remainHp = Math.max(1, RAID_MAX_HP - totalDmg);
+  const remainHp = Math.max(1, getRaidMaxHp() - totalDmg);
 
   explore = {
     isRaid: true,
@@ -12521,7 +12677,8 @@ async function startRaidBattle() {
     over: false,
     currentTurnProblem: null,
     raidDamageDealt: 0,
-    raidStartedAt: Date.now()
+    raidStartedAt: Date.now(),
+    raidBossId: getRaidData().bossId || RAID_BOSS_ID
   };
 
   showScreen('screen-battle');
