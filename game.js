@@ -11998,7 +11998,7 @@ function retryRaidSettlementIfPending() {
   raidSettlementTimer = setTimeout(() => {
     raidSettlementTimer = null;
     if (G) syncRaidState();
-  }, 15000);
+  }, 3000);
 }
 
 async function syncRaidState() {
@@ -12114,12 +12114,14 @@ async function syncRaidState() {
       if (own) { progress.participated = true; progress.totalDamage = own.totalDamage || 0; }
       saveRaidData(data);
       if (data.defeatedAt && !data.finalizedAt) {
-        const due = data.settlesAt || data.defeatedAt + 10 * 60 * 1000;
-        // 締め切り後もまだ確定していない場合は、15秒ごとに再確認する
-        if (Date.now() > due + 1000) retryRaidSettlementIfPending();
-        else scheduleRaidSettlement(due);
+        // 討伐後は待ち時間なしで確定する。まだ確定していなければすぐ再確認する
+        retryRaidSettlementIfPending();
       }
-      else clearTimeout(raidSettlementTimer);
+      else {
+        clearTimeout(raidSettlementTimer);
+        // 確定済みなら少し後にもう一度同期して、次のボスをすぐ復活させる
+        if (data.finalizedAt) raidSettlementTimer = setTimeout(() => { raidSettlementTimer = null; if (G) syncRaidState(); }, 4000);
+      }
       save(true);
       raidSyncStatus = 'ready';
       return true;
@@ -12181,7 +12183,7 @@ function showRaidBattleResult(damage, defeated) {
       <p class="raid-gold-payout">💰 ダメージ報酬 +${Math.max(0, Math.round(damage)).toLocaleString()}G</p>
       ${G.raidChallenge2SeedNotice || G.raidChallenge3TicketNotice ? `<p class="raid-challenge-milestone">${G.raidChallenge2SeedNotice ? '🎉 2回チャレンジ達成！コストプラスのたね×3を獲得！<br>' : ''}${G.raidChallenge3TicketNotice ? '🎉 3回チャレンジ達成！10連ガチャチケットを獲得！' : ''}</p>` : ''}
       <div class="raid-result-rank"><span>${defeated ? '暫定ランキング' : '現在のランキング'}</span><strong>${rankLabel}</strong></div>
-      <p class="raid-result-encouragement">${defeated ? '最終順位は10分後に確定！討伐前から進行中だった戦闘も集計するよ。' : '開催期間中は何度でも挑戦して、ランキング上位を目指そう！'}</p>
+      <p class="raid-result-encouragement">${defeated ? '最終順位はすぐに確定！すぐに次のボスが現れるよ。' : '開催期間中は何度でも挑戦して、ランキング上位を目指そう！'}</p>
       <button type="button" id="btn-raid-result-close" class="btn btn-primary">レイドに もどる</button>
     </section>`;
   const close = () => {
@@ -12347,10 +12349,8 @@ function renderRaidFinalResult() {
   if (!data.defeatedAt) { el.innerHTML = ''; el.classList.add('hidden'); return; }
   el.classList.remove('hidden');
   if (!data.finalizedAt) {
-    const secondsLeft = Math.max(0, Math.ceil(((data.settlesAt || data.defeatedAt + 10 * 60 * 1000) - Date.now()) / 1000));
-    const countdown = `${String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:${String(secondsLeft % 60).padStart(2, '0')}`;
-    el.innerHTML = `<b>🎉 レイド討伐！ 討伐後10分間、集計中</b><span>同時に挑戦していた戦闘を確認中。最終ランキング発表まで <strong>${countdown}</strong></span>`;
-    if (secondsLeft <= 0 && !raidSyncPromise && Date.now() - raidLastSettleKick > 10000) { raidLastSettleKick = Date.now(); syncRaidState(); }
+    el.innerHTML = '<b>🎉 レイド討伐！ 結果を集計中…</b><span>まもなく最終ランキングが発表されます。</span>';
+    if (!raidSyncPromise && Date.now() - raidLastSettleKick > 3000) { raidLastSettleKick = Date.now(); syncRaidState(); }
     raidCountdownTimer = setTimeout(renderRaidFinalResult, 1000);
     return;
   }

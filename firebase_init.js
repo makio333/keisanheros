@@ -17,7 +17,7 @@ import {
 } from "firebase/firestore";
 
 // レイド討伐後の集計待ち時間（ミリ秒）
-const RAID_SETTLEMENT_MS = 10 * 60 * 1000;
+const RAID_SETTLEMENT_MS = 0; // 討伐したら待ち時間なしで即確定・次のボスへ
 
 const firebaseConfig = {
   apiKey: "AIzaSyDu5F9Dlw4x7E1cDg2K41_mEzaEa0QGW6Q",
@@ -342,7 +342,7 @@ window.RaidBossAPI = {
       
       const defeatedAt = Number(global.defeatedAt) || null;
       const settlesAt = Number(global.settlesAt) || (defeatedAt || null);
-      const acceptingDamage = isActive && !global.finalizedAt && (!defeatedAt || now <= settlesAt);
+      const acceptingDamage = isActive && !global.finalizedAt && !defeatedAt;
       
       let addedDamage = acceptingDamage && !defeatedAt ? legacyDamage - oldBaseline : 0;
       let acceptedEvents = 0;
@@ -399,7 +399,7 @@ window.RaidBossAPI = {
         if (!finisherSlotKeys.includes(slotKey)) finisherSlotKeys.push(slotKey);
       }
       
-      const finalize = isActive && !!finalDefeatedAt && !global.finalizedAt && now >= finalSettlesAt;
+      const finalize = isActive && !!finalDefeatedAt && !global.finalizedAt;
       let finalRankings = null;
       let finalHitters = null;
       
@@ -421,7 +421,7 @@ window.RaidBossAPI = {
       }
       
       if (rankSnap.exists() || participated) {
-        if (!global.finalizedAt && (!defeatedAt || now <= finalSettlesAt) && participated) {
+        if (!global.finalizedAt && !defeatedAt && participated) {
           const appearance = { playerName: profile.playerName || '勇者', avatar: profile.avatar || '', avatarBackground: profile.avatarBackground || 'default', avatarHolographic: !!profile.avatarHolographic, avatarBackgroundHolographic: !!profile.avatarBackgroundHolographic, level: profile.level || 1, equipment: profile.equipment || {} };
           transaction.set(rankRef, { ...appearance, slotKey, participated: !!participated, totalDamage: nextTotal, challengeCount, legacyDamage, appliedEvents, lastUpdated: Date.now() }, { merge: true });
         }

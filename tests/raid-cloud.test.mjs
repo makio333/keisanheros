@@ -10,7 +10,7 @@ const copy = value => structuredClone(value);
 const context = {
   window: {}, db: {}, console,
   Date: class extends Date { static now() { return now; } }, JSON,
-  RAID_SETTLEMENT_MS: 10 * 60 * 1000,
+  RAID_SETTLEMENT_MS: 0,
   slotKeyToDocId: encodeURIComponent,
   doc: (_db, collection, id) => `${collection}/${id}`,
   collection: (_db, name) => name,
@@ -61,10 +61,11 @@ const threeChallenges = await api.syncPlayer('a', profile, { bossId: 'boss_50', 
   { id: 'battle-a2', bossId: 'boss_50', damage: 200 },
   { id: 'battle-a3', bossId: 'boss_50', damage: 100 }
 ], state: threeChallengeState });
-await Promise.all([
-  api.syncPlayer('b', profile, { bossId: 'boss_50', events: [{ id: 'battle-b', bossId: 'boss_50', damage: 400 }] }),
-  api.syncPlayer('a', profile, { bossId: 'boss_50', events: [{ id: 'battle-a1', bossId: 'boss_50', damage: 200 }], state: threeChallengeState })
-]);
+const repeatedMilestones = await api.syncPlayer('a', profile, { bossId: 'boss_50', events: [{ id: 'battle-a3', bossId: 'boss_50', damage: 100 }], state: threeChallengeState });
+assert.equal(repeatedMilestones.challenge2SeedCount, null, 'Challenge milestone rewards cannot be claimed twice');
+assert.equal(repeatedMilestones.challenge3TicketCount, null, '10-pull ticket cannot be claimed twice');
+const finishing = await api.syncPlayer('b', profile, { bossId: 'boss_50', events: [{ id: 'battle-b', bossId: 'boss_50', damage: 400 }] });
+assert.ok(finishing.finalizedAt, 'Defeating the boss finalizes it immediately with no waiting window');
 assert.equal(global().totalDamageDealt, 1100);
 assert.equal(rank('a').totalDamage, 700);
 assert.equal(rank('b').totalDamage, 400);
@@ -74,15 +75,9 @@ assert.equal(threeChallenges.challenge2SeedCount, 3, 'The second challenge grant
 assert.equal(threeChallenges.challenge3TicketCount, 1, 'The third challenge grants one 10-pull ticket');
 assert.equal(JSON.parse(documents.get('saves/a').gameData).skinGachaTenPullTickets, 1);
 assert.equal(JSON.parse(documents.get('saves/a').gameData).items.find(item => item.id === 'cost_seed').count, 3);
-const repeatedMilestones = await api.syncPlayer('a', profile, { bossId: 'boss_50', events: [{ id: 'battle-a3', bossId: 'boss_50', damage: 100 }], state: threeChallengeState });
-assert.equal(repeatedMilestones.challenge2SeedCount, null, 'Challenge milestone rewards cannot be claimed twice');
-assert.equal(repeatedMilestones.challenge3TicketCount, null, '10-pull ticket cannot be claimed twice');
 
 const state = { playerName: 'Test Hero', player: { lvl: 7, gold: 20 } };
-now = global().settlesAt + 1;
-const finalized = await api.syncPlayer('a', profile, { bossId: 'boss_50' });
-assert.ok(finalized.finalizedAt, 'Defeated raid finalizes after its ten-minute settlement window');
-assert.equal(global().startsAt, now, 'Next boss opens as soon as aggregation finalizes');
+assert.equal(global().startsAt, now, 'Next boss opens as soon as the boss is defeated');
 const rewards = await Promise.all([
   api.settleReward('a', 'boss_50', state, game => { game.player.gold += 500; }),
   api.settleReward('a', 'boss_50', state, game => { game.player.gold += 500; })
@@ -99,4 +94,9 @@ assert.ok(documents.get('raidHistory/boss_50')?.finalizedAt, 'Previous results a
 const archivedReward = await api.settleReward('b', 'boss_50', state);
 assert.equal(archivedReward.eligible, true, 'Archived rankings remain payable after the next boss starts');
 assert.equal(archivedReward.rank, 2);
+// 旧仕様で「集計中」のまま止まっているデータも、次の同期で即確定する
+documents.set('raidGlobal/currentBoss', { bossLevel: 60, bossId: 'boss_60', maxHp: 2000, totalDamageDealt: 2000, defeatedAt: now - 1000, settlesAt: now + 600000, finisherSlotKeys: ['a'], startsAt: null });
+documents.set('raidRankings_boss_60/a', { slotKey: 'a', participated: true, totalDamage: 2000 });
+const unstuck = await api.syncPlayer('b', profile, { bossId: 'boss_60' });
+assert.ok(unstuck.finalizedAt, 'A raid stuck in the old settlement window finalizes on the next sync');
 console.log('PASS: participation, legacy migration, concurrent damage, ten-minute finalization, instant next boss, archived results and reward claim-once');
