@@ -1889,11 +1889,48 @@ function unlockedWordFamilies(){
 
 /* 1クエスト＝おなじ人物から、おなじ ものがたりの ながれで 3問。
    3問とも おなじ えんざんファミリー・おなじ なんいどで そろえる */
+/* サブクエストの 難易度は、クリアしたステージに あわせる。
+   すすんだ子には かんたんすぎる もんだい（かけざんが できるのに 1桁のたしざん など）は 出さない */
+const QUEST_FAMILY_ORDER = ['add', 'sub', 'mul', 'div'];
+const QUEST_FAMILY_AREA = { add:'area1', sub:'area13', mul:'area2', div:'area3' };
+function questFamilyProgress(family){
+  const areaId = QUEST_FAMILY_AREA[family];
+  const counts = (G && G.stageClearCounts && G.stageClearCounts[areaId]) || [];
+  const total = (AREA_STAGES[areaId].stages || []).length || 1;
+  return { cleared: counts.filter(c => (c || 0) >= 1).length, total };
+}
+/* 出して いい もんだいの 一覧：[{ family, tiers:[...] }]
+   ・いちばん すすんだ えんざん（先頭）… クリアした ステージの 数に あわせた 段階（ふたつ ぶん）
+   ・それより まえの えんざん … むずかしい 4〜5だんかい だけ */
+function questAllowedTiers(){
+  let front = 0;
+  QUEST_FAMILY_ORDER.forEach((f, i) => { if (questFamilyProgress(f).cleared > 0) front = i; });
+  const fp = questFamilyProgress(QUEST_FAMILY_ORDER[front]);
+  const maxTier = Math.min(5, Math.max(1, Math.ceil(fp.cleared / fp.total * 5)));
+  return QUEST_FAMILY_ORDER.slice(0, front + 1).map((family, i) => ({
+    family,
+    tiers: i === front
+      ? [Math.max(1, maxTier - 1), maxTier].filter((t, k, a) => a.indexOf(t) === k)
+      : [4, 5],
+    isFront: i === front,
+  }));
+}
+function questTierAllowed(tier){
+  const family = String(tier).replace(/[0-9]/g, '');
+  const n = parseInt(String(tier).slice(-1), 10);
+  return questAllowedTiers().some(e => e.family === family && e.tiers.includes(n));
+}
+
 function generateStoryQuest(){
-  const family = pick(unlockedWordFamilies());
+  const allowed = questAllowedTiers();
+  const front = allowed.find(e => e.isFront);
+  const earlier = allowed.filter(e => !e.isFront);
+  // 先頭の えんざんを 中心に（のこりは まえの えんざんの むずかしい もんだい）
+  const entry = (earlier.length && Math.random() < 0.4) ? pick(earlier) : front;
+  const family = entry.family;
   const arc = pick(STORY_ARCS[family]);
   const npc = pick(QUEST_NPCS);
-  const tier = `${family}${rnd(1, 5)}`;
+  const tier = `${family}${pick(entry.tiers)}`;
   const parts = arc.parts.map(tpl => {
     const p = generateProblem(tier);
     return { ...p, text: tpl(p.a, p.b), isWordProblem: true };
@@ -1901,9 +1938,82 @@ function generateStoryQuest(){
   return { uid: G.nextUid++, npc, title: arc.title, tier, parts, partIndex: 0 };
 }
 
+/* サブクエストの ごほうび：1問ごとに クエストメダル1まい（1回目・2回目は アイテムも）。
+   メダルは ためると クエストでしか もらえない ごほうびに かわる（コストプラスのたね・背景スキン など） */
+const QUEST_STEP_ITEMS = [ { id:'potion', count:1 }, { id:'herb', count:1 } ];
+const QUEST_MEDAL_MILESTONES = [
+  { key:'cost_seed',   medals:3,  kind:'item', id:'cost_seed', count:3, label:'コストプラスのたね×3' },
+  { key:'legend_w4',   medals:6,  kind:'equip', id:'w4', rarity:5, label:'レジェンド武器「ほのおの斧」' },
+  { key:'bg_village',  medals:10, kind:'background', id:'quest_village', label:'背景「むらの ひろば」' },
+  { key:'equip_ten',   medals:15, kind:'equip-ticket', count:1, label:'装備ガチャ10連チケット' },
+  { key:'skin_ticket', medals:20, kind:'skin-ticket', count:1, label:'背景スキンガチャチケット' },
+];
+/* メダルは へらない。あつめた まいすうに とどいたら、じぶんで ボタンを おして うけとる（それぞれ 1回だけ） */
+/* 景品の絵の「パス／絵文字」だけ（トーストなど、iconHtml() に渡す用） */
+function questMedalMilestoneIconSrc(m){
+  const kind = (m.kind === 'equip-ticket' || m.kind === 'skin-ticket') ? 'ticket' : m.kind;
+  const id = m.kind === 'equip-ticket' ? 'equip-ten-ticket' : m.kind === 'skin-ticket' ? 'skin-ticket' : m.id;
+  return rewardIconInfo(kind, id).icon;
+}
+function questMedalMilestoneIcon(m, size){
+  const kind = m.kind === 'equip-ticket' ? 'ticket' : m.kind === 'skin-ticket' ? 'ticket' : m.kind;
+  const id = m.kind === 'equip-ticket' ? 'equip-ten-ticket' : m.kind === 'skin-ticket' ? 'skin-ticket' : m.id;
+  return stageRewardIcon(kind, id, m.rarity || 1, size);
+}
+
+/* 1問こたえるたびの おまけの ごほうび。step＝なんもんめか（1〜3）。
+   かえり値は トーストに出す [{icon, text}]。メダルが たまったら ごほうびも わたす */
+function grantQuestExtras(step, completed){
+  const extras = [];
+  const stepItem = !completed ? QUEST_STEP_ITEMS[step - 1] : null;
+  if (stepItem) {
+    addItem(stepItem.id, stepItem.count);
+    const db = getItemTemplate(stepItem.id);
+    extras.push({ icon: db.emoji, text: `${db.name} ×${stepItem.count}` });
+  }
+  {
+    // メダルは 1問こたえるごとに 1まい
+    G.questMedals = (G.questMedals || 0) + 1;
+    extras.push({ icon: '🏅', text: `クエストメダル +1（${G.questMedals}まい）` });
+  }
+  return extras;
+}
+
+/* ゴールドは「おなじ えんざん・おなじ なんいどの ステージの 3回クリア報酬」＋500。
+   1問め20%・2問め30%・クリア50% に わけてわたす */
+const QUEST_GOLD_EXTRA = 500;
+/* あつめた メダルの まいすうに とどいていたら けいひんを わたす（メダルは へらない）。{kind,name,icon,rarity,ability} を かえす（できないときは null） */
+function exchangeQuestMedals(key){
+  const m = QUEST_MEDAL_MILESTONES.find(x => x.key === key);
+  if (!G || !m) return null;
+  if (!G.questMedalExchanged) G.questMedalExchanged = {};
+  if (G.questMedalExchanged[key] || (G.questMedals || 0) < m.medals) return null;
+  G.questMedalExchanged[key] = true;
+  const iconSrc = questMedalMilestoneIconSrc(m);
+  if (m.kind === 'item') {
+    addItem(m.id, m.count);
+    return { kind:'item', name:m.label, icon:iconSrc };
+  }
+  if (m.kind === 'equip') {
+    const ability = rollAbility(m.rarity);
+    G.ownedEquips.push({ uid: G.nextUid++, id: m.id, rarity: m.rarity, ability });
+    return { kind:'equip', name:getEquipTemplate(m.id).name, icon:iconSrc, rarity:m.rarity, ability };
+  }
+  if (m.kind === 'background') G.unlockedAvatarBackgrounds = [...new Set(['default', ...(G.unlockedAvatarBackgrounds || []), m.id])];
+  else if (m.kind === 'equip-ticket') G.equipGachaTenPullTickets = (G.equipGachaTenPullTickets || 0) + m.count;
+  else if (m.kind === 'skin-ticket') G.skinGachaTickets = (G.skinGachaTickets || 0) + m.count;
+  return { kind:'item', name:m.label, icon:iconSrc };
+}
+
 function questRewardFor(tier){
+  const family = String(tier).replace(/[0-9]/g, '');
   const idx = tierStageIndex(tier);
-  return { gold: 15 + idx * 10, exp: 6 + idx * 5 };
+  const areaId = QUEST_FAMILY_AREA[family] || 'area1';
+  const stageCount = (AREA_STAGES[areaId].stages || []).length || 1;
+  const stageIndex = Math.round(idx / 4 * (stageCount - 1));
+  const total = stageFirstSuppliesReward(areaId, stageIndex).gold + QUEST_GOLD_EXTRA;
+  const g1 = Math.round(total * 0.2), g2 = Math.round(total * 0.3);
+  return { golds: [g1, g2, total - g1 - g2], total, exp: 6 + idx * 5 };
 }
 
 /* ==========================================================
@@ -2113,6 +2223,7 @@ const REWARD_SETTINGS_DEFAULTS = {
   thirdItemCount: 3,        // 3回クリア報酬の アイテム個数
   bossFirstTickets: 1,      // ボス初回クリア報酬：背景スキンガチャチケット枚数
   bossThirdTickets: 1,      // ボス3回クリア報酬：装備ガチャ10連チケット枚数
+  pickupBonusTickets: 3,    // ピックアップステージを クリアしたときの チャレンジボーナス：装備ガチャ10連チケット枚数
   bossLevelUp: 1,           // ボスを たおすたびに あがる 強化レベル
   bossGrowthPct: 8,         // 強化レベル1ごとの ステータス上昇（％）
 };
@@ -2351,6 +2462,7 @@ const AVATAR_BACKGROUNDS = [
   { id: 'sky', name: '天空の城', image: 'assets/characters/bg_skin_sky.png', color: '#90cce8' },
   { id: 'crystal', name: '氷晶の聖域', image: 'assets/characters/bg_skin_crystal.png', color: '#8bd9e9' },
   { id: 'raid_magma', name: 'マグマの火山', image: 'assets/raid/raid_bg_magma_pixel.jpg', color: '#651a16', rewardSource: 'raid' },
+  { id: 'quest_village', name: 'むらの ひろば', image: '画像/ステージ/拠点.jpg', color: '#7a5a33', rewardSource: 'quest' },
 ];
 
 function getAvatarBackground(backgroundId) {
@@ -2625,6 +2737,8 @@ function newGameState(name, avatarId){
     areaBossClearCounts: {},
     skinGachaTickets: 0,
     equipGachaTenPullTickets: 0,
+    questMedals: 0,
+    questMedalExchanged: {},
     stageTotalClears: {},
     areaBossTotalClears: {},
     areaBossLevel: {},
@@ -2759,6 +2873,8 @@ function loadSlot(key, options = {}){
     if (!G.areaBossClearCounts) G.areaBossClearCounts = {};
     if (!Number.isFinite(G.skinGachaTickets)) G.skinGachaTickets = 0;
     if (!Number.isFinite(G.equipGachaTenPullTickets)) G.equipGachaTenPullTickets = 0;
+    if (!Number.isFinite(G.questMedals)) G.questMedals = 0;
+    if (!G.questMedalExchanged) G.questMedalExchanged = {};
     if (!G.stageTotalClears) G.stageTotalClears = {};
     if (!G.areaBossTotalClears) G.areaBossTotalClears = {};
     if (!G.areaBossLevel) G.areaBossLevel = {};
@@ -5646,7 +5762,10 @@ function stageClearRewardsHtml(rewards){
   if (!rewards) return '';
   const { drops, gold, exp } = rewards;
   const normal = generateDropsSummaryHtml(drops, gold, { exp, title: '【このステージで てにいれたもの】' });
-  const bonuses = (rewards.milestoneRewards || []).map(entry => generateDropsSummaryHtml(entry.drops, entry.gold, { title: `🎁 ${entry.title}` })).join('');
+  const bonuses = (rewards.milestoneRewards || []).map(entry => {
+    const html = generateDropsSummaryHtml(entry.drops, entry.gold, { title: `${entry.luxury ? '🌟' : '🎁'} ${entry.title}${entry.luxury ? ' 🌟' : ''}` });
+    return entry.luxury ? `<div class="pickup-bonus-luxury">${html}</div>` : html;
+  }).join('');
   return normal + bonuses;
 }
 
@@ -5671,14 +5790,14 @@ function grantBossClearState(areaId){
     G.skinGachaTickets = (G.skinGachaTickets || 0) + n;
     claims.rewardFirst = true;
     claims.first = true;
-    if (n > 0) entries.push({ title:'初回クリア報酬', gold:0, drops:[{ kind:'skin-ticket', name:`背景スキンガチャチケット`, icon:SKIN_GACHA_TICKET_ICON, count:n }] });
+    if (n > 0) entries.push({ title:'初回クリア報酬', gold:0, drops:[{ kind:'skin-ticket', name:`背景スキンガチャチケット ×${n}`, icon:SKIN_GACHA_TICKET_ICON, count:n }] });
   }
   if (currentStars >= STAGE_STARS_TO_UNLOCK_NEXT && !claims.rewardThird) {
     const n = Math.max(0, Math.round(rewardSettings.bossThirdTickets));
     G.equipGachaTenPullTickets = (G.equipGachaTenPullTickets || 0) + n;
     claims.rewardThird = true;
     claims.star3 = true;
-    if (n > 0) entries.push({ title:'3回クリア報酬', gold:0, drops:[{ kind:'equip-ticket', name:`装備ガチャ10連チケット`, icon:'🎫', count:n }] });
+    if (n > 0) entries.push({ title:'3回クリア報酬', gold:0, drops:[{ kind:'equip-ticket', name:`装備ガチャ10連チケット ×${n}`, icon:'🎫', count:n }] });
   }
   /* たおすたびに ボスが 強くなる */
   const up = Math.max(0, Math.round(rewardSettings.bossLevelUp));
@@ -6152,17 +6271,40 @@ function stageFirstSuppliesReward(areaId, stageIndex){
   };
 }
 
-function stageRewardIcon(kind, id, rarity = 1){
-  const db = kind === 'equip' ? getEquipTemplate(id) : kind === 'item' ? getItemTemplate(id) : null;
-  const isEquipTen = id === 'equip-ten-ticket';
-  const name = db ? db.name : isEquipTen ? '装備ガチャ10連チケット' : '背景スキンガチャチケット';
-  return `<button type="button" class="stage-reward-icon${kind === 'equip' ? ` equip-icon rarity-${rarity}` : ''}" data-reward-kind="${kind}" data-reward-id="${id}" data-reward-rarity="${rarity}" aria-label="${name}${kind === 'equip' ? `・${RARITY_NAME[rarity]}` : ''}の詳細">${iconHtml(db ? db.emoji : isEquipTen ? '🎫' : SKIN_GACHA_TICKET_ICON, 56)}</button>`;
+/* ごほうびアイコンの 見た目の情報（名前・アイコン）。ホバーの 詳細ウィンドウは rewardTooltipHtml() */
+function rewardIconInfo(kind, id){
+  if (kind === 'equip') { const db = getEquipTemplate(id); return { name: db.name, icon: db.emoji }; }
+  if (kind === 'item') { const db = getItemTemplate(id); return { name: db.name, icon: db.emoji }; }
+  if (kind === 'medal') return { name: 'クエストメダル', icon: '🏅' };
+  if (kind === 'background') { const bg = getAvatarBackground(id); return { name: `背景「${bg.name}」`, icon: bg.image }; }
+  if (id === 'equip-ten-ticket') return { name: '装備ガチャ10連チケット', icon: '🎫' };
+  return { name: '背景スキンガチャチケット', icon: SKIN_GACHA_TICKET_ICON };
+}
+
+/* ごほうびの 詳細（ホバーで 出す ウィンドウの 中身）。ごほうびの アイコンは かならず これを つかう */
+function rewardTooltipHtml(kind, id, rarity = 1, count = 1){
+  if (kind === 'equip') return generateEquipDetailHtml(getEquipTemplate(id), { rarity: Number(rarity) });
+  if (kind === 'item') return generateItemDetailHtml(getItemTemplate(id), { count: count || (id === 'hipotion' ? 3 : 1) });
+  if (kind === 'medal') {
+    return `<b>🏅 クエストメダル</b><p>村の人たちを助けた証。<br>集めて豪華景品と交換しよう！</p>`;
+  }
+  if (kind === 'background') {
+    const bg = getAvatarBackground(id);
+    return `<b>背景「${bg.name}」</b><p>プレイヤーの 背景スキン。${bg.rewardSource === 'quest' ? 'サブクエストでしか 手に入らないよ！' : ''}</p>`;
+  }
+  if (id === 'equip-ten-ticket') return '<b>装備ガチャ10連チケット</b><p>装備ガチャを 10回まとめて 引けるチケット。</p>';
+  return '<b>背景スキンガチャチケット</b><p>背景スキンガチャを 1回 引けるチケット。</p>';
+}
+
+function stageRewardIcon(kind, id, rarity = 1, size = 56){
+  const info = rewardIconInfo(kind, id);
+  return `<button type="button" class="stage-reward-icon${kind === 'equip' ? ` equip-icon rarity-${rarity}` : ''}" data-reward-kind="${kind}" data-reward-id="${id}" data-reward-rarity="${rarity}" aria-label="${info.name}${kind === 'equip' ? `・${RARITY_NAME[rarity]}` : ''}の詳細">${iconHtml(info.icon, size)}</button>`;
 }
 
 function bindStageRewardTooltips(container){
   container.querySelectorAll('.stage-reward-icon').forEach(button => {
     const { rewardKind: kind, rewardId: id, rewardRarity: rarity } = button.dataset;
-    const detail = kind === 'equip' ? generateEquipDetailHtml(getEquipTemplate(id), { rarity: Number(rarity) }) : kind === 'item' ? generateItemDetailHtml(getItemTemplate(id), { count: id === 'hipotion' ? 3 : 1 }) : id === 'equip-ten-ticket' ? '<b>装備ガチャ10連チケット</b><p>装備ガチャを10回まとめて引けるチケット。</p>' : '<b>背景スキンガチャチケット</b><p>背景スキンガチャを1回引けるチケット。</p>';
+    const detail = rewardTooltipHtml(kind, id, rarity);
     button.onmouseover = event => showTooltip(event, detail);
     button.onmousemove = updateTooltipPos;
     button.onmouseout = hideTooltip;
@@ -6223,7 +6365,7 @@ function grantStageMilestone(areaId, stageIndex, previousStars, currentStars){
 function pushMilestoneRewardCards(rewards, entry){
   if (entry.gold > 0) rewards.push({ kind:'item', name:`${entry.title}：${entry.gold} G`, icon:'💰' });
   for (const d of entry.drops || []) {
-    rewards.push({ kind: d.kind === 'equip' ? 'equip' : 'item', name:`${entry.title}：${d.name}${d.count > 1 ? ` ×${d.count}` : ''}`, icon:d.icon, rarity:d.rarity, ability:d.ability || null });
+    rewards.push({ kind: d.kind === 'equip' ? 'equip' : 'item', name:`${entry.title}：${d.name}${d.count > 1 && !/×\d/.test(d.name) ? ` ×${d.count}` : ''}`, icon:d.icon, rarity:d.rarity, ability:d.ability || null });
   }
 }
 
@@ -6236,7 +6378,10 @@ function recordStageClear(areaId, stageIndex){
   if (!G.stageTotalClears) G.stageTotalClears = {};
   if (!G.stageTotalClears[areaId]) G.stageTotalClears[areaId] = [];
   G.stageTotalClears[areaId][stageIndex] = (G.stageTotalClears[areaId][stageIndex] || 0) + 1;
-  return { previousStars, currentStars: counts[stageIndex], milestoneRewards: grantStageMilestone(areaId, stageIndex, previousStars, counts[stageIndex]) };
+  const milestoneRewards = grantStageMilestone(areaId, stageIndex, previousStars, counts[stageIndex]);
+  const pickupBonus = grantPickupBonusIfAny(areaId, stageIndex);
+  if (pickupBonus) milestoneRewards.unshift(pickupBonus);
+  return { previousStars, currentStars: counts[stageIndex], milestoneRewards };
 }
 
 /* 新ステージ選択（エリアの背景に よこならびで ステージボタンを ひょうじ） */
@@ -6282,6 +6427,10 @@ function showStageSelectNew(areaId){
       row.className = 'stage-select-row';
       row.innerHTML = `<span class="stage-select-num">${numPrefix}-${idx + 1}</span><span class="stage-select-name">${stage.name}</span>${stageClearStatusHtml(stageCounts[idx] || 0)}`;
       row.onclick = () => enterAreaStage(areaId, idx);
+      if (G && G.pickup && G.pickup.status === 'open' && G.pickup.areaId === areaId && G.pickup.stageIndex === idx) {
+        row.classList.add('is-pickup');
+        row.insertAdjacentHTML('afterbegin', '<span class="pickup-tag">ピックアップ！</span>');
+      }
       const line = document.createElement('div');
       line.className = 'stage-select-line';
       line.innerHTML = stageRewardPairHtml(areaId, idx, false, stageCounts[idx] || 0);
@@ -6352,51 +6501,167 @@ function showGrassSubstage(){
 /* ==========================================================
    サブクエストボード（拠点で NPCの ぶんしょうだいに こたえる）
    ========================================================== */
-const QUEST_BOARD_SIZE = 3;
+const QUEST_BOARD_SIZE = 6;
 
 function ensureQuestBoard(){
   if (!G.questBoard) G.questBoard = [];
   // ふるいセーブに のこった 1問だけの クエスト（parts が ない）は はきかえる
   G.questBoard = G.questBoard.filter(q => q && Array.isArray(q.parts));
+  // いまの 進み具合に 合わない かんたんすぎる クエスト（まだ 手をつけていないもの）は 入れかえる
+  G.questBoard = G.questBoard.map(q => (q.partIndex > 0 || questTierAllowed(q.tier)) ? q : generateStoryQuest());
   while (G.questBoard.length < QUEST_BOARD_SIZE) G.questBoard.push(generateStoryQuest());
+}
+
+/* カードの中に出す、1回目・2回目・3回目の ごほうび（ちいさい版。アイコンはホバーで詳細） */
+function questCardRewardsHtml(q){
+  const r = questRewardFor(q.tier);
+  const medal = stageRewardIcon('medal', 'quest-medal', 1, 24);
+  const item = it => stageRewardIcon('item', it.id, 1, 24);
+  const cell = (label, icons, gold, claimed) => `<div class="qc-reward${claimed ? ' is-claimed' : ''}"><b>${label}</b><span class="qc-icons">${icons}</span>${claimed ? '<em>獲得済み</em>' : `<span class="qc-gold">💰${gold}</span>`}</div>`;
+  return `<div class="quest-card-rewards">
+    ${cell('1回目', item(QUEST_STEP_ITEMS[0]) + medal, r.golds[0], q.partIndex >= 1)}
+    ${cell('2回目', item(QUEST_STEP_ITEMS[1]) + medal, r.golds[1], q.partIndex >= 2)}
+    ${cell('3回目', medal, r.golds[2], q.partIndex >= 3)}
+  </div>`;
+}
+
+/* 1回目・2回目・3回目の ごほうびを、ステージ選択と おなじ バッジで 見せる */
+function questRewardStripHtml(q){
+  const r = questRewardFor(q.tier);
+  const goldChip = g => `<span class="stage-reward-gold"><span aria-hidden="true">💰</span><b>${g}</b></span>`;
+  const itemIcon = it => stageRewardIcon('item', it.id, 1, 40);
+  const medalIcon = stageRewardIcon('medal', 'quest-medal', 1, 40);
+  return `<div class="quest-reward-strip">
+    ${stageRewardBadge('1回目', itemIcon(QUEST_STEP_ITEMS[0]) + medalIcon + goldChip(r.golds[0]), q.partIndex >= 1)}
+    ${stageRewardBadge('2回目', itemIcon(QUEST_STEP_ITEMS[1]) + medalIcon + goldChip(r.golds[1]), q.partIndex >= 2)}
+    ${stageRewardBadge('3回目', medalIcon + goldChip(r.golds[2]), q.partIndex >= 3)}
+  </div>`;
+}
+
+/* クエストメダルの ためた数と、もらえる ごほうびの 一覧 */
+function questMedalTrackHtml(){
+  const medals = G.questMedals || 0;
+  const done = G.questMedalExchanged || {};
+  return `<div class="quest-medal-rewards">${QUEST_MEDAL_MILESTONES.map(m => {
+    const got = !!done[m.key];
+    const can = !got && medals >= m.medals;
+    return `<div class="quest-medal-reward${got ? ' is-claimed' : ''}">${questMedalMilestoneIcon(m, 40)}<small>🏅 ${m.medals}まい</small>${got
+      ? '<strong>うけとりずみ</strong>'
+      : `<button type="button" class="btn quest-exchange-btn" data-exchange="${m.key}"${can ? '' : ' disabled'}>${can ? 'うけとる' : `あと${m.medals - medals}まい`}</button>`}</div>`;
+  }).join('')}</div>`;
+}
+
+/* うけとりの かくにん → わたす → ごほうび表示 */
+function confirmMedalExchange(key){
+  const m = QUEST_MEDAL_MILESTONES.find(x => x.key === key);
+  if (!m || (G.questMedalExchanged || {})[key] || (G.questMedals || 0) < m.medals) return;
+  document.querySelector('.quest-detail-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'quest-detail-overlay';
+  overlay.innerHTML = `<div class="quest-detail-panel quest-exchange-confirm" role="alertdialog" aria-modal="true">
+    <h3>うけとりますか？</h3>
+    <div class="quest-exchange-item">${questMedalMilestoneIcon(m, 56)}<b>${m.label}</b></div>
+    <p>メダルが <b>${m.medals}まい</b> あつまったので うけとれるよ！<br><small>（メダルは へりません）</small></p>
+    <div class="quest-detail-actions">
+      <button type="button" class="btn" id="btn-exchange-cancel">あとで</button>
+      <button type="button" class="btn btn-primary" id="btn-exchange-ok">うけとる！</button>
+    </div></div>`;
+  document.body.appendChild(overlay);
+  bindStageRewardTooltips(overlay);
+  const close = () => { hideTooltip(); overlay.remove(); };
+  $('btn-exchange-cancel').onclick = close;
+  $('btn-exchange-ok').onclick = () => {
+    close();
+    const reward = exchangeQuestMedals(key);
+    if (!reward) { showQuestBoard(); return; }
+    save();
+    playItemRevealSequence([reward], { badge:'🏅 メダルの ごほうび', title:'ごうかな けいひん！', showSummary:true, onDone: showQuestBoard });
+  };
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+}
+
+/* ボードの右上：メダルの アイコンと 数字だけ */
+function renderQuestMedalCount(){
+  const el = $('quest-medal-count');
+  if (!el) return;
+  el.innerHTML = `${stageRewardIcon('medal', 'quest-medal', 1, 28)}<b>${G.questMedals || 0}</b>`;
+  bindStageRewardTooltips(el);
+}
+
+/* クエストボードの上に いつも出す メダルの けいひん表 */
+function renderQuestMedalShop(){
+  const el = $('quest-medal-shop');
+  if (!el) return;
+  el.innerHTML = questMedalTrackHtml();
+  bindStageRewardTooltips(el);
+  el.querySelectorAll('[data-exchange]').forEach(btn => { btn.onclick = () => confirmMedalExchange(btn.dataset.exchange); });
 }
 
 function showQuestBoard(){
   showHome();
+  document.querySelector('.quest-detail-overlay')?.remove();
   $('screen-quest-board').classList.remove('hidden');
   ensureQuestBoard();
   const list = $('quest-board-list');
   list.innerHTML = '';
   for (const q of G.questBoard){
-    const part = q.parts[q.partIndex];
-    const row = document.createElement('div');
-    row.className = 'inv-row quest-board-row';
-    row.innerHTML = `<div class="info">
-      <div class="quest-npc-line">
-        <span class="quest-npc-emoji">${q.npc.emoji}</span>
-        <span class="quest-npc-name">${q.npc.name}</span>
-        <span class="tag">🧮${OP_LABELS[q.tier]}</span>
-        <span class="tag quest-progress-tag">${q.partIndex + 1}／${q.parts.length}問め</span>
-      </div>
-      <div class="quest-title">＊${q.title}＊</div>
-      <div class="desc quest-text">${part.text}</div>
-    </div>`;
-    const btnGroup = document.createElement('div');
-    btnGroup.className = 'skill-row-btns';
-    const answerBtn = document.createElement('button');
-    answerBtn.className = 'btn btn-primary';
-    answerBtn.textContent = 'こたえる';
-    answerBtn.onclick = () => startQuestChallenge(q);
-    const printBtn = document.createElement('button');
-    printBtn.className = 'btn';
-    printBtn.textContent = '🖨️ プリント';
-    printBtn.onclick = () => printQuestSheet(q);
-    btnGroup.appendChild(answerBtn);
-    btnGroup.appendChild(printBtn);
-    row.appendChild(btnGroup);
-    list.appendChild(row);
+    // 中に ごほうびアイコン（ホバーで詳細）の ボタンが 入るので、カードは button ではなく div にする
+    const card = document.createElement('div');
+    card.setAttribute('role', 'button');
+    card.tabIndex = 0;
+    card.className = 'quest-card';
+    card.setAttribute('aria-label', `${q.npc.name}「${q.title}」 ${q.partIndex}／${q.parts.length}問 クリア`);
+    const stars = Array.from({ length: q.parts.length }, (_, i) => `<span class="${i < q.partIndex ? 'on' : ''}">★</span>`).join('');
+    card.innerHTML = `
+      <div class="quest-card-ribbon"><span class="quest-card-stars">${stars}</span></div>
+      <div class="quest-card-art"><img src="${getNPCImage(q.npc)}" alt=""></div>
+      <div class="quest-card-name">${q.npc.name}</div>
+      <div class="quest-card-title">${q.title}</div>
+      <div class="quest-card-tag">🧮 ${OP_LABELS[q.tier]}</div>
+      ${questCardRewardsHtml(q)}`;
+    card.onclick = () => showQuestDetail(q);
+    card.onkeydown = e => { if (e.target === card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); showQuestDetail(q); } };
+    list.appendChild(card);
   }
+  bindStageRewardTooltips(list);
+  renderQuestMedalShop();
+  renderQuestMedalCount();
 }
+
+/* カードを えらんだあとの 詳細：もんだい・ごほうび（1〜3回目）・こたえる／プリント */
+function showQuestDetail(q){
+  document.querySelector('.quest-detail-overlay')?.remove();
+  const part = q.parts[q.partIndex];
+  const overlay = document.createElement('div');
+  overlay.className = 'quest-detail-overlay';
+  overlay.innerHTML = `
+    <div class="quest-detail-panel" role="dialog" aria-modal="true" aria-labelledby="quest-detail-title">
+      <div class="quest-detail-head">
+        <img class="quest-detail-npc" src="${getNPCImage(q.npc)}" alt="">
+        <div>
+          <div class="quest-npc-line"><span class="quest-npc-name">${q.npc.name}</span>
+            <span class="tag">🧮${OP_LABELS[q.tier]}</span>
+            <span class="tag quest-progress-tag">${q.partIndex + 1}／${q.parts.length}問め</span></div>
+          <h3 id="quest-detail-title" class="quest-title">＊${q.title}＊</h3>
+        </div>
+      </div>
+      <div class="quest-detail-text">${part.text}</div>
+      ${questRewardStripHtml(q)}
+      <div class="quest-detail-actions">
+        <button type="button" class="btn" id="btn-quest-detail-close">とじる</button>
+        <button type="button" class="btn" id="btn-quest-detail-print">🖨️ プリント</button>
+        <button type="button" class="btn btn-primary" id="btn-quest-detail-answer">こたえる</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  bindStageRewardTooltips(overlay);
+  const close = () => { hideTooltip(); overlay.remove(); };
+  $('btn-quest-detail-close').onclick = close;
+  $('btn-quest-detail-print').onclick = () => printQuestSheet(q);
+  $('btn-quest-detail-answer').onclick = () => { close(); startQuestChallenge(q); };
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+}
+
 
 /* クエスト依頼者からの お礼のセリフ（3問すべて こたえおわった とき） */
 const QUEST_THANKS_LINES = [
@@ -6416,7 +6681,7 @@ const QUEST_CONTINUE_LINES = [
 
 /* サブクエストの クリア演出：NPCの おれいセリフ＋ごほうび
    （ゴールド・けいけんちが じっさいの HUDの ばしょへ とんでいく） */
-function showQuestRewardToast(gold, exp, npc, completed, onDone){
+function showQuestRewardToast(gold, exp, npc, completed, extras, onDone){
   showHome();
   document.querySelector('.quest-reward-overlay')?.remove();
   const overlay = document.createElement('div');
@@ -6430,6 +6695,7 @@ function showQuestRewardToast(gold, exp, npc, completed, onDone){
         <div class="quest-reward-chip gold" id="quest-reward-chip-gold">💰 +${gold}</div>
         <div class="quest-reward-chip exp" id="quest-reward-chip-exp">✨ +${exp}</div>
       </div>
+      ${(extras && extras.length) ? `<div class="quest-reward-extras">${extras.map(x => `<div class="quest-reward-extra${x.big ? ' is-big' : ''}">${iconHtml(x.icon, 26)}<span>${x.text}</span></div>`).join('')}</div>` : ''}
     </div>
   `;
   document.body.appendChild(overlay);
@@ -6443,7 +6709,7 @@ function showQuestRewardToast(gold, exp, npc, completed, onDone){
   setTimeout(() => {
     overlay.remove();
     if (onDone) onDone();
-  }, 1900);
+  }, (extras && extras.some(x => x.big)) ? 3600 : (extras && extras.length) ? 2600 : 1900);
 }
 
 /* fromEl の見た目のコピーを、toEl の位置まで とばして きえさせる。
@@ -6543,11 +6809,13 @@ function startQuestChallenge(q) {
         if (res.success) {
           hitTrainingDummy();
           const reward = questRewardFor(q.tier);
+          const stepIdx = q.partIndex;
           q.partIndex++;
           const completed = q.partIndex >= q.parts.length;
-          const totalGold = reward.gold + (completed ? Math.round(reward.gold * 0.5) : 0);
+          const totalGold = reward.golds[Math.min(stepIdx, reward.golds.length - 1)];
           const totalExp = reward.exp + (completed ? Math.round(reward.exp * 0.5) : 0);
           G.player.gold += totalGold;
+          const questExtras = grantQuestExtras(q.partIndex, completed);
           const { leveledUp, lvlBefore, pointsGained, maxHpBefore, maxMpBefore } = grantExp(totalExp);
           if (completed){
             const idx = G.questBoard.findIndex(x => x.uid === q.uid);
@@ -6573,14 +6841,9 @@ function startQuestChallenge(q) {
           };
           
           const playReward = () => {
-            showQuestRewardToast(totalGold, totalExp, q.npc, completed, () => {
-              const nextStep = () => {
-                if (completed) {
-                  showQuestBoard(); // クエスト完了後はクエストボードに戻す
-                } else {
-                  startQuestChallenge(q); // 未完了なら次の問題へ連続で進む
-                }
-              };
+            showQuestRewardToast(totalGold, totalExp, q.npc, completed, questExtras, () => {
+              // 1問おわるごとに サブクエストボードへ もどる（つづきは ボードから えらぶ）
+              const nextStep = () => showQuestBoard();
               if (leveledUp){
                 const unlockedSkills = SKILL_DB.filter(s => (s.reqLvl || 1) > lvlBefore && (s.reqLvl || 1) <= G.player.lvl);
                 showLevelUpModal({
@@ -6686,6 +6949,8 @@ let statusPending = {};
 let currentRoomTab = 'status-equip';
 
 function setRoomTab(tabKey){
+  // 「持ち物」タブは なくなった（そうび画面の「アイテム」タブに 統合）
+  if (tabKey === 'inventory') { tabKey = 'status-equip'; equipListTab = 'items'; }
   currentRoomTab = tabKey || 'status-equip';
   document.querySelectorAll('.room-nav-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.roomTab === currentRoomTab);
@@ -6697,8 +6962,6 @@ function setRoomTab(tabKey){
   if (currentRoomTab === 'status-equip') {
     renderStatus();
     renderEquipmentSlots();
-  } else if (currentRoomTab === 'inventory') {
-    renderRoomInventory();
   } else if (currentRoomTab === 'stats') {
     renderPlayerStudyStats();
   }
@@ -6715,11 +6978,13 @@ function statusPendingTotal(){
 }
 
 
-function renderRoomInventory() {
-  const grid = $('room-inventory-grid');
+let roomInventoryTarget = null; // いま アイテムを 描いている 先（もちもの タブ／そうび画面の 一覧）
+function renderRoomInventory(gridEl, cellCount) {
+  const grid = gridEl || roomInventoryTarget;
   if (!grid) return;
+  roomInventoryTarget = grid;
   grid.innerHTML = '';
-  const CELLS = 64; // 8x8
+  const CELLS = cellCount || 64; // 8x8
   
   for (let i = 0; i < CELLS; i++) {
     const cell = document.createElement('div');
@@ -6928,14 +7193,10 @@ function renderStatusPentagonUI(bonusMap, remaining){
   const maxR = 98;
   const numAxes = 5;
 
-  // 動的スケーリング：能力値が基準値を超えた場合に全体を収める
-  let maxOverRatio = 1.0;
-  for (const item of STAT_RADAR_DEFS){
-    const curVal = (G.player[item.key] || 0) + (bonusMap[item.key] || 0);
-    const pendVal = curVal + ((statusPending[item.key] || 0) * item.per);
-    const ratio = pendVal / item.baseCap;
-    if (ratio > maxOverRatio) maxOverRatio = ratio;
-  }
+  // 外側のふち＝「いまのレベルの めやす」。レベルが あがるほど めやすも ふえる。
+  // 各じくを それぞれ めやすで わる（ひとつの 能力が めやすを こえても、ほかの能力が つぶれない）
+  const capScale = 1 + 0.1 * (Math.max(1, G.player.lvl) - 1);
+  const capOf = item => item.baseCap * capScale;
 
   const getAngle = (i) => (-90 + i * (360 / numAxes)) * (Math.PI / 180);
 
@@ -6981,8 +7242,8 @@ function renderStatusPentagonUI(bonusMap, remaining){
     const previewTotal = curTotal + pendGain;
 
     // 比率 (最小8%、最大100%)
-    const baseRatio = Math.max(0.08, Math.min(1.0, curTotal / (item.baseCap * maxOverRatio)));
-    const pendRatio = Math.max(0.08, Math.min(1.0, previewTotal / (item.baseCap * maxOverRatio)));
+    const baseRatio = Math.max(0.08, Math.min(1.0, curTotal / capOf(item)));
+    const pendRatio = Math.max(0.08, Math.min(1.0, previewTotal / capOf(item)));
 
     const bx = cx + maxR * baseRatio * Math.cos(th);
     const by = cy + maxR * baseRatio * Math.sin(th);
@@ -7171,25 +7432,45 @@ function equipStatBarsHtml(stat){
 
 /* そうびコストの視覚化：四角いブロック1個＝コスト1。上限ぶんのマスの うち
    つかっている分だけ 色がつく */
-function costBarHtml(used, cap){
-  let blocks = '';
-  for (let i = 1; i <= cap; i++){
-    blocks += `<span class="cost-block${i <= used ? ' filled' : ''}"></span>`;
+/* コストの ブロック表示（どこでも これ1つ）。1段に 10こまで。11こめからは 下の段へ のびる。
+   total＝ブロックの数、filled＝そのうち 色がつく数、over＝赤くする */
+const COST_BLOCKS_PER_ROW = 10;
+function costGridHtml(total, filled, over = false){
+  let cells = '';
+  for (let i = 1; i <= total; i++){
+    cells += `<span class="cost-cell${i <= filled ? (over ? ' over' : ' filled') : ''}"></span>`;
   }
-  return `<div class="cost-bar-label">そうびコスト：<b class="${used > cap ? 'bad' : ''}">${used}</b> / ${cap}</div>
-    <div class="cost-bar">${blocks}</div>`;
+  return `<span class="cost-grid" style="--cost-cols:${COST_BLOCKS_PER_ROW}">${cells}</span>`;
 }
 
-/* 個別そうびのコスト表示：四角ブロックとともに数字も並べて明確に表す */
-function costBlocksHtml(cost, wouldExceed = false, showLabel = true){
-  let blocks = '';
-  for (let i = 0; i < cost; i++){
-    blocks += `<span class="cost-mini-block${wouldExceed ? ' over' : ''}"></span>`;
+/* 自分の部屋：いまの そうびコスト（つかっている／上限）。
+   next を わたすと「そうびしたら ここまで ふえる」を 点滅で見せる。上限を こえた ぶんは 赤い ブロック */
+function costBarHtml(used, cap, next){
+  const hasNext = Number.isFinite(next) && next !== used;
+  const target = hasNext ? next : used;
+  const total = Math.max(cap, used, target);
+  const stay = hasNext ? Math.min(used, next) : used;
+  let cells = '';
+  for (let i = 1; i <= total; i++){
+    let cls = '';
+    if (i <= stay) cls = i <= cap ? ' filled' : ' over';
+    else if (hasNext && next > used && i <= next) cls = i <= cap ? ' blink' : ' blink-over';
+    else if (hasNext && next < used && i <= used) cls = ' blink-free';
+    cells += `<span class="cost-cell${cls}"></span>`;
   }
+  const label = hasNext
+    ? `<b>${used}</b> → <b class="${next > cap ? 'bad' : 'preview'}">${next}</b>`
+    : `<b class="${used > cap ? 'bad' : ''}">${used}</b>`;
+  return `<div class="cost-bar-label">そうびコスト：${label} / ${cap}</div>
+    <span class="cost-grid" style="--cost-cols:${COST_BLOCKS_PER_ROW}">${cells}</span>`;
+}
+
+/* 個別そうびのコスト表示：ブロックと数字（そうび枠・一覧・詳細ウィンドウ共通） */
+function costBlocksHtml(cost, wouldExceed = false, showLabel = true){
   return `<span class="tag cost-tag${wouldExceed ? ' cost-tag-over' : ''}">
     ${showLabel ? '<span class="cost-tag-text">コスト:</span>' : ''}
     <span class="cost-num-val">${cost}</span>
-    <span class="cost-mini-blocks">${blocks}</span>
+    ${costGridHtml(cost, cost, wouldExceed)}
   </span>`;
 }
 
@@ -7215,10 +7496,6 @@ function generateEquipDetailHtml(db, options = {}){
   const slot = db.slot;
   const SLOT_ICONS = { weapon:'⚔️', armor:'🛡️', accessory:'💍' };
 
-  let costBlocks = '';
-  for (let i = 0; i < cost; i++){
-    costBlocks += `<span class="cost-mini-block"></span>`;
-  }
 
   const statBadges = Object.entries(stat).map(([k, v]) => {
     const info = EQUIP_STAT_INFOS[k] || { name:k, icon:'✨' };
@@ -7276,7 +7553,7 @@ function generateEquipDetailHtml(db, options = {}){
         <div class="equip-cost-display">
           <span class="cost-lbl">コスト:</span>
           <span class="cost-num-val">${cost}</span>
-          <span class="cost-mini-blocks">${costBlocks}</span>
+          ${costGridHtml(cost, cost)}
         </div>
       </div>
 
@@ -7555,6 +7832,15 @@ function buyEquip(db){
   showEquipPurchaseReveal({ kind:'equip', name: db.name, rarity: 1, icon: db.emoji, ability: null });
 }
 
+/* そうび画面：上＝コスト、その下＝ぶき・よろい・アクセサリを 横ならび、その下＝そうび／アイテムの 一覧 */
+let equipListTab = 'equips';
+let equipSlotFilter = 'all'; // 'all' | 'weapon' | 'armor' | 'accessory'
+
+function setEquipListMsg(text){
+  const el = $('equip-list-msg');
+  if (el) el.textContent = text || '';
+}
+
 function renderEquipmentSlots(){
   const SLOT_ICONS = { weapon:'⚔️', armor:'🛡️', accessory:'💍' };
   for (const slot of EQUIP_SLOTS){
@@ -7565,73 +7851,138 @@ function renderEquipmentSlots(){
     let db = null;
     if (eq) {
       owned = G.ownedEquips.find(o => o.uid === eq.uid);
-      if (owned) {
-        db = getEquipTemplate(owned.id);
-      }
+      if (owned) db = getEquipTemplate(owned.id);
     }
-    
     if (!db){
       el.className = 'equip-slot empty-slot';
-      el.onmouseover = null;
-      el.onmouseout = null;
       el.innerHTML = `
-        <div class="equip-slot-header">
-          <span class="slot-badge">${SLOT_ICONS[slot] || '✨'} ${SLOT_LABELS[slot]}</span>
-          <span class="slot-status-text">未装備</span>
-        </div>
-        <div class="equip-slot-body">
-          <div class="equip-icon equip-icon-empty">${HOME_EQUIP_SLOT_EMPTY_ICON[slot] || '？'}</div>
-          <div class="equip-slot-details">
-            <div class="equip-slot-empty-msg">装備していません</div>
-            <button class="btn btn-primary btn-equip-change" data-slot="${slot}">＋ そうびする</button>
-          </div>
-        </div>`;
+        <div class="slot-badge">${SLOT_ICONS[slot]} ${SLOT_LABELS[slot]}</div>
+        <div class="equip-icon equip-icon-empty">${HOME_EQUIP_SLOT_EMPTY_ICON[slot] || '？'}</div>
+        <div class="equip-slot-name equip-slot-none">未装備</div>`;
     } else {
       el.className = 'equip-slot';
-      const stat = calcEquipStat(db.stat, owned.rarity);
-      const abilityInfo = owned.ability ? getAbility(owned.ability) : null;
       el.innerHTML = `
-        <div class="equip-slot-header">
-          <span class="slot-badge">${SLOT_ICONS[slot] || '✨'} ${SLOT_LABELS[slot]}</span>
-          ${costBlocksHtml(equipCost(db, owned.rarity))}
-        </div>
-        <div class="equip-slot-body">
-          <div class="equip-icon rarity-${owned.rarity}">${iconHtml(db.emoji, 56)}</div>
-          <div class="equip-slot-details">
-            <div class="equip-slot-name-row">
-              <span class="equip-slot-name rarity-${owned.rarity}">${rarityLabelHtml(owned.rarity)} ${db.name}</span>
-            </div>
-            <div class="equip-stat-bars">${equipStatBarsHtml(stat)}</div>
-            ${abilityInfo ? `<div class="desc ability-desc">✨ ${abilityInfo.name}（${abilityInfo.desc}）</div>` : ''}
-          </div>
-        </div>
-        <div class="equip-slot-actions">
-          <button class="btn btn-equip-change" data-slot="${slot}">🔄 かえる</button>
-          <button class="btn btn-unequip">✕ 外す</button>
-        </div>`;
-
-      // 装備アイコンやカード本体ホバーで統一レイアウト詳細を表示
+        <div class="slot-badge">${SLOT_ICONS[slot]} ${SLOT_LABELS[slot]}</div>
+        <button type="button" class="equip-icon rarity-${owned.rarity}" aria-label="${db.name}を はずす">${iconHtml(db.emoji, 56)}</button>
+        <div class="equip-slot-name rarity-${owned.rarity}">${db.name}</div>
+        <span class="tag cost-tag"><span class="cost-tag-text">コスト</span> <span class="cost-num-val">${equipCost(db, owned.rarity)}</span></span>
+        <button type="button" class="btn btn-unequip">✕ はずす</button>`;
       const iconEl = el.querySelector('.equip-icon');
-      if (iconEl){
-        bindEquipDetailTooltip(iconEl, db, { rarity: owned.rarity, ability: owned.ability });
-      }
-
-      el.querySelector('.btn-unequip').onclick = () => {
+      bindEquipDetailTooltip(iconEl, db, { rarity: owned.rarity, ability: owned.ability });
+      const unequip = () => {
         hideTooltip();
         G.equipment[slot] = null;
         save();
-        renderEquipmentSlots();
         renderStatus();
+        renderEquipmentSlots();
       };
+      iconEl.onclick = unequip;
+      el.querySelector('.btn-unequip').onclick = unequip;
     }
-    
-    el.querySelector('.btn-equip-change').onclick = () => {
-      hideTooltip();
-      openEquipSelectModal(slot);
-    };
   }
-
   $('equip-cost-bar').innerHTML = costBarHtml(usedCost(), costCap());
+  renderEquipList();
+}
+
+/* 下の 一覧：そうび／アイテムを タブで きりかえ。アイコンを おすと そうび・つかう */
+/* コストバーの「そうびしたら」プレビュー（ホバー中だけ）。高さを 固定して、のびた ぶんは 上に かさねる（一覧が ずれて ちらつかないように） */
+function previewEquipCost(nextUsed){
+  const bar = $('equip-cost-bar');
+  if (!bar) return;
+  if (!bar.classList.contains('is-previewing')) {
+    bar.style.height = bar.offsetHeight + 'px';
+    bar.classList.add('is-previewing');
+  }
+  bar.innerHTML = costBarHtml(usedCost(), costCap(), nextUsed);
+}
+function clearEquipCostPreview(){
+  const bar = $('equip-cost-bar');
+  if (!bar || !bar.classList.contains('is-previewing')) return;
+  bar.classList.remove('is-previewing');
+  bar.style.height = '';
+  bar.innerHTML = costBarHtml(usedCost(), costCap());
+}
+
+function renderEquipList(){
+  const grid = $('equip-list-grid');
+  if (!grid) return;
+  $('equip-tab-equips')?.classList.toggle('active', equipListTab === 'equips');
+  $('equip-tab-items')?.classList.toggle('active', equipListTab === 'items');
+  $('equip-tab-equips')?.setAttribute('aria-selected', String(equipListTab === 'equips'));
+  $('equip-tab-items')?.setAttribute('aria-selected', String(equipListTab === 'items'));
+  const filterEl = $('equip-slot-filter');
+  if (filterEl) filterEl.style.display = equipListTab === 'equips' ? '' : 'none';
+  if (equipListTab === 'items') {
+    grid.className = 'equip-list-grid is-items';
+    renderRoomInventory(grid, Math.max(24, G.items.length + 4));
+    return;
+  }
+  roomInventoryTarget = null;
+  grid.className = 'equip-list-grid is-equips';
+  grid.innerHTML = '';
+  const slotOrder = s => EQUIP_SLOTS.indexOf(s);
+  const allOwned = G.ownedEquips.map(o => ({ o, db: getEquipTemplate(o.id) })).filter(x => x.db);
+  // 種類でしぼりこむボタン（すべて／ぶき／よろい／アクセサリ）
+  if (filterEl) {
+    const SLOT_ICONS_F = { weapon:'⚔️', armor:'🛡️', accessory:'💍' };
+    const chips = [{ key:'all', label:'すべて', icon:'' }, ...EQUIP_SLOTS.map(sl => ({ key:sl, label:SLOT_LABELS[sl], icon:SLOT_ICONS_F[sl] }))];
+    filterEl.innerHTML = chips.map(c => {
+      const n = c.key === 'all' ? allOwned.length : allOwned.filter(x => x.db.slot === c.key).length;
+      return `<button type="button" class="equip-filter-chip${equipSlotFilter === c.key ? ' active' : ''}" data-slot-filter="${c.key}" aria-pressed="${equipSlotFilter === c.key}">${c.icon} ${c.label}<small>${n}</small></button>`;
+    }).join('');
+    filterEl.querySelectorAll('[data-slot-filter]').forEach(btn => {
+      btn.onclick = () => { equipSlotFilter = btn.dataset.slotFilter; setEquipListMsg(''); renderEquipList(); };
+    });
+  }
+  const owned = allOwned
+    .filter(x => equipSlotFilter === 'all' || x.db.slot === equipSlotFilter)
+    .sort((a, b) => slotOrder(a.db.slot) - slotOrder(b.db.slot) || b.o.rarity - a.o.rarity || a.db.name.localeCompare(b.db.name, 'ja'));
+  if (!owned.length) {
+    grid.innerHTML = `<div class="flavor equip-list-empty">${equipSlotFilter === 'all' ? 'そうびを もっていない。' : `${SLOT_LABELS[equipSlotFilter]}は もっていない。`}</div>`;
+    return;
+  }
+  const SLOT_ICONS = { weapon:'⚔️', armor:'🛡️', accessory:'💍' };
+  for (const { o, db } of owned) {
+    const equipped = !!G.equipment[db.slot] && G.equipment[db.slot].uid === o.uid;
+    const cost = equipCost(db, o.rarity);
+    const tooCostly = !equipped && (usedCost(db.slot) + cost > costCap());
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = `equip-grid-cell rarity-${o.rarity}${equipped ? ' is-equipped' : ''}${tooCostly ? ' is-costly' : ''}`;
+    cell.setAttribute('aria-label', `${db.name}${equipped ? '（そうびちゅう）' : ''} コスト${cost}`);
+    cell.innerHTML = `${iconHtml(db.emoji, 44)}<span class="egc-slot">${SLOT_ICONS[db.slot]}</span><span class="egc-cost">${cost}</span>${equipped ? '<span class="egc-on">そうび中</span>' : ''}`;
+    bindEquipDetailTooltip(cell, db, { rarity: o.rarity, ability: o.ability });
+    if (!equipped) {
+      // ホバー／フォーカスで「そうびしたら コストが ここまで ふえる」を 点滅表示（上限こえは 赤）
+      const nextUsed = usedCost(db.slot) + cost;
+      cell.addEventListener('mouseenter', () => previewEquipCost(nextUsed));
+      cell.addEventListener('focus', () => previewEquipCost(nextUsed));
+      cell.addEventListener('mouseleave', clearEquipCostPreview);
+      cell.addEventListener('blur', clearEquipCostPreview);
+    }
+    cell.onclick = () => {
+      hideTooltip();
+      clearEquipCostPreview();
+      setEquipListMsg('');
+      if (equipped) {
+        G.equipment[db.slot] = null;
+        save();
+        renderStatus();
+        renderEquipmentSlots();
+      } else if (tooCostly) {
+        SM.playBeep('error');
+        setEquipListMsg(`コストが たりないよ！（${usedCost(db.slot) + cost} ／ ${costCap()}）`);
+      } else {
+        const nextUsed = usedCost(db.slot) + cost;
+        showConfirmModal('そうびしますか？',
+          `<div class="equip-confirm-body">${iconHtml(db.emoji, 56)}<b class="rarity-${o.rarity}">${db.name}</b>
+            <div>コスト ${usedCost()} → <b>${nextUsed}</b> ／ ${costCap()}</div>
+            <small>※ けいさん（${OP_LABELS[db.opTier]}）に せいかいすると そうびできるよ</small></div>`,
+          () => startEquipFlow(o, db));
+      }
+    };
+    grid.appendChild(cell);
+  }
 }
 
 function openEquipSelectModal(targetSlot) {
@@ -8535,7 +8886,7 @@ function getSkinGachaPrizes() {
     { ...hero, kind: 'character', owned: hero.id === G.avatar || (G.unlockedSkins || []).includes(hero.id) },
     { ...hero, name: `ホログラム・${hero.name}`, kind: 'holo-character', holographic: true, owned: (G.holographicSkins || []).includes(hero.id) },
   ]);
-  const backgrounds = AVATAR_BACKGROUNDS.filter(background => background.image && background.rewardSource !== 'raid').flatMap(background => [
+  const backgrounds = AVATAR_BACKGROUNDS.filter(background => background.image && !background.rewardSource).flatMap(background => [
     { ...background, kind: 'background', owned: background.id === G.avatarBackground || (G.unlockedAvatarBackgrounds || []).includes(background.id) },
     { ...background, name: `ホログラム・${background.name}`, kind: 'holo-background', holographic: true, owned: (G.holographicAvatarBackgrounds || []).includes(background.id) },
   ]);
@@ -9161,7 +9512,7 @@ on('btn-raid-history', async () => {
   });
   on('btn-raid-sync-retry', () => syncRaidState());
   on('btn-raid-challenge', startRaidBattle);
-  on('hotspot-adventure', showStageSelect);
+  on('hotspot-adventure', openAdventure);
 
   // 教科タブ切り替え
   on('subject-tab-math', () => setSubjectTab('math'));
@@ -9218,6 +9569,8 @@ on('btn-raid-history', async () => {
 
   on('btn-status-back', showHome);
   on('btn-status-confirm', confirmStatusAllocation);
+  on('equip-tab-equips', () => { equipListTab = 'equips'; setEquipListMsg(''); renderEquipList(); });
+  on('equip-tab-items', () => { equipListTab = 'items'; setEquipListMsg(''); renderEquipList(); });
 
   // 自分の部屋の左側タブ切り替えボタン
   document.querySelectorAll('.room-nav-btn').forEach(btn => {
@@ -9315,9 +9668,9 @@ on('btn-raid-history', async () => {
 	    });
 
 	    const ownedBackgrounds = getSelectableAvatarBackgrounds();
-	    const lockedGachaCount = AVATAR_BACKGROUNDS.filter(background => background.image && background.rewardSource !== 'raid' && !ownedBackgrounds.some(owned => owned.id === background.id)).length;
+	    const lockedGachaCount = AVATAR_BACKGROUNDS.filter(background => background.image && !background.rewardSource && !ownedBackgrounds.some(owned => owned.id === background.id)).length;
 	    $('avatar-background-locked-note').textContent = [lockedGachaCount ? `未所持の背景 ${lockedGachaCount}種は背景スキンガチャで獲得できます。` : '', !ownedBackgrounds.some(background => background.id === 'raid_magma') ? 'マグマの火山はレイドに参加すると獲得できます。' : ''].filter(Boolean).join(' ');
-	    [{ title: '基本', entries: AVATAR_BACKGROUNDS.filter(background => !background.image) }, { title: 'テーマ背景', entries: AVATAR_BACKGROUNDS.filter(background => background.image && background.rewardSource !== 'raid') }, { title: 'レイド参加特典', entries: AVATAR_BACKGROUNDS.filter(background => background.rewardSource === 'raid') }].forEach(({ title, entries }) => {
+	    [{ title: '基本', entries: AVATAR_BACKGROUNDS.filter(background => !background.image) }, { title: 'テーマ背景', entries: AVATAR_BACKGROUNDS.filter(background => background.image && !background.rewardSource) }, { title: 'レイド参加特典', entries: AVATAR_BACKGROUNDS.filter(background => background.rewardSource === 'raid') }, { title: 'クエスト限定', entries: AVATAR_BACKGROUNDS.filter(background => background.rewardSource === 'quest') }].forEach(({ title, entries }) => {
 	      const group = document.createElement('section');
 	      group.className = 'avatar-selector-group';
 	      const heading = document.createElement('h4');
@@ -9736,6 +10089,140 @@ function recordRaidLearningAnswer(problem, isCorrect) {
   if (isCorrect) stat.correct = (stat.correct || 0) + 1;
   else stat.wrong = (stat.wrong || 0) + 1;
   save();
+}
+
+/* ==========================================================
+   ピックアップステージ（「冒険に出る」で表示。レイドの復習おすすめから きまる）
+   やる！で すぐ挑戦し、クリアすると チャレンジボーナス（装備ガチャ10連チケット）。
+   「やらない」を選ぶか、クリアするまでの あいだ レイドボス1体ぶん（bossId）つづく
+   ========================================================== */
+const PICKUP_STAGE_MAP = {
+  kanji_1:{ areaId:'area5' }, kanji_2:{ areaId:'area6' }, kanji_3:{ areaId:'area7' },
+  kanji_4:{ areaId:'area8' }, kanji_5:{ areaId:'area9' }, kanji_6:{ areaId:'area10' },
+  math_add:{ areaId:'area1' }, math_sub:{ areaId:'area13' }, math_mul:{ areaId:'area2' },
+  math_div:{ areaId:'area3' }, math_dec:{ areaId:'area11', stages:[0,1] }, math_frac:{ areaId:'area11', stages:[2,3] },
+  math_elem5:{ areaId:'area11' }, math_elem6:{ areaId:'area12' }, math_calc:{ areaId:'area4' },
+};
+
+function topRaidLearningEntry(){
+  const cands = Object.entries(G?.raidLearning || {})
+    .filter(([, st]) => st.attempts >= 3 && st.wrong >= 2)
+    .sort((a, b) => (b[1].wrong / b[1].attempts) - (a[1].wrong / a[1].attempts) || b[1].wrong - a[1].wrong || b[1].attempts - a[1].attempts);
+  return cands[0] ? { key: cands[0][0], stat: cands[0][1] } : null;
+}
+
+/* エリアの中で いちばん クリア回数が少ない（おなじなら 前の）ステージを えらぶ */
+function leastClearedStage(areaId, allowed){
+  const counts = getStageClearCounts(areaId);
+  const idxs = (allowed && allowed.length ? allowed : (AREA_STAGES[areaId].stages || []).map((_, i) => i));
+  return idxs.reduce((best, i) => ((counts[i] || 0) < (counts[best] || 0) ? i : best), idxs[0]);
+}
+
+function choosePickupStage(){
+  const rec = topRaidLearningEntry();
+  const map = rec && PICKUP_STAGE_MAP[rec.key];
+  if (map && AREA_STAGES[map.areaId]) {
+    return { areaId: map.areaId, stageIndex: leastClearedStage(map.areaId, map.stages), reason: `れいどで まちがえた「${rec.stat.label}」の ふくしゅう！` };
+  }
+  // れいどの きろくが まだ ないとき：さんすうを じゅんばんに みて、まだ ★3 に なっていない さいしょのステージ
+  for (const areaId of STAGE_REWARD_MATH_ORDER) {
+    const counts = getStageClearCounts(areaId);
+    const idx = counts.findIndex(c => (c || 0) < STAGE_STARS_TO_UNLOCK_NEXT);
+    if (idx >= 0) return { areaId, stageIndex: idx, reason: 'いまの きみに ぴったりの ステージ！' };
+  }
+  const last = STAGE_REWARD_MATH_ORDER[STAGE_REWARD_MATH_ORDER.length - 1];
+  return { areaId: last, stageIndex: 0, reason: 'いまの きみに ぴったりの ステージ！' };
+}
+
+/* いま ゆうこうな ピックアップ（なければ null）。レイドボスが かわると あたらしく きまる */
+function getActivePickup(){
+  if (!G) return null;
+  const bossId = getRaidData().bossId || RAID_BOSS_ID;
+  if (!G.pickup || G.pickup.bossId !== bossId) {
+    G.pickup = { bossId, ...choosePickupStage(), status: 'open' };
+  }
+  return G.pickup.status === 'open' ? G.pickup : null;
+}
+
+/* ピックアップを クリアしたら ボーナスを わたす（recordStageClear から呼ぶ）。{title, gold, drops, luxury} を かえす */
+function grantPickupBonusIfAny(areaId, stageIndex){
+  const pk = G && G.pickup;
+  if (!pk || pk.status !== 'open' || pk.areaId !== areaId || pk.stageIndex !== stageIndex) return null;
+  const n = Math.max(0, Math.round(rewardSettings.pickupBonusTickets));
+  pk.status = 'claimed';
+  if (n <= 0) return null;
+  G.equipGachaTenPullTickets = (G.equipGachaTenPullTickets || 0) + n;
+  return { title:'ピックアップ チャレンジボーナス', gold:0, luxury:true, drops:[{ kind:'equip-ticket', name:`装備ガチャ10連チケット ×${n}`, icon:'🎫', count:n }] };
+}
+
+function pickupTicketRowHtml(n, lost){
+  const icons = Array.from({ length: Math.min(n, 5) }, () => stageRewardIcon('ticket', 'equip-ten-ticket', 1, 68)).join('');
+  return `<div class="pickup-tickets${lost ? ' is-lost' : ''}"><div class="pickup-ticket-icons">${icons}${lost ? '<span class="pickup-lost-mark" aria-hidden="true">✖</span>' : ''}</div><b>装備ガチャ10連チケット ×${n}</b></div>`;
+}
+
+/* 「冒険に出る」：ピックアップが あれば まず それを 見せる */
+function openAdventure(){
+  const pk = getActivePickup();
+  if (!pk) { showStageSelect(); return; }
+  showPickupOverlay(pk);
+}
+
+function showPickupOverlay(pk){
+  document.querySelector('.pickup-overlay')?.remove();
+  const area = AREA_STAGES[pk.areaId];
+  const stage = area.stages[pk.stageIndex];
+  const numPrefix = area.displayNum || pk.areaId.replace('area', '');
+  const n = Math.max(0, Math.round(rewardSettings.pickupBonusTickets));
+  if (SM.initialized) SM.play('se_clear');
+  const overlay = document.createElement('div');
+  overlay.className = 'pickup-overlay';
+  overlay.innerHTML = `
+    <div class="panel pickup-panel" role="dialog" aria-modal="true" aria-labelledby="pickup-title">
+      <div class="pickup-ribbon">✨ ピックアップ ステージ ✨</div>
+      <h2 id="pickup-title">${area.name}　${numPrefix}-${pk.stageIndex + 1}</h2>
+      <p class="pickup-stage-name">${stage.name}</p>
+      <p class="flavor">${pk.reason}</p>
+      <div class="pickup-bonus">
+        <div class="pickup-bonus-title">🎁 チャレンジボーナス 🎁</div>
+        ${pickupTicketRowHtml(n, false)}
+        <div class="pickup-bonus-note">いま クリアすると もらえる！</div>
+      </div>
+      <div class="pickup-actions">
+        <button class="btn btn-primary pickup-yes" id="btn-pickup-yes">やる！</button>
+        <button class="btn pickup-no" id="btn-pickup-no">やらない</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  bindStageRewardTooltips(overlay);
+  $('btn-pickup-yes').onclick = () => { hideTooltip(); overlay.remove(); enterAreaStage(pk.areaId, pk.stageIndex); };
+  $('btn-pickup-no').onclick = () => { hideTooltip(); overlay.remove(); showPickupDeclineConfirm(pk); };
+}
+
+function showPickupDeclineConfirm(pk){
+  document.querySelector('.pickup-overlay')?.remove();
+  const n = Math.max(0, Math.round(rewardSettings.pickupBonusTickets));
+  const overlay = document.createElement('div');
+  overlay.className = 'pickup-overlay';
+  overlay.innerHTML = `
+    <div class="panel pickup-panel pickup-confirm" role="alertdialog" aria-modal="true" aria-labelledby="pickup-confirm-title">
+      <h2 id="pickup-confirm-title">⚠ ほんとうに いいかな？</h2>
+      <p class="pickup-confirm-text">いま やらないと、<br><b>この ボーナスは もらえなくなるよ！</b></p>
+      ${pickupTicketRowHtml(n, true)}
+      <div class="pickup-actions">
+        <button class="btn btn-primary pickup-yes" id="btn-pickup-confirm-yes">やっぱり やる！</button>
+        <button class="btn pickup-no" id="btn-pickup-confirm-no">もらわなくて いい</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  bindStageRewardTooltips(overlay);
+  $('btn-pickup-confirm-yes').onclick = () => { hideTooltip(); overlay.remove(); enterAreaStage(pk.areaId, pk.stageIndex); };
+  $('btn-pickup-confirm-no').onclick = () => {
+    hideTooltip();
+    overlay.remove();
+    if (G.pickup) G.pickup.status = 'declined';
+    save();
+    showStageSelect();
+  };
 }
 
 function renderRaidLearningRecommendation() {
@@ -10372,6 +10859,7 @@ const ADMIN_REWARD_FIELDS = [
   { group:'ボス', items:[
     { key:'bossFirstTickets', label:'初回クリア：背景スキンガチャチケット枚数', min:0, max:99, step:1 },
     { key:'bossThirdTickets', label:'3回クリア：装備ガチャ10連チケット枚数', min:0, max:99, step:1 },
+    { key:'pickupBonusTickets', label:'ピックアップ チャレンジボーナス：装備ガチャ10連チケット枚数', min:0, max:99, step:1 },
     { key:'bossLevelUp', label:'たおすたびに あがる 強化レベル', min:0, max:20, step:1 },
     { key:'bossGrowthPct', label:'強化レベル1ごとの ステータス上昇（％）', min:0, max:100, step:1 },
     { key:'zoneClearLegend', label:'エリア制覇で レジェンド装備を わたす（1=する／0=しない）', min:0, max:1, step:1 },
@@ -12341,12 +12829,13 @@ function renderRaidChallengeRewards(){
   const count = Number(G.raidProgress?.challengeCount) || 0;
   const claimed = G.raidChallengeClaimed || {};
   const rows = [
-    { n:1, icon:'<img src="assets/raid/raid_bg_magma_pixel.jpg" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">', name:'マグマの背景', done:(G.unlockedAvatarBackgrounds || []).includes('raid_magma') },
-    { n:2, icon:'<span style="font-size:34px;line-height:1;width:40px;text-align:center;flex:none;">🎫</span>', name:'装備ガチャ10連チケット', done: count >= 2 || !!claimed[2] },
-    { n:3, icon:iconHtml(SKIN_GACHA_TICKET_ICON, 40), name:'背景スキンガチャチケット', done: count >= 3 || !!claimed[3] },
+    { n:1, icon:stageRewardIcon('background', 'raid_magma', 1, 40), name:'マグマの背景', done:(G.unlockedAvatarBackgrounds || []).includes('raid_magma') },
+    { n:2, icon:stageRewardIcon('ticket', 'equip-ten-ticket', 1, 40), name:'装備ガチャ10連チケット', done: count >= 2 || !!claimed[2] },
+    { n:3, icon:stageRewardIcon('ticket', 'skin-ticket', 1, 40), name:'背景スキンガチャチケット', done: count >= 3 || !!claimed[3] },
   ];
   el.innerHTML = '<b>🎁 チャレンジ報酬（1人1回）</b>' + rows.map(r =>
     `<div class="raid-challenge-reward-row${r.done ? ' is-claimed' : ''}">${r.icon}<span class="rc-name">${r.n}回目：${r.name}</span><strong>${r.done ? '受け取り済み' : 'もらえる'}</strong></div>`).join('');
+  bindStageRewardTooltips(el);
 }
 
 function raidChallengeNoticeHtml(state){
@@ -13260,6 +13749,6 @@ if (import.meta.env && import.meta.env.DEV) {
     get G(){ return G; }, get explore(){ return explore; }, set explore(v){ explore = v; },
     get rewardSettings(){ return rewardSettings; },
     recordStageClear, grantBossClearState, generateStageEnemy, rollBattleDrops, grantPrintRewards,
-    stageTotalClearCount, stageRepeatDropMult, AREA_STAGES, stageAreaCleared, showBossClearOverlay,
+    stageTotalClearCount, stageRepeatDropMult, AREA_STAGES, stageAreaCleared, showBossClearOverlay, grantQuestExtras, QUEST_MEDAL_MILESTONES, showQuestRewardToast, generateStoryQuest, questRewardFor, questAllowedTiers, QUEST_STEP_ITEMS, getActivePickup, choosePickupStage, openAdventure, showStageClearOverlay, recordStageClear2:recordStageClear,
   };
 }

@@ -319,13 +319,13 @@
           <span class="hotspot-tag">🏠 自分の部屋</span>
         </button>
         <button id="hotspot-gacha" class="town-hotspot" style="left:50%; top:49%;">
-          <span class="hotspot-tag">🎰 ガチャ<br><span style="font-size:0.75em; color:#ffd34e; font-weight:bold; text-shadow: 0 0 5px rgba(255,211,78,0.8); animation: pulse 1s infinite alternate;">UP! アップデート</span></span>
+          <span class="hotspot-tag">🎰 ガチャ</span>
         </button>
         <button id="hotspot-synthesis" class="town-hotspot" style="left:36%; top:37%;">
           <span class="hotspot-tag">🌀 合成</span>
         </button>
         <button id="hotspot-quest-board" class="town-hotspot" style="left:83%; top:30%;">
-          <span class="hotspot-tag">📋 サブクエスト</span>
+          <span class="hotspot-tag">📋 サブクエスト<br><span style="font-size:0.75em; color:#ffd34e; font-weight:bold; text-shadow: 0 0 5px rgba(255,211,78,0.8); animation: pulse 1s infinite alternate;">UP! アップデート</span></span>
         </button>
         <button id="hotspot-raid-boss" class="town-hotspot" style="left:75%; top:15%;">
           <span class="hotspot-tag" style="background:linear-gradient(45deg, #e74c3c, #c0392b); font-weight:900;">👿 レイドボス</span>
@@ -613,11 +613,14 @@
       </div>
     </div>
     <div id="screen-quest-board" class="modal-overlay hidden" style="position:fixed; z-index:90;">
-      <div class="modal-panel" style="width:90%; max-width:800px; max-height:80vh; overflow-y:auto; position: relative;">
-        <button id="btn-quest-board-back" class="window-nav-btn window-close-btn">✕ とじる</button>
-        <h2>＊サブクエストボード＊</h2>
-        <p class="flavor">むらの みんなから たのまれごとが きている。ぶんしょうを よんで こたえよう！</p>
-        <div id="quest-board-list" class="inventory-list"></div>
+      <div class="quest-board-wood" role="dialog" aria-labelledby="quest-board-title">
+        <header class="quest-board-header">
+          <button id="btn-quest-board-back" class="window-nav-btn window-back-btn" type="button">← もどる</button>
+          <h2 id="quest-board-title" class="quest-board-heading">＊サブクエストボード＊</h2>
+          <div id="quest-medal-count" class="quest-medal-count"></div>
+        </header>
+        <div id="quest-medal-shop" class="quest-medal-shop"></div>
+        <div id="quest-board-list" class="quest-board-grid"></div>
       </div>
     </div>
 
@@ -638,10 +641,6 @@
               <button class="room-nav-btn active" data-room-tab="status-equip" id="room-tab-btn-status-equip">
                 <span class="room-nav-icon">👤</span>
                 <span class="room-nav-text">ステータス・装備</span>
-              </button>
-              <button class="room-nav-btn" data-room-tab="inventory" id="room-tab-btn-inventory">
-                <span class="room-nav-icon">🎒</span>
-                <span class="room-nav-text">持ち物</span>
               </button>
               <button class="room-nav-btn" data-room-tab="stats" id="room-tab-btn-stats">
                 <span class="room-nav-icon">📊</span>
@@ -665,36 +664,31 @@
                   </div>
                   <div id="status-list" class="status-list" style="display:none;"></div>
                   <button id="btn-status-confirm" class="btn btn-primary" style="margin-top:10px;" disabled>けってい</button>
-                </div>
-                
-                <div class="room-equip-area">
-                  <h3>そうび</h3>
-                  <div id="equip-cost-bar" class="equip-cost-bar-wrap"></div>
-                  <div class="equip-slots">
-                    <div class="equip-slot" id="slot-weapon"></div>
-                    <div class="equip-slot" id="slot-armor"></div>
-                    <div class="equip-slot" id="slot-accessory"></div>
-                  </div>
                   <div class="room-avatar-preview" style="text-align: center; margin-top: 20px;">
                     <img id="room-player-avatar" src="" alt="スキン" style="width: 96px; height: 96px; object-fit: contain; object-position: center; border-radius: 50%; border: 3px solid var(--accent); cursor: pointer; background: var(--btn-grad-end); display: none; margin: 0 auto;" title="クリックでスキンを変更">
                   </div>
                   <button id="btn-change-avatar" class="btn" style="margin-top:15px; width:100%; background:linear-gradient(135deg, #f39c12, #d35400); color:white;">🌟 スキンを変更する</button>
                 </div>
+                
+                <div class="room-equip-area">
+                  <div id="equip-cost-bar" class="equip-cost-bar-wrap"></div>
+                  <div class="equip-slots equip-slots-row">
+                    <div class="equip-slot" id="slot-weapon"></div>
+                    <div class="equip-slot" id="slot-armor"></div>
+                    <div class="equip-slot" id="slot-accessory"></div>
+                  </div>
+                  <div class="equip-list-tabs" role="tablist" aria-label="もちものの しゅるい">
+                    <button type="button" id="equip-tab-equips" class="equip-list-tab active" role="tab" aria-selected="true">⚔ そうび</button>
+                    <button type="button" id="equip-tab-items" class="equip-list-tab" role="tab" aria-selected="false">🎒 アイテム</button>
+                  </div>
+                  <div id="equip-slot-filter" class="equip-slot-filter" role="group" aria-label="そうびの しゅるいで しぼりこむ"></div>
+                  <div id="equip-list-grid" class="equip-list-grid"></div>
+                  <div id="equip-list-msg" class="equip-list-msg" role="status" aria-live="polite"></div>
+                </div>
               </div>
             </div>
 
-            <!-- タブ2: 持ち物 -->
-            <div id="room-tab-pane-inventory" class="room-tab-pane">
-              <div class="room-pane-header">
-                <h3>🎒 もちもの一覧</h3>
-                <p class="flavor">持っているアイテムや設計図です。アイコンにマウスを合わせると詳しい説明が見られます。</p>
-              </div>
-              <div class="room-inventory-area">
-                <div id="room-inventory-grid" class="inv-grid"></div>
-              </div>
-            </div>
-
-            <!-- タブ3: 成績 -->
+            <!-- タブ2: 成績 -->
             <div id="room-tab-pane-stats" class="room-tab-pane">
               <div class="room-pane-header">
                 <h3>📊 ぼうけんの せいせき ＆ せいちょう</h3>

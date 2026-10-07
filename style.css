@@ -7321,3 +7321,240 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
 .raid-challenge-reward-row strong { color: #ffce77; white-space: nowrap; }
 .raid-challenge-reward-row.is-claimed { opacity: .6; }
 .raid-challenge-reward-row.is-claimed strong { color: #8fe3a0; }
+
+/* ===== ピックアップステージ（冒険に出る）===== */
+.pickup-overlay { position: fixed; inset: 0; z-index: 400; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(5, 3, 14, .82); }
+.pickup-panel { position: relative; width: min(94vw, 560px); max-height: 92vh; overflow: auto; text-align: center; padding: 22px 18px 20px;
+  border: 3px solid #f7d56b; border-radius: 16px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255,214,102,.35), transparent 60%), linear-gradient(160deg, #2b1f4d, #1a1233 70%);
+  box-shadow: 0 0 0 2px rgba(0,0,0,.6), 0 0 28px rgba(255,205,90,.55); }
+.pickup-panel::after { content: ""; position: absolute; inset: 0; border-radius: 13px; pointer-events: none; overflow: hidden;
+  background: linear-gradient(110deg, transparent 38%, rgba(255,255,255,.22) 50%, transparent 62%); transform: translateX(-120%); animation: pickup-shine 3.6s ease-in-out infinite; }
+@keyframes pickup-shine { 0%, 15% { transform: translateX(-120%); } 60%, 100% { transform: translateX(120%); } }
+.pickup-ribbon { display: inline-block; margin: -6px 0 10px; padding: 6px 22px; font-size: 20px; font-weight: bold; color: #3a2400; letter-spacing: 2px;
+  background: linear-gradient(180deg, #fff1b3, #f4b72f); border-radius: 999px; border: 2px solid #fff6cf; }
+.pickup-panel h2 { margin: 6px 0 2px; color: #ffe08a; font-size: 24px; }
+.pickup-stage-name { margin: 0 0 6px; font-size: 20px; font-weight: bold; color: #fff; }
+.pickup-bonus { margin: 14px 0 16px; padding: 12px 10px 10px; border: 2px dashed #ffd35a; border-radius: 12px; background: rgba(255, 213, 90, .12); }
+.pickup-bonus-title { font-size: 18px; font-weight: bold; color: #ffe08a; margin-bottom: 6px; }
+.pickup-bonus-note { margin-top: 6px; font-size: 14px; color: #ffd35a; font-weight: bold; }
+.pickup-tickets { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 6px 4px; }
+.pickup-ticket-icons { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 4px 10px; }
+.pickup-ticket-icon { font-size: 68px; line-height: 1; filter: drop-shadow(0 0 6px rgba(255, 214, 102, .9)); }
+.pickup-tickets b { font-size: 20px; color: #fff; }
+/* もらえなくなる表示：グレーにして 大きな赤い ✖ を かさねる */
+.pickup-tickets.is-lost { padding: 10px 4px; }
+.pickup-tickets.is-lost .pickup-ticket-icon { filter: grayscale(1) brightness(.6); opacity: .65; }
+.pickup-tickets.is-lost b { color: #b9b9c6; text-decoration: line-through; }
+.pickup-lost-mark { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 110px; line-height: 1; font-weight: bold; color: #ff4d5e; text-shadow: 0 0 10px rgba(0,0,0,.8); pointer-events: none; opacity: .92; }
+.pickup-confirm { border-color: #ff6b6b; background: linear-gradient(160deg, #3a1822, #1a1020 70%); box-shadow: 0 0 0 2px rgba(0,0,0,.6), 0 0 24px rgba(255,90,100,.5); }
+.pickup-confirm h2 { color: #ff9aa4; }
+.pickup-confirm-text { font-size: 18px; line-height: 1.7; margin: 10px 0; }
+.pickup-confirm-text b { color: #ff8a95; font-size: 20px; }
+.pickup-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+.pickup-yes { min-width: 180px; font-size: 22px; padding: 14px 20px; }
+.pickup-no { min-width: 130px; opacity: .85; }
+/* ステージ一覧のピックアップ表示／クリア画面のボーナス */
+.stage-select-row.is-pickup { box-shadow: 0 0 0 2px #f7d56b, 0 0 14px rgba(255,205,90,.6); }
+.pickup-tag { display: inline-block; margin-right: 8px; padding: 2px 8px; font-size: 12px; font-weight: bold; color: #3a2400; background: linear-gradient(180deg, #fff1b3, #f4b72f); border-radius: 999px; white-space: nowrap; }
+.pickup-bonus-luxury { margin: 10px 0; padding: 8px; border: 2px solid #f7d56b; border-radius: 12px; background: radial-gradient(ellipse at 50% 0%, rgba(255,214,102,.3), transparent 70%), rgba(255, 213, 90, .1); box-shadow: 0 0 18px rgba(255, 205, 90, .55); }
+.pickup-bonus-luxury h4 { color: #ffe08a !important; font-size: 18px; }
+.pickup-bonus-luxury .drop-reward-card { transform: scale(1.12); }
+@media (prefers-reduced-motion: reduce) { .pickup-panel::after { animation: none; } }
+
+/* ===== サブクエスト：報酬バッジ・メダル表 ===== */
+.quest-reward-strip { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.quest-medal-icon { font-size: 34px; line-height: 40px; width: 40px; text-align: center; display: inline-block; }
+.quest-medal-track { margin: 0 0 12px; padding: 10px 12px; border: 2px solid #f7d56b; border-radius: 12px; background: radial-gradient(ellipse at 50% 0%, rgba(255,214,102,.22), transparent 70%), rgba(0,0,0,.3); }
+.quest-medal-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.quest-medal-head b { color: #ffe08a; font-size: 17px; }
+.quest-medal-head span { font-size: 13px; color: #ffd35a; }
+.quest-medal-rewards { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.quest-medal-reward { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 8px; min-width: 96px; flex: 1; border: 1px solid rgba(247,213,107,.5); border-radius: 8px; background: rgba(0,0,0,.3); text-align: center; }
+.quest-medal-reward small { color: #ffd35a; font-weight: bold; }
+.quest-medal-reward span { font-size: 12px; }
+.quest-medal-reward strong { font-size: 11px; color: #8fe3a0; }
+.quest-medal-reward.is-claimed { opacity: .6; }
+.quest-medal-note { margin: 8px 0 0; font-size: 12px; opacity: .8; }
+.quest-reward-extras { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 12px; }
+.quest-reward-extra { display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,.12); font-weight: bold; }
+.quest-reward-extra.is-big { background: linear-gradient(180deg, #fff1b3, #f4b72f); color: #3a2400; font-size: 17px; }
+
+.pickup-ticket-icons .stage-reward-icon { background: transparent; border: 0; padding: 0; filter: drop-shadow(0 0 6px rgba(255, 214, 102, .9)); }
+.pickup-tickets.is-lost .stage-reward-icon { filter: grayscale(1) brightness(.6); opacity: .65; }
+.quest-medal-head .stage-reward-icon { vertical-align: middle; width: auto; height: auto; padding: 2px 4px; }
+.quest-medal-lead { margin: 6px 0 0; font-size: 15px; font-weight: bold; color: #ffe08a; }
+.quest-medal-head .stage-reward-icon { flex: none; }
+.quest-medal-reward .stage-reward-icon, .quest-reward-strip .stage-reward-icon, .raid-challenge-reward-row .stage-reward-icon { width: 56px; height: 56px; flex: 0 0 56px; }
+
+/* ===== サブクエストボード（木の掲示板＋カード） ===== */
+.quest-board-wood { position: relative; display: flex; flex-direction: column; width: min(94vw, 880px); max-height: 92vh; padding: 16px 22px 14px;
+  border: 8px solid #4a2b12; border-radius: 18px;
+  background: repeating-linear-gradient(90deg, rgba(0,0,0,.07) 0 2px, transparent 2px 9px), linear-gradient(180deg, #b27a3b, #94602b 55%, #7d4d22);
+  box-shadow: inset 0 0 36px rgba(0,0,0,.5), 0 14px 34px rgba(0,0,0,.65); }
+.quest-board-heading { margin: 0; text-align: center; color: #fff3c9; text-shadow: 0 2px 0 #4a2b12, 0 0 10px rgba(0,0,0,.4); font-size: 24px; }
+.quest-board-lead { margin: 4px 0 0; text-align: center; color: #ffe9b8; font-size: 13px; }
+.quest-board-grid { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px 16px; padding: 28px 8px 12px; }
+@media (max-width: 640px) { .quest-board-grid { grid-template-columns: repeat(2, 1fr); } }
+.quest-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 24px 8px 10px; font: inherit; color: #4a2b12; cursor: pointer; text-align: center;
+  border: 4px solid #f2d37a; border-radius: 12px; background: linear-gradient(180deg, #f8ebc9, #dcbf86);
+  box-shadow: 0 4px 0 #5b3a1a, 0 9px 14px rgba(0,0,0,.45); transition: transform .12s; }
+.quest-card:hover, .quest-card:focus-visible { transform: translateY(-4px); outline: 4px solid #5fe0ff; outline-offset: 1px; }
+.quest-card-ribbon { position: absolute; top: -17px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; justify-content: center; width: 80%; height: 32px; border-radius: 6px 6px 16px 16px;
+  background: linear-gradient(90deg, #d63b3b 0 16%, #fff 16% 20%, #2c6bd1 20% 80%, #fff 80% 84%, #d63b3b 84%); box-shadow: 0 2px 0 rgba(0,0,0,.45); }
+.quest-card-stars span { font-size: 20px; line-height: 1; color: #9db4e6; text-shadow: 0 1px 0 rgba(0,0,0,.55); }
+.quest-card-stars span.on { color: #ffd84a; }
+.quest-card-art { display: flex; align-items: flex-end; justify-content: center; width: 100%; height: 104px; border-radius: 8px; overflow: hidden; background: radial-gradient(ellipse at 50% 100%, #fff6d6, #b8d8f0 70%); }
+.quest-card-art img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.quest-card-name { margin-top: 6px; font-weight: bold; font-size: 14px; }
+.quest-card-title { font-size: 15px; font-weight: bold; color: #8a3b0f; }
+.quest-card-tag { font-size: 11px; opacity: .85; }
+.quest-board-bar { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+.quest-back-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 22px 8px 10px; font: inherit; font-size: 18px; font-weight: bold; color: #fff; cursor: pointer;
+  border: 3px solid #e7c8ff; border-radius: 999px; background: linear-gradient(180deg, #a04fe0, #6a2aa8); box-shadow: 0 3px 0 #3a1160; }
+.quest-back-b { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: #fff; color: #6a2aa8; font-weight: bold; }
+.quest-medal-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px; font: inherit; font-size: 22px; font-weight: bold; color: #fff; cursor: pointer;
+  border: 3px solid #cdf7c9; border-radius: 14px; background: linear-gradient(180deg, #3fcf6d, #1c8f44); box-shadow: 0 3px 0 #0c5a26; }
+.quest-medal-btn b { font-size: 20px; }
+.quest-back-btn:hover, .quest-medal-btn:hover, .quest-back-btn:focus-visible, .quest-medal-btn:focus-visible { filter: brightness(1.12); }
+/* カードを えらんだあとの詳細 */
+.quest-detail-overlay { position: fixed; inset: 0; z-index: 96; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(5, 3, 14, .7); }
+.quest-detail-panel { width: min(94vw, 600px); max-height: 90vh; overflow: auto; padding: 16px 16px 14px; color: #fff; border: 5px solid #f2d37a; border-radius: 16px;
+  background: linear-gradient(180deg, #3b2a1a, #24170d); box-shadow: 0 0 0 2px rgba(0,0,0,.6), 0 14px 34px rgba(0,0,0,.65); }
+.quest-detail-head { display: flex; align-items: center; gap: 12px; }
+.quest-detail-npc { width: 84px; height: 84px; object-fit: contain; flex-shrink: 0; border-radius: 10px; background: radial-gradient(ellipse at 50% 100%, #fff6d6, #b8d8f0 70%); }
+.quest-detail-text { margin: 12px 0 4px; padding: 12px; font-size: 17px; line-height: 1.7; border-radius: 10px; background: rgba(0,0,0,.35); }
+.quest-detail-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.quest-detail-actions .btn { width: auto; flex: 1 1 110px; margin: 0; }
+.quest-detail-actions .btn-primary { flex-basis: 160px; font-size: 18px; }
+
+/* メダル交換所（クエストボードの上に常時表示） */
+.quest-medal-shop { margin-top: 10px; }
+.quest-medal-shop .quest-medal-track { margin: 0; padding: 8px 12px 10px; background: rgba(40, 22, 8, .78); }
+.quest-medal-shop .quest-medal-lead { margin: 2px 0 0; font-size: 14px; }
+.quest-medal-shop .quest-medal-rewards { margin-top: 6px; }
+.quest-medal-shop .quest-medal-reward { min-width: 118px; padding: 6px 6px 8px; }
+.quest-exchange-btn { width: auto; margin: 4px 0 0; padding: 4px 12px; font-size: 14px; min-height: 0; }
+.quest-exchange-btn:not(:disabled) { background: linear-gradient(180deg, #3fcf6d, #1c8f44); color: #fff; border-color: #cdf7c9; }
+.quest-exchange-confirm { text-align: center; }
+.quest-exchange-confirm h3 { margin: 0 0 8px; color: #ffe08a; }
+.quest-exchange-item { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 10px 0; font-size: 18px; }
+
+/* ===== クエストボード：1画面に収める・ヘッダーは他のウィンドウと同じ（左上にもどる） ===== */
+.quest-board-wood { max-height: 96vh; padding: 12px 18px 14px; }
+.quest-board-header { display: flex; align-items: center; gap: 12px; }
+.quest-board-header .window-nav-btn { position: static; flex-shrink: 0; }
+.quest-board-header .quest-board-heading { flex: 1; font-size: 22px; }
+.quest-medal-count { display: flex; align-items: center; gap: 6px; flex-shrink: 0; min-width: 96px; justify-content: flex-end; color: #fff3c9; }
+.quest-medal-count b { font-size: 22px; }
+.quest-medal-count .stage-reward-icon { width: 40px; height: 40px; flex: 0 0 40px; padding: 2px; }
+.quest-medal-shop { margin-top: 8px; }
+.quest-medal-shop .quest-medal-rewards { margin: 0; padding: 8px; gap: 8px; flex-wrap: nowrap; border: 2px solid #f7d56b; border-radius: 12px; background: rgba(40, 22, 8, .8); }
+.quest-medal-shop .quest-medal-reward { min-width: 0; padding: 4px 4px 6px; }
+.quest-medal-shop .quest-medal-reward .stage-reward-icon { width: 48px; height: 48px; flex: 0 0 48px; }
+.quest-board-grid { gap: 24px 14px; padding: 24px 6px 6px; }
+.quest-card { padding: 20px 8px 8px; }
+.quest-card-art { height: 66px; }
+.quest-card-ribbon { top: -15px; height: 28px; }
+.quest-card-stars span { font-size: 18px; }
+.quest-card-name { margin-top: 3px; font-size: 13px; }
+.quest-card-title { font-size: 14px; }
+
+.quest-card-tag { max-width: 100%; font-size: 12px; font-weight: bold; color: #5b3a1a; background: rgba(255,255,255,.55); border-radius: 999px; padding: 1px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ===== レイドボス画面：左＝ボス・報酬／右＝ランキング（より多くの順位を1画面に） ===== */
+#screen-raid-boss .raid-menu-panel {
+  display: grid; width: min(1100px, 96%); max-width: 1100px; height: min(94dvh, 840px); max-height: none; overflow: hidden;
+  grid-template-columns: minmax(330px, .95fr) minmax(0, 1.05fr); grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-areas: "head head" "rules rules" "boss rank"; column-gap: 16px;
+}
+#screen-raid-boss .raid-menu-header { grid-area: head; }
+#screen-raid-boss #raid-rules { grid-area: rules; max-height: 30dvh; overflow-y: auto; }
+#screen-raid-boss .raid-boss-overview { grid-area: boss; min-height: 0; overflow-y: auto; padding-right: 4px; }
+#screen-raid-boss .raid-ranking-section { grid-area: rank; display: flex; flex-direction: column; min-height: 0; border-top: 0; border-left: 1px solid #555; padding: 0 0 0 14px; }
+#screen-raid-boss #raid-ranking-list { flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px; }
+@media (max-width: 780px) {
+  #screen-raid-boss .raid-menu-panel { display: block; height: auto; max-height: 94dvh; overflow-y: auto; }
+  #screen-raid-boss .raid-ranking-section { border-left: 0; border-top: 1px solid #555; padding: 8px 0 0; }
+  #screen-raid-boss #raid-ranking-list { overflow: visible; }
+}
+#screen-raid-boss .raid-menu-header { padding-right: 124px; } /* 右上の時計表示に ボタンが かくれないように */
+
+/* クエストカードの中の ごほうび（1〜3回目） */
+.quest-card-rewards { display: flex; gap: 4px; width: 100%; margin-top: 4px; }
+.qc-reward { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 2px 2px 3px; border-radius: 8px; background: rgba(60, 35, 12, .85); color: #fff3c9; }
+.qc-reward b { font-size: 11px; color: #ffd35a; }
+.qc-icons { display: flex; gap: 2px; align-items: center; justify-content: center; }
+.qc-reward .stage-reward-icon { width: 28px; height: 28px; flex: 0 0 28px; padding: 1px; border-width: 1px; border-radius: 6px; }
+.qc-gold { font-size: 12px; font-weight: bold; }
+.qc-reward em { font-size: 11px; font-style: normal; color: #8fe3a0; }
+.qc-reward.is-claimed { opacity: .65; }
+.quest-card { gap: 1px; padding: 18px 8px 6px; }
+.quest-card-art { height: 56px; }
+
+/* ===== そうび画面：コスト → ぶき・よろい・アクセサリ（横ならび）→ そうび／アイテム 一覧 ===== */
+.room-equip-area .equip-slots-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0 12px; }
+.room-equip-area .equip-slot { align-items: center; gap: 6px; padding: 8px 6px 10px; text-align: center; }
+.room-equip-area .equip-slot .slot-badge { justify-content: center; font-size: 12px; }
+.room-equip-area .equip-slot .equip-icon { width: 72px; height: 72px; flex: 0 0 72px; cursor: pointer; background: rgba(0,0,0,.35); }
+.room-equip-area .equip-slot.empty-slot .equip-icon { cursor: default; border-style: dashed; }
+.room-equip-area .equip-slot-name { font-size: 13px; font-weight: bold; line-height: 1.3; word-break: break-all; }
+.room-equip-area .equip-slot-none { color: #9aa; font-weight: normal; }
+.room-equip-area .btn-unequip { width: auto; margin: 0; padding: 2px 10px; font-size: 12px; min-height: 0; }
+.equip-list-tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+.equip-list-tab { flex: 1; width: auto; margin: 0; padding: 7px 10px; font: inherit; font-weight: bold; color: #fff; cursor: pointer; border: 2px solid var(--panel-border); border-radius: 10px 10px 0 0; background: rgba(255,255,255,.07); }
+.equip-list-tab.active { background: linear-gradient(180deg, #f7d56b, #d99a22); color: #3a2400; border-color: #fff1b3; }
+.equip-list-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 8px; max-height: 44vh; overflow-y: auto; padding: 8px; border: 1.5px solid var(--panel-border); border-radius: 0 0 10px 10px; background: rgba(0,0,0,.25); }
+.equip-list-grid .inv-grid-cell { aspect-ratio: 1; }
+.equip-list-empty { grid-column: 1 / -1; text-align: center; padding: 18px 0; }
+.equip-grid-cell { position: relative; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; padding: 4px; font: inherit; cursor: pointer; border: 2px solid var(--panel-border); border-radius: 8px; background: rgba(255,255,255,.06); transition: transform .1s, background .1s; }
+.equip-grid-cell:hover, .equip-grid-cell:focus-visible { background: rgba(255,255,255,.2); transform: scale(1.06); z-index: 2; }
+.equip-grid-cell.is-equipped { box-shadow: 0 0 0 2px #5fe0ff; }
+.equip-grid-cell.is-costly { opacity: .55; }
+.equip-grid-cell .egc-slot { position: absolute; top: 1px; left: 3px; font-size: 12px; }
+.equip-grid-cell .egc-cost { position: absolute; bottom: 1px; right: 4px; font-size: 12px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; }
+.equip-grid-cell.is-costly .egc-cost { color: #ff7b7b; }
+.equip-grid-cell .egc-on { position: absolute; bottom: 1px; left: 2px; padding: 0 4px; font-size: 10px; font-weight: bold; color: #06323d; background: #5fe0ff; border-radius: 4px; }
+.equip-list-msg { min-height: 20px; margin-top: 6px; font-size: 13px; font-weight: bold; color: #ff9a9a; text-align: center; }
+
+/* ===== コスト表示の統一：1段10こまで、11こめからは 下の段へ ===== */
+.cost-grid { display: inline-grid; grid-template-columns: repeat(var(--cost-cols, 10), 16px); gap: 3px; vertical-align: middle; }
+.cost-cell { width: 16px; height: 16px; box-sizing: border-box; border-radius: 4px; background: rgba(0,0,0,.5); border: 1.5px solid rgba(255,255,255,.2); }
+.cost-cell.filled { background: var(--accent, #fbbf24); border-color: #ffd700; box-shadow: 0 0 6px rgba(255, 207, 77, .6); }
+.cost-cell.over { background: #e0524b; border-color: #ff8f8a; box-shadow: 0 0 6px rgba(255, 90, 80, .6); }
+.equip-cost-bar-wrap .cost-grid { margin-left: auto; }
+.tag.cost-tag { align-items: flex-start; }
+.equip-cost-display { display: flex; align-items: flex-start; gap: 6px; flex-wrap: wrap; }
+.room-equip-area .equip-slot .cost-tag { justify-content: center; }
+
+.room-equip-area .equip-slots-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.room-equip-area .equip-slot { min-width: 0; }
+.room-equip-area .equip-slot-name { max-width: 100%; }
+
+/* コストのプレビュー（そうびしたら ここまで ふえる＝点滅／上限こえ＝赤） */
+@keyframes costBlink { from { opacity: .25; } to { opacity: 1; } }
+.cost-cell.blink { background: var(--accent, #fbbf24); border-color: #ffd700; animation: costBlink .6s ease-in-out infinite alternate; }
+.cost-cell.blink-over { background: #e0524b; border-color: #ff8f8a; animation: costBlink .45s ease-in-out infinite alternate; }
+.cost-cell.blink-free { background: transparent; border: 2px dashed #8fe3a0; animation: costBlink .7s ease-in-out infinite alternate; }
+.cost-bar-label b.preview { color: #ffe08a; }
+.equip-cost-bar-wrap.is-previewing { position: relative; z-index: 6; overflow: visible; align-items: flex-start; }
+.equip-cost-bar-wrap.is-previewing .cost-grid { position: relative; padding: 4px; border-radius: 6px; background: rgba(15, 12, 25, .96); box-shadow: 0 6px 14px rgba(0,0,0,.6); }
+.equip-confirm-body { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+@media (prefers-reduced-motion: reduce) { .cost-cell.blink, .cost-cell.blink-over, .cost-cell.blink-free { animation: none; } }
+
+.equip-slot-filter { display: flex; gap: 6px; flex-wrap: wrap; padding: 6px 8px 0; border: 1.5px solid var(--panel-border); border-bottom: 0; background: rgba(0,0,0,.25); }
+.equip-filter-chip { width: auto; margin: 0; padding: 3px 10px; font: inherit; font-size: 13px; font-weight: bold; color: #fff; cursor: pointer; border: 1.5px solid var(--panel-border); border-radius: 999px; background: rgba(255,255,255,.07); }
+.equip-filter-chip small { margin-left: 4px; opacity: .8; }
+.equip-filter-chip.active { background: linear-gradient(180deg, #5fe0ff, #2a9fc0); color: #06323d; border-color: #d9f7ff; }
+.equip-slot-filter + .equip-list-grid { border-radius: 0 0 10px 10px; border-top: 0; }
+
+/* ===== コストの枠：ラベルは左上の角に重ね、ブロックは真ん中。ホバー中も 配置を かえない ===== */
+.equip-cost-bar-wrap { position: relative; box-sizing: border-box; display: flex; justify-content: center; align-items: flex-start; flex-wrap: nowrap; gap: 0; padding: 20px 12px 10px; margin: 16px 0 12px; }
+.equip-cost-bar-wrap .cost-bar-label { position: absolute; top: -13px; left: 10px; z-index: 2; padding: 2px 12px; font-size: 13px; white-space: nowrap; background: #1b1626; border: 1.5px solid rgba(255, 215, 0, .5); border-radius: 999px; }
+.equip-cost-bar-wrap .cost-grid { margin: 0 auto; }
+.equip-cost-bar-wrap.is-previewing { overflow: visible; z-index: 6; align-items: flex-start; }
+.equip-cost-bar-wrap.is-previewing .cost-grid { padding: 0; background: none; box-shadow: none; border-radius: 0; }
+/* 絞り込みボタンは かならず 1列に（せまくても はみ出さず 縮む） */
+.equip-slot-filter { flex-wrap: nowrap; gap: 4px; }
+.equip-filter-chip { flex: 1 1 auto; min-width: 0; padding: 3px 4px; font-size: 12px; white-space: nowrap; text-align: center; }
+.equip-filter-chip small { margin-left: 2px; }
