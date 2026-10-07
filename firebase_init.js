@@ -290,8 +290,8 @@ window.RaidBossAPI = {
       let archivedBoss = null;
       let settledBossId = null;
       
-      if (global.finalizedAt && global.startsAt && now >= global.startsAt) {
-         archivedBoss = { ...global };
+      if (global.finalizedAt && (!global.startsAt || now >= global.startsAt)) { // startsAt 欠落データ（旧コードで集計）でも次のレベルへ進める
+         archivedBoss = { ...global, bossLevel: global.bossLevel || 50, bossId: global.bossId || 'boss_50', maxHp: global.maxHp || 1000 };
          settledBossId = global.bossId || 'boss_50';
          const nextLevel = (global.bossLevel || 50) + 10;
          global = {
@@ -364,8 +364,8 @@ window.RaidBossAPI = {
       const participated = previous.participated || participatedBeforeDefeat || legacyDamage > 0 || acceptedEvents > 0;
       const nextTotal = (previous.totalDamage || 0) + addedDamage;
       const challengeCount = (Number(challengeCounterSnap.data()?.challengeCount) || 0) + acceptedChallenges;
-      let challenge2SeedCount = null;
-      let challenge3TicketCount = null;
+      let challenge2EquipTenCount = null;
+      let challenge3SkinTicketCount = null;
       const shouldGrantChallenge2 = challengeCount >= 2 && acceptedChallenges > 0 && !challenge2ClaimSnap.exists();
       const shouldGrantChallenge3 = challengeCount >= 3 && acceptedChallenges > 0 && !challenge3ClaimSnap.exists();
       let challengeSave = null;
@@ -374,19 +374,16 @@ window.RaidBossAPI = {
           ? JSON.parse(saveSnap.data().gameData)
           : JSON.parse(JSON.stringify(progress.state || {}));
         if (challengeSave?.player) {
+          // 2回目：装備ガチャ10連チケット／3回目：背景スキンガチャチケット1枚（1回目の参加特典はマグマの背景）
           if (shouldGrantChallenge2) {
-            challengeSave.items ||= [];
-            const seed = challengeSave.items.find(item => item.id === 'cost_seed');
-            if (seed) seed.count = (Number(seed.count) || 0) + 3;
-            else {
-              challengeSave.nextUid = Number.isFinite(challengeSave.nextUid) ? challengeSave.nextUid : 1;
-              challengeSave.items.push({ uid: challengeSave.nextUid++, id: 'cost_seed', count: 3 });
-            }
-            challenge2SeedCount = challengeSave.items.find(item => item.id === 'cost_seed')?.count || 0;
+            challengeSave.equipGachaTenPullTickets = (Number(challengeSave.equipGachaTenPullTickets) || 0) + 1;
+            challenge2EquipTenCount = challengeSave.equipGachaTenPullTickets;
           }
-          if (shouldGrantChallenge3) challengeSave.skinGachaTenPullTickets = (Number(challengeSave.skinGachaTenPullTickets) || 0) + 1;
+          if (shouldGrantChallenge3) {
+            challengeSave.skinGachaTickets = (Number(challengeSave.skinGachaTickets) || 0) + 1;
+            challenge3SkinTicketCount = challengeSave.skinGachaTickets;
+          }
           challengeSave.updatedAt = now;
-          if (shouldGrantChallenge3) challenge3TicketCount = challengeSave.skinGachaTenPullTickets;
         }
       }
       const nextGlobalTotal = (global.totalDamageDealt || 0) + addedDamage;
@@ -437,8 +434,8 @@ window.RaidBossAPI = {
 
       if ((shouldGrantChallenge2 || shouldGrantChallenge3) && challengeSave?.player) {
         transaction.set(saveRef, { slotKey, playerName: challengeSave.playerName || profile.playerName || '勇者', lvl: challengeSave.player.lvl || 1, gold: challengeSave.player.gold || 0, updatedAt: now, gameData: JSON.stringify(challengeSave), deleted: false }, { merge: true });
-        if (shouldGrantChallenge2) transaction.set(challenge2ClaimRef, { claimedAt: now, version: 1, reward: 'cost_seed_3' });
-        if (shouldGrantChallenge3) transaction.set(challenge3ClaimRef, { claimedAt: now, version: 1, reward: 'skin_gacha_ten_pull_ticket' });
+        if (shouldGrantChallenge2) transaction.set(challenge2ClaimRef, { claimedAt: now, version: 1, reward: 'equip_gacha_ten_pull_ticket' });
+        if (shouldGrantChallenge3) transaction.set(challenge3ClaimRef, { claimedAt: now, version: 1, reward: 'skin_gacha_ticket' });
       }
       if (acceptedChallenges > 0) transaction.set(challengeCounterRef, { challengeCount }, { merge: true });
       
@@ -456,8 +453,8 @@ window.RaidBossAPI = {
          bossLevel,
          bossId,
          challengeCount,
-         challenge2SeedCount,
-         challenge3TicketCount,
+         challenge2EquipTenCount,
+         challenge3SkinTicketCount,
          maxHp,
          settledBossId,
          startsAt: nextStartsAt || null
@@ -537,8 +534,12 @@ window.RaidBossAPI = {
   },
   
   async getHistory() {
-    const snap = await getDocs(query(collection(db, 'raidHistory'), orderBy('bossLevel', 'desc'), limit(50)));
-    return snap.docs.map(doc => doc.data());
+    // bossLevel が無い古い記録（Lv.50）も含めるため、orderBy は使わず 取得後に並べ替える
+    const snap = await getDocs(query(collection(db, 'raidHistory'), limit(100)));
+    return snap.docs
+      .map(doc => ({ bossId: doc.id, bossLevel: Number(String(doc.id).replace('boss_', '')) || 50, ...doc.data() }))
+      .sort((a, b) => (b.bossLevel || 0) - (a.bossLevel || 0))
+      .slice(0, 50);
   },
 
   async getGlobalBoss() {

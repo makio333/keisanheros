@@ -3342,7 +3342,7 @@ body:has(#screen-gacha.active) :is(#analog-clock-widget, #btn-menu, #menu-dropdo
   background-size: 100% 100%; mix-blend-mode: screen; opacity: .75; transform: translateX(-75%) skewX(-12deg); animation: foil-glint 3.4s ease-in-out infinite;
 }
 .skin-gacha-background-swatch.holo-artwork::after { border-radius: inherit; }
-.avatar-holographic { filter: saturate(1.28) contrast(1.08) drop-shadow(0 0 1px rgba(255,255,255,.75)); animation: foil-color 3.6s ease-in-out infinite alternate; }
+.avatar-holographic { filter: drop-shadow(0 0 4px rgba(75,255,244,.85)) drop-shadow(0 0 9px rgba(255,78,205,.55)) brightness(1.15); } /* 軽量化：filter は毎フレーム再描画で重いため固定。動きはプリズム層が担当 */
 .holo-surface { position: relative; overflow: hidden; isolation: isolate; }
 .holo-surface::after {
   content: ""; position: absolute; inset: -20% -35%; z-index: 2; pointer-events: none;
@@ -6646,7 +6646,6 @@ body:has(.stage-clear-overlay) .volume-control-container { display: none; }
   object-fit: contain;
   object-position: center;
 }
-.save-slot-avatar-character .save-slot-avatar-img.avatar-holographic, .avatar-window .avatar-img-layer.avatar-holographic, .skin-gacha-result-art .avatar-holographic { filter: drop-shadow(0 0 3px rgba(75,255,244,.8)) drop-shadow(0 0 7px rgba(255,78,205,.42)) brightness(1.1); animation: holo-sparkle 2.5s infinite alternate ease-in-out; } @keyframes holo-sparkle { 0% { filter: drop-shadow(0 0 3px rgba(75,255,244,.8)) drop-shadow(0 0 7px rgba(255,78,205,.42)) brightness(1.1) hue-rotate(0deg); } 100% { filter: drop-shadow(0 0 8px rgba(75,255,244,1)) drop-shadow(0 0 14px rgba(255,78,205,.8)) brightness(1.35) hue-rotate(25deg); } }
 .avatar-window .avatar-bg.holo-background-surface::before,
 .save-slot-avatar-bg.holo-background-surface::before { animation: none; opacity: .48; }
 .avatar-window .avatar-bg.holo-background-surface::after,
@@ -7162,10 +7161,10 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
 .stage-select-line .stage-reward-badge > b { font-size: 12px; }
 
 #screen-raid-boss .raid-menu-panel { width: min(940px, 94%); max-width: 940px; max-height: 92dvh; overflow-y: auto; position: relative; background: #17191e; color: #fff; border: 3px solid #c0392b; box-sizing: border-box; }
-.raid-menu-header { display: flex; align-items: center; gap: 12px; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid #e74c3c; }
+.raid-menu-header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid #e74c3c; }
 .raid-menu-header .window-close-btn { position: static; flex-shrink: 0; margin: 0; padding: 6px 10px; font-size: 13px; min-height: 34px; }
-.raid-menu-title { flex: 1; color: #ff8e82; margin: 0; padding: 0; border: 0; font-size: 20px; text-align: center; }
-.raid-menu-header #btn-raid-rules { width: auto; flex-shrink: 0; margin: 0; min-height: 34px; padding: 6px 10px; font-size: 13px; border-radius: 6px; }
+.raid-menu-title { flex: 1 1 auto; white-space: nowrap; color: #ff8e82; margin: 0; padding: 0; border: 0; font-size: 20px; text-align: center; }
+.raid-menu-header #btn-raid-rules, .raid-menu-header #btn-raid-history { width: auto; flex-shrink: 0; margin: 0; min-height: 34px; padding: 6px 10px; font-size: 13px; border-radius: 6px; }
 .skin-ticket-icon { width: 52px; height: 52px; object-fit: contain; image-rendering: pixelated; vertical-align: middle; margin-right: 8px; }
 .raid-boss-overview { text-align: center; }
 .raid-boss-portrait { position: relative; width: 760px; max-width: 100%; height: 120px; margin: 0 auto; overflow: hidden; border: 2px solid #ff9f43; border-radius: 6px; background: #261b19 url('./assets/raid/raid_bg_magma_pixel.jpg') center 55% / cover; box-sizing: border-box; }
@@ -7235,3 +7234,90 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
 }
 
 .avatar-composite-bg { position: absolute !important; inset: 0; z-index: 0; border-radius: inherit; }
+
+/* ホログラム：キャラのシルエットに沿うプリズム層（fff3d6a で消えていたため復元） */
+.avatar-character-stage.holo-character-prism { position: absolute; inset: 0; z-index: 2; }
+.holo-character-prism { position: relative; isolation: isolate; overflow: hidden; }
+.holo-character-prism::before,
+.holo-character-prism::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  -webkit-mask-image: var(--character-foil-mask);
+  mask-image: var(--character-foil-mask);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+.holo-character-prism::before {
+  z-index: 3;
+  background:
+    radial-gradient(ellipse at 30% 28%, rgba(255,255,255,.9), transparent 25%),
+    repeating-conic-gradient(from 18deg at 50% 50%, rgba(103,244,255,.62) 0deg 20deg, rgba(255,255,255,.12) 20deg 22deg, rgba(255,76,196,.56) 22deg 43deg, rgba(255,236,124,.52) 43deg 64deg, rgba(143,115,255,.58) 64deg 85deg, rgba(111,247,210,.54) 85deg 106deg),
+    linear-gradient(125deg, rgba(255,255,255,.05), rgba(255,255,255,.4) 48%, rgba(255,255,255,.04));
+  background-size: 100% 100%, 30px 30px, 100% 100%;
+  mix-blend-mode: screen;
+  opacity: .7;
+  animation: character-prism-shift 2.8s steps(5, end) infinite alternate;
+}
+.holo-character-prism::after {
+  z-index: 4;
+  inset: -10% -40%;
+  background:
+    radial-gradient(4px 4px at 26% 35%, #fff 0 45%, transparent 60%),
+    radial-gradient(3px 3px at 72% 62%, #fff7c6 0 45%, transparent 65%),
+    linear-gradient(112deg, transparent 39%, rgba(255,255,255,.06) 46%, rgba(255,255,255,.96) 49.5%, rgba(94,245,255,.92) 51%, rgba(255,116,220,.82) 53%, transparent 60%);
+  mix-blend-mode: color-dodge;
+  opacity: .88;
+  transform: translateX(-65%);
+  animation: character-prism-flash 2.4s steps(7, end) infinite;
+}
+.avatar-selector-preview.holo-character-prism::before,
+.avatar-selector-preview.holo-character-prism::after,
+.skin-gacha-result-art.holo-character-prism::before,
+.skin-gacha-result-art.holo-character-prism::after { -webkit-mask-size: 92% 92%; mask-size: 92% 92%; }
+.save-slot-avatar-character.holo-character-prism { position: absolute; inset: 4px; z-index: 2; }
+.avatar-character-stage.holo-character-prism::before,
+.save-slot-avatar-character.holo-character-prism::before { animation: none; opacity: .58; }
+.avatar-character-stage.holo-character-prism::after,
+.save-slot-avatar-character.holo-character-prism::after { animation-duration: 5.5s; }
+@media (prefers-reduced-motion: reduce) { .holo-character-prism::before, .holo-character-prism::after { animation: none !important; } }
+/* ホログラム：全画面で見え方を統一（セーブ枠・拠点と同じ控えめ設定を共通化） */
+.holo-character-prism::before { animation: none; opacity: .58; }
+.holo-character-prism::after { animation-duration: 5.5s; }
+/* ホログラム：コマ送り(steps)をやめて滑らかに。動くのは transform / opacity のみ（GPU合成で軽い） */
+@keyframes character-prism-pulse { from { opacity: .42; } to { opacity: .72; } }
+.holo-character-prism::before,
+.avatar-character-stage.holo-character-prism::before,
+.save-slot-avatar-character.holo-character-prism::before { animation: character-prism-pulse 3.2s ease-in-out infinite alternate; will-change: opacity; }
+.holo-character-prism::after,
+.avatar-character-stage.holo-character-prism::after,
+.save-slot-avatar-character.holo-character-prism::after { animation: character-prism-flash 4.5s ease-in-out infinite; will-change: transform, opacity; }
+/* ホログラム：パキパキした角張った模様をやめて、柔らかい虹色グラデ＋ゆっくり流れる光に */
+.holo-character-prism::before,
+.avatar-character-stage.holo-character-prism::before,
+.save-slot-avatar-character.holo-character-prism::before {
+  background:
+    radial-gradient(ellipse at 30% 25%, rgba(255,255,255,.55), transparent 55%),
+    linear-gradient(125deg, rgba(103,244,255,.55), rgba(255,76,196,.5) 28%, rgba(255,236,124,.45) 52%, rgba(143,115,255,.5) 76%, rgba(111,247,210,.5));
+  background-size: 100% 100%, 100% 100%;
+}
+.holo-character-prism::after,
+.avatar-character-stage.holo-character-prism::after,
+.save-slot-avatar-character.holo-character-prism::after {
+  background: linear-gradient(112deg, transparent 20%, rgba(255,255,255,.12) 38%, rgba(255,255,255,.55) 50%, rgba(255,255,255,.12) 62%, transparent 80%);
+  animation: character-prism-flash 6s ease-in-out infinite;
+}
+
+/* レイド：チャレンジ報酬（1〜3回目）の表示 */
+.raid-challenge-rewards { padding-top: 12px; text-align: left; font-size: 13px; }
+.raid-challenge-rewards > b { color: #ffce77; display: block; margin-bottom: 6px; }
+.raid-challenge-reward-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; margin-top: 4px; border: 1px solid rgba(255,159,67,.4); border-radius: 8px; background: rgba(0,0,0,.25); }
+.raid-challenge-reward-row .rc-name { flex: 1; }
+.raid-challenge-reward-row strong { color: #ffce77; white-space: nowrap; }
+.raid-challenge-reward-row.is-claimed { opacity: .6; }
+.raid-challenge-reward-row.is-claimed strong { color: #8fe3a0; }

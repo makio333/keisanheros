@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "type-rpg-server",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8745"],
-      "port": 8745
+      "name": "vite-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "5173", "--strictPort"],
+      "port": 5173
     }
   ]
 }

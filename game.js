@@ -93,7 +93,7 @@ function av(path){
   return path + (path.includes('?') ? '&' : '?') + 'v=' + ASSET_V;
 }
 function characterFoilMaskStyle(image){
-  return `--character-foil-mask:url("${av(image)}")`;
+  return `--character-foil-mask:url('${av(image)}')`; // style="..." 内で使うので内側はシングルクォート
 }
 function isFireCharacter(id){ return String(id || '').startsWith('skin_fire_lancer_'); }
 
@@ -1180,6 +1180,23 @@ function stageProblem(a, b, op, answer){
   return { a, b, op, answer, text: `${a} ${op} ${b}` };
 }
 
+/* ボス用の出題：そのエリアの ステージのうち 難しい方（うしろ4割・さいてい2つ）から、
+   うしろの ステージほど 出やすい重みで えらぶ（ステージは すすむほど むずかしくなる つくり） */
+function pickHardStageProblem(stages){
+  const n = stages.length;
+  let pool = stages.slice(Math.max(0, n - Math.max(2, Math.ceil(n * 0.4))));
+  // 「まとめ」ステージ（易しい数も出る 汎用の四則ミックス）は、ほかに むずかしい ステージが あるかぎり ボスでは使わない
+  const specific = pool.filter(st => st.generateProblem !== generateArea4MixedProblem);
+  if (specific.length) pool = specific;
+  const total = pool.reduce((sum, _, i) => sum + i + 1, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < pool.length; i++) {
+    r -= i + 1;
+    if (r < 0) return pool[i].generateProblem();
+  }
+  return pool[pool.length - 1].generateProblem();
+}
+
 const AREA_STAGES = {
 
   area14: {
@@ -1200,8 +1217,8 @@ const AREA_STAGES = {
       { name: '特殊な読み・助詞', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_hira_5') },
     ],
     bossTimeLimit1: 15000, bossTimeLimit2: 15000,
-    bossPhase1Problem: () => generateKanjiProblem('kana_hira'),
-    bossPhase2Problem: () => generateKanjiProblem('kana_hira'),
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area14.stages),
+    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area14.stages),
   },
   area15: {
     name: 'カタカナの森',
@@ -1221,8 +1238,8 @@ const AREA_STAGES = {
       { name: '外来音', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_kata_5') },
     ],
     bossTimeLimit1: 15000, bossTimeLimit2: 15000,
-    bossPhase1Problem: () => generateKanjiProblem('kana_kata'),
-    bossPhase2Problem: () => generateKanjiProblem('kana_kata'),
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area15.stages),
+    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area15.stages),
   },
 
   area1: {
@@ -1270,7 +1287,7 @@ const AREA_STAGES = {
     ],
     bossTimeLimit1: 6500,
     bossTimeLimit2: 8000,
-    bossPhase1Problem(){ return pick(this.stages).generateProblem(); },
+    bossPhase1Problem(){ return pickHardStageProblem(this.stages); },
     bossPhase2Problem(){
       let a, b;
       do { a = rnd(15,59); b = rnd(15,49); } while ((a % 10) + (b % 10) < 10);
@@ -1322,7 +1339,7 @@ const AREA_STAGES = {
     ],
     bossTimeLimit1: 6500,
     bossTimeLimit2: 8000,
-    bossPhase1Problem(){ return pick(this.stages).generateProblem(); },
+    bossPhase1Problem(){ return pickHardStageProblem(this.stages); },
     bossPhase2Problem(){
       let a, b;
       do { a = rnd(31,78); b = rnd(15, a - 10); } while ((a % 10) >= (b % 10));
@@ -1352,8 +1369,9 @@ const AREA_STAGES = {
     ],
     bossTimeLimit1: 4500,
     bossTimeLimit2: 5500,
-    bossPhase1Problem(){ const a = rnd(1,9), b = rnd(1,9); return stageProblem(a, b, '×', a * b); },
-    bossPhase2Problem(){ const a = rnd(1,9), b = rnd(1,9); return stageProblem(a, b, '×', a * b); },
+    // ボスは むずかしい 6〜9の段を中心に（かけられる数も 6〜9が出やすい）
+    bossPhase1Problem(){ const a = rnd(6,9), b = Math.random() < 0.7 ? rnd(6,9) : rnd(2,9); return stageProblem(a, b, '×', a * b); },
+    bossPhase2Problem(){ const a = rnd(6,9), b = Math.random() < 0.8 ? rnd(6,9) : rnd(2,9); return stageProblem(a, b, '×', a * b); },
   },
   area3: {
     name: 'わり算の海',
@@ -1408,14 +1426,10 @@ const AREA_STAGES = {
     ],
     bossTimeLimit1: 6500,
     bossTimeLimit2: 7500,
-    bossPhase1Problem(){
-      const divisor = rnd(2,9);
-      const ans = rnd(1,9);
-      return stageProblem(divisor * ans, divisor, '÷', ans);
-    },
+    bossPhase1Problem(){ return pickHardStageProblem(this.stages); },
     bossPhase2Problem(){
-      // フェーズ2：あまりのあるわり算
-      const divisor = rnd(2,9);
+      // フェーズ2：あまりのあるわり算（わる数は 6〜9が出やすい）
+      const divisor = Math.random() < 0.7 ? rnd(6,9) : rnd(2,9);
       const ans = rnd(2,8);
       const rem = rnd(1, divisor - 1);
       const dividend = divisor * ans + rem;
@@ -1443,8 +1457,8 @@ const AREA_STAGES = {
     ],
     bossTimeLimit1: 5700,
     bossTimeLimit2: 6000,
-    bossPhase1Problem: generateArea4MixedProblem,
-    bossPhase2Problem: generateArea4MixedProblem,
+    bossPhase1Problem: generateArea4HardMixedProblem,
+    bossPhase2Problem: generateArea4HardMixedProblem,
   },
   // --- 漢字エリア（小1〜小6） ---
   area5: {
@@ -1465,8 +1479,8 @@ const AREA_STAGES = {
       { name: 'いろ・いきもの', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g1_5') },
     ],
     bossTimeLimit1: 15000, bossTimeLimit2: 15000,
-    bossPhase1Problem: () => generateKanjiProblem('kanji_g1'),
-    bossPhase2Problem: () => generateKanjiProblem('kanji_g1'),
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area5.stages),
+    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area5.stages),
   },
   area6: {
     name: '漢字の洞窟',
@@ -1486,8 +1500,8 @@ const AREA_STAGES = {
       { name: 'せいかつ・ことば', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g2_5') },
     ],
     bossTimeLimit1: 15000, bossTimeLimit2: 15000,
-    bossPhase1Problem: () => generateKanjiProblem('kanji_g2'),
-    bossPhase2Problem: () => generateKanjiProblem('kanji_g2'),
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area6.stages),
+    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area6.stages),
   },
   area7: {
     name: '漢字の砂漠',
@@ -1507,8 +1521,8 @@ const AREA_STAGES = {
       { name: 'その5', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g3_5') },
     ],
     bossTimeLimit1: 15000, bossTimeLimit2: 15000,
-    bossPhase1Problem: () => generateKanjiProblem('kanji_g3'),
-    bossPhase2Problem: () => generateKanjiProblem('kanji_g3'),
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area7.stages),
+    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area7.stages),
   },
   area8: {
     name: '漢字の海',
@@ -1528,8 +1542,8 @@ const AREA_STAGES = {
       { name: 'その5', timeLimit: 16000, generateProblem: () => generateKanjiProblem('kanji_g4_5') },
     ],
     bossTimeLimit1: 16000, bossTimeLimit2: 16000,
-    bossPhase1Problem: () => generateKanjiProblem('kanji_g4'),
-    bossPhase2Problem: () => generateKanjiProblem('kanji_g4'),
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area8.stages),
+    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area8.stages),
   },
   area9: {
     name: '漢字の火山',
@@ -1549,8 +1563,8 @@ const AREA_STAGES = {
       { name: 'その5', timeLimit: 17000, generateProblem: () => generateKanjiProblem('kanji_g5_5') },
     ],
     bossTimeLimit1: 17000, bossTimeLimit2: 17000,
-    bossPhase1Problem: () => generateKanjiProblem('kanji_g5'),
-    bossPhase2Problem: () => generateKanjiProblem('kanji_g5'),
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area9.stages),
+    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area9.stages),
   },
   area10: {
     name: '漢字の魔王城',
@@ -1570,8 +1584,8 @@ const AREA_STAGES = {
       { name: 'その5', timeLimit: 18000, generateProblem: () => generateKanjiProblem('kanji_g6_5') },
     ],
     bossTimeLimit1: 18000, bossTimeLimit2: 18000,
-    bossPhase1Problem: () => generateKanjiProblem('kanji_g6'),
-    bossPhase2Problem: () => generateKanjiProblem('kanji_g6'),
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area10.stages),
+    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area10.stages),
   },
   // --- 算数エリア（小5・小6） ---
   area11: {
@@ -1594,8 +1608,8 @@ const AREA_STAGES = {
       { name: '5年まとめ', timeLimit: 8000, generateProblem: generateArea4MixedProblem },
     ],
     bossTimeLimit1: 7500, bossTimeLimit2: 8000,
-    bossPhase1Problem: generateArea4MixedProblem,
-    bossPhase2Problem: generateArea4MixedProblem,
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area11.stages),
+    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area11.stages),
   },
   area12: {
     name: '算数の魔王城',
@@ -1617,10 +1631,32 @@ const AREA_STAGES = {
       { name: '6年総まとめ', timeLimit: 8500, generateProblem: generateArea4MixedProblem },
     ],
     bossTimeLimit1: 8000, bossTimeLimit2: 8500,
-    bossPhase1Problem: generateArea4MixedProblem,
-    bossPhase2Problem: generateArea4MixedProblem,
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area12.stages),
+    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area12.stages),
   }
 };
+
+/* 試練の塔のボス用：数を大きく・九九はむずかしい段・3つの数の計算も大きめ */
+function generateArea4HardMixedProblem() {
+  const type = rnd(1, 5);
+  if (type === 1) {
+    const a = rnd(45, 99), b = rnd(35, 99);
+    return stageProblem(a, b, '+', a + b);
+  } else if (type === 2) {
+    let a = rnd(45, 99), b = rnd(15, 98);
+    if (a < b) [a, b] = [b, a];
+    return stageProblem(a, b, '-', a - b);
+  } else if (type === 3) {
+    const a = rnd(6, 9), b = rnd(6, 9);
+    return stageProblem(a, b, '×', a * b);
+  } else if (type === 4) {
+    const b = rnd(6, 9), ans = rnd(4, 9);
+    return stageProblem(b * ans, b, '÷', ans);
+  }
+  const a = rnd(30, 70), b = rnd(10, 40), c = rnd(10, 40);
+  if (Math.random() < 0.5) return { a, b, c, op: '+', answer: a + b + c, text: `${a} + ${b} + ${c}` };
+  return { a, b, c, op: '+-', answer: a + b - c, text: `${a} + ${b} - ${c}` };
+}
 
 function generateArea4MixedProblem() {
   const type = rnd(1, 5);
@@ -1688,6 +1724,15 @@ function generateStageEnemy(areaId, stageIndex, isBoss){
     if (bossDiffMult !== 1.0) {
       e.maxHp = Math.max(2, Math.round(e.maxHp * bossDiffMult));
       e.atk = Math.max(1, Math.round(e.atk * bossDiffMult));
+    }
+    /* たおすたびに 強化レベルが あがり、HP・こうげき・ぼうぎょが ふえる */
+    const bossLv = (G && G.areaBossLevel && G.areaBossLevel[areaId]) || 0;
+    if (bossLv > 0) {
+      const grow = 1 + bossLv * rewardSettings.bossGrowthPct / 100;
+      e.maxHp = Math.max(2, Math.round(e.maxHp * grow));
+      e.atk = Math.max(1, Math.round(e.atk * grow));
+      e.def = Math.round(e.def * grow);
+      e.name += ` 強化Lv.${bossLv}`;
     }
     e.hp = e.maxHp;
     return e;
@@ -2046,6 +2091,46 @@ function getAreaDifficultyMultiplier(areaId){
   const m = areaDifficultyMultipliers[areaId];
   return (typeof m === 'number' && !isNaN(m) && m > 0) ? m : getDefaultAreaDifficultyMultiplier(areaId);
 }
+
+/* ==========================================================
+   報酬・ドロップ設定（管理者メニュー「報酬・ドロップ」で変更。全セーブ共通）
+   ========================================================== */
+const REWARD_SETTINGS_KEY = 'typing_rpg_reward_settings_v1';
+const REWARD_SETTINGS_DEFAULTS = {
+  dropMultItem: 0.5,        // アイテムのドロップ率にかける倍率
+  dropMultEquip: 0.5,       // そうびのドロップ率にかける倍率（レジェンドは落ちない）
+  dropMultBlueprint: 0.4,   // 設計図のドロップ率にかける倍率
+  dropMultTicket: 0.5,      // 背景スキンガチャチケットのドロップ率にかける倍率
+  repeatThreshold: 3,       // おなじステージを この回数以上クリアしていたら
+  repeatMult: 0.1,          // ドロップ率にさらにかける倍率（0で まったく出ない）
+  bossEquipDrop: 0,         // ボスの そうびドロップ確率（0〜1。0で なし）
+  bossBlueprintRate: 0.03,  // ボスの 設計図ドロップ確率（倍率かける前）
+  zoneClearLegend: 0,       // 1 にすると エリア制覇のたびに レジェンド装備がもらえる（通常 0）
+  firstWeaponRarity: 2,     // 初回クリア報酬の ぶきの レアリティ（1〜4）
+  thirdGoldBase: 100,       // 3回クリア報酬のゴールド（さいしょのステージ）
+  thirdGoldStep: 50,        // ステージが すすむごとに ふえるゴールド
+  thirdItemId: 'hipotion',  // 3回クリア報酬の アイテム
+  thirdItemCount: 3,        // 3回クリア報酬の アイテム個数
+  bossFirstTickets: 1,      // ボス初回クリア報酬：背景スキンガチャチケット枚数
+  bossThirdTickets: 1,      // ボス3回クリア報酬：装備ガチャ10連チケット枚数
+  bossLevelUp: 1,           // ボスを たおすたびに あがる 強化レベル
+  bossGrowthPct: 8,         // 強化レベル1ごとの ステータス上昇（％）
+};
+let rewardSettings = { ...REWARD_SETTINGS_DEFAULTS };
+function loadRewardSettings(){
+  rewardSettings = { ...REWARD_SETTINGS_DEFAULTS };
+  try {
+    const raw = storageGet(REWARD_SETTINGS_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      for (const k of Object.keys(REWARD_SETTINGS_DEFAULTS)) {
+        if (saved[k] !== undefined && typeof saved[k] === typeof REWARD_SETTINGS_DEFAULTS[k]) rewardSettings[k] = saved[k];
+      }
+    }
+  } catch(e) {}
+}
+loadRewardSettings();
+function saveRewardSettings(){ storageSet(REWARD_SETTINGS_KEY, JSON.stringify(rewardSettings)); }
 
 const ENEMY_POOLS = { tower: ENEMIES_TOWER, dungeon: ENEMIES_DUNGEON, crypt: ENEMIES_CRYPT, bandit: ENEMIES_BANDIT };
 
@@ -2539,6 +2624,10 @@ function newGameState(name, avatarId){
     stageRewardClaims: {},
     areaBossClearCounts: {},
     skinGachaTickets: 0,
+    equipGachaTenPullTickets: 0,
+    stageTotalClears: {},
+    areaBossTotalClears: {},
+    areaBossLevel: {},
     skinGachaTenPullTickets: 0,
     skinGachaGender: 'female',
     skinGachaCategory: 'female',
@@ -2669,7 +2758,15 @@ function loadSlot(key, options = {}){
     if (!G.stageRewardClaims) G.stageRewardClaims = {};
     if (!G.areaBossClearCounts) G.areaBossClearCounts = {};
     if (!Number.isFinite(G.skinGachaTickets)) G.skinGachaTickets = 0;
+    if (!Number.isFinite(G.equipGachaTenPullTickets)) G.equipGachaTenPullTickets = 0;
+    if (!G.stageTotalClears) G.stageTotalClears = {};
+    if (!G.areaBossTotalClears) G.areaBossTotalClears = {};
+    if (!G.areaBossLevel) G.areaBossLevel = {};
     if (!Number.isFinite(G.skinGachaTenPullTickets)) G.skinGachaTenPullTickets = 0;
+    if (G.skinGachaTenPullTickets > 0) { // スキンの10連チケットは廃止。持っていた分は 単発チケット10枚ぶんに交換
+      G.skinGachaTickets += G.skinGachaTenPullTickets * 10;
+      G.skinGachaTenPullTickets = 0;
+    }
     if (!Array.isArray(G.holographicSkins)) G.holographicSkins = [];
     if (!Array.isArray(G.holographicAvatarBackgrounds)) G.holographicAvatarBackgrounds = [];
     G.avatarHolographic = !!G.avatarHolographic && G.holographicSkins.includes(G.avatar);
@@ -4864,6 +4961,60 @@ function grantExp(amount){
   return { leveledUp: G.player.lvl > lvlBefore, lvlBefore, pointsGained, maxHpBefore, maxMpBefore };
 }
 
+/* 戦闘に勝ったときの ドロップ抽選。ドロップ率 = 基本率 × 全体倍率 ×（くりかえし低下）。
+   引数 rewards（ログ配列）に メッセージを つけたし、獲得物の配列を かえす */
+function rollBattleDrops(e, rewards){
+  const drops = [];
+  /* ドロップ率 = 基本率 × 全体倍率 ×（おなじステージを 規定回数以上クリア済みなら さらに大きく低下）。
+     レジェンド（★5）は ドロップでは出さない。ボスの そうびドロップも なし（設定で変更可） */
+  const repeatM = stageRepeatDropMult();
+  const dropChance = (base, mult) => Math.min(1, Math.max(0, base * mult * repeatM));
+  if (explore && Math.random() < dropChance(e.isBoss ? 0.15 : 0.05, rewardSettings.dropMultTicket)) {
+    G.skinGachaTickets = (G.skinGachaTickets || 0) + 1;
+    drops.push({ kind:'skin-ticket', name:'背景スキンガチャチケット ×1', icon:SKIN_GACHA_TICKET_ICON, count:1 });
+    rewards.push('背景スキンガチャチケットを 1枚ひろった！');
+  }
+  if (Math.random() < dropChance(0.12, rewardSettings.dropMultItem)){
+    const it = pick(ITEM_DB);
+    const count = it.id === 'hipotion' ? 3 : 1;
+    addItem(it.id, count);
+    drops.push({ kind:'item', id:it.id, name:it.name, icon:it.emoji, count });
+    rewards.push(`${it.name}${count > 1 ? `×${count}` : ''}を ひろった！`);
+  }
+  if (Math.random() < dropChance(e.isBoss ? rewardSettings.bossEquipDrop : 0.04, e.isBoss ? 1 : rewardSettings.dropMultEquip)){
+    const db = pick(EQUIP_DB);
+    const rarity = pick(e.isBoss ? [2, 3, 3, 4] : [1, 2, 2]);
+    const ability = rollAbility(rarity);
+    G.ownedEquips.push({ uid: G.nextUid++, id: db.id, rarity, ability });
+    drops.push({ kind:'equip', id:db.id, name:db.name, rarity, icon:db.emoji, ability });
+    rewards.push(`そうび「<span class="rarity-${rarity}">${db.name}</span>」を てにいれた！`);
+  }
+  // 古代装備の せっけいず（レア・ドロップ）
+  if (Math.random() < dropChance(e.isBoss ? rewardSettings.bossBlueprintRate : 0.015, rewardSettings.dropMultBlueprint)){
+    const bp = pick(BLUEPRINT_DB);
+    addItem(bp.id, 1);
+    drops.push({ kind:'blueprint', id:bp.id, name:bp.name, icon:bp.emoji });
+    rewards.push(`めずらしい「📜 ${bp.name}」を ひろった！`);
+  }
+  return drops;
+}
+
+/* いま挑んでいる ステージ／ボスを すでに何回クリアしているか（★は3で止まるので、数えなおし用の別カウント） */
+function stageTotalClearCount(areaId, stageIndex){
+  if (!G || !areaId) return 0;
+  if (stageIndex === null || stageIndex === undefined) {
+    return Math.max((G.areaBossTotalClears && G.areaBossTotalClears[areaId]) || 0, (G.areaBossClearCounts && G.areaBossClearCounts[areaId]) || 0);
+  }
+  const total = (G.stageTotalClears && G.stageTotalClears[areaId] && G.stageTotalClears[areaId][stageIndex]) || 0;
+  const stars = (G.stageClearCounts && G.stageClearCounts[areaId] && G.stageClearCounts[areaId][stageIndex]) || 0;
+  return Math.max(total, stars);
+}
+function stageRepeatDropMult(){
+  if (!explore || !explore.stageMode) return 1;
+  const n = stageTotalClearCount(explore.areaId, explore.isBoss ? null : explore.stageIndex);
+  return n >= rewardSettings.repeatThreshold ? rewardSettings.repeatMult : 1;
+}
+
 function winBattle(){
   endBattleLoop();
   if (battle && battle.enemy && battle.enemy.isRaid) {
@@ -4885,38 +5036,7 @@ function winBattle(){
     `${gold}ゴールドを てにいれた！`,
   ];
 
-  const drops = [];
-  if (explore) {
-    const ticketDrop = rollAdventureSkinGachaTicket(e);
-    if (ticketDrop) {
-      drops.push(ticketDrop);
-      rewards.push('背景スキンガチャチケットを 1枚ひろった！');
-    }
-  }
-  // ドロップ（1ステージ5戦化に合わせて確率を調整）
-  if (Math.random() < 0.12){ // 35% -> 12%
-    const it = pick(ITEM_DB);
-    const count = it.id === 'hipotion' ? 3 : 1;
-    addItem(it.id, count);
-    drops.push({ kind:'item', id:it.id, name:it.name, icon:it.emoji, count });
-    rewards.push(`${it.name}${count > 1 ? `×${count}` : ''}を ひろった！`);
-  }
-  if (e.isBoss || Math.random() < 0.04){ // 通常敵: 12% -> 4%（ボスは確定）
-    const db = pick(EQUIP_DB);
-    const rarities = e.isBoss ? [3, 3, 4, 4, 4, 5] : [1, 2, 2];
-    const rarity = pick(rarities);
-    const ability = rollAbility(rarity);
-    G.ownedEquips.push({ uid: G.nextUid++, id: db.id, rarity, ability });
-    drops.push({ kind:'equip', id:db.id, name:db.name, rarity, icon:db.emoji, ability });
-    rewards.push(`そうび「<span class="rarity-${rarity}">${db.name}</span>」を てにいれた！`);
-  }
-  // 古代装備の せっけいず（レア・ドロップ）
-  if (Math.random() < (e.isBoss ? 0.08 : 0.015)){ // ボス: 15% -> 8%, 通常敵: 4% -> 1.5%
-    const bp = pick(BLUEPRINT_DB);
-    addItem(bp.id, 1);
-    drops.push({ kind:'blueprint', id:bp.id, name:bp.name, icon:bp.emoji });
-    rewards.push(`めずらしい「📜 ${bp.name}」を ひろった！`);
-  }
+  const drops = rollBattleDrops(e, rewards);
   
   if (explore) {
     if (!explore.sessionDrops) explore.sessionDrops = [];
@@ -4959,10 +5079,7 @@ function winBattle(){
       const stageIndex = explore.stageIndex;
       showKillProgressPopup(fromCount, toCount, ENEMIES_PER_STAGE, () => {
         if (stageCleared){
-          const counts = getStageClearCounts(areaId);
-          const previousStars = counts[stageIndex] || 0;
-          counts[stageIndex] = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, (counts[stageIndex] || 0) + 1);
-          const milestoneRewards = grantStageMilestone(areaId, stageIndex, previousStars, counts[stageIndex]);
+          const { milestoneRewards } = recordStageClear(areaId, stageIndex);
           const stageRewards = { drops: explore.stageDrops || [], gold: explore.stageGold || 0, exp: explore.stageExp || 0, milestoneRewards };
           
           // ステージクリア時にHP/MPを全回復させる
@@ -5297,6 +5414,9 @@ function getDropItemDb(d) {
 
 /* 共通ホバー詳細ウィンドウHTMLの取得 */
 function getDropTooltipHtml(d) {
+  if (d?.kind === 'equip-ticket') {
+    return '<strong>装備ガチャ10連チケット</strong><p>装備ガチャを10回まとめて引けます。</p>';
+  }
   if (d?.kind === 'skin-ticket') {
     return '<strong>背景スキンガチャチケット</strong><p>キャラクターや背景が手に入るガチャを1回引けます。</p>';
   }
@@ -5391,7 +5511,9 @@ function bindDropItemTooltips(container) {
   });
 }
 
-function zoneCleared(zone, extraRewards, opts){
+/* エリア制覇の「状態の更新」だけ（画面は出さない）。戦闘でのクリアも プリントでのクリアも これを通す。
+   かえり値は 表示用ログ */
+function applyZoneClearState(zone, extraRewards, opts){
   opts = opts || {};
   const dispName = opts.displayName || zoneName(zone);
   const first = !G.clears[zone];
@@ -5417,18 +5539,28 @@ function zoneCleared(zone, extraRewards, opts){
       G.rescued.push(reward.rescueId);
       logs.push(reward.rescueText);
     }
-    const db = EQUIP_DB.find(d => d.id === reward.equipId);
-    const ability = rollAbility(5);
-    G.ownedEquips.push({ uid: G.nextUid++, id: db.id, rarity: 5, ability });
-    const abilityInfo = ability ? getAbility(ability) : null;
-    logs.push(`おれいに「<span class="rarity-5">${rarityLabelHtml(5)} ${db.name}</span>」を もらった！${abilityInfo ? `<br><span class="tag ability">✨ ${abilityInfo.name}（${abilityInfo.desc}）</span>` : ''}`);
+    /* レジェンド装備は 出すぎていたので、設定（zoneClearLegend=1）のときだけ わたす */
+    if (rewardSettings.zoneClearLegend) {
+      const db = EQUIP_DB.find(d => d.id === reward.equipId);
+      const ability = rollAbility(5);
+      G.ownedEquips.push({ uid: G.nextUid++, id: db.id, rarity: 5, ability });
+      const abilityInfo = ability ? getAbility(ability) : null;
+      logs.push(`おれいに「<span class="rarity-5">${rarityLabelHtml(5)} ${db.name}</span>」を もらった！${abilityInfo ? `<br><span class="tag ability">✨ ${abilityInfo.name}（${abilityInfo.desc}）</span>` : ''}`);
+    }
   }
   if (first){
     addItem('hipotion', 3);
     addItem('ether', 2);
     logs.push('<span class="good">はつせいは ボーナス！ 秘薬×3 と エーテル×2 を てにいれた！</span>');
   }
-  
+  return logs;
+}
+
+function zoneCleared(zone, extraRewards, opts){
+  opts = opts || {};
+  const dispName = opts.displayName || zoneName(zone);
+  const logs = applyZoneClearState(zone, extraRewards, opts);
+
   if (explore) {
     const dropsHtml = generateDropsSummaryHtml(explore.sessionDrops, explore.sessionGold);
     if (dropsHtml) {
@@ -5514,31 +5646,94 @@ function stageClearRewardsHtml(rewards){
   if (!rewards) return '';
   const { drops, gold, exp } = rewards;
   const normal = generateDropsSummaryHtml(drops, gold, { exp, title: '【このステージで てにいれたもの】' });
-  const bonuses = (rewards.milestoneRewards || []).map(text => `<div class="good stage-milestone-reward">🎁 ${text}</div>`).join('');
+  const bonuses = (rewards.milestoneRewards || []).map(entry => generateDropsSummaryHtml(entry.drops, entry.gold, { title: `🎁 ${entry.title}` })).join('');
   return normal + bonuses;
 }
 
 /* 新ステージシステムの エリア制覇。報酬・救助イベントは 既存の zoneCleared() を
    そのまま流用する（rewardZone＝tower/dungeon の クリア処理に のる） */
-function stageAreaCleared(areaId, extraRewards){
+/* ボスを1回たおした（クリアした）ときの 共通の状態更新。戦闘でも プリントでも これを通す。
+   ★・累計回数・ボスの強化レベル・初回／3回クリアの 装備ガチャチケットを 処理して、表示用ログを かえす */
+function grantBossClearState(areaId){
   const area = AREA_STAGES[areaId];
   if (!G.areaBossClearCounts) G.areaBossClearCounts = {};
+  if (!G.areaBossTotalClears) G.areaBossTotalClears = {};
+  if (!G.areaBossLevel) G.areaBossLevel = {};
   const previousStars = G.areaBossClearCounts[areaId] ?? Math.min(STAGE_STARS_TO_UNLOCK_NEXT, G.clearCounts[area.rewardZone] || 0);
   const currentStars = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, previousStars + 1);
   G.areaBossClearCounts[areaId] = currentStars;
+  G.areaBossTotalClears[areaId] = Math.max(G.areaBossTotalClears[areaId] || 0, previousStars) + 1;
   const claims = getStageRewardClaims(areaId, 'boss');
-  const rewardLogs = [...extraRewards];
-  if (!claims.first) {
-    G.skinGachaTickets = (G.skinGachaTickets || 0) + 1;
+  const entries = [];
+  const notes = [];
+  if (!claims.rewardFirst) {
+    const n = Math.max(0, Math.round(rewardSettings.bossFirstTickets));
+    G.skinGachaTickets = (G.skinGachaTickets || 0) + n;
+    claims.rewardFirst = true;
     claims.first = true;
-    rewardLogs.push('<span class="good">初回討伐報酬：背景スキンガチャチケット×1</span>');
+    if (n > 0) entries.push({ title:'初回クリア報酬', gold:0, drops:[{ kind:'skin-ticket', name:`背景スキンガチャチケット`, icon:SKIN_GACHA_TICKET_ICON, count:n }] });
   }
-  if (currentStars >= STAGE_STARS_TO_UNLOCK_NEXT && !claims.star3) {
-    G.skinGachaTickets = (G.skinGachaTickets || 0) + 1;
+  if (currentStars >= STAGE_STARS_TO_UNLOCK_NEXT && !claims.rewardThird) {
+    const n = Math.max(0, Math.round(rewardSettings.bossThirdTickets));
+    G.equipGachaTenPullTickets = (G.equipGachaTenPullTickets || 0) + n;
+    claims.rewardThird = true;
     claims.star3 = true;
-    rewardLogs.push('<span class="good">3回クリア報酬：背景スキンガチャチケット×1</span>');
+    if (n > 0) entries.push({ title:'3回クリア報酬', gold:0, drops:[{ kind:'equip-ticket', name:`装備ガチャ10連チケット`, icon:'🎫', count:n }] });
   }
-  zoneCleared(area.rewardZone, rewardLogs, { suppressNextUnlock:true, displayName:area.name });
+  /* たおすたびに ボスが 強くなる */
+  const up = Math.max(0, Math.round(rewardSettings.bossLevelUp));
+  if (up > 0) {
+    G.areaBossLevel[areaId] = (G.areaBossLevel[areaId] || 0) + up;
+    notes.push(`ボスが つよくなった！（強化Lv.${G.areaBossLevel[areaId]}）`);
+  }
+  return { entries, notes };
+}
+
+/* ボスを たおしたあとの ウィンドウ（通常ステージと同じ見た目：アイコンカードで ごほうびを表示） */
+function showBossClearOverlay(area, rewards, storyLines, onBackToSelect){
+  document.querySelector('.stage-clear-overlay')?.remove();
+  if (SM.initialized) SM.play('se_clear');
+  const overlay = document.createElement('div');
+  overlay.className = 'stage-clear-overlay';
+  const flow = document.createElement('div');
+  flow.className = 'stage-clear-flow-overlay';
+  flow.textContent = 'エリア せいは';
+  overlay.appendChild(flow);
+  const panel = document.createElement('div');
+  panel.className = 'panel stage-clear-panel';
+  const story = (storyLines || []).map(l => `<div class="flavor" style="margin:4px 0;">${l}</div>`).join('');
+  panel.innerHTML = `
+    <h2>${area.name} ボスを たおした！</h2>
+    ${stageClearRewardsHtml(rewards)}
+    ${story}
+    <div class="stage-clear-actions">
+      <button class="btn" id="btn-boss-clear-home">きょてんへ もどる</button>
+      <button class="btn btn-primary" id="btn-boss-clear-back">ステージせんたくへ</button>
+    </div>
+  `;
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+  bindDropItemTooltips(panel);
+  $('btn-boss-clear-home').onclick = () => { hideTooltip(); overlay.remove(); showHome(); };
+  $('btn-boss-clear-back').onclick = () => { hideTooltip(); overlay.remove(); onBackToSelect(); };
+}
+
+function stageAreaCleared(areaId, extraRewards){
+  const area = AREA_STAGES[areaId];
+  const bossState = grantBossClearState(areaId);
+  const zoneLogs = applyZoneClearState(area.rewardZone, [], { suppressNextUnlock:true, displayName:area.name });
+  const rewards = {
+    drops: explore ? (explore.sessionDrops || []) : [],
+    gold: explore ? (explore.sessionGold || 0) : 0,
+    exp: explore ? (explore.stageExp || 0) : 0,
+    milestoneRewards: bossState.entries,
+  };
+  // 救助・はつせいボーナスなどの 文章（アイコン化できない ストーリーの行）は ウィンドウの下に まとめて出す
+  const story = [...zoneLogs.map(l => l.replace(/<div[\s\S]*$/, '')), ...bossState.notes.map(t => `<span class="accent">${t}</span>`)];
+  if (G.player) { G.player.hp = totalMaxHp(); G.player.mp = totalMaxMp(); }
+  explore = null;
+  save();
+  showBossClearOverlay(area, rewards, story, () => showStageSelectNew(areaId));
 }
 
 /* 勝利後：おなじ ステージの もんだいタイプで つぎの 敵へ（テンポ重視で即戦闘）。
@@ -5676,7 +5871,7 @@ function renderLoadSaveSlots(onSelectCb){
       <!-- 2段目: 立ち絵エリア -->
       <div class="save-slot-avatar-frame">
         <div class="save-slot-avatar-bg"></div>
-        <div class="save-slot-avatar-character" style="${slot.avatarHolographic ? characterFoilMaskStyle(avatar.image) : ''}">
+        <div class="save-slot-avatar-character${slot.avatarHolographic ? ' holo-character-prism' : ''}" style="${slot.avatarHolographic ? characterFoilMaskStyle(avatar.image) : ''}">
           <img src="${av(avatar.image)}" class="save-slot-avatar-img${slot.avatarHolographic ? ' avatar-holographic' : ''}" alt="キャラクター">
         </div>
       </div>
@@ -5910,7 +6105,11 @@ function getStageRewardClaims(areaId, stageKey){
   if (!G.stageRewardClaims) G.stageRewardClaims = {};
   const key = `${areaId}:${stageKey}`;
   if (!G.stageRewardClaims[key]) G.stageRewardClaims[key] = { first: false, star3: false };
-  return G.stageRewardClaims[key];
+  const c = G.stageRewardClaims[key];
+  // 旧仕様（初回＝ゴールド＋アイテム／3回＝ぶき）で もらいずみの記録を 新しい記録に引きつぐ
+  if (c.rewardFirst === undefined) c.rewardFirst = !!(c.first || c.firstSupplies);
+  if (c.rewardThird === undefined) c.rewardThird = !!(c.star3 || c.thirdWeapon);
+  return c;
 }
 
 function stageRewardBadge(label, reward, claimed){
@@ -5922,10 +6121,11 @@ function stageWeaponReward(areaId, stageIndex){
   const budget = Math.max(1, recLv + stageIndex);
   const targetAtk = 2 + recLv + stageIndex * 2;
   const initial = getEquipTemplate('w1');
-  let reward = { db: initial, rarity: 2, atk: calcEquipStat(initial.stat, 2).atk };
+  const wRarity = Math.min(4, Math.max(1, Math.round(rewardSettings.firstWeaponRarity) || 2));
+  let reward = { db: initial, rarity: wRarity, atk: calcEquipStat(initial.stat, wRarity).atk };
   for (const base of EQUIP_DB.filter(db => db.slot === 'weapon' && !db.assist)) {
     const db = getEquipTemplate(base.id);
-    const rarity = 2;
+    const rarity = wRarity;
     const atk = calcEquipStat(db.stat, rarity).atk;
     if (equipCost(db, rarity) <= budget && atk <= targetAtk && atk > reward.atk) reward = { db, rarity, atk };
   }
@@ -5945,19 +6145,24 @@ function stageRewardOrdinal(areaId, stageIndex){
 }
 
 function stageFirstSuppliesReward(areaId, stageIndex){
-  return { gold: 100 + stageRewardOrdinal(areaId, stageIndex) * 50, itemId: 'hipotion', count: 3 };
+  return {
+    gold: Math.max(0, Math.round(rewardSettings.thirdGoldBase + stageRewardOrdinal(areaId, stageIndex) * rewardSettings.thirdGoldStep)),
+    itemId: getItemTemplate(rewardSettings.thirdItemId) ? rewardSettings.thirdItemId : 'hipotion',
+    count: Math.max(0, Math.round(rewardSettings.thirdItemCount)),
+  };
 }
 
 function stageRewardIcon(kind, id, rarity = 1){
   const db = kind === 'equip' ? getEquipTemplate(id) : kind === 'item' ? getItemTemplate(id) : null;
-  const name = db ? db.name : '背景スキンガチャチケット';
-  return `<button type="button" class="stage-reward-icon${kind === 'equip' ? ` equip-icon rarity-${rarity}` : ''}" data-reward-kind="${kind}" data-reward-id="${id}" data-reward-rarity="${rarity}" aria-label="${name}${kind === 'equip' ? `・${RARITY_NAME[rarity]}` : ''}の詳細">${iconHtml(db ? db.emoji : SKIN_GACHA_TICKET_ICON, 56)}</button>`;
+  const isEquipTen = id === 'equip-ten-ticket';
+  const name = db ? db.name : isEquipTen ? '装備ガチャ10連チケット' : '背景スキンガチャチケット';
+  return `<button type="button" class="stage-reward-icon${kind === 'equip' ? ` equip-icon rarity-${rarity}` : ''}" data-reward-kind="${kind}" data-reward-id="${id}" data-reward-rarity="${rarity}" aria-label="${name}${kind === 'equip' ? `・${RARITY_NAME[rarity]}` : ''}の詳細">${iconHtml(db ? db.emoji : isEquipTen ? '🎫' : SKIN_GACHA_TICKET_ICON, 56)}</button>`;
 }
 
 function bindStageRewardTooltips(container){
   container.querySelectorAll('.stage-reward-icon').forEach(button => {
     const { rewardKind: kind, rewardId: id, rewardRarity: rarity } = button.dataset;
-    const detail = kind === 'equip' ? generateEquipDetailHtml(getEquipTemplate(id), { rarity: Number(rarity) }) : kind === 'item' ? generateItemDetailHtml(getItemTemplate(id), { count: id === 'hipotion' ? 3 : 1 }) : '<b>背景スキンガチャチケット</b><p>背景スキンガチャを1回引けるチケット。</p>';
+    const detail = kind === 'equip' ? generateEquipDetailHtml(getEquipTemplate(id), { rarity: Number(rarity) }) : kind === 'item' ? generateItemDetailHtml(getItemTemplate(id), { count: id === 'hipotion' ? 3 : 1 }) : id === 'equip-ten-ticket' ? '<b>装備ガチャ10連チケット</b><p>装備ガチャを10回まとめて引けるチケット。</p>' : '<b>背景スキンガチャチケット</b><p>背景スキンガチャを1回引けるチケット。</p>';
     button.onmouseover = event => showTooltip(event, detail);
     button.onmousemove = updateTooltipPos;
     button.onmouseout = hideTooltip;
@@ -5972,41 +6177,66 @@ function stageRewardPairHtml(areaId, stageIndex, isBoss, stars){
   const claims = getStageRewardClaims(areaId, isBoss ? 'boss' : stageIndex);
   const area = AREA_STAGES[areaId];
   if (isBoss) {
-    return `<span class="stage-reward-pair">${stageRewardBadge('初回クリア', stageRewardIcon('ticket', 'skin-ticket'), claims.first)}${stageRewardBadge('3回クリア', stageRewardIcon('ticket', 'skin-ticket'), claims.star3)}</span>`;
+    return `<span class="stage-reward-pair">${stageRewardBadge('初回クリア', stageRewardIcon('ticket', 'skin-ticket'), !!claims.rewardFirst)}${stageRewardBadge('3回クリア', stageRewardIcon('ticket', 'equip-ten-ticket'), !!claims.rewardThird)}</span>`;
   }
+  /* 初回クリア＝ぶき ／ 3回クリア＝ゴールド＋アイテム（4回目いこうは ごほうびなし） */
   const supplies = stageFirstSuppliesReward(areaId, stageIndex);
   const weapon = stageWeaponReward(areaId, stageIndex);
-  const priorWeapon = claims.thirdWeapon || claims.firstWeapon;
+  const priorWeapon = claims.firstWeapon;
   const weaponId = priorWeapon?.id || weapon.db.id;
   const rarity = priorWeapon?.rarity || weapon.rarity;
-  return `<span class="stage-reward-pair">${stageRewardBadge('初回クリア', `${stageRewardIcon('item', supplies.itemId)}<span class="stage-reward-gold" aria-label="${supplies.gold}ゴールド"><span aria-hidden="true">💰</span><b>${supplies.gold}</b></span>`, !!claims.firstSupplies)}${stageRewardBadge('3回クリア', stageRewardIcon('equip', weaponId, rarity), !!priorWeapon)}</span>`;
+  return `<span class="stage-reward-pair">${stageRewardBadge('初回クリア', stageRewardIcon('equip', weaponId, rarity), !!claims.rewardFirst)}${stageRewardBadge('3回クリア', `${stageRewardIcon('item', supplies.itemId)}<span class="stage-reward-gold" aria-label="${supplies.gold}ゴールド"><span aria-hidden="true">💰</span><b>${supplies.gold}</b></span>`, !!claims.rewardThird)}</span>`;
 }
 
 function grantStageMilestone(areaId, stageIndex, previousStars, currentStars){
-  const area = AREA_STAGES[areaId];
   const claims = getStageRewardClaims(areaId, stageIndex);
+  /* 各ごほうびは { title, gold, drops:[ドロップ形式] }。画面では アイコンカードで表示する */
   const received = [];
-  if (!claims.firstSupplies) {
+  /* 初回クリア：ぶき */
+  if (currentStars >= 1 && !claims.rewardFirst) {
+    const reward = stageWeaponReward(areaId, stageIndex);
+    const equip = { uid: G.nextUid++, id: reward.db.id, rarity: reward.rarity, ability: null };
+    G.ownedEquips.push(equip);
+    claims.firstWeapon = { uid: equip.uid, id: equip.id, rarity: equip.rarity };
+    claims.rewardFirst = true;
+    claims.first = true;
+    received.push({ title:'初回クリア報酬', gold:0, drops:[{ kind:'equip', id:reward.db.id, name:reward.db.name, rarity:reward.rarity, icon:reward.db.emoji, ability:null }] });
+  }
+  /* 3回クリア：ゴールド＋アイテム（これ以降のクリアは ごほうびなし） */
+  if (currentStars >= STAGE_STARS_TO_UNLOCK_NEXT && !claims.rewardThird) {
     const supplies = stageFirstSuppliesReward(areaId, stageIndex);
     G.player.gold += supplies.gold;
-    addItem(supplies.itemId, supplies.count);
-    claims.firstSupplies = true;
-    claims.first = true;
-    received.push(`初回クリア報酬：${supplies.gold}G・${getItemTemplate(supplies.itemId).name}×${supplies.count}`);
-  }
-  if (currentStars >= STAGE_STARS_TO_UNLOCK_NEXT && !claims.thirdWeapon) {
-    if (claims.firstWeapon) {
-      claims.thirdWeapon = claims.firstWeapon;
-    } else {
-      const reward = stageWeaponReward(areaId, stageIndex);
-      const equip = { uid: G.nextUid++, id: reward.db.id, rarity: reward.rarity, ability: null };
-      G.ownedEquips.push(equip);
-      claims.thirdWeapon = { uid: equip.uid, id: equip.id, rarity: equip.rarity };
-      received.push(`3回クリア報酬：${reward.db.name}（${RARITY_NAME[reward.rarity]}・攻撃+${reward.atk}）`);
+    const drops = [];
+    if (supplies.count > 0) {
+      addItem(supplies.itemId, supplies.count);
+      const it = getItemTemplate(supplies.itemId);
+      drops.push({ kind:'item', id:supplies.itemId, name:it.name, icon:it.emoji, count:supplies.count });
     }
+    claims.rewardThird = true;
     claims.star3 = true;
+    received.push({ title:'3回クリア報酬', gold:supplies.gold, drops });
   }
   return received;
+}
+
+/* ごほうび（{title, gold, drops}）を、報酬ポップイン用のカード配列に つけたす */
+function pushMilestoneRewardCards(rewards, entry){
+  if (entry.gold > 0) rewards.push({ kind:'item', name:`${entry.title}：${entry.gold} G`, icon:'💰' });
+  for (const d of entry.drops || []) {
+    rewards.push({ kind: d.kind === 'equip' ? 'equip' : 'item', name:`${entry.title}：${d.name}${d.count > 1 ? ` ×${d.count}` : ''}`, icon:d.icon, rarity:d.rarity, ability:d.ability || null });
+  }
+}
+
+/* ステージを1回クリアしたときの 共通処理（戦闘クリアでも プリントでも これを通す）。
+   ★（上限3）と ほんとうの累計クリア回数を 数え、初回／3回クリアの報酬を わたす */
+function recordStageClear(areaId, stageIndex){
+  const counts = getStageClearCounts(areaId);
+  const previousStars = counts[stageIndex] || 0;
+  counts[stageIndex] = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, previousStars + 1);
+  if (!G.stageTotalClears) G.stageTotalClears = {};
+  if (!G.stageTotalClears[areaId]) G.stageTotalClears[areaId] = [];
+  G.stageTotalClears[areaId][stageIndex] = (G.stageTotalClears[areaId][stageIndex] || 0) + 1;
+  return { previousStars, currentStars: counts[stageIndex], milestoneRewards: grantStageMilestone(areaId, stageIndex, previousStars, counts[stageIndex]) };
 }
 
 /* 新ステージ選択（エリアの背景に よこならびで ステージボタンを ひょうじ） */
@@ -6594,6 +6824,39 @@ function renderStatus(){
   confirmBtn.textContent = total > 0 ? `けってい（スキルポイント${total}を つかう）` : 'けってい';
   updateHud();
   renderEquipmentSlots();
+  renderTestModeStatEditor();
+}
+
+/* テストモード専用：ステータスを数値で直接入力して書き換えるパネル */
+function renderTestModeStatEditor(){
+  const old = $('test-stat-editor');
+  if (old) old.remove();
+  if (!G || !G.isTestMode) return;
+  const anchor = $('btn-status-confirm');
+  if (!anchor) return;
+  const fields = [
+    { key:'maxHp', label:'HP（さいだい）' },
+    { key:'maxMp', label:'MP（さいだい）' },
+    { key:'atk', label:'こうげき力' },
+    { key:'def', label:'しゅび力' },
+    { key:'spd', label:'すばやさ' },
+  ];
+  const box = document.createElement('div');
+  box.id = 'test-stat-editor';
+  box.style.cssText = 'margin-top:12px; padding:10px; border:1px dashed #f1c40f; border-radius:8px; background:rgba(0,0,0,.25);';
+  box.innerHTML = '<div style="font-weight:bold; color:#f1c40f; margin-bottom:6px;">🛠 テスト用：数値を直接入力</div>'
+    + fields.map(f => `<label style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin:4px 0;"><span>${f.label}</span><input type="number" min="1" max="999999" step="1" inputmode="numeric" data-test-stat="${f.key}" value="${G.player[f.key]}" style="width:110px; padding:4px 6px; text-align:right;"></label>`).join('')
+    + '<button type="button" id="btn-test-stat-apply" class="btn btn-primary" style="margin-top:8px;">てきよう</button>';
+  anchor.insertAdjacentElement('afterend', box);
+  $('btn-test-stat-apply').addEventListener('click', () => {
+    box.querySelectorAll('input[data-test-stat]').forEach(inp => {
+      const v = Math.floor(Number(toHalfWidth(String(inp.value))));
+      if (Number.isFinite(v) && v >= 1) G.player[inp.dataset.testStat] = Math.min(v, 999999);
+    });
+    G.player.hp = G.player.maxHp;
+    G.player.mp = G.player.maxMp;
+    renderStatus();
+  });
 }
 
 /* 五角形パラメーター統合UI（五角形チャート＋5頂点操作ノード＋ホバー解説）の描画 */
@@ -8217,6 +8480,9 @@ function showGacha(){
 function renderEquipmentGachaControls() {
   const buttonCosts = [['btn-gacha-1', 150], ['btn-gacha-6', 750], ['btn-gacha-13', 1400]];
   buttonCosts.forEach(([id, cost]) => { $(id).disabled = equipmentGachaRolling || G.player.gold < cost; });
+  const tickets = G.equipGachaTenPullTickets || 0;
+  $('equip-gacha-tickets').textContent = tickets;
+  $('btn-gacha-ticket').disabled = equipmentGachaRolling || tickets < 1;
   const entry = db => `<button type="button" class="skin-gacha-theme equipment-gacha-preview" data-equip-id="${db.id}" aria-label="${db.name}の抽選レアリティと性能を表示"><img src="${av(db.emoji)}" alt=""><b>${db.name}</b><span>${SLOT_LABELS[db.slot]}</span><span class="equipment-gacha-rates"><i class="rarity-3">★3 9%</i><i class="rarity-4">★4 0.7%</i><i class="rarity-5">★5 0.3%</i></span></button>`;
   $('equipment-gacha-featured').innerHTML = LIMITED_EQUIP_DB.map(entry).join('');
   $('equipment-gacha-collection').innerHTML = EQUIP_DB.filter(db => !db.assist).map(entry).join('');
@@ -8285,7 +8551,6 @@ function renderSkinGachaControls(){
   const hasStandard = locked.some(prize => !prize.holographic);
   const hasHolographic = locked.some(prize => prize.holographic);
   $('skin-gacha-tickets').textContent = G.skinGachaTickets || 0;
-  $('skin-gacha-ten-tickets').textContent = G.skinGachaTenPullTickets || 0;
   $('gacha-current-gold').textContent = G.player.gold;
   const rates = $('skin-gacha-rates');
   if (rates) rates.textContent = !locked.length
@@ -8296,7 +8561,6 @@ function renderSkinGachaControls(){
   $('btn-skin-gacha-draw').textContent = `${SKIN_GACHA_GOLD_COST}Gで1回引く`;
   $('btn-skin-gacha-draw').disabled = !locked.length || G.player.gold < SKIN_GACHA_GOLD_COST;
   $('btn-skin-gacha-ticket').disabled = !locked.length || !(G.skinGachaTickets > 0);
-  $('btn-skin-gacha-ten-ticket').disabled = !locked.length || !(G.skinGachaTenPullTickets > 0);
   $('skin-gacha-status').textContent = locked.length
     ? `キャラ・背景の未所持：${locked.length}種。重複は出ません。`
     : 'キャラクターと背景をすべて獲得しました！';
@@ -8604,13 +8868,22 @@ function gachaEquipPick(rarity){
 }
 
 let equipmentGachaRolling = false;
-function doGacha(times, cost) {
+function doGacha(times, cost, payment) {
   if (!G || equipmentGachaRolling || document.querySelector('.skin-gacha-reveal') || document.querySelector('.gacha-reveal-overlay')) return;
-  if (G.player.gold < cost) {
-    $('gacha-results').innerHTML = '<span class="bad">ゴールドがたりない！</span>';
-    return;
+  if (payment === 'ticket') {
+    if (!(G.equipGachaTenPullTickets > 0)) {
+      $('gacha-results').innerHTML = '<span class="bad">装備ガチャ10連チケットがない！</span>';
+      return;
+    }
+    G.equipGachaTenPullTickets--;
+    times = 10;
+  } else {
+    if (G.player.gold < cost) {
+      $('gacha-results').innerHTML = '<span class="bad">ゴールドがたりない！</span>';
+      return;
+    }
+    G.player.gold -= cost;
   }
-  G.player.gold -= cost;
   $('gacha-current-gold').textContent = G.player.gold;
 
   let results = [];
@@ -9138,7 +9411,16 @@ on('btn-raid-history', async () => {
     $('screen-quest-board').classList.add('hidden');
   });
 
+  on('btn-admin-rewards-save', saveAdminRewardSettingsFromForm);
+  on('btn-admin-rewards-reset', () => {
+    rewardSettings = { ...REWARD_SETTINGS_DEFAULTS };
+    saveRewardSettings();
+    renderAdminRewardSettings();
+    const st = $('admin-rewards-status');
+    if (st) st.textContent = '✅ 初期値にもどしました';
+  });
   on('btn-gacha-1', () => doGacha(1, 150));
+  on('btn-gacha-ticket', () => doGacha(10, 0, 'ticket'));
   on('btn-gacha-6', () => doGacha(6, 750));
   on('btn-gacha-13', () => doGacha(13, 1400));
   $('gacha-item-section').addEventListener('click', event => {
@@ -9147,7 +9429,6 @@ on('btn-raid-history', async () => {
   });
   on('btn-skin-gacha-draw', () => doSkinGacha('gold'));
   on('btn-skin-gacha-ticket', () => doSkinGacha('ticket'));
-  on('btn-skin-gacha-ten-ticket', doSkinGachaTenPull);
   on('btn-skin-gacha-preview-close', () => $('skin-gacha-preview-modal').classList.add('hidden'));
   $('equipment-preview-rarities')?.addEventListener('click', event => {
     const button = event.target.closest('button[data-rarity]');
@@ -9967,13 +10248,13 @@ function ensureTestModeSupplies(){
   if (!G || !G.isTestMode || !G.player) return;
   if ((G.player.points || 0) < 9999) G.player.points = 9999;
   if ((G.player.gold || 0) < 99999999) G.player.gold = 99999999;
-  if ((G.player.maxMp || 0) < 999) {
-    G.player.maxMp = 999;
-    G.player.mp = 999;
-  }
-  if ((G.player.maxHp || 0) < 999) {
-    G.player.maxHp = 999;
-    G.player.hp = 999;
+  // ステータスは初回だけ設定（以降はステータス画面の数値入力で自由に変更できるよう、上書きしない）
+  if (!G.testStatsInit) {
+    G.testStatsInit = true;
+    G.player.maxMp = 999; G.player.mp = 999;
+    G.player.maxHp = 999; G.player.hp = 999;
+    G.player.atk = 999;
+    G.player.def = 999;
   }
 
   // 全スキル習得済み（戦闘テストで即使用可能）
@@ -10044,6 +10325,8 @@ function setAdminTab(tabKey){
     $('admin-edit-view').classList.add('hidden');
     renderAdminList();
     renderAdminDifficultyList();
+  } else if (currentAdminTab === 'rewards') {
+    renderAdminRewardSettings();
   } else if (currentAdminTab === 'tools') {
     const goldBtn = $('btn-admin-get-gold');
     if (goldBtn) goldBtn.classList.toggle('hidden', !(currentSlotKey && G));
@@ -10065,6 +10348,69 @@ function getDifficultyBadgeColor(v){
 }
 
 /* エリア別 難易度倍率一覧の描画 */
+/* 管理者メニュー「報酬・ドロップ」：設定の入力フォーム */
+const ADMIN_REWARD_FIELDS = [
+  { group:'ドロップ率（全体）', items:[
+    { key:'dropMultItem', label:'アイテムのドロップ倍率', min:0, max:3, step:0.05, help:'1.0で これまでと同じ。0.5で はんぶん' },
+    { key:'dropMultEquip', label:'そうびのドロップ倍率（通常の敵）', min:0, max:3, step:0.05, help:'レジェンドは ドロップでは出ません' },
+    { key:'dropMultBlueprint', label:'設計図のドロップ倍率', min:0, max:3, step:0.05 },
+    { key:'dropMultTicket', label:'背景スキンガチャチケットのドロップ倍率', min:0, max:3, step:0.05 },
+    { key:'bossEquipDrop', label:'ボスの そうびドロップ確率（0〜1）', min:0, max:1, step:0.01, help:'0で ボスは そうびを落とさない' },
+    { key:'bossBlueprintRate', label:'ボスの 設計図ドロップ確率（0〜1）', min:0, max:1, step:0.01 },
+  ]},
+  { group:'おなじステージの くりかえし', items:[
+    { key:'repeatThreshold', label:'この回数いじょうクリア済みで ドロップ低下', min:1, max:99, step:1 },
+    { key:'repeatMult', label:'低下後の ドロップ倍率', min:0, max:1, step:0.01, help:'0で まったく出ない。0.1で 10分の1' },
+  ]},
+  { group:'ステージのクリア報酬（初回＝ぶき／3回＝ゴールド＋アイテム）', items:[
+    { key:'firstWeaponRarity', label:'初回クリア：ぶきの レアリティ（1〜4）', min:1, max:4, step:1 },
+    { key:'thirdGoldBase', label:'3回クリア：ゴールド（さいしょのステージ）', min:0, max:1000000, step:10 },
+    { key:'thirdGoldStep', label:'3回クリア：ステージごとの ゴールド加算', min:0, max:100000, step:5 },
+    { key:'thirdItemId', label:'3回クリア：アイテム', type:'item' },
+    { key:'thirdItemCount', label:'3回クリア：アイテム個数', min:0, max:99, step:1 },
+  ]},
+  { group:'ボス', items:[
+    { key:'bossFirstTickets', label:'初回クリア：背景スキンガチャチケット枚数', min:0, max:99, step:1 },
+    { key:'bossThirdTickets', label:'3回クリア：装備ガチャ10連チケット枚数', min:0, max:99, step:1 },
+    { key:'bossLevelUp', label:'たおすたびに あがる 強化レベル', min:0, max:20, step:1 },
+    { key:'bossGrowthPct', label:'強化レベル1ごとの ステータス上昇（％）', min:0, max:100, step:1 },
+    { key:'zoneClearLegend', label:'エリア制覇で レジェンド装備を わたす（1=する／0=しない）', min:0, max:1, step:1 },
+  ]},
+];
+
+function renderAdminRewardSettings(){
+  const form = $('admin-rewards-form');
+  if (!form) return;
+  const inputStyle = 'width:120px; padding:6px 8px; text-align:right;';
+  form.innerHTML = ADMIN_REWARD_FIELDS.map(g => `
+    <div style="margin-bottom:16px; padding:12px 14px; background:rgba(0,0,0,.3); border:1.5px solid var(--panel-border); border-radius:10px;">
+      <strong style="color:var(--accent);">${g.group}</strong>
+      ${g.items.map(f => {
+        const val = rewardSettings[f.key];
+        const input = f.type === 'item'
+          ? `<select data-reward-key="${f.key}" style="${inputStyle} width:170px; text-align:left;">${ITEM_DB.filter(d => !d.internal && d.id !== 'ticket').map(d => `<option value="${d.id}"${d.id === val ? ' selected' : ''}>${d.name}</option>`).join('')}</select>`
+          : `<input type="number" data-reward-key="${f.key}" min="${f.min}" max="${f.max}" step="${f.step}" value="${val}" style="${inputStyle}">`;
+        return `<label style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; flex-wrap:wrap;"><span>${f.label}${f.help ? `<small style="display:block; opacity:.7;">${f.help}</small>` : ''}</span>${input}</label>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function saveAdminRewardSettingsFromForm(){
+  const form = $('admin-rewards-form');
+  if (!form) return;
+  form.querySelectorAll('[data-reward-key]').forEach(el => {
+    const key = el.dataset.rewardKey;
+    if (el.tagName === 'SELECT') { rewardSettings[key] = el.value; return; }
+    const v = Number(toHalfWidth(String(el.value)));
+    if (!Number.isFinite(v)) return;
+    rewardSettings[key] = Math.min(Number(el.max), Math.max(Number(el.min), v));
+  });
+  saveRewardSettings();
+  renderAdminRewardSettings();
+  const st = $('admin-rewards-status');
+  if (st) st.textContent = '✅ ほぞんしました';
+}
+
 function renderAdminDifficultyList(){
   const listEl = $('admin-difficulty-list');
   if (!listEl) return;
@@ -11403,11 +11749,15 @@ function grantPrintRewards(cur, correct, total, rate) {
       G.ownedEquips.push({ uid: G.nextUid++, id: bp.equipId, rarity: 5, ability });
       rewards.push({ kind:'equip', name:`${equipDb.name} を完成させた！`, icon:'⚔️', rarity:5, ability });
   } else if (meta.type === 'stage' && rate >= 0.8) {
-      const counts = getStageClearCounts(meta.areaId);
-      counts[meta.stageIndex] = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, (counts[meta.stageIndex] || 0) + 1);
+      const r = recordStageClear(meta.areaId, meta.stageIndex);
       title = 'ステージ クリア！';
-      rewards.push({ kind:'item', name:`${meta.name} をクリア！`, icon:'🚩' });
-  } else if (meta.type === 'stage_boss' && rate >= 0.8) {
+      rewards.push({ kind:'item', name:`${meta.name} をクリア！（★${r.currentStars}／${STAGE_STARS_TO_UNLOCK_NEXT}）`, icon:'🚩' });
+      for (const entry of r.milestoneRewards) pushMilestoneRewardCards(rewards, entry);
+  } else if ((meta.type === 'boss' || meta.type === 'stage_boss') && rate >= 0.8) {
+      /* ボスのプリント：戦闘でたおしたときと おなじ処理を通す（★・救助・ごほうび・ボス強化） */
+      const area = AREA_STAGES[meta.areaId];
+      const bossState = grantBossClearState(meta.areaId);
+      applyZoneClearState(area.rewardZone, [], { suppressNextUnlock:true, displayName:area.name });
       if (!G.clearedAreaBosses) G.clearedAreaBosses = {};
       G.clearedAreaBosses[meta.areaId] = true;
       if (!G.rescued) G.rescued = [];
@@ -11415,7 +11765,9 @@ function grantPrintRewards(cur, correct, total, rate) {
       const npcId = npcAreaIdMap[meta.areaId];
       if (npcId && !G.rescued.includes(npcId)) G.rescued.push(npcId);
       title = 'エリア 制覇！';
-      rewards.push({ kind:'item', name:`${meta.name} を完全クリア！`, icon:'👑' });
+      rewards.push({ kind:'item', name:`${meta.name} を完全クリア！（★${G.areaBossClearCounts[meta.areaId]}／${STAGE_STARS_TO_UNLOCK_NEXT}）`, icon:'👑' });
+      for (const entry of bossState.entries) pushMilestoneRewardCards(rewards, entry);
+      for (const note of bossState.notes) rewards.push({ kind:'item', name:note, icon:'💪' });
   }
   
   const { leveledUp, lvlBefore, pointsGained, maxHpBefore, maxMpBefore } = grantExp(baseExp);
@@ -11982,6 +12334,28 @@ function scheduleRaidSettlement(settlesAt) {
   }, Math.max(250, settlesAt - Date.now() + 250));
 }
 
+/* レイド画面の「チャレンジ報酬」：1回目＝マグマ背景／2回目＝装備10連チケット／3回目＝スキンチケット。もらいずみは「受け取り済み」 */
+function renderRaidChallengeRewards(){
+  const el = $('raid-challenge-rewards');
+  if (!el || !G) return;
+  const count = Number(G.raidProgress?.challengeCount) || 0;
+  const claimed = G.raidChallengeClaimed || {};
+  const rows = [
+    { n:1, icon:'<img src="assets/raid/raid_bg_magma_pixel.jpg" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">', name:'マグマの背景', done:(G.unlockedAvatarBackgrounds || []).includes('raid_magma') },
+    { n:2, icon:'<span style="font-size:34px;line-height:1;width:40px;text-align:center;flex:none;">🎫</span>', name:'装備ガチャ10連チケット', done: count >= 2 || !!claimed[2] },
+    { n:3, icon:iconHtml(SKIN_GACHA_TICKET_ICON, 40), name:'背景スキンガチャチケット', done: count >= 3 || !!claimed[3] },
+  ];
+  el.innerHTML = '<b>🎁 チャレンジ報酬（1人1回）</b>' + rows.map(r =>
+    `<div class="raid-challenge-reward-row${r.done ? ' is-claimed' : ''}">${r.icon}<span class="rc-name">${r.n}回目：${r.name}</span><strong>${r.done ? '受け取り済み' : 'もらえる'}</strong></div>`).join('');
+}
+
+function raidChallengeNoticeHtml(state){
+  return [
+    state.raidChallenge2Notice ? '🎉 2回チャレンジ達成！装備ガチャ10連チケットを獲得！' : '',
+    state.raidChallenge3Notice ? '🎉 3回チャレンジ達成！背景スキンガチャチケットを獲得！' : '',
+  ].filter(Boolean).join('<br>');
+}
+
 async function syncRaidState() {
   if (!G || !currentSlotKey || G.isTestMode) return false;
   if (raidSyncPromise) {
@@ -12019,31 +12393,24 @@ async function syncRaidState() {
       const result = await window.RaidBossAPI.syncPlayer(slotKey, profile, { bossId: progress.bossId, participated: progress.participated, participationAt: progress.participationAt, legacyDamage: progress.legacyDamage || 0, events, claimed: localClaim?.applied ? localClaim : null, state: game });
       progress.pendingEvents = (progress.pendingEvents || []).filter(event => !result.acknowledged.includes(event.id));
       progress.challengeCount = Math.max(Number(progress.challengeCount) || 0, Number(result.challengeCount) || 0);
-      if (Number.isFinite(result.challenge2SeedCount)) {
-        game.items ||= [];
-        const seed = game.items.find(item => item.id === 'cost_seed');
-        if (seed) seed.count = Math.max(Number(seed.count) || 0, result.challenge2SeedCount);
-        else game.items.push({ uid: Number.isFinite(game.nextUid) ? game.nextUid++ : Date.now(), id: 'cost_seed', count: result.challenge2SeedCount });
-        game.raidChallenge2SeedNotice = true;
+      // 2回目＝装備ガチャ10連チケット／3回目＝背景スキンガチャチケット1枚（1回目の参加特典はマグマの背景）
+      if (Number.isFinite(result.challenge2EquipTenCount)) {
+        game.equipGachaTenPullTickets = Math.max(Number(game.equipGachaTenPullTickets) || 0, result.challenge2EquipTenCount);
+        game.raidChallenge2Notice = true;
       }
-      if (Number.isFinite(result.challenge3TicketCount)) {
-        game.skinGachaTenPullTickets = Math.max(Number(game.skinGachaTenPullTickets) || 0, result.challenge3TicketCount);
-        game.raidChallenge3TicketNotice = true;
+      if (Number.isFinite(result.challenge3SkinTicketCount)) {
+        game.skinGachaTickets = Math.max(Number(game.skinGachaTickets) || 0, result.challenge3SkinTicketCount);
+        game.raidChallenge3Notice = true;
+      }
+      if (game.raidChallenge2Notice || game.raidChallenge3Notice) {
+        if (!game.raidChallengeClaimed) game.raidChallengeClaimed = {};
+        if (game.raidChallenge2Notice) game.raidChallengeClaimed[2] = true;
+        if (game.raidChallenge3Notice) game.raidChallengeClaimed[3] = true;
         const resultPanel = document.querySelector('.raid-result-panel');
         if (resultPanel) {
           const notice = document.createElement('p');
           notice.className = 'raid-challenge-milestone';
-          notice.innerHTML = `${game.raidChallenge2SeedNotice ? '🎉 2回チャレンジ達成！コストプラスのたね×3を獲得！<br>' : ''}🎉 3回チャレンジ達成！10連ガチャチケットを獲得！`;
-          resultPanel.querySelector('.raid-challenge-milestone')?.remove();
-          resultPanel.querySelector('.raid-result-summary')?.after(notice);
-        }
-      }
-      if (Number.isFinite(result.challenge2SeedCount) && !Number.isFinite(result.challenge3TicketCount)) {
-        const resultPanel = document.querySelector('.raid-result-panel');
-        if (resultPanel) {
-          const notice = document.createElement('p');
-          notice.className = 'raid-challenge-milestone';
-          notice.textContent = '🎉 2回チャレンジ達成！コストプラスのたね×3を獲得！';
+          notice.innerHTML = raidChallengeNoticeHtml(game);
           resultPanel.querySelector('.raid-challenge-milestone')?.remove();
           resultPanel.querySelector('.raid-result-summary')?.after(notice);
         }
@@ -12152,7 +12519,7 @@ function showRaidBattleResult(damage, defeated) {
       ${showBackground ? `<img class="raid-result-background" src="${av(background.image)}" alt="獲得したマグマの火山の背景"><h3>${background.name}</h3><p>きみのキャラクターの背景に えらべるよ！</p>` : ''}
       <p class="raid-result-summary">今回のダメージ <b>${Math.max(0, Math.round(damage)).toLocaleString()}</b></p>
       <p class="raid-gold-payout">💰 ダメージ報酬 +${Math.max(0, Math.round(damage)).toLocaleString()}G</p>
-      ${G.raidChallenge2SeedNotice || G.raidChallenge3TicketNotice ? `<p class="raid-challenge-milestone">${G.raidChallenge2SeedNotice ? '🎉 2回チャレンジ達成！コストプラスのたね×3を獲得！<br>' : ''}${G.raidChallenge3TicketNotice ? '🎉 3回チャレンジ達成！10連ガチャチケットを獲得！' : ''}</p>` : ''}
+      ${G.raidChallenge2Notice || G.raidChallenge3Notice ? `<p class="raid-challenge-milestone">${raidChallengeNoticeHtml(G)}</p>` : ''}
       <div class="raid-result-rank"><span>${defeated ? '暫定ランキング' : '現在のランキング'}</span><strong>${rankLabel}</strong></div>
       <p class="raid-result-encouragement">${defeated ? '最終順位は10分後に確定！討伐前から進行中だった戦闘も集計するよ。' : '開催期間中は何度でも挑戦して、ランキング上位を目指そう！'}</p>
       <button type="button" id="btn-raid-result-close" class="btn btn-primary">レイドに もどる</button>
@@ -12160,8 +12527,8 @@ function showRaidBattleResult(damage, defeated) {
   const close = () => {
     if (!overlay.isConnected) return;
     if (showBackground) { G.raidMagmaNoticeSeen = true; save(true); }
-    G.raidChallenge3TicketNotice = false;
-    G.raidChallenge2SeedNotice = false;
+    G.raidChallenge3Notice = false;
+    G.raidChallenge2Notice = false;
     overlay.remove();
     showRaidBossMenu();
     $('btn-raid-challenge')?.focus();
@@ -12368,6 +12735,7 @@ function renderRaidBossMenu() {
   const raidData = getRaidData();
   if (bossName) bossName.textContent = `暗黒竜 ダークバハムート Lv.${raidData.bossLevel || 50}`;
   if (participationStatus) participationStatus.textContent = (G?.unlockedAvatarBackgrounds || []).includes('raid_magma') ? '獲得済み' : '参加でもらえる';
+  renderRaidChallengeRewards();
 
   // 現在のプレイヤーが既にランキングにいれば、最新のアバター・レベル・装備情報を自動同期
   if (currentSlotKey && G) {
@@ -12884,4 +13252,14 @@ async function checkAdminGifts() {
   } finally {
     adminGiftChecking = false;
   }
+}
+
+/* 開発サーバー（npm run dev）のときだけ、ブラウザのコンソールから テストできるようにする */
+if (import.meta.env && import.meta.env.DEV) {
+  window.__dbg = {
+    get G(){ return G; }, get explore(){ return explore; }, set explore(v){ explore = v; },
+    get rewardSettings(){ return rewardSettings; },
+    recordStageClear, grantBossClearState, generateStageEnemy, rollBattleDrops, grantPrintRewards,
+    stageTotalClearCount, stageRepeatDropMult, AREA_STAGES, stageAreaCleared, showBossClearOverlay,
+  };
 }

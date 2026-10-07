@@ -4,7 +4,7 @@
 - 素早さバー（ATB）方式の**計算専用**バトルRPG（タイピング要素なし）。純粋なHTML/CSS/JS（ビルドなし）
 - 構成: `index.html` / `style.css` / `game.js`
 - セーブ: localStorage（キー `typing_rpg_save_v3`。旧 `typing_rpg_save_v2` から自動移行あり）
-- 起動: `python3 -m http.server` で配信（親フォルダの `.claude/launch.json` に `type-math-rpg-server` 設定あり、ポート8745）
+- 起動: Vite 開発サーバー `npm run dev`（`.claude/launch.json` の `vite-dev`、ポート5173）。静的サーバーでは動かない
 
 ## ゲームフロー（テンポ重視）
 - 拠点 → 塔/ダンジョンに入ると**即バトル**

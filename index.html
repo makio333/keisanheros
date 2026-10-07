@@ -501,7 +501,6 @@
           <div class="skin-gacha-draw-actions">
               <button id="btn-skin-gacha-draw" class="btn btn-primary" type="button">1000Gで1回引く</button>
               <button id="btn-skin-gacha-ticket" class="btn" type="button">チケット1枚で1回引く</button>
-              <button id="btn-skin-gacha-ten-ticket" class="btn" type="button">10連チケット <b id="skin-gacha-ten-tickets">0</b> 枚</button>
           </div>
           <div id="skin-gacha-status" class="flavor" aria-live="polite"></div>
           <div id="skin-gacha-rates" class="skin-gacha-rates" aria-label="スキンガチャの排出率">通常スキン 99% ／ ホログラム仕様 1%</div>
@@ -519,6 +518,9 @@
             <button id="btn-gacha-1" class="btn">1回引く (150G)</button>
             <button id="btn-gacha-6" class="btn">6回引く (750G)</button>
             <button id="btn-gacha-13" class="btn">13回引く (1400G)</button>
+          </div>
+          <div class="skin-gacha-balance" style="margin-top:10px;">🎫 装備ガチャ10連チケット：<b id="equip-gacha-tickets">0</b>枚
+            <button id="btn-gacha-ticket" class="btn" type="button" style="margin-left:10px;">10連チケットで10回引く</button>
           </div>
           <div id="gacha-results" class="log-box" style="margin-top:15px; min-height:100px;"></div>
           <div class="gacha-collection-heading"><h3>通常装備</h3><span>ぶき・よろい・アクセサリ / ★3〜★5も抽選</span></div>
@@ -563,7 +565,7 @@
           <button class="window-nav-btn window-close-btn" onclick="document.getElementById('screen-raid-boss').classList.add('hidden')">✕ とじる</button>
           <h2 class="raid-menu-title">ワールド・レイドボス</h2>
           <button id="btn-raid-rules" class="btn" aria-expanded="false" aria-controls="raid-rules">レイドのルールは？</button>
-          <button id="btn-raid-history" class="btn" style="margin-left:8px;">��������</button>
+          <button id="btn-raid-history" class="btn" style="margin-left:8px;">討伐履歴</button>
         </header>
         <section id="raid-rules" class="raid-how-to-play hidden" aria-labelledby="raid-how-to-play-title">
           <h3 id="raid-how-to-play-title">レイドのルール</h3>
@@ -597,6 +599,7 @@
               <img src="assets/raid/raid_bg_magma_pixel.jpg" alt="参加特典のマグマ背景">
               <div><b>参加特典：マグマの火山</b><p id="raid-participation-status"></p></div>
             </div>
+            <div id="raid-challenge-rewards" class="raid-challenge-rewards"></div>
             <section id="raid-final-result" class="raid-final-result hidden" aria-live="polite"></section>
         </section>
         <section class="raid-ranking-section">
@@ -970,6 +973,10 @@
                 <span class="room-nav-icon">⚔️</span>
                 <span class="room-nav-text">データ編集</span>
               </button>
+              <button class="room-nav-btn admin-nav-btn" data-admin-tab="rewards" id="admin-tab-btn-rewards">
+                <span class="room-nav-icon">🎁</span>
+                <span class="room-nav-text">報酬・ドロップ</span>
+              </button>
               <button class="room-nav-btn admin-nav-btn" data-admin-tab="tools" id="admin-tab-btn-tools">
                 <span class="room-nav-icon">🛠️</span>
                 <span class="room-nav-text">テスト・管理</span>
@@ -1157,6 +1164,17 @@
             </div>
 
             <!-- タブ4: テスト・管理 -->
+            <div id="admin-tab-pane-rewards" class="room-tab-pane admin-tab-pane">
+              <h3 style="margin:0 0 6px; color:var(--accent);">🎁 報酬・ドロップ設定</h3>
+              <p class="flavor" style="font-size:13px; margin-bottom:12px;">ステージの ごほうび・ドロップ率・ボスの強化を 数字で調整できます。変更は「ほぞん」で すぐ反映されます（全セーブ共通）。</p>
+              <div id="admin-rewards-form"></div>
+              <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+                <button id="btn-admin-rewards-save" class="btn btn-primary" type="button">ほぞん</button>
+                <button id="btn-admin-rewards-reset" class="btn" type="button">初期値にもどす</button>
+                <span id="admin-rewards-status" class="flavor" role="status" aria-live="polite"></span>
+              </div>
+            </div>
+
             <div id="admin-tab-pane-tools" class="room-tab-pane admin-tab-pane">
               <!-- テスト用プレイ セクション -->
               <div id="admin-testplay-section" style="padding:18px; border:2px solid #2ecc71; background:rgba(46, 204, 113, 0.15); border-radius:12px; text-align:center;">
