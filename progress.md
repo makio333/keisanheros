@@ -121,3 +121,8 @@ TODO:
 - Renamed the Ancient greatsword to 古代の双剣 and replaced its icon with a transparent 256x256 pixel-art pair of crossed swords. Its existing two 0.8x-ATK basic strikes remain unchanged.
 - Kept 古代の双剣 and restored 古代の大剣 as separate Ancient weapons, bringing the set to six. The greatsword has a separate +30 percentage-point critical bonus; the spear grants a flat +30 SPD. Unowned-first duplicate prevention now naturally covers all six IDs.
 - Enhanced the Ancient ★6 presentation with a stronger layered black-and-gold frame, metallic dark-gold card surface, sharper gold glow and a slow, narrow gold reflection sweep. Kept Legend ★5 rainbow hologram distinct; reduced-motion mode disables the Ancient sweep.
+
+## 2026-10-09
+- Fixed master-volume scaling across BGM and sound effects. Slider changes update all loaded BGM tracks (preserving the quieter home-music baseline) and currently playing audio-file sound effects; generated beep/rumble effects continue to use the same master-volume value for new playback.
+- Removed furigana from challenge question text and removed question-bank-derived readings so answer data cannot leak into hover hints. Furigana now applies only to safe quest names/titles and item names, descriptions, and usage guidance, including inventory and battle item lists.
+- Verification: `npm run build` and `git diff --check` passed. The game browser showed the volume slider changing from 70% to 35% and back. The required Playwright client could not launch because Chromium is not installed in this environment.

@@ -105,6 +105,7 @@ class SoundManager {
     this.beepCtx = null;
     this.initialized = false;
     this.audios = {}; 
+    this.activeSE = new Set();
     this.bgmKey = null;
     this.muted = false;
     this.globalVolume = 0.7; // マスター音量 (0.0〜1.0)
@@ -129,14 +130,14 @@ class SoundManager {
   
   setGlobalVolume(vol) {
     this.globalVolume = Math.max(0, Math.min(1, vol));
-    if (this.bgmKey && this.audios[this.bgmKey]) {
-      const a = this.audios[this.bgmKey];
-      if (this.bgmKey === 'bgm_home') {
-        a.volume = 0.075 * this.globalVolume;
-      } else {
-        a.volume = 0.4 * this.globalVolume;
-      }
+    for (const [key, audio] of Object.entries(this.audios)) {
+      if (key.startsWith('bgm_')) audio.volume = this.getBgmBaseVolume(key) * this.globalVolume;
     }
+    for (const audio of this.activeSE) audio.volume = this.globalVolume;
+  }
+
+  getBgmBaseVolume(key) {
+    return key === 'bgm_home' ? 0.075 : 0.4;
   }
 
   init() {
@@ -183,7 +184,10 @@ class SoundManager {
     }
     const node = base.cloneNode(true);
     node.volume = this.globalVolume;
+    this.activeSE.add(node);
+    node.addEventListener('ended', () => this.activeSE.delete(node), { once:true });
     node.play().catch(() => {
+      this.activeSE.delete(node);
       if (key === 'se_type' || key === 'se_decide') this.playBeep('type');
       if (key === 'se_slash') this.playBeep('hit');
       if (key === 'se_crit') this.playBeep('hit');
@@ -212,11 +216,7 @@ class SoundManager {
     audio.preload = 'auto';
     audio.loop = true;
     
-    if (key === 'bgm_home') {
-      audio.volume = 0.075 * this.globalVolume;
-    } else {
-      audio.volume = 0.4 * this.globalVolume;
-    }
+    audio.volume = this.getBgmBaseVolume(key) * this.globalVolume;
     
     audio.currentTime = 0;
     audio.play().catch(e => console.warn('BGM playback blocked:', e));
@@ -3723,13 +3723,6 @@ function escapeHtml(str) {
 function getReadingHintWords(extraReadings = null) {
   if (!readingHintWordCache) {
     readingHintWordCache = { ...READING_HINT_WORDS };
-    if (typeof window !== 'undefined' && window.KANJI_POOLS) {
-      Object.values(window.KANJI_POOLS).flat().forEach(item => {
-        if (item && item.text && item.answer && /[\u3400-\u9fff]/.test(item.text)) {
-          readingHintWordCache[item.text] = item.answer;
-        }
-      });
-    }
   }
   return extraReadings ? { ...readingHintWordCache, ...extraReadings } : readingHintWordCache;
 }
@@ -3953,7 +3946,7 @@ function startChallenge(container, opts, cb){
   const answerStr = String(problem.answer);
   const assistHtml = hasAssist() ? assistVisualHtml(problem) : '';
   const equationJoin = problem.isWordProblem ? '<br><span class="challenge-answer-arrow">こたえ→</span> ' : ' = ';
-  const problemTextHtml = renderReadingHints(problem.text);
+  const problemTextHtml = escapeHtml(problem.text ?? '');
 
   const challengeMainHTML = `
     <div class="challenge-main">
@@ -4626,7 +4619,7 @@ function openItemMenu(){
     b.style.justifyContent = 'space-between';
     b.style.alignItems = 'center';
     b.style.padding = '10px 16px';
-    b.innerHTML = `<strong>${iconHtml(db.emoji, 20)} ${db.name} ×${it.count} <span class="tag" style="background:rgba(231,76,60,0.2); border-color:#e74c3c; color:#ff7675; font-size:11px; margin-left:4px; padding:1px 6px; border-radius:4px;">⚔️ 戦闘用</span></strong> <small style="color:var(--text-light);">${db.desc} (効果:${db.value})</small>`;
+    b.innerHTML = `<strong>${iconHtml(db.emoji, 20)} ${renderReadingHints(db.name)} ×${it.count} <span class="tag" style="background:rgba(231,76,60,0.2); border-color:#e74c3c; color:#ff7675; font-size:11px; margin-left:4px; padding:1px 6px; border-radius:4px;">⚔️ 戦闘用</span></strong> <small style="color:var(--text-light);">${renderReadingHints(db.desc)} (効果:${db.value})</small>`;
     b.onmouseover = (e) => showTooltip(e, generateItemDetailHtml(db, { count: it.count, inBattle: true }));
     b.onmouseout = () => hideTooltip();
     b.onclick = () => {
@@ -6707,8 +6700,8 @@ function showQuestBoard(){
     card.innerHTML = `
       <div class="quest-card-ribbon"><span class="quest-card-stars">${stars}</span></div>
       <div class="quest-card-art"><img src="${getNPCImage(q.npc)}" alt=""></div>
-      <div class="quest-card-name">${q.npc.name}</div>
-      <div class="quest-card-title">${q.title}</div>
+      <div class="quest-card-name">${renderReadingHints(q.npc.name)}</div>
+      <div class="quest-card-title">${renderReadingHints(q.title)}</div>
       <div class="quest-card-tag">🧮 ${OP_LABELS[q.tier]}</div>
       ${questCardRewardsHtml(q)}`;
     card.onclick = () => showQuestDetail(q);
@@ -6731,10 +6724,10 @@ function showQuestDetail(q){
       <div class="quest-detail-head">
         <img class="quest-detail-npc" src="${getNPCImage(q.npc)}" alt="">
         <div>
-          <div class="quest-npc-line"><span class="quest-npc-name">${q.npc.name}</span>
+          <div class="quest-npc-line"><span class="quest-npc-name">${renderReadingHints(q.npc.name)}</span>
             <span class="tag">🧮${OP_LABELS[q.tier]}</span>
             <span class="tag quest-progress-tag">${q.partIndex + 1}／${q.parts.length}問め</span></div>
-          <h3 id="quest-detail-title" class="quest-title">＊${q.title}＊</h3>
+          <h3 id="quest-detail-title" class="quest-title">＊${renderReadingHints(q.title)}＊</h3>
         </div>
       </div>
       <div class="quest-detail-text">${part.text}</div>
@@ -7767,6 +7760,8 @@ function generateItemDetailHtml(db, options = {}){
   if (isBlueprint){
     descText = '設計図をプリントして暗号を解こう。6種類からランダムで1つ完成！全種類を持つまでは未所持品が出ます。';
   }
+  const itemNameHtml = renderReadingHints(db.name);
+  const itemDescHtml = renderReadingHints(descText);
 
   // 使用場所・使い方ガイド
   let usageGuide = '';
@@ -7816,7 +7811,7 @@ function generateItemDetailHtml(db, options = {}){
       <div class="equip-unified-main">
         <div class="equip-icon item-unified-icon">${iconHtml(emoji, 44)}</div>
         <div class="equip-unified-info">
-          <div class="equip-unified-name">${db.name}</div>
+          <div class="equip-unified-name">${itemNameHtml}</div>
           ${calcText ? `<div class="equip-unified-calc">${calcText}</div>` : ''}
         </div>
       </div>
@@ -7827,8 +7822,8 @@ function generateItemDetailHtml(db, options = {}){
       </div>` : ''}
 
       <div class="equip-unified-desc">
-        <div class="item-desc-text">${descText}</div>
-        <div class="item-usage-guide">${usageGuide}</div>
+        <div class="item-desc-text">${itemDescHtml}</div>
+        <div class="item-usage-guide">${renderReadingHints(usageGuide)}</div>
       </div>
 
       ${shopSectionHtml}
@@ -8812,6 +8807,8 @@ function showItems(){
     any = true;
     const row = document.createElement('div');
     row.className = 'inv-row';
+    const itemNameHtml = renderReadingHints(db.name);
+    const itemDescHtml = renderReadingHints(db.desc || '');
 
     // 統一詳細カードホバー
     row.onmouseover = (e) => showTooltip(e, generateItemDetailHtml(db, { count: it.count }));
@@ -8819,7 +8816,7 @@ function showItems(){
 
     if (isBlueprintItem(db)) {
       // 設計図（古代装備の あんごうプリント用アイテム）
-      row.innerHTML = `<div class="info">${iconHtml(db.emoji, 20)} ${db.name} ×${it.count} <span class="tag" style="background:rgba(243,156,18,0.2); border-color:#f39c12; color:#f39c12; font-size:11px; margin-left:6px; padding:1px 5px; border-radius:3px;">📜 設計図</span><div class="desc">プリントを解くと古代装備をランダム獲得。6種類そろうまでは重複なし</div></div>`;
+      row.innerHTML = `<div class="info">${iconHtml(db.emoji, 20)} ${itemNameHtml} ×${it.count} <span class="tag" style="background:rgba(243,156,18,0.2); border-color:#f39c12; color:#f39c12; font-size:11px; margin-left:6px; padding:1px 5px; border-radius:3px;">📜 設計図</span><div class="desc">${renderReadingHints('プリントを解くと古代装備をランダム獲得。6種類そろうまでは重複なし')}</div></div>`;
       const btnGroup = document.createElement('div');
       btnGroup.className = 'skill-row-btns';
       const printBtn = document.createElement('button');
@@ -8832,7 +8829,7 @@ function showItems(){
       btnGroup.appendChild(printBtn);
       row.appendChild(btnGroup);
     } else if (isBattleItem(db)) {
-      row.innerHTML = `<div class="info">${iconHtml(db.emoji, 20)} ${db.name} ×${it.count} <span class="tag" style="background:rgba(231,76,60,0.2); border-color:#e74c3c; color:#ff7675; font-size:11px; margin-left:6px; padding:1px 5px; border-radius:3px;">⚔️ 戦闘用</span><div class="desc">${db.desc} (効果:${db.value})</div></div>`;
+      row.innerHTML = `<div class="info">${iconHtml(db.emoji, 20)} ${itemNameHtml} ×${it.count} <span class="tag" style="background:rgba(231,76,60,0.2); border-color:#e74c3c; color:#ff7675; font-size:11px; margin-left:6px; padding:1px 5px; border-radius:3px;">⚔️ 戦闘用</span><div class="desc">${itemDescHtml} (効果:${db.value})</div></div>`;
       const btn = document.createElement('button');
       btn.className = 'btn';
       btn.disabled = true;
@@ -8840,7 +8837,7 @@ function showItems(){
       btn.textContent = '戦闘用';
       row.appendChild(btn);
     } else if (db.effect === 'cost') {
-      row.innerHTML = `<div class="info">${iconHtml(db.emoji, 20)} ${db.name} ×${it.count} <span class="tag" style="background:rgba(46,204,113,0.2); border-color:#2ecc71; color:#2ecc71; font-size:11px; margin-left:6px; padding:1px 5px; border-radius:3px;">🌱 部屋用</span><div class="desc">${db.desc}</div></div>`;
+      row.innerHTML = `<div class="info">${iconHtml(db.emoji, 20)} ${itemNameHtml} ×${it.count} <span class="tag" style="background:rgba(46,204,113,0.2); border-color:#2ecc71; color:#2ecc71; font-size:11px; margin-left:6px; padding:1px 5px; border-radius:3px;">🌱 部屋用</span><div class="desc">${itemDescHtml}</div></div>`;
       const btn = document.createElement('button');
       btn.className = 'btn';
       btn.textContent = 'つかう';
@@ -8856,7 +8853,7 @@ function showItems(){
       };
       row.appendChild(btn);
     } else if (db.effect === 'respec') {
-      row.innerHTML = `<div class="info">${iconHtml(db.emoji, 20)} ${db.name} ×${it.count} <span class="tag" style="background:rgba(168,85,247,0.2); border-color:#a855f7; color:#c084fc; font-size:11px; margin-left:6px; padding:1px 5px; border-radius:3px;">🌰 部屋用</span><div class="desc">${db.desc}</div></div>`;
+      row.innerHTML = `<div class="info">${iconHtml(db.emoji, 20)} ${itemNameHtml} ×${it.count} <span class="tag" style="background:rgba(168,85,247,0.2); border-color:#a855f7; color:#c084fc; font-size:11px; margin-left:6px; padding:1px 5px; border-radius:3px;">🌰 部屋用</span><div class="desc">${itemDescHtml}</div></div>`;
       const btn = document.createElement('button');
       btn.className = 'btn';
       btn.textContent = 'つかう';
@@ -8877,7 +8874,7 @@ function showItems(){
       };
       row.appendChild(btn);
     } else {
-      row.innerHTML = `<div class="info">${iconHtml(db.emoji, 20)} ${db.name} ×${it.count} <div class="desc">${db.desc}</div></div>`;
+      row.innerHTML = `<div class="info">${iconHtml(db.emoji, 20)} ${itemNameHtml} ×${it.count} <div class="desc">${itemDescHtml}</div></div>`;
       const btn = document.createElement('button');
       btn.className = 'btn';
       btn.textContent = 'つかう';
