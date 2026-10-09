@@ -2225,7 +2225,7 @@ const REWARD_SETTINGS_DEFAULTS = {
   bossThirdTickets: 1,      // ボス3回クリア報酬：装備ガチャ10連チケット枚数
   pickupBonusTickets: 3,    // ピックアップステージを クリアしたときの チャレンジボーナス：装備ガチャ10連チケット枚数
   bossLevelUp: 1,           // ボスを たおすたびに あがる 強化レベル
-  bossGrowthPct: 8,         // 強化レベル1ごとの ステータス上昇（％）
+  bossGrowthPct: 12,        // ステージボスの強化レベル1ごとの ステータス上昇（％）
 };
 let rewardSettings = { ...REWARD_SETTINGS_DEFAULTS };
 function loadRewardSettings(){
@@ -2237,6 +2237,8 @@ function loadRewardSettings(){
       for (const k of Object.keys(REWARD_SETTINGS_DEFAULTS)) {
         if (saved[k] !== undefined && typeof saved[k] === typeof REWARD_SETTINGS_DEFAULTS[k]) rewardSettings[k] = saved[k];
       }
+      // 以前の標準値8%を保存済みの端末にも、新しい標準値12%を反映する。
+      if (saved.bossGrowthPct === 8) rewardSettings.bossGrowthPct = REWARD_SETTINGS_DEFAULTS.bossGrowthPct;
     }
   } catch(e) {}
 }
@@ -2539,12 +2541,14 @@ const EQUIP_DB = [
   { id:'ast1', name:'かぞえだま', slot:'weapon', opTier:'add1', stat:{}, price:30, cost:1, assist:true, emoji:'🧮' },
 ];
 
-/* 古代装備：しゅぎょうでは てにはいらず、ダンジョンの ドロップや ガチャで
-   手に入る「せっけいず」を プリント＆あんごうで かいどくして てにいれる（常に★5でかいどく） */
+/* 古代装備：共通の設計図を印刷し、暗号を解くと未所持品を優先して★6で完成 */
 const ANCIENT_EQUIP_DB = [
-  { id:'anc_w1', name:'古代の大剣', slot:'weapon', opTier:'div5', stat:{atk:40}, cost:15, emoji:'assets/items/w7.png' },
-  { id:'anc_a1', name:'古代の鎧', slot:'armor', opTier:'div5', stat:{def:35}, cost:13, emoji:'assets/items/a7.png' },
-  { id:'anc_c1', name:'古代の指輪', slot:'accessory', opTier:'div5', stat:{spd:12, mp:15}, cost:9, emoji:'assets/items/c2.png' },
+  { id:'anc_w1', name:'古代の双剣', slot:'weapon', opTier:'div5', stat:{atk:40}, cost:8, emoji:'assets/items/ancient_dual_swords_v1.png' },
+  { id:'anc_w3', name:'古代の大剣', slot:'weapon', opTier:'div5', stat:{atk:40}, cost:8, emoji:'assets/items/ancient_greatsword_v2.png' },
+  { id:'anc_a1', name:'古代の鎧', slot:'armor', opTier:'div5', stat:{def:35, hp:20}, cost:7, emoji:'assets/items/ancient_armor_v2.png' },
+  { id:'anc_c1', name:'古代の指輪', slot:'accessory', opTier:'div5', stat:{spd:12}, cost:8, emoji:'assets/items/ancient_ring_v2.png' },
+  { id:'anc_w2', name:'古代の槍', slot:'weapon', opTier:'div5', stat:{atk:34, spd:8}, cost:7, emoji:'assets/items/ancient_spear_v2.png' },
+  { id:'anc_a2', name:'古代の盾', slot:'armor', opTier:'div5', stat:{def:29, hp:20}, cost:7, emoji:'assets/items/ancient_shield_v2.png' },
   { id:'demon_sword', name:'魔王の覇剣', slot:'weapon', opTier:'elem6', stat:{atk:50}, cost:20, emoji:'assets/items/w6.png' },
 ];
 
@@ -2573,12 +2577,11 @@ const ITEM_DB = [
   { id:'respec_seed', name:'ふりなおしのたね', opTier:'mul1', effect:'respec', value:0, price:500, desc:'使うと わりふったスキルポイントを 全てリセットして 振り直せる 不思議なたね。', emoji:'🌰', tags:['部屋用'] }
 ];
 
-/* 古代装備の せっけいず（プリント専用アイテム。少し難易度高め＝わりざん） */
+/* 古代装備の共通設計図。旧IDはセーブ移行だけに使用 */
 const BLUEPRINT_DB = [
-  { id:'bp_anc_w1', name:'古代の大剣の せっけいず', equipId:'anc_w1', tier:'div5', emoji:'assets/items/blueprint.png', tags:['設計図'] },
-  { id:'bp_anc_a1', name:'古代の鎧の せっけいず', equipId:'anc_a1', tier:'div5', emoji:'assets/items/blueprint.png', tags:['設計図'] },
-  { id:'bp_anc_c1', name:'古代の指輪の せっけいず', equipId:'anc_c1', tier:'div5', emoji:'assets/items/blueprint.png', tags:['設計図'] },
+  { id:'bp_ancient', name:'古代の設計図', blueprint:true, tier:'div5', emoji:'assets/items/ancient_blueprint_v2.png', tags:['設計図'] },
 ];
+const LEGACY_BLUEPRINT_EQUIP = { bp_anc_w1:'anc_w1', bp_anc_a1:'anc_a1', bp_anc_c1:'anc_c1' };
 
 function isBattleItem(db) {
   if (!db) return false;
@@ -2593,10 +2596,11 @@ function getItemTemplate(id) {
   const custom = customItems[id];
   return custom ? { ...base, ...custom } : base;
 }
+function isBlueprintItem(db) { return !!(db && (db.blueprint || db.equipId)); }
 
-/* レアリティは1〜5（数値）。5が最強。表記は ★の数ではなく 名前で表示する */
-const RARITY_MULTI = { 1: 1.0, 2: 1.5, 3: 2.0, 4: 3.0, 5: 4.2 };
-const RARITY_NAME = { 1: 'ノーマル', 2: 'レア', 3: '激レア', 4: '超激レア', 5: 'レジェンド' };
+/* 通常装備は★5まで。古代装備だけは制作時に★6になる */
+const RARITY_MULTI = { 1: 1.0, 2: 1.5, 3: 2.0, 4: 3.0, 5: 4.2, 6: 5.5 };
+const RARITY_NAME = { 1: 'ノーマル', 2: 'レア', 3: '激レア', 4: '超激レア', 5: 'レジェンド', 6: 'エンシェントレア ★6' };
 const RARITY_MAX = 5;
 
 function calcEquipStat(baseStat, rarity) {
@@ -2809,10 +2813,29 @@ function createSaveSlot(name, avatarId){
 /* 旧バージョンの N/R/SR/SSR（文字列）レアリティを ★1〜4（数値）に へんかんする */
 const RARITY_LETTER_MAP = { N:1, R:2, SR:3, SSR:4 };
 function normalizeRarityData(data){
+  const legacyBlueprintUidMap = new Map();
   if (data.items){
     // アイテム（どうぐ）は レアリティ廃止。ふるいセーブに のこっていたら 消す
     for (const it of data.items){
       delete it.rarity;
+    }
+    const legacyBlueprints = data.items.filter(it => LEGACY_BLUEPRINT_EQUIP[it.id]);
+    if (legacyBlueprints.length) {
+      let common = data.items.find(it => it.id === 'bp_ancient');
+      if (!common) {
+        common = { ...legacyBlueprints[0], id:'bp_ancient', count:0 };
+        data.items.push(common);
+      }
+      for (const old of legacyBlueprints) legacyBlueprintUidMap.set(old.uid, common.uid);
+      common.count += legacyBlueprints.reduce((sum, it) => sum + (Number(it.count) || 0), 0);
+      data.items = data.items.filter(it => !LEGACY_BLUEPRINT_EQUIP[it.id]);
+    }
+  }
+  if (data.activePrints && legacyBlueprintUidMap.size) {
+    for (const print of Object.values(data.activePrints)) {
+      if (print?.type === 'blueprint' && legacyBlueprintUidMap.has(print.uid)) {
+        print.uid = legacyBlueprintUidMap.get(print.uid);
+      }
     }
   }
   if (data.ownedEquips){
@@ -2835,7 +2858,8 @@ function normalizeRarityData(data){
   // レアリティの 数値正規化（★1〜5）
   if (data.ownedEquips){
     for (const eq of data.ownedEquips){
-      eq.rarity = Math.max(1, Math.min(RARITY_MAX, Math.round(Number(eq.rarity) || 1)));
+      const maxRarity = String(eq.id || '').startsWith('anc_') ? 6 : RARITY_MAX;
+      eq.rarity = Math.max(1, Math.min(maxRarity, Math.round(Number(eq.rarity) || 1)));
     }
   }
   // スキルの状態を {progress, mastered} から {level, progress} に統一。
@@ -3247,6 +3271,8 @@ function equipBonus(){
     if (!db) continue;
     const stat = calcEquipStat(db.stat, owned.rarity);
     for (const k in stat) b[k] += stat[k];
+    if (owned.id === 'anc_c1') b.mp += 100;
+    if (owned.id === 'anc_w2') b.spd += 30;
   }
   return b;
 }
@@ -3255,7 +3281,29 @@ function equipBonus(){
    そうびコスト（レベル＝そうびできる合計コスト上限）
    ========================================================== */
 function equipCost(db, rarity){
+  if (db && db.id && db.id.startsWith('anc_')) return Math.max(1, db.cost || 1);
   return Math.max(1, Math.ceil((db.cost || 1) * (RARITY_MULTI[rarity] || 1)));
+}
+
+function equippedAncientIds(){
+  const ids = new Set();
+  for (const slot of EQUIP_SLOTS){
+    const eq = G.equipment[slot];
+    const owned = eq && G.ownedEquips.find(o => o.uid === eq.uid);
+    if (owned && owned.id.startsWith('anc_')) ids.add(owned.id);
+  }
+  return ids;
+}
+function ancientCritBonus(){ return equippedAncientIds().has('anc_w3') ? 0.3 : 0; }
+function ancientDamageReduction(dmg){
+  return equippedAncientIds().has('anc_a2') ? Math.max(1, Math.round(dmg * 0.7)) : dmg;
+}
+
+function rollAncientBlueprintReward(){
+  const pool = ANCIENT_EQUIP_DB.filter(eq => eq.id.startsWith('anc_'));
+  const ownedIds = new Set(G.ownedEquips.filter(o => pool.some(eq => eq.id === o.id)).map(o => o.id));
+  const unowned = pool.filter(eq => !ownedIds.has(eq.id));
+  return pick(unowned.length ? unowned : pool);
 }
 function costCap(){
   return Math.max(1, G.player.lvl) + (G.player.costPlus || 0);
@@ -4424,7 +4472,11 @@ function doAttack(){
           dmg = Math.round(dmg * raidMult);
         }
         
-        const critChance = calcSpdRate(totalStat('spd')) + (equippedAbilities().has('crit_up') ? 0.10 : 0);
+        const critChance = Math.min(0.95, calcSpdRate(totalStat('spd')) + (equippedAbilities().has('crit_up') ? 0.10 : 0) + ancientCritBonus());
+        if (equippedAncientIds().has('anc_w1')) {
+          dealAncientDoubleStrike(atk, res.timeFrac, () => afterPlayerAction());
+          return;
+        }
         const isCrit = Math.random() < critChance;
         if (isCrit) dmg = Math.floor(dmg * BALANCE.critMult);
         dealToEnemy(dmg, 'こうげき', isCrit, () => afterPlayerAction());
@@ -4536,7 +4588,7 @@ function useSkill(s){
         return;
       }
       // スキルでもクリティカル（すばやさ確率＋スキルボーナス3%）
-      const critChance = calcSpdRate(totalStat('spd')) + 0.03 + (equippedAbilities().has('crit_up') ? 0.08 : 0);
+      const critChance = Math.min(0.95, calcSpdRate(totalStat('spd')) + 0.03 + (equippedAbilities().has('crit_up') ? 0.08 : 0) + ancientCritBonus());
       const isCrit = Math.random() < critChance;
       if (isCrit) dmg = Math.floor(dmg * BALANCE.critMult);
       dealToEnemy(dmg, s.name, isCrit, () => afterPlayerAction(), s.id);
@@ -4832,6 +4884,44 @@ function handlePostDamageEffects(dmg, cb) {
   }, 400);
 }
 
+function dealAncientDoubleStrike(atk, timeFrac, cb){
+  if (!battle || !battle.enemy) return;
+  const enemy = battle.enemy;
+  const frame = getEnemyCanvasCoords().frame || document.querySelector('.enemy-sprite');
+  const eDef = enemy.def || 0;
+  const raidMult = explore && explore.isRaid
+    ? 1 + (explore.raidAreaIdx || 0) * 0.5 + (explore.raidStageIdx || 0) * 0.1
+    : 1;
+  const hitBase = Math.max(1, Math.round(Math.max(atk * 0.8 * BALANCE.atkMinRatio, atk * 0.8 - eDef)));
+  const hitDamage = Math.max(1, Math.round(hitBase * (1 + timeFrac * BALANCE.timeBonus) * raidMult));
+  playPlayerAttackAnim();
+  blog('<span class="good">古代の双剣が連続斬り！ 0.8倍の攻撃を2回！</span>');
+  let total = 0;
+  const strike = index => {
+    if (!battle || !battle.enemy || battle.over) return;
+    const crit = Math.random() < Math.min(0.95, calcSpdRate(totalStat('spd')) + (equippedAbilities().has('crit_up') ? 0.10 : 0) + ancientCritBonus());
+    const dealt = Math.min(battle.enemy.hp, Math.max(1, crit ? Math.floor(hitDamage * BALANCE.critMult) : hitDamage));
+    battle.enemy.hp = Math.max(0, battle.enemy.hp - dealt);
+    total += dealt;
+    if (battle.enemy.isRaid) battle.raidDamageDealt = (battle.raidDamageDealt || 0) + dealt;
+    if (frame){
+      frame.classList.remove('enemy-damage-hit');
+      void frame.offsetWidth;
+      frame.classList.add('enemy-damage-hit');
+      spawnFloatingDamage(frame, dealt, crit ? 'enemy-dmg crit' : 'enemy-dmg');
+    }
+    if (crit) SM.play('se_crit'); else SM.play('se_slash');
+    blog(`<span class="good">${index + 1}回目${crit ? 'の会心！' : ''} ${battle.enemy.name}に <b>${dealt}</b>ダメージ</span>`);
+    updateBattleBars();
+    if (index === 0 && battle.enemy.hp > 0){
+      setTimeout(() => strike(1), 180);
+    } else {
+      handlePostDamageEffects(total, cb);
+    }
+  };
+  setTimeout(() => strike(0), 220);
+}
+
 function dealToEnemy(dmg, label, isCrit, cb, skillId){
   if (battle && battle.enemy && battle.enemy.isRaid) {
     battle.raidDamageDealt = (battle.raidDamageDealt || 0) + dmg;
@@ -4953,6 +5043,7 @@ function turnBasedEnemyAct(callback){
   playEnemyAttackAnim();
   let dmg = Math.max(1, Math.round(e.atk * 1.5) - totalStat('def'));
   if (equippedAbilities().has('guard')) dmg = Math.max(1, Math.round(dmg * 0.85));
+  dmg = ancientDamageReduction(dmg);
   G.player.hp -= dmg;
   SM.playBeep('damage');
   flashScreenRed();
@@ -5026,6 +5117,7 @@ function enemyAct(){
   let dmg = Math.max(1, Math.round(e.atk * 1.5) - totalStat('def'));
   // そうびの特殊能力「てっぺき」：うけるダメージ-15%
   if (equippedAbilities().has('guard')) dmg = Math.max(1, Math.round(dmg * 0.85));
+  dmg = ancientDamageReduction(dmg);
   G.player.hp -= dmg;
   SM.playBeep('damage');
   flashScreenRed();
@@ -5107,10 +5199,10 @@ function rollBattleDrops(e, rewards){
   }
   // 古代装備の せっけいず（レア・ドロップ）
   if (Math.random() < dropChance(e.isBoss ? rewardSettings.bossBlueprintRate : 0.015, rewardSettings.dropMultBlueprint)){
-    const bp = pick(BLUEPRINT_DB);
+    const bp = BLUEPRINT_DB[0];
     addItem(bp.id, 1);
     drops.push({ kind:'blueprint', id:bp.id, name:bp.name, icon:bp.emoji });
-    rewards.push(`めずらしい「📜 ${bp.name}」を ひろった！`);
+    rewards.push(`「${bp.name}」を ひろった！`);
   }
   return drops;
 }
@@ -6994,7 +7086,7 @@ function renderRoomInventory(gridEl, cellCount) {
       const it = G.items[i];
       const db = getItemTemplate(it.id);
       if (db) {
-        const isBlueprint = !!db.equipId;
+        const isBlueprint = isBlueprintItem(db);
         const isCostSeed = db.effect === 'cost';
         const isBattle = isBattleItem(db);
         const emoji = db.emoji || (isBlueprint ? '📜' : '💊');
@@ -7002,8 +7094,7 @@ function renderRoomInventory(gridEl, cellCount) {
         
         let desc = db.desc || '';
         if (isBlueprint) {
-          const equipDb = getEquipTemplate(db.equipId);
-          desc = `プリントを解いて暗号を入力すると「${equipDb.name}」が手に入る！`;
+          desc = '設計図をプリントして暗号を解こう。古代装備がランダムで完成！未所持の種類が優先され、6種類そろうまでは重複しません。';
         }
 
         let tagBadge = '';
@@ -7495,6 +7586,15 @@ function generateEquipDetailHtml(db, options = {}){
   const abilityInfo = abilityId ? getAbility(abilityId) : null;
   const slot = db.slot;
   const SLOT_ICONS = { weapon:'⚔️', armor:'🛡️', accessory:'💍' };
+  const ancientEffects = {
+    anc_w1:'通常攻撃：攻撃力×0.8の連続2回攻撃',
+    anc_w2:'すばやさ +30',
+    anc_w3:'クリティカル率が別枠で+30%',
+    anc_a2:'受けるダメージを30%カット',
+    anc_c1:'最大MP +100',
+    anc_a1:'高い防御力と最大HPを持つ古代の鎧',
+  };
+  const ancientEffect = ancientEffects[db.id];
 
 
   const statBadges = Object.entries(stat).map(([k, v]) => {
@@ -7576,6 +7676,8 @@ function generateEquipDetailHtml(db, options = {}){
         </div>
       ` : ''}
 
+      ${ancientEffect ? `<div class="equip-unified-ability"><div class="ability-title">★6 古代効果</div><div class="ability-desc">${ancientEffect}</div></div>` : ''}
+
       ${shopSectionHtml}
     </div>
   `;
@@ -7584,7 +7686,7 @@ function generateEquipDetailHtml(db, options = {}){
 /* アイテムホバー時の統一レイアウト詳細カード生成（お店・自分の部屋・インベントリ・バトル共通） */
 function generateItemDetailHtml(db, options = {}){
   if (!db) return '';
-  const isBlueprint = !!db.equipId;
+  const isBlueprint = isBlueprintItem(db);
   const isCostSeed = db.effect === 'cost';
   const isBattle = isBattleItem(db);
   const emoji = db.emoji || (isBlueprint ? 'assets/items/blueprint.png' : '💊');
@@ -7613,13 +7715,11 @@ function generateItemDetailHtml(db, options = {}){
   // 効果数値バッジ（バーではなく数値でハッキリ表示）
   let effectBadges = '';
   if (isBlueprint){
-    const equipDb = getEquipTemplate(db.equipId);
-    const targetName = equipDb ? equipDb.name : '古代装備';
     effectBadges = `
       <div class="equip-stat-val-badge stat-plus" style="border-color:rgba(245,158,11,0.4); background:rgba(245,158,11,0.12);">
         <span class="stat-badge-icon">🔨</span>
         <span class="stat-badge-name">せいさく</span>
-        <span class="stat-badge-num" style="color:#fbbf24;">${targetName}</span>
+        <span class="stat-badge-num" style="color:#fbbf24;">ランダムで1つ</span>
       </div>`;
   } else if (db.effect === 'heal'){
     effectBadges = `
@@ -7665,14 +7765,13 @@ function generateItemDetailHtml(db, options = {}){
   // 説明文
   let descText = db.desc || '';
   if (isBlueprint){
-    const equipDb = getEquipTemplate(db.equipId);
-    descText = `プリントを解いて暗号を入力すると「${equipDb ? equipDb.name : '古代装備'}」が手に入ります！`;
+    descText = '設計図をプリントして暗号を解こう。6種類からランダムで1つ完成！全種類を持つまでは未所持品が出ます。';
   }
 
   // 使用場所・使い方ガイド
   let usageGuide = '';
   if (isBlueprint){
-    usageGuide = '🖨️ 自分の部屋で「プリント」して謎を解くと完成！';
+    usageGuide = '🖨️ 自分の部屋でプリントし、暗号を解くと古代装備がランダムで完成！6種類そろった後は重複することがあります。';
   } else if (isCostSeed){
     usageGuide = '🌱 自分の部屋で使うと そうびコスト上限が 1 ふえます！';
   } else if (db.effect === 'respec'){
@@ -8323,7 +8422,6 @@ function startCodeEntry(s){
    ========================================================== */
 function printBlueprintSheet(bp, uid){
   const count = 20;
-  const equipDb = getEquipTemplate(bp.equipId);
 
   const variants = ['🅰 Aセット', '🅱 Bセット', '🅲 Cセット'].map((label, vi) => {
     const problems = [];
@@ -8342,8 +8440,8 @@ function printBlueprintSheet(bp, uid){
         const printId = addPrintCode(bp.id, code, { type: 'blueprint', uid, problems, name: bp.name });
         save();
         openPrintWindow(`
-          <h1>古代装備の せっけいず：${bp.name}</h1>
-          <div class="p-sub">えんざん：${OP_LABELS[bp.tier]}／${label}／${count}もん／「${equipDb.name}」を かいどく！</div>
+          <h1>古代の設計図</h1>
+          <div class="p-sub">えんざん：${OP_LABELS[bp.tier]}／${label}／${count}もん／暗号を入力して古代装備を手に入れよう！</div>
           <div class="p-sub" style="font-size:20px; font-weight:bold;">【プリント番号: ${printId}】</div>
           <div class="p-sheet">${p1}${p2}</div>
         `, av('画像/ステージ/沼地.jpg'));
@@ -8366,7 +8464,6 @@ function startBlueprintCodeEntry(uid, bp){
     return;
   }
 
-  const equipDb = getEquipTemplate(bp.equipId);
   $('training-progress').innerHTML = `プリントした 10もんの こたえから つくった あんごう（すうじ10けた）を にゅうりょくしよう！`;
   $('training-challenge').innerHTML = `
     <input type="text" inputmode="numeric" id="code-input" class="challenge-input" maxlength="20" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
@@ -8383,13 +8480,14 @@ function startBlueprintCodeEntry(uid, bp){
   $('code-submit').onclick = () => {
     const val = input.value;
     if (checkPrintCode(bp.id, val)) {
+      const equipDb = rollAncientBlueprintReward();
       removePrintCode(bp.id, val);
       removeItem(uid, 1);
-      const ability = rollAbility(5);
-      G.ownedEquips.push({ uid: G.nextUid++, id: bp.equipId, rarity: 5, ability });
+      const ability = rollAbility(6);
+      G.ownedEquips.push({ uid: G.nextUid++, id: equipDb.id, rarity: 6, ability });
       save();
       const abilityInfo = ability ? getAbility(ability) : null;
-      trainingDone(`あんごう せいかい！ でんせつの そうび「<span class="rarity-5">${rarityLabelHtml(5)} ${equipDb.name}</span>」を てにいれた！${abilityInfo ? `<br><span class="tag ability">✨ ${abilityInfo.name}（${abilityInfo.desc}）</span>` : ''}`);
+      trainingDone(`あんごう せいかい！ <span class="rarity-6">${equipDb.name}を手に入れた！</span>${abilityInfo ? `<br><span class="tag ability">✨ ${abilityInfo.name}（${abilityInfo.desc}）</span>` : ''}`);
     } else {
       const resultEl = $('code-result');
       resultEl.textContent = 'ちがう あんごうだよ…。もういちど プリントを みなおしてみよう。';
@@ -8719,10 +8817,9 @@ function showItems(){
     row.onmouseover = (e) => showTooltip(e, generateItemDetailHtml(db, { count: it.count }));
     row.onmouseout = () => hideTooltip();
 
-    if (db.equipId) {
+    if (isBlueprintItem(db)) {
       // 設計図（古代装備の あんごうプリント用アイテム）
-      const equipDb = getEquipTemplate(db.equipId);
-      row.innerHTML = `<div class="info">📜 ${db.name} ×${it.count} <span class="tag" style="background:rgba(243,156,18,0.2); border-color:#f39c12; color:#f39c12; font-size:11px; margin-left:6px; padding:1px 5px; border-radius:3px;">📜 設計図</span><div class="desc">プリントして あんごうに せいかいすると「${equipDb.name}」が てにはいる</div></div>`;
+      row.innerHTML = `<div class="info">${iconHtml(db.emoji, 20)} ${db.name} ×${it.count} <span class="tag" style="background:rgba(243,156,18,0.2); border-color:#f39c12; color:#f39c12; font-size:11px; margin-left:6px; padding:1px 5px; border-radius:3px;">📜 設計図</span><div class="desc">プリントを解くと古代装備をランダム獲得。6種類そろうまでは重複なし</div></div>`;
       const btnGroup = document.createElement('div');
       btnGroup.className = 'skill-row-btns';
       const printBtn = document.createElement('button');
@@ -8730,7 +8827,7 @@ function showItems(){
       printBtn.textContent = '🖨️ プリント';
       printBtn.onclick = () => {
         hideTooltip();
-        printBlueprintSheet(db);
+        printBlueprintSheet(db, it.uid);
       };
       btnGroup.appendChild(printBtn);
       row.appendChild(btnGroup);
@@ -10861,7 +10958,7 @@ const ADMIN_REWARD_FIELDS = [
     { key:'bossThirdTickets', label:'3回クリア：装備ガチャ10連チケット枚数', min:0, max:99, step:1 },
     { key:'pickupBonusTickets', label:'ピックアップ チャレンジボーナス：装備ガチャ10連チケット枚数', min:0, max:99, step:1 },
     { key:'bossLevelUp', label:'たおすたびに あがる 強化レベル', min:0, max:20, step:1 },
-    { key:'bossGrowthPct', label:'強化レベル1ごとの ステータス上昇（％）', min:0, max:100, step:1 },
+    { key:'bossGrowthPct', label:'ステージボス：強化Lv.1ごとの上昇（％）', min:0, max:100, step:1 },
     { key:'zoneClearLegend', label:'エリア制覇で レジェンド装備を わたす（1=する／0=しない）', min:0, max:1, step:1 },
   ]},
 ];
@@ -12230,12 +12327,12 @@ function grantPrintRewards(cur, correct, total, rate) {
       const s = SKILL_DB.find(x => x.id === meta.targetId);
       rewards.push({ kind:'item', name:`とくぎ「${s.name}」を習得！`, icon:'📖' });
   } else if (meta.type === 'blueprint' && rate >= 0.8) {
+      const equipDb = rollAncientBlueprintReward();
       removeItem(meta.uid, 1);
-      const bp = BLUEPRINTS.find(x => x.id === meta.targetId);
-      const equipDb = getEquipTemplate(bp.equipId);
-      const ability = rollAbility(5);
-      G.ownedEquips.push({ uid: G.nextUid++, id: bp.equipId, rarity: 5, ability });
-      rewards.push({ kind:'equip', name:`${equipDb.name} を完成させた！`, icon:'⚔️', rarity:5, ability });
+      const ability = rollAbility(6);
+      G.ownedEquips.push({ uid: G.nextUid++, id:equipDb.id, rarity:6, ability });
+      rewards.push({ kind:'equip', id:equipDb.id, name:equipDb.name, icon:equipDb.emoji, rarity:6, ability });
+      title = `${equipDb.name}を手に入れた！`;
   } else if (meta.type === 'stage' && rate >= 0.8) {
       const r = recordStageClear(meta.areaId, meta.stageIndex);
       title = 'ステージ クリア！';

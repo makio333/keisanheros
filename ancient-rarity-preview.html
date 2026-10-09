@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>エンシェントレア ★6 フレーム プレビュー</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #111827; color: #f8f1d2; font-family: system-ui, sans-serif; }
+    .preview { width: min(92vw, 540px); padding: 26px; border: 1px solid #35404b; background: #17212b; }
+    .eyebrow { color: #aab4be; font-size: 14px; }
+    h1 { margin: 6px 0 20px; font-size: 24px; }
+    .equip-unified-card { padding: 18px; border: 32px solid transparent; border-image-source: url('/assets/ui/ancient_frame_9slice.png?v=2'); border-image-slice: 230 fill; border-image-width: 32px; border-image-repeat: round; border-radius: 0; background: linear-gradient(140deg,rgba(255,204,55,.1),transparent 34%,rgba(255,190,25,.06)),#171512; filter: drop-shadow(0 0 5px rgba(255,205,55,.42)) drop-shadow(0 0 12px rgba(0,0,0,.8)); }
+    .equip-unified-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid #4c4630; }
+    .rarity { font-weight: 800; background: linear-gradient(90deg,#ff5c5c,#ffe066,#4ddd7a,#4da6ff,#b26bff,#ff5c5c); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 1px 2px rgba(255,255,255,.42)) drop-shadow(0 0 8px rgba(95,190,255,.58)); animation: rarity5-shine 2.5s linear infinite; }
+    @keyframes rarity5-shine { to { background-position: -200% center; } }
+    .cost { color: #ffe38a; font-size: 14px; }
+    .equip-unified-main { display: flex; align-items: center; gap: 18px; padding: 18px 0; }
+    .equip-icon { position: relative; overflow: hidden; isolation: isolate; width: 116px; height: 116px; flex: 0 0 116px; display: grid; place-items: center; box-sizing: border-box; padding: 0; border: 4px solid #d9aa35; border-radius: 8px; background: #100e08; box-shadow: inset 0 0 0 2px #17120a,0 0 0 2px #090909,0 0 8px rgba(255,210,70,.38),0 0 12px rgba(91,194,255,.22); }
+    .equip-icon::before { content: ''; position: absolute; inset: 0; z-index: 1; border-radius: inherit; background: linear-gradient(120deg,rgba(255,55,125,.34),rgba(255,204,66,.3) 22%,rgba(83,255,172,.28) 45%,rgba(65,204,255,.34) 68%,rgba(184,92,255,.34) 86%,rgba(255,55,125,.34)); background-size: 220% 220%; mix-blend-mode: screen; opacity: .72; animation: ancient-prism-wash 6s ease-in-out infinite alternate; pointer-events: none; }
+    .equip-icon::after { content: ''; position: absolute; inset: 0; z-index: 2; border-radius: inherit; background: conic-gradient(from 0deg at 50% 50%,#ff315c,#ff9d36,#fff04a,#44e977,#36ddff,#657bff,#bd55ff,#ff55ad,#ff315c); -webkit-mask-image: repeating-conic-gradient(from 0deg at 50% 50%,transparent 0deg 5deg,rgba(0,0,0,.06) 8deg,rgba(0,0,0,.25) 13deg,rgba(0,0,0,.68) 19deg,#000 25deg,rgba(0,0,0,.68) 31deg,rgba(0,0,0,.25) 37deg,rgba(0,0,0,.06) 42deg,transparent 45deg),radial-gradient(circle at center,transparent 0 9%,#000 78%); -webkit-mask-composite: source-in; mask-image: repeating-conic-gradient(from 0deg at 50% 50%,transparent 0deg 5deg,rgba(0,0,0,.06) 8deg,rgba(0,0,0,.25) 13deg,rgba(0,0,0,.68) 19deg,#000 25deg,rgba(0,0,0,.68) 31deg,rgba(0,0,0,.25) 37deg,rgba(0,0,0,.06) 42deg,transparent 45deg),radial-gradient(circle at center,transparent 0 9%,#000 78%); mask-composite: intersect; opacity: .82; filter: blur(3px); animation: ancient-ray-sweep 8s linear infinite; pointer-events: none; }
+    .equip-icon img { filter: drop-shadow(0 0 2px rgba(255,92,92,.55)) drop-shadow(0 0 4px rgba(255,224,102,.42)) drop-shadow(0 0 6px rgba(77,221,122,.38)) drop-shadow(0 0 8px rgba(77,166,255,.48)) drop-shadow(0 0 10px rgba(178,107,255,.48)); animation: ancient-rainbow-icon-glow 2.5s ease-in-out infinite alternate; }
+    @keyframes ancient-ray-sweep { to { transform: rotate(360deg); } }
+    @keyframes ancient-prism-wash { to { background-position: 100% 100%; } }
+    @keyframes ancient-rainbow-icon-glow { from { filter:drop-shadow(0 0 2px rgba(255,92,92,.38)) drop-shadow(0 0 4px rgba(255,224,102,.3)) drop-shadow(0 0 6px rgba(77,221,122,.28)) drop-shadow(0 0 8px rgba(77,166,255,.36)) drop-shadow(0 0 10px rgba(178,107,255,.36)); } to { filter:drop-shadow(0 0 3px rgba(255,92,92,.7)) drop-shadow(0 0 5px rgba(255,224,102,.58)) drop-shadow(0 0 7px rgba(77,221,122,.52)) drop-shadow(0 0 10px rgba(77,166,255,.7)) drop-shadow(0 0 12px rgba(178,107,255,.66)); } }
+    @media (prefers-reduced-motion: reduce) { .equip-icon::before,.equip-icon::after,.equip-icon img,.rarity { animation: none; } }
+    .equip-icon img { width: 88%; height: 88%; object-fit: contain; image-rendering: pixelated; position:relative; z-index:0; }
+    .name { color: #ffd84d; font-size: 21px; font-weight: 800; }
+    .sub { margin-top: 6px; color: #aab4be; font-size: 13px; }
+    .passive { margin-top: 10px; padding: 12px; border: 1px solid #9b7417; background: linear-gradient(135deg,rgba(255,202,45,.22),rgba(27,22,10,.94)); color: #fff0ae; font-size: 14px; box-shadow: inset 0 0 14px rgba(255,200,40,.1), 0 0 12px rgba(255,170,0,.16); }
+    .note { margin: 18px 0 0; color: #aab4be; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <main class="preview">
+    <div class="eyebrow">そうび詳細の見た目</div>
+    <h1>レアリティ別フレーム</h1>
+    <section class="equip-unified-card" data-equip-rarity="6">
+      <header class="equip-unified-header"><span>⚔️ ぶき</span><span class="rarity">エンシェントレア ★6</span><span class="cost">コスト: 8</span></header>
+      <div class="equip-unified-main">
+        <div class="equip-icon rarity-6"><img src="assets/items/ancient_greatsword_v2.png" alt="古代の大剣"></div>
+        <div><div class="name">古代の大剣</div><div class="sub">こうげき +220</div><div class="passive">会心率 +30%</div></div>
+      </div>
+    </section>
+    <p class="note">金色主体のピクセル調9スライス枠。角を保ちつつ辺を繰り返します。アイコン四角全体にプリズム反射を敷き、放射状の光を重ねます。</p>
+  </main>
+</body>
+</html>

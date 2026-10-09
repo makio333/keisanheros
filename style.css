@@ -2518,6 +2518,17 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 .rarity-2 { color:var(--rarity-2); font-weight:700; }
 .rarity-3 { color:var(--rarity-3); font-weight:700; }
 .rarity-4 { color:var(--rarity-4); font-weight:700; text-shadow: 0 1px 2px rgba(255,92,92,0.4); }
+.rarity-6 {
+  font-weight:800;
+  background:linear-gradient(90deg,#ff5c5c,#ffe066,#4ddd7a,#4da6ff,#b26bff,#ff5c5c);
+  background-size:200% auto;
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  text-shadow:none;
+  filter:drop-shadow(0 1px 2px rgba(255,255,255,.42)) drop-shadow(0 0 8px rgba(95,190,255,.58));
+  animation:rarity5-shine 2.5s linear infinite;
+}
 .rarity-5 {
   font-weight:700;
   background: linear-gradient(90deg, #ff5c5c, #ffe066, #4ddd7a, #4da6ff, #b26bff, #ff5c5c);
@@ -2541,6 +2552,88 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 }
 .equip-icon.rarity-5, .town-equip-icon-slot.rarity-5, .item-card.rarity-5, .item-card-icon.rarity-5, .gacha-reveal-card.rarity-5 {
   border-color:var(--rarity-5); box-shadow: 0 0 10px rgba(178,107,255,0.55);
+}
+.equip-icon.rarity-6, .town-equip-icon-slot.rarity-6, .item-card.rarity-6, .item-card-icon.rarity-6, .gacha-reveal-card.rarity-6 {
+  border:4px solid #d9aa35 !important;
+  box-shadow:inset 0 0 0 2px #15110a, 0 0 0 2px #090909, 0 0 0 4px #9a7019,
+    0 0 14px rgba(255,210,70,.56), 0 0 22px rgba(91,194,255,.2);
+  background:linear-gradient(145deg,#100e08,#302307 48%,#17130a);
+}
+.equip-unified-card[data-equip-rarity="6"] {
+  border:32px solid transparent;
+  border-radius:0;
+  border-image-source:url('./assets/ui/ancient_frame_9slice.png');
+  border-image-slice:230 fill;
+  border-image-width:32px;
+  border-image-repeat:round;
+  background:linear-gradient(140deg,rgba(255,204,55,.1),transparent 34%,rgba(255,190,25,.06)),#171512;
+  filter:drop-shadow(0 0 5px rgba(255,205,55,.42)) drop-shadow(0 0 12px rgba(0,0,0,.8));
+}
+.equip-icon.rarity-6, .town-equip-icon-slot.rarity-6, .item-card-icon.rarity-6 {
+  position:relative;
+  overflow:hidden;
+  isolation:isolate;
+  box-sizing:border-box;
+  padding:0;
+  border:4px solid #d9aa35 !important;
+  border-radius:8px;
+  clip-path:none;
+  background:#100e08;
+  box-shadow:inset 0 0 0 2px #17120a, 0 0 0 2px #090909,
+    0 0 8px rgba(255,210,70,.38), 0 0 12px rgba(91,194,255,.22);
+}
+.equip-icon.rarity-6::before, .town-equip-icon-slot.rarity-6::before, .item-card-icon.rarity-6::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  z-index:1;
+  border-radius:inherit;
+  background:linear-gradient(120deg,rgba(255,55,125,.34),rgba(255,204,66,.3) 22%,rgba(83,255,172,.28) 45%,rgba(65,204,255,.34) 68%,rgba(184,92,255,.34) 86%,rgba(255,55,125,.34));
+  background-size:220% 220%;
+  mix-blend-mode:screen;
+  opacity:.72;
+  animation:ancient-prism-wash 6s ease-in-out infinite alternate;
+  pointer-events:none;
+}
+.equip-icon.rarity-6::after, .town-equip-icon-slot.rarity-6::after, .item-card-icon.rarity-6::after {
+  content:'';
+  position:absolute;
+  inset:0;
+  z-index:2;
+  border-radius:inherit;
+  background:conic-gradient(from 0deg at 50% 50%,#ff315c,#ff9d36,#fff04a,#44e977,#36ddff,#657bff,#bd55ff,#ff55ad,#ff315c);
+  -webkit-mask-image:repeating-conic-gradient(from 0deg at 50% 50%,transparent 0deg 5deg,rgba(0,0,0,.06) 8deg,rgba(0,0,0,.25) 13deg,rgba(0,0,0,.68) 19deg,#000 25deg,rgba(0,0,0,.68) 31deg,rgba(0,0,0,.25) 37deg,rgba(0,0,0,.06) 42deg,transparent 45deg),radial-gradient(circle at center,transparent 0 9%,#000 78%);
+  -webkit-mask-composite:source-in;
+  mask-image:repeating-conic-gradient(from 0deg at 50% 50%,transparent 0deg 5deg,rgba(0,0,0,.06) 8deg,rgba(0,0,0,.25) 13deg,rgba(0,0,0,.68) 19deg,#000 25deg,rgba(0,0,0,.68) 31deg,rgba(0,0,0,.25) 37deg,rgba(0,0,0,.06) 42deg,transparent 45deg),radial-gradient(circle at center,transparent 0 9%,#000 78%);
+  mask-composite:intersect;
+  opacity:.82;
+  filter:blur(3px);
+  animation:ancient-ray-sweep 8s linear infinite;
+  pointer-events:none;
+}
+.equip-icon.rarity-6 img, .town-equip-icon-slot.rarity-6 img, .item-card-icon.rarity-6 img {
+  filter:drop-shadow(0 0 2px rgba(255,92,92,.55)) drop-shadow(0 0 4px rgba(255,224,102,.42))
+    drop-shadow(0 0 6px rgba(77,221,122,.38)) drop-shadow(0 0 8px rgba(77,166,255,.48))
+    drop-shadow(0 0 10px rgba(178,107,255,.48));
+  animation:ancient-rainbow-icon-glow 2.5s ease-in-out infinite alternate;
+}
+@keyframes ancient-rainbow-icon-glow {
+  from { filter:drop-shadow(0 0 2px rgba(255,92,92,.38)) drop-shadow(0 0 4px rgba(255,224,102,.3)) drop-shadow(0 0 6px rgba(77,221,122,.28)) drop-shadow(0 0 8px rgba(77,166,255,.36)) drop-shadow(0 0 10px rgba(178,107,255,.36)); }
+  to { filter:drop-shadow(0 0 3px rgba(255,92,92,.7)) drop-shadow(0 0 5px rgba(255,224,102,.58)) drop-shadow(0 0 7px rgba(77,221,122,.52)) drop-shadow(0 0 10px rgba(77,166,255,.7)) drop-shadow(0 0 12px rgba(178,107,255,.66)); }
+}
+@keyframes ancient-ray-sweep { to { transform:rotate(360deg); } }
+@keyframes ancient-prism-wash { to { background-position:100% 100%; } }
+.item-card.rarity-6, .gacha-reveal-card.rarity-6 {
+  border:4px solid transparent !important;
+  background-image:linear-gradient(#171512,#171512),conic-gradient(from 20deg,#ffe27a,#17120a,#d9aa35,#17120a,#ff70cc,#72eaff,#fff17a,#a87aff,#ffe27a);
+  background-origin:border-box;
+  background-clip:padding-box,border-box;
+}
+.equip-unified-card[data-equip-rarity="6"] .equip-unified-header { border-bottom-color:rgba(255,210,85,.5); }
+@media (prefers-reduced-motion: reduce) {
+  .equip-icon.rarity-6::before, .town-equip-icon-slot.rarity-6::before, .item-card-icon.rarity-6::before,
+  .equip-icon.rarity-6::after, .town-equip-icon-slot.rarity-6::after, .item-card-icon.rarity-6::after,
+  .equip-icon.rarity-6 img, .town-equip-icon-slot.rarity-6 img, .item-card-icon.rarity-6 img, .rarity-6 { animation:none; }
 }
 .equip-icon.rarity-5, .town-equip-icon-slot.rarity-5, .item-card-icon.rarity-5 {
   position: relative;
@@ -2567,6 +2660,16 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
   0%, 100% { background-position: 130% 130%; }
   50%      { background-position: -30% -30%; }
 }
+.ancient-blueprint-choice { position:relative; width:min(760px,94vw); max-height:88vh; overflow:auto; padding:24px; }
+.ancient-blueprint-choice h3 { margin:0 42px 6px 0; color:#ffd84d; }
+.ancient-blueprint-choice > p { margin:0 0 16px; color:#d7d2c4; }
+.ancient-blueprint-close { position:absolute; top:12px; right:12px; min-width:40px; }
+.ancient-blueprint-options { display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); gap:10px; }
+.ancient-blueprint-option { display:grid; justify-items:center; gap:6px; min-width:0; padding:10px 8px; color:#f5e8b4; background:#151515; border:2px solid #8b7025; border-radius:8px; cursor:pointer; }
+.ancient-blueprint-option:hover, .ancient-blueprint-option:focus-visible { border-color:#ffd84d; box-shadow:0 0 12px rgba(255,216,77,.32); outline:none; }
+.ancient-blueprint-option img { width:92px; height:92px; object-fit:contain; image-rendering:pixelated; }
+.ancient-blueprint-option b { text-align:center; }
+.ancient-blueprint-option small { color:#ffd84d; }
 .tag { font-size:11px; padding:2px 8px; background: rgba(239,227,192,0.12); border-radius: 10px; border:1px solid rgba(239,227,192,0.3); color:var(--text-light); margin-left:6px; font-weight:700; }
 .tag.ability { color:#8be28b; border-color:rgba(139,226,139,0.5); }
 .ability-desc { color:#8be28b !important; font-weight:700; }
@@ -5962,6 +6065,7 @@ body:has(.stage-clear-overlay) .volume-control-container { display: none; }
 #global-tooltip[data-equip-rarity="3"] { --tooltip-rarity-color: var(--rarity-3); }
 #global-tooltip[data-equip-rarity="4"] { --tooltip-rarity-color: var(--rarity-4); }
 #global-tooltip[data-equip-rarity="5"] { --tooltip-rarity-color: var(--rarity-5); }
+#global-tooltip[data-equip-rarity="6"] { --tooltip-rarity-color:#ffd84d; }
 #global-tooltip[data-equip-rarity] {
   border-color: var(--tooltip-rarity-color);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85), 0 0 16px color-mix(in srgb, var(--tooltip-rarity-color) 35%, transparent);
