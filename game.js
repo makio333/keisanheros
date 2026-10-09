@@ -2543,11 +2543,11 @@ const EQUIP_DB = [
 
 /* 古代装備：共通の設計図を印刷し、暗号を解くと未所持品を優先して★6で完成 */
 const ANCIENT_EQUIP_DB = [
-  { id:'anc_w1', name:'古代の双剣', slot:'weapon', opTier:'div5', stat:{atk:40}, cost:8, emoji:'assets/items/ancient_dual_swords_v1.png' },
-  { id:'anc_w3', name:'古代の大剣', slot:'weapon', opTier:'div5', stat:{atk:40}, cost:8, emoji:'assets/items/ancient_greatsword_v2.png' },
+  { id:'anc_w1', name:'古代の双剣', slot:'weapon', opTier:'div5', stat:{atk:10}, cost:8, emoji:'assets/items/ancient_dual_swords_v1.png' },
+  { id:'anc_w3', name:'古代の大剣', slot:'weapon', opTier:'div5', stat:{atk:10}, cost:8, emoji:'assets/items/ancient_greatsword_v2.png' },
   { id:'anc_a1', name:'古代の鎧', slot:'armor', opTier:'div5', stat:{def:35, hp:20}, cost:7, emoji:'assets/items/ancient_armor_v2.png' },
   { id:'anc_c1', name:'古代の指輪', slot:'accessory', opTier:'div5', stat:{spd:12}, cost:8, emoji:'assets/items/ancient_ring_v2.png' },
-  { id:'anc_w2', name:'古代の槍', slot:'weapon', opTier:'div5', stat:{atk:34, spd:8}, cost:7, emoji:'assets/items/ancient_spear_v2.png' },
+  { id:'anc_w2', name:'古代の槍', slot:'weapon', opTier:'div5', stat:{atk:8.5, spd:8}, cost:7, emoji:'assets/items/ancient_spear_v2.png' },
   { id:'anc_a2', name:'古代の盾', slot:'armor', opTier:'div5', stat:{def:29, hp:20}, cost:7, emoji:'assets/items/ancient_shield_v2.png' },
   { id:'demon_sword', name:'魔王の覇剣', slot:'weapon', opTier:'elem6', stat:{atk:50}, cost:20, emoji:'assets/items/w6.png' },
 ];
