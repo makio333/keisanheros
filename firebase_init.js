@@ -17,7 +17,7 @@ import {
 } from "firebase/firestore";
 
 // レイド討伐後の集計待ち時間（ミリ秒）
-const RAID_SETTLEMENT_MS = 10 * 60 * 1000;
+const RAID_SETTLEMENT_MS = 60 * 1000; // 討伐後の集計時間（1分）
 
 const firebaseConfig = {
   apiKey: "AIzaSyDu5F9Dlw4x7E1cDg2K41_mEzaEa0QGW6Q",

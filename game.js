@@ -1414,14 +1414,14 @@ const AREA_STAGES = {
         const ans = rnd(2,7);
         const rem = rnd(1, divisor - 1);
         const dividend = divisor * ans + rem;
-        return { a:dividend, b:divisor, op:'÷', answer:ans, text:`${dividend} ÷ ${divisor}` };
+        return { a:dividend, b:divisor, op:'÷', answer:ans, remainder:rem, text:`${dividend} ÷ ${divisor}` };
       }},
       { name:'あまりのあるわり算（大）', timeLimit:7000, generateProblem:() => {
         const divisor = rnd(6,9);
         const ans = rnd(2,7);
         const rem = rnd(1, divisor - 1);
         const dividend = divisor * ans + rem;
-        return { a:dividend, b:divisor, op:'÷', answer:ans, text:`${dividend} ÷ ${divisor}` };
+        return { a:dividend, b:divisor, op:'÷', answer:ans, remainder:rem, text:`${dividend} ÷ ${divisor}` };
       }},
     ],
     bossTimeLimit1: 6500,
@@ -1433,7 +1433,7 @@ const AREA_STAGES = {
       const ans = rnd(2,8);
       const rem = rnd(1, divisor - 1);
       const dividend = divisor * ans + rem;
-      return { a:dividend, b:divisor, op:'÷', answer:ans, text:`${dividend} ÷ ${divisor}` };
+      return { a:dividend, b:divisor, op:'÷', answer:ans, remainder:rem, text:`${dividend} ÷ ${divisor}` };
     },
   },
   area4: {
@@ -1790,15 +1790,25 @@ function stageBattleBg(areaId, stageIndex, isBoss){
   return battleBgFor(area.enemyZone, Math.min((stageIndex || 0) + 1, 9));
 }
 
+/* いま 何たいめか わかる 星の ならび：たおした＝金の★、いま＝ひかって 点滅する★、まだ＝灰色の☆ */
+function progressStarsHtml(current, total){
+  let h = '';
+  for (let i = 1; i <= total; i++){
+    const cls = i < current ? 'done' : i === current ? 'now' : 'todo';
+    h += `<span class="pstar ${cls}">${i < current || i === current ? '★' : '☆'}</span>`;
+  }
+  return `<div class="progress-stars" role="img" aria-label="${current}／${total}">${h}</div>`;
+}
+
 function stageBattleTitleHtml(areaId, stageIndex, isBoss, bossPhase, killCount){
   const area = AREA_STAGES[areaId];
   if (isBoss){
     const phaseLabel = bossPhase === 2 ? 'フェーズ2：限界突破' : 'フェーズ1：総復習';
-    return `${area.name} ${area.bossName}（${phaseLabel}）`;
+    return `${area.name} ${area.bossName}（${phaseLabel}）${progressStarsHtml(bossPhase === 2 ? 2 : 1, 2)}`;
   }
   const stage = area.stages[stageIndex];
   const enemyNo = Math.min(ENEMIES_PER_STAGE, (killCount || 0) + 1);
-  return `${area.name} ステージ${stageIndex + 1}／${area.stages.length}（${stage.name}）${enemyNo}／${ENEMIES_PER_STAGE}たいめ`;
+  return `${area.name} ステージ${stageIndex + 1}／${area.stages.length}（${stage.name}）${enemyNo}／${ENEMIES_PER_STAGE}たいめ${progressStarsHtml(enemyNo, ENEMIES_PER_STAGE)}`;
 }
 
 /* エリア2は エリア1をクリアしないと ちょうせんできない */
@@ -2223,7 +2233,9 @@ const REWARD_SETTINGS_DEFAULTS = {
   thirdItemCount: 3,        // 3回クリア報酬の アイテム個数
   bossFirstTickets: 1,      // ボス初回クリア報酬：背景スキンガチャチケット枚数
   bossThirdTickets: 1,      // ボス3回クリア報酬：装備ガチャ10連チケット枚数
-  pickupBonusTickets: 3,    // ピックアップステージを クリアしたときの チャレンジボーナス：装備ガチャ10連チケット枚数
+  pickupBonusTickets: 1,    // ピックアップステージを クリアしたときの チャレンジボーナス：装備ガチャ10連チケット枚数
+  pickupBonusRaidTickets: 2, // 同：レイドチケット枚数
+  pickupBonusGold: 1000,    // 同：ゴールド
   bossLevelUp: 1,           // ボスを たおすたびに あがる 強化レベル
   bossGrowthPct: 12,        // ステージボスの強化レベル1ごとの ステータス上昇（％）
 };
@@ -2741,6 +2753,8 @@ function newGameState(name, avatarId){
     areaBossClearCounts: {},
     skinGachaTickets: 0,
     equipGachaTenPullTickets: 0,
+    raidTickets: 0,
+    raidTicketBossId: null,
     questMedals: 0,
     questMedalExchanged: {},
     stageTotalClears: {},
@@ -2897,6 +2911,8 @@ function loadSlot(key, options = {}){
     if (!G.areaBossClearCounts) G.areaBossClearCounts = {};
     if (!Number.isFinite(G.skinGachaTickets)) G.skinGachaTickets = 0;
     if (!Number.isFinite(G.equipGachaTenPullTickets)) G.equipGachaTenPullTickets = 0;
+    if (!Number.isFinite(G.raidTickets)) G.raidTickets = 0;
+    if (G.raidTicketBossId === undefined) G.raidTicketBossId = null;
     if (!Number.isFinite(G.questMedals)) G.questMedals = 0;
     if (!G.questMedalExchanged) G.questMedalExchanged = {};
     if (!G.stageTotalClears) G.stageTotalClears = {};
@@ -3440,6 +3456,7 @@ function updateHud(){
   });
 
   renderHomeEquipIcons();
+  renderHomeTickets();
 }
 
 function updatePlayerHpGauge(container, firstFill, firstGhost, hp, maxHp){
@@ -3761,6 +3778,17 @@ if (typeof window !== 'undefined') window.renderReadingHints = renderReadingHint
 
 
 
+/* プリントの こたえ らん。分数の こたえは たて書き（うえ ぶんし／した ぶんぼ）の 2つの らんに する */
+function printBlankHtml(p){
+  if (p && /^\d+\/\d+$/.test(String(p.answer))) return '<span class="p-frac-blank"><i></i><i class="p-frac-bar"></i><i></i></span>';
+  return '<span class="p-blank"></span>';
+}
+
+/* もんだいの ぶんすう「1/5」を、たてに ならべた 分数（うえ ぶんし／した ぶんぼ）で 見せる */
+function fractionTextHtml(escaped){
+  return String(escaped).replace(/(\d+)\/(\d+)/g, (m, n, d) => `<span class="frac"><span class="frac-n">${n}</span><span class="frac-d">${d}</span></span>`);
+}
+
 function getChallengePrompt(problem, isAttack = false) {
   if (isKanjiProblem(problem)) {
     const tierStr = String(problem.tier || '');
@@ -3890,6 +3918,12 @@ function startChallenge(container, opts, cb){
         const kItem = $('btn-kanji-item');
         if (kSkill) kSkill.onclick = (e) => { if(e) e.preventDefault(); openSkillMenu(); };
         if (kItem) kItem.onclick = (e) => { if(e) e.preventDefault(); openItemMenu(); };
+        const kGiveup = $('btn-kanji-giveup');
+        if (kGiveup) {
+          const isRaidBattle = !!(battle && battle.enemy && battle.enemy.isRaid);
+          kGiveup.classList.toggle('hidden', !isRaidBattle);
+          kGiveup.onclick = (e) => { if (e) e.preventDefault(); confirmRaidRetreat(); };
+        }
       } else {
         kanjiCmds.classList.add('hidden');
       }
@@ -3943,10 +3977,16 @@ function startChallenge(container, opts, cb){
   const calcCenter = $('calc-problem-center');
   if (calcCenter) calcCenter.classList.add('hidden');
 
-  const answerStr = String(problem.answer);
+  const hasRem = problem.remainder !== undefined && problem.remainder !== null; // あまりのある わり算：しょう → あまり の じゅんに こたえる
+  const isFrac = !hasRem && /^\d+\/\d+$/.test(String(problem.answer)); // 分数の こたえ：ぶんし（うえ）→ぶんぼ（した）の じゅんに こたえる
+  const isRatio = !hasRem && /^\d+:\d+$/.test(String(problem.answer)); // 比の こたえ：ひだり → みぎ の じゅんに こたえる
+  const slotted = hasRem || isFrac || isRatio;
+  const slotCaps = hasRem ? ['しょう', 'あまり'] : isRatio ? ['ひだり', 'みぎ'] : ['ぶんし', 'ぶんぼ'];
+  const slotExpect = hasRem ? [String(problem.answer), String(problem.remainder)] : isFrac ? String(problem.answer).split('/') : isRatio ? String(problem.answer).split(':') : null;
+  const answerStr = hasRem ? `${problem.answer} あまり ${problem.remainder}` : isFrac ? `${slotExpect[1]}ぶんの${slotExpect[0]}` : isRatio ? `${slotExpect[0]} : ${slotExpect[1]}` : String(problem.answer);
   const assistHtml = hasAssist() ? assistVisualHtml(problem) : '';
   const equationJoin = problem.isWordProblem ? '<br><span class="challenge-answer-arrow">こたえ→</span> ' : ' = ';
-  const problemTextHtml = escapeHtml(problem.text ?? '');
+  const problemTextHtml = fractionTextHtml(escapeHtml(problem.text ?? ''));
 
   const challengeMainHTML = `
     <div class="challenge-main">
@@ -3968,6 +4008,7 @@ function startChallenge(container, opts, cb){
         <div class="battle-inline-commands">
           <button type="button" id="btn-inline-skill" class="btn">✨ とくぎ</button>
           <button type="button" id="btn-inline-item" class="btn">🧪 どうぐ</button>
+          ${battle?.enemy?.isRaid ? '<button type="button" id="btn-inline-giveup" class="btn btn-giveup">🏳 わからない</button>' : ''}
         </div>
       </div>
     `;
@@ -3979,6 +4020,8 @@ function startChallenge(container, opts, cb){
   if (opts.showBattleCommands) {
     const skillBtn = $('btn-inline-skill');
     const itemBtn = $('btn-inline-item');
+    const giveupBtn = $('btn-inline-giveup');
+    if (giveupBtn) giveupBtn.onclick = (e) => { if (e) e.preventDefault(); confirmRaidRetreat(); };
     if (skillBtn) {
       skillBtn.disabled = false;
       skillBtn.onclick = (e) => {
@@ -4000,15 +4043,54 @@ function startChallenge(container, opts, cb){
   const resultEl = container.querySelector('.result-text');
   const submitBtn = container.querySelector('#ch-submit') || $('ch-submit');
 
+  let slotStage = 0;   // 2つの こたえ枠（しょう／あまり、ぶんし／ぶんぼ）の どちらを いれているか。-1=おわり
+  const slotVals = ['', ''];
+  const promptEl = container.querySelector('.challenge-prompt');
+  const slotPrompts = hasRem
+    ? ['まず「しょう」を いれてね！（あまりは そのあと）', 'つぎは「あまり」を いれてね！']
+    : isRatio
+      ? ['まず「：」の ひだりがわの かずを いれてね！', 'つぎは「：」の みぎがわの かずを いれてね！']
+      : ['まず「ぶんし」（うえの かず）を いれてね！', 'つぎは「ぶんぼ」（したの かず）を いれてね！'];
+  function slotHtml(i){
+    const typed = i === slotStage ? input.value : slotVals[i];
+    const cls = 'rem-slot' + (i === slotStage ? ' active' : typed ? ' fixed' : '');
+    return `<span class="${cls}" data-slot="${i}" role="button" tabindex="0" aria-label="${slotCaps[i]}を いれる"><small>${slotCaps[i]}</small><b>${escapeHtml(typed || '？')}</b></span>`;
+  }
   function renderTyped(){
     if (wordEl) {
-      wordEl.textContent = input && input.value.length ? input.value : '？';
+      if (!slotted) wordEl.textContent = input && input.value.length ? input.value : '？';
+      else if (hasRem) wordEl.innerHTML = `${slotHtml(0)}<span class="rem-amari">あまり</span>${slotHtml(1)}`;
+      else if (isRatio) wordEl.innerHTML = `${slotHtml(0)}<span class="rem-amari">：</span>${slotHtml(1)}`;
+      else wordEl.innerHTML = `<span class="frac-answer">${slotHtml(0)}<span class="frac-bar"></span>${slotHtml(1)}</span>`;
       wordEl.className = 'challenge-word';
     }
   }
-  renderTyped();
+  function applySlotUi(){
+    if (promptEl && slotStage >= 0) promptEl.textContent = slotPrompts[slotStage];
+    if (submitBtn) submitBtn.textContent = slotStage === 0 && !slotVals[1] ? 'つぎへ' : 'けってい';
+    renderTyped();
+  }
+  /* 「しょう」「あまり」「ぶんし」「ぶんぼ」の わくを おして、いれる ほうを きりかえる */
+  function switchSlot(i){
+    if (!slotted || done || i === slotStage || slotStage < 0) return;
+    slotVals[slotStage] = input.value;
+    slotStage = i;
+    input.value = slotVals[i];
+    lastLen = input.value.length;
+    applySlotUi();
+    input.focus();
+  }
+  if (slotted) {
+    applySlotUi();
+    if (wordEl) {
+      wordEl.addEventListener('click', e => {
+        const t = e.target.closest('[data-slot]');
+        if (t) switchSlot(Number(t.dataset.slot));
+      });
+    }
+  } else renderTyped();
   if (input) {
-    input.dataset.calcSymbols = [...new Set(answerStr.replace(/[0-9]/g, ''))].filter(symbol => './:%-'.includes(symbol)).join('');
+    input.dataset.calcSymbols = slotted ? '' : [...new Set(answerStr.replace(/[0-9]/g, ''))].filter(symbol => './:%-'.includes(symbol)).join('');
     syncPortraitCalcPad();
   }
   if (input) setTimeout(() => input.focus(), 50);
@@ -4023,12 +4105,18 @@ function startChallenge(container, opts, cb){
     const elapsed = Date.now() - start;
     recordStudyAnswer(problem, success, elapsed, (typeof hasAssist === 'function' ? hasAssist() : false));
     recordRaidLearningAnswer(problem, success);
+    if (slotted) {
+      if (slotStage >= 0) slotVals[slotStage] = input.value;
+      slotStage = -1;
+      if (success) { slotVals[0] = slotExpect[0]; slotVals[1] = slotExpect[1]; }
+      renderTyped();
+    }
     if (input) input.disabled = true;
     if (submitBtn) submitBtn.disabled = true;
     const timeFrac = Math.max(0, 1 - elapsed / timeLimit);
     if (success) {
       if (wordEl) {
-        wordEl.textContent = answerStr;
+        if (!slotted) wordEl.textContent = answerStr;
         wordEl.className = 'challenge-word done';
       }
       if (resultEl) {
@@ -4061,14 +4149,30 @@ function startChallenge(container, opts, cb){
       input.classList.add('flash-ng');
       return;
     }
-    finish(input.value.trim() === answerStr.trim());
+    if (slotted) {
+      slotVals[slotStage] = input.value.trim();
+      if (slotStage === 0 && !slotVals[1]) { SM.playBeep('type'); switchSlot(1); return; }
+      const empty = slotVals[0] ? (slotVals[1] ? -1 : 1) : 0;
+      if (empty >= 0) { switchSlot(empty); input.classList.remove('flash-ng'); void input.offsetWidth; input.classList.add('flash-ng'); return; }
+      const [v0, v1] = slotVals.map(v => String(Number(v)));
+      // 分数は 約分した ものも 同じ かずとして OK（4/12 でも 1/3 でも 正解）
+      const same = isFrac ? (v1 !== '0' && Number(v0) * Number(slotExpect[1]) === Number(v1) * Number(slotExpect[0])) : (v0 === slotExpect[0] && v1 === slotExpect[1]);
+      finish(same);
+      return;
+    }
+    const typed = input.value.trim();
+    // 小数は 「3」と「3.0」のように 数として 同じなら OK
+    const decimalOk = /^\d+\.\d+$/.test(answerStr) || /^\d+$/.test(answerStr) ? (/^\d+(\.\d+)?$/.test(typed) && Number(typed) === Number(answerStr)) : false;
+    finish(typed === answerStr.trim() || decimalOk);
   }
+
+  function remBack(){ if (slotted && slotStage === 1) switchSlot(0); }
 
   if (input) {
     input.addEventListener('input', () => {
       if (done) return;
       const before = input.value;
-      let v = toHalfWidth(before).replace(/[^0-9./:%-]/g, '');
+      let v = toHalfWidth(before).replace(slotted ? /[^0-9]/g : /[^0-9./:%-]/g, '');
       if (v !== before){
         input.value = v;
       }
@@ -4077,8 +4181,10 @@ function startChallenge(container, opts, cb){
       renderTyped();
     });
 
+    input.addEventListener('calc-back', remBack);
     input.addEventListener('keydown', (e) => {
       if (e.isComposing || e.keyCode === 229) return;
+      if (e.key === 'Backspace' && input.value === '' && slotted && slotStage === 1) { e.preventDefault(); remBack(); return; }
       if (e.key === 'Enter' || e.keyCode === 13 || e.which === 13){
         e.preventDefault();
         trySubmit();
@@ -4133,6 +4239,7 @@ function syncPortraitCalcPad() {
     button.addEventListener('pointerdown', event => event.preventDefault());
     button.onclick = () => {
       if (input.disabled) return;
+      if (key === 'delete' && input.value === '') { input.dispatchEvent(new CustomEvent('calc-back')); return; }
       if (key === 'delete') input.value = input.value.slice(0, -1);
       else if (key === 'clear') input.value = '';
       else input.value += key;
@@ -4217,7 +4324,7 @@ function startBattle(animateFloor){
   $('screen-battle').style.backgroundImage = bg ? `url("${av(bg)}")` : 'none';
   $('battle-floor-title').innerHTML = isStageMode
     ? stageBattleTitleHtml(explore.areaId, explore.stageIndex, explore.isBoss, explore.bossPhase, explore.stageKillCount)
-    : `${zoneName(explore.zone)} ${floorLabelHTML(explore.zone, explore.floor)}／10（${OP_LABELS[opTierForZoneFloor(explore.zone, explore.floor)]}）`;
+    : `${zoneName(explore.zone)} ${floorLabelHTML(explore.zone, explore.floor)}／10（${OP_LABELS[opTierForZoneFloor(explore.zone, explore.floor)]}）${progressStarsHtml(explore.floor, 10)}`;
   if (animateFloor){
     const numEl = $('floor-num');
     if (numEl){ numEl.classList.remove('floor-num-pop'); void numEl.offsetWidth; numEl.classList.add('floor-num-pop'); }
@@ -5618,6 +5725,9 @@ function getDropTooltipHtml(d) {
   if (d?.kind === 'equip-ticket') {
     return '<strong>装備ガチャ10連チケット</strong><p>装備ガチャを10回まとめて引けます。</p>';
   }
+  if (d?.kind === 'raid-ticket') {
+    return '<strong>レイドチケット</strong><p>レイドボスに1回挑戦できます。</p>';
+  }
   if (d?.kind === 'skin-ticket') {
     return '<strong>背景スキンガチャチケット</strong><p>キャラクターや背景が手に入るガチャを1回引けます。</p>';
   }
@@ -6196,6 +6306,23 @@ function showLoadSaveScreen(onSelectCb){
 /* ==========================================================
    拠点・ステータス
    ========================================================== */
+/* 拠点の ステータスに、もっている チケット・メダルを ならべる（アイコンは ホバーで詳細） */
+function renderHomeTickets(){
+  const el = $('home-tickets');
+  if (!el || !G) return;
+  const key = G.isTestMode ? 'T' : [G.equipGachaTenPullTickets, G.skinGachaTickets, G.raidTickets, G.questMedals].join(',');
+  if (el.dataset.key === key && el.childElementCount) return; // 数が変わらないときは 作りなおさない（ホバー中のちらつき防止）
+  el.dataset.key = key;
+  const t = G.isTestMode ? '∞' : null;
+  const cell = (icon, n) => `<span class="home-ticket-cell">${icon}<b>×${t ?? n}</b></span>`;
+  el.innerHTML =
+    cell(stageRewardIcon('ticket', 'equip-ten-ticket', 1, 26), G.equipGachaTenPullTickets || 0) +
+    cell(stageRewardIcon('ticket', 'skin-ticket', 1, 26), G.skinGachaTickets || 0) +
+    cell(stageRewardIcon('ticket', 'raid-ticket', 1, 26), G.raidTickets || 0) +
+    `<span class="home-ticket-cell">${stageRewardIcon('medal', 'quest-medal', 1, 26)}<b>×${G.questMedals || 0}</b></span>`;
+  bindStageRewardTooltips(el);
+}
+
 function showHome(){
   showScreen('screen-home');
   const hr = $('home-rescued');
@@ -6209,6 +6336,7 @@ function showHome(){
   updateHud();
   save();
   checkDemonCastleReward();
+  checkRaidLevelTicket();
 }
 
 function checkDemonCastleReward() {
@@ -6363,6 +6491,7 @@ function rewardIconInfo(kind, id){
   if (kind === 'medal') return { name: 'クエストメダル', icon: '🏅' };
   if (kind === 'background') { const bg = getAvatarBackground(id); return { name: `背景「${bg.name}」`, icon: bg.image }; }
   if (id === 'equip-ten-ticket') return { name: '装備ガチャ10連チケット', icon: '🎫' };
+  if (id === 'raid-ticket') return { name: 'レイドチケット', icon: '🎟️' };
   return { name: '背景スキンガチャチケット', icon: SKIN_GACHA_TICKET_ICON };
 }
 
@@ -6378,6 +6507,7 @@ function rewardTooltipHtml(kind, id, rarity = 1, count = 1){
     return `<b>背景「${bg.name}」</b><p>プレイヤーの 背景スキン。${bg.rewardSource === 'quest' ? 'サブクエストでしか 手に入らないよ！' : ''}</p>`;
   }
   if (id === 'equip-ten-ticket') return '<b>装備ガチャ10連チケット</b><p>装備ガチャを 10回まとめて 引けるチケット。</p>';
+  if (id === 'raid-ticket') return '<b>🎟️ レイドチケット</b><p>レイドボスに 1回 挑戦できるチケット。<br>ボスの レベルが あがると 1まい もらえるよ。</p>';
   return '<b>背景スキンガチャチケット</b><p>背景スキンガチャを 1回 引けるチケット。</p>';
 }
 
@@ -8252,6 +8382,12 @@ function openPrintWindow(htmlContent, bgUrl, isLandscape) {
       .p-num { width: auto; min-width: 34px; color: #888; font-size: 16px; white-space: nowrap; }
       .p-expr { white-space: nowrap; }
       .p-blank { flex: 1; border-bottom: 1px solid #222; min-width: 70px; height: 1.1em; }
+      .frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 6px; line-height: 1.15; }
+      .frac-n { padding: 0 6px 1px; border-bottom: 2px solid #222; }
+      .frac-d { padding: 1px 6px 0; }
+      .p-frac-blank { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; gap: 3px; margin-left: 6px; }
+      .p-frac-blank i { display: block; width: 56px; height: 1.3em; border: 1px solid #222; border-radius: 3px; }
+      .p-frac-blank i.p-frac-bar { height: 2px; border: 0; background: #222; border-radius: 0; }
       .p-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 60px; }
       .p-meta { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 40px; font-size: 16px; margin-bottom: 18px; }
       .p-meta-name { border-bottom: 1px solid #222; padding: 0 160px 4px 4px; }
@@ -8288,7 +8424,7 @@ function showPrintChoiceModal(variants) {
 
     // プレビュー（全問表示）
     const previewHtml = v.problems.map((p, pi) =>
-      `<div style="font-size:14px; padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.2);">${pi+1}. ${p.text} = ？</div>`
+      `<div style="font-size:14px; padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.2);">${pi+1}. ${fractionTextHtml(p.text)} = ？</div>`
     ).join('');
 
     card.innerHTML = `
@@ -8323,10 +8459,10 @@ function printTrainingSheet(s){
       opLabel: OP_LABELS[tier],
       onSelect: () => {
         const p1 = problems.slice(0, 5).map((p, i) =>
-          `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+          `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
         ).join('');
         const p2 = problems.slice(5, 10).map((p, i) =>
-          `<div class="p-row"><span class="p-num">${i + 6}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+          `<div class="p-row"><span class="p-num">${i + 6}.</span><span class="p-expr">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
         ).join('');
         const code = problems.map(p => String(p.answer).slice(-1)).join('');
         const printId = addPrintCode(s.id, code, { type: 'skill', problems, name: s.name });
@@ -8426,10 +8562,10 @@ function printBlueprintSheet(bp, uid){
       opLabel: OP_LABELS[bp.tier],
       onSelect: () => {
         const p1 = problems.slice(0, 10).map((p, i) =>
-          `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+          `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
         ).join('');
         const p2 = problems.slice(10, 20).map((p, i) =>
-          `<div class="p-row"><span class="p-num">${i + 11}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+          `<div class="p-row"><span class="p-num">${i + 11}.</span><span class="p-expr">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
         ).join('');
         const code = problems.map(p => String(p.answer).slice(-1)).join('');
         const printId = addPrintCode(bp.id, code, { type: 'blueprint', uid, problems, name: bp.name });
@@ -8542,10 +8678,10 @@ function printDemonCastleSheet(){
       opLabel: '魔王の試練',
       onSelect: () => {
         const p1 = problems.slice(0, 10).map((p, i) =>
-          `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr" style="font-size: 20px;">${p.text} = </span><span class="p-blank"></span></div>`
+          `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr" style="font-size: 20px;">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
         ).join('');
         const p2 = problems.slice(10, 20).map((p, i) =>
-          `<div class="p-row"><span class="p-num">${i + 11}.</span><span class="p-expr" style="font-size: 20px;">${p.text} = </span><span class="p-blank"></span></div>`
+          `<div class="p-row"><span class="p-num">${i + 11}.</span><span class="p-expr" style="font-size: 20px;">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
         ).join('');
         
         const code = problems.map(p => String(Math.abs(parseInt(p.answer, 10) || 1)).slice(-1)).join('');
@@ -9605,7 +9741,7 @@ on('btn-raid-history', async () => {
     $('raid-rules').classList.toggle('hidden', !expanded);
   });
   on('btn-raid-sync-retry', () => syncRaidState());
-  on('btn-raid-challenge', startRaidBattle);
+  on('btn-raid-challenge', confirmRaidStart);
   on('hotspot-adventure', openAdventure);
 
   // 教科タブ切り替え
@@ -10242,16 +10378,29 @@ function getActivePickup(){
 function grantPickupBonusIfAny(areaId, stageIndex){
   const pk = G && G.pickup;
   if (!pk || pk.status !== 'open' || pk.areaId !== areaId || pk.stageIndex !== stageIndex) return null;
-  const n = Math.max(0, Math.round(rewardSettings.pickupBonusTickets));
+  const b = pickupBonusAmounts();
   pk.status = 'claimed';
-  if (n <= 0) return null;
-  G.equipGachaTenPullTickets = (G.equipGachaTenPullTickets || 0) + n;
-  return { title:'ピックアップ チャレンジボーナス', gold:0, luxury:true, drops:[{ kind:'equip-ticket', name:`装備ガチャ10連チケット ×${n}`, icon:'🎫', count:n }] };
+  const drops = [];
+  if (b.equip > 0) { G.equipGachaTenPullTickets = (G.equipGachaTenPullTickets || 0) + b.equip; drops.push({ kind:'equip-ticket', name:`装備ガチャ10連チケット ×${b.equip}`, icon:'🎫', count:b.equip }); }
+  if (b.raid > 0) { G.raidTickets = (G.raidTickets || 0) + b.raid; drops.push({ kind:'raid-ticket', name:`レイドチケット ×${b.raid}`, icon:'🎟️', count:b.raid }); }
+  if (b.gold > 0) G.player.gold += b.gold;
+  if (!drops.length && b.gold <= 0) return null;
+  return { title:'ピックアップ チャレンジボーナス', gold:b.gold, luxury:true, drops };
 }
 
-function pickupTicketRowHtml(n, lost){
-  const icons = Array.from({ length: Math.min(n, 5) }, () => stageRewardIcon('ticket', 'equip-ten-ticket', 1, 68)).join('');
-  return `<div class="pickup-tickets${lost ? ' is-lost' : ''}"><div class="pickup-ticket-icons">${icons}${lost ? '<span class="pickup-lost-mark" aria-hidden="true">✖</span>' : ''}</div><b>装備ガチャ10連チケット ×${n}</b></div>`;
+function pickupBonusAmounts(){
+  const num = k => Math.max(0, Math.round(Number(rewardSettings[k]) || 0));
+  return { equip:num('pickupBonusTickets'), raid:num('pickupBonusRaidTickets'), gold:num('pickupBonusGold') };
+}
+
+function pickupTicketRowHtml(lost){
+  const b = pickupBonusAmounts();
+  const cell = (iconHtml, label) => `<div class="pickup-bonus-cell"><div class="pickup-ticket-icons">${iconHtml}${lost ? '<span class="pickup-lost-mark" aria-hidden="true">✖</span>' : ''}</div><b>${label}</b></div>`;
+  const cells = [];
+  if (b.equip > 0) cells.push(cell(stageRewardIcon('ticket', 'equip-ten-ticket', 1, 60), `装備ガチャ10連チケット ×${b.equip}`));
+  if (b.raid > 0) cells.push(cell(stageRewardIcon('ticket', 'raid-ticket', 1, 60), `レイドチケット ×${b.raid}`));
+  if (b.gold > 0) cells.push(cell('<span class="pickup-gold-icon" aria-hidden="true">💰</span>', `${b.gold.toLocaleString()} ゴールド`));
+  return `<div class="pickup-tickets pickup-bonus-row${lost ? ' is-lost' : ''}">${cells.join('')}</div>`;
 }
 
 /* 「冒険に出る」：ピックアップが あれば まず それを 見せる */
@@ -10266,7 +10415,6 @@ function showPickupOverlay(pk){
   const area = AREA_STAGES[pk.areaId];
   const stage = area.stages[pk.stageIndex];
   const numPrefix = area.displayNum || pk.areaId.replace('area', '');
-  const n = Math.max(0, Math.round(rewardSettings.pickupBonusTickets));
   if (SM.initialized) SM.play('se_clear');
   const overlay = document.createElement('div');
   overlay.className = 'pickup-overlay';
@@ -10278,7 +10426,7 @@ function showPickupOverlay(pk){
       <p class="flavor">${pk.reason}</p>
       <div class="pickup-bonus">
         <div class="pickup-bonus-title">🎁 チャレンジボーナス 🎁</div>
-        ${pickupTicketRowHtml(n, false)}
+        ${pickupTicketRowHtml(false)}
         <div class="pickup-bonus-note">いま クリアすると もらえる！</div>
       </div>
       <div class="pickup-actions">
@@ -10294,14 +10442,13 @@ function showPickupOverlay(pk){
 
 function showPickupDeclineConfirm(pk){
   document.querySelector('.pickup-overlay')?.remove();
-  const n = Math.max(0, Math.round(rewardSettings.pickupBonusTickets));
   const overlay = document.createElement('div');
   overlay.className = 'pickup-overlay';
   overlay.innerHTML = `
     <div class="panel pickup-panel pickup-confirm" role="alertdialog" aria-modal="true" aria-labelledby="pickup-confirm-title">
       <h2 id="pickup-confirm-title">⚠ ほんとうに いいかな？</h2>
       <p class="pickup-confirm-text">いま やらないと、<br><b>この ボーナスは もらえなくなるよ！</b></p>
-      ${pickupTicketRowHtml(n, true)}
+      ${pickupTicketRowHtml(true)}
       <div class="pickup-actions">
         <button class="btn btn-primary pickup-yes" id="btn-pickup-confirm-yes">やっぱり やる！</button>
         <button class="btn pickup-no" id="btn-pickup-confirm-no">もらわなくて いい</button>
@@ -10954,6 +11101,8 @@ const ADMIN_REWARD_FIELDS = [
     { key:'bossFirstTickets', label:'初回クリア：背景スキンガチャチケット枚数', min:0, max:99, step:1 },
     { key:'bossThirdTickets', label:'3回クリア：装備ガチャ10連チケット枚数', min:0, max:99, step:1 },
     { key:'pickupBonusTickets', label:'ピックアップ チャレンジボーナス：装備ガチャ10連チケット枚数', min:0, max:99, step:1 },
+    { key:'pickupBonusRaidTickets', label:'ピックアップ チャレンジボーナス：レイドチケット枚数', min:0, max:99, step:1 },
+    { key:'pickupBonusGold', label:'ピックアップ チャレンジボーナス：ゴールド', min:0, max:99999, step:100 },
     { key:'bossLevelUp', label:'たおすたびに あがる 強化レベル', min:0, max:20, step:1 },
     { key:'bossGrowthPct', label:'ステージボス：強化Lv.1ごとの上昇（％）', min:0, max:100, step:1 },
     { key:'zoneClearLegend', label:'エリア制覇で レジェンド装備を わたす（1=する／0=しない）', min:0, max:1, step:1 },
@@ -12202,8 +12351,8 @@ function fetchUnifiedPrint() {
     const isKanji = typeof p.answer === 'string' && isNaN(parseInt(p.answer, 10)); // crude check for kanji string vs number
     listEl.innerHTML += `<div class="unified-prob-row" style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:32px;">
       <span style="width:40px; text-align:right;">${i+1}.</span>
-      <span style="flex:1; text-align:right;">${p.text} = </span>
-      <input type="text" id="unified-ans-${i}" class="challenge-input" style="width:160px; font-size:36px; height: 50px; padding:4px;" ${!isKanji ? 'inputmode="numeric"' : ''}>
+      <span style="flex:1; text-align:right;">${fractionTextHtml(p.text)} = </span>
+      <input type="text" id="unified-ans-${i}" class="challenge-input" style="width:160px; font-size:36px; height: 50px; padding:4px;" ${!isKanji ? (/^-?\d+$/.test(String(p.answer)) ? 'inputmode="numeric"' : 'inputmode="text"') : ''}>
       <span id="unified-mark-${i}" style="width:30px; font-weight:bold;"></span>
     </div>`;
   });
@@ -12227,9 +12376,16 @@ function gradeUnifiedPrint() {
     
     // allow half-width conversion for math, exact for kanji
     const isKanji = typeof p.answer === 'string' && isNaN(parseInt(p.answer, 10));
-    const processedInp = isKanji ? inp : toHalfWidth(inp).replace(/[^0-9\-]/g, '');
+    const processedInp = isKanji ? inp : toHalfWidth(inp).replace(/[：]/g, ':').replace(/[^0-9\/\-.:]/g, '');
+    let ok = processedInp === expected;
+    if (!ok && !isKanji && processedInp) {
+      const fr = /^(\d+)\/(\d+)$/, nu = /^\d+(\.\d+)?$/;
+      const ma = processedInp.match(fr), me = expected.match(fr);
+      if (ma && me) ok = Number(ma[2]) !== 0 && Number(ma[1]) * Number(me[2]) === Number(ma[2]) * Number(me[1]); // 約分した 分数も OK
+      else if (nu.test(processedInp) && nu.test(expected)) ok = Number(processedInp) === Number(expected);   // 3 と 3.0
+    }
     
-    if (processedInp === expected) {
+    if (ok) {
       correct++;
       $(`unified-mark-${i}`).innerHTML = '<span style="color:#2ecc71;">〇</span>';
     } else {
@@ -12405,14 +12561,14 @@ function hasPrintCode(id) {
 
 
 function cleanupOldPrints() {
-  const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
+  const PRINT_LIFETIME = 30 * 24 * 60 * 60 * 1000; // プリントの暗号を入力できる期限（1か月）
   const now = Date.now();
   
   if (G && G.activePrints) {
     let changed = false;
     for (const pId in G.activePrints) {
-      const createdAt = G.activePrints[pId].createdAt || now; // default to now if missing (keep old ones for 2 days from today)
-      if (now - createdAt > TWO_DAYS) {
+      const createdAt = G.activePrints[pId].createdAt || now; // default to now if missing (keep old ones for 1 month from today)
+      if (now - createdAt > PRINT_LIFETIME) {
         delete G.activePrints[pId];
         changed = true;
       }
@@ -12427,7 +12583,7 @@ function cleanupOldPrints() {
       let guestChanged = false;
       for (const pId in guestPrints) {
         const createdAt = guestPrints[pId].createdAt || now;
-        if (now - createdAt > TWO_DAYS) {
+        if (now - createdAt > PRINT_LIFETIME) {
           delete guestPrints[pId];
           guestChanged = true;
         }
@@ -12720,10 +12876,10 @@ function printAreaStage(areaId, idx) {
         opLabel: stage.name,
         onSelect: () => {
           const p1 = problems.slice(0, 5).map((p, i) =>
-            `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+            `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
           ).join('');
           const p2 = problems.slice(5, 10).map((p, i) =>
-            `<div class="p-row"><span class="p-num">${i + 6}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+            `<div class="p-row"><span class="p-num">${i + 6}.</span><span class="p-expr">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
           ).join('');
           const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
           const printId = addPrintCode(areaId + '_' + idx, pCode, { type: 'stage', problems, name: printName, areaId, stageIndex: idx });
@@ -12847,10 +13003,10 @@ function printAreaBoss(areaId) {
         opLabel: 'ボス戦',
         onSelect: () => {
           const p1 = problems.slice(0, 5).map((p, i) =>
-            `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+            `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
           ).join('');
           const p2 = problems.slice(5, 10).map((p, i) =>
-            `<div class="p-row"><span class="p-num">${i + 6}.</span><span class="p-expr">${p.text} = </span><span class="p-blank"></span></div>`
+            `<div class="p-row"><span class="p-num">${i + 6}.</span><span class="p-expr">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
           ).join('');
           const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
           const printId = addPrintCode(areaId + '_boss', pCode, { type: 'boss', problems, name: printName, areaId });
@@ -12876,6 +13032,7 @@ function printAreaBoss(areaId) {
 /* ==========================================================
    レイドボス機能（クラウド共有＋未送信記録のローカル保存）
    ========================================================== */
+const RAID_SETTLEMENT_MS = 60 * 1000; // 討伐後の集計時間（1分。firebase_init.js と同じ値）
 const RAID_BOSS_ID = 'boss1';
 const RAID_STORAGE_KEY = 'raid_boss_v1_boss1';
 function getRaidMaxHp() { return Math.max(1, Number(getRaidData().maxHp) || 1000); }
@@ -13042,7 +13199,7 @@ async function syncRaidState() {
       const own = data.rankings[slotKey];
       if (own) { progress.participated = true; progress.totalDamage = own.totalDamage || 0; }
       saveRaidData(data);
-      if (data.defeatedAt && !data.finalizedAt) scheduleRaidSettlement(data.settlesAt || data.defeatedAt + 10 * 60 * 1000);
+      if (data.defeatedAt && !data.finalizedAt) scheduleRaidSettlement(data.settlesAt || data.defeatedAt + RAID_SETTLEMENT_MS);
       else clearTimeout(raidSettlementTimer);
       save(true);
       raidSyncStatus = 'ready';
@@ -13104,7 +13261,7 @@ function showRaidBattleResult(damage, defeated) {
       <p class="raid-gold-payout">💰 ダメージ報酬 +${Math.max(0, Math.round(damage)).toLocaleString()}G</p>
       ${G.raidChallenge2Notice || G.raidChallenge3Notice ? `<p class="raid-challenge-milestone">${raidChallengeNoticeHtml(G)}</p>` : ''}
       <div class="raid-result-rank"><span>${defeated ? '暫定ランキング' : '現在のランキング'}</span><strong>${rankLabel}</strong></div>
-      <p class="raid-result-encouragement">${defeated ? '最終順位は10分後に確定！討伐前から進行中だった戦闘も集計するよ。' : '開催期間中は何度でも挑戦して、ランキング上位を目指そう！'}</p>
+      <p class="raid-result-encouragement">${defeated ? '最終順位は1分後に確定！討伐前から進行中だった戦闘も集計するよ。' : '開催期間中は何度でも挑戦して、ランキング上位を目指そう！'}</p>
       <button type="button" id="btn-raid-result-close" class="btn btn-primary">レイドに もどる</button>
     </section>`;
   const close = () => {
@@ -13270,9 +13427,9 @@ function renderRaidFinalResult() {
   if (!data.defeatedAt) { el.innerHTML = ''; el.classList.add('hidden'); return; }
   el.classList.remove('hidden');
   if (!data.finalizedAt) {
-    const secondsLeft = Math.max(0, Math.ceil(((data.settlesAt || data.defeatedAt + 10 * 60 * 1000) - Date.now()) / 1000));
+    const secondsLeft = Math.max(0, Math.ceil(((data.settlesAt || data.defeatedAt + RAID_SETTLEMENT_MS) - Date.now()) / 1000));
     const countdown = `${String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:${String(secondsLeft % 60).padStart(2, '0')}`;
-    el.innerHTML = `<b>🎉 レイド討伐！ 討伐後10分間、集計中</b><span>同時に挑戦していた戦闘を確認中。最終ランキング発表まで <strong>${countdown}</strong></span>`;
+    el.innerHTML = `<b>🎉 レイド討伐！ 討伐後1分間、集計中</b><span>同時に挑戦していた戦闘を確認中。最終ランキング発表まで <strong>${countdown}</strong></span>`;
     raidCountdownTimer = setTimeout(renderRaidFinalResult, 1000);
     return;
   }
@@ -13319,6 +13476,7 @@ function renderRaidBossMenu() {
   if (bossName) bossName.textContent = `暗黒竜 ダークバハムート Lv.${raidData.bossLevel || 50}`;
   if (participationStatus) participationStatus.textContent = (G?.unlockedAvatarBackgrounds || []).includes('raid_magma') ? '獲得済み' : '参加でもらえる';
   renderRaidChallengeRewards();
+  renderRaidTicketCount();
 
   // 現在のプレイヤーが既にランキングにいれば、最新のアバター・レベル・装備情報を自動同期
   if (currentSlotKey && G) {
@@ -13542,10 +13700,13 @@ function renderRaidBossMenu() {
     btn.style.display = 'block';
     if (!defeated) {
       const statusReady = raidSyncStatus === 'ready' || G?.isTestMode;
-      btn.disabled = !statusReady;
-      btn.textContent = statusReady ? '⚔ レイドボスに挑戦する' : raidSyncStatus === 'offline' || raidSyncStatus === 'denied' ? '共有状況を確認できません' : '討伐状況を確認中…';
-      btn.style.background = statusReady ? 'linear-gradient(to bottom, #d35400, #c0392b)' : '#555';
-      btn.onclick = statusReady ? startRaidBattle : null;
+      const hasTicket = G?.isTestMode || (G?.raidTickets || 0) > 0;
+      const canStart = statusReady && hasTicket;
+      btn.disabled = !canStart;
+      btn.textContent = !statusReady ? (raidSyncStatus === 'offline' || raidSyncStatus === 'denied' ? '共有状況を確認できません' : '討伐状況を確認中…')
+        : hasTicket ? '⚔ レイドボスに挑戦する（🎟️ ×1 つかう）' : '🎟️ レイドチケットが ありません';
+      btn.style.background = canStart ? 'linear-gradient(to bottom, #d35400, #c0392b)' : '#555';
+      btn.onclick = canStart ? confirmRaidStart : null;
     } else {
       // 討伐済み --- 報酬確認
       const rankings = getRaidRankings();
@@ -13576,6 +13737,95 @@ async function claimRaidReward() {
   renderRaidBossMenu();
 }
 
+/* レイドチケットの数を、レイド画面の ボタンの上に 見せる */
+function renderRaidTicketCount(){
+  const el = $('raid-ticket-count');
+  if (!el || !G) return;
+  el.innerHTML = `${stageRewardIcon('ticket', 'raid-ticket', 1, 28)}<span>レイドチケット <b>×${G.isTestMode ? '∞' : (G.raidTickets || 0)}</b></span>`;
+  bindStageRewardTooltips(el);
+}
+
+/* ボスの レベルが あがったあと、はじめて 拠点に入ったときに レイドチケットを 1まい わたす（真ん中に おしらせ） */
+let raidTicketChecking = false;
+let raidTicketCheckedAt = 0;
+async function checkRaidLevelTicket(){
+  if (!G || G.isTestMode || raidTicketChecking) return;
+  if (Date.now() - raidTicketCheckedAt < 30000) return;
+  if (!window.RaidBossAPI?.getGlobalBoss) return;
+  raidTicketChecking = true;
+  const game = G;
+  try {
+    const boss = await window.RaidBossAPI.getGlobalBoss();
+    raidTicketCheckedAt = Date.now();
+    if (G !== game) return;
+    const bossId = boss?.bossId || (boss?.bossLevel ? 'boss_' + boss.bossLevel : null);
+    if (!bossId || G.raidTicketBossId === bossId) return;
+    G.raidTicketBossId = bossId;
+    G.raidTickets = (G.raidTickets || 0) + 1;
+    save(true);
+    showRaidTicketNotice(Number(boss.bossLevel) || null);
+  } catch (e) {
+    console.warn('[Raid] ticket check failed', e);
+  } finally {
+    raidTicketChecking = false;
+  }
+}
+
+function showRaidTicketNotice(level){
+  document.querySelector('.raid-ticket-notice')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'confirm-overlay raid-ticket-notice';
+  overlay.innerHTML = `
+    <div class="panel confirm-card raid-ticket-card" role="alertdialog" aria-modal="true">
+      <h3>🎟️ レイドチケットを ゲット！</h3>
+      <div class="raid-ticket-card-icon">${stageRewardIcon('ticket', 'raid-ticket', 1, 72)}</div>
+      <div class="confirm-message">${level ? `レイドボスが <b>Lv.${level}</b> に なったよ！<br>` : ''}チケットを <b>1まい</b> もらった！<br>レイドボスに ちょうせん しよう！</div>
+      <div class="confirm-actions"><button class="btn btn-primary" id="btn-raid-ticket-ok">やったー！</button></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  bindStageRewardTooltips(overlay);
+  if (SM.initialized) SM.play('se_clear');
+  $('btn-raid-ticket-ok').onclick = () => { hideTooltip(); overlay.remove(); updateHud(); };
+}
+
+/* 挑戦の前に「チケットを 1まい つかうよ」を 見せる（画像と へる数つき） */
+function confirmRaidStart(){
+  if (!G) return;
+  document.querySelector('.raid-ticket-use')?.remove();
+  const test = !!G.isTestMode;
+  const have = G.raidTickets || 0;
+  if (!test && have <= 0) { renderRaidBossMenu(); return; }
+  const overlay = document.createElement('div');
+  overlay.className = 'confirm-overlay raid-ticket-use';
+  overlay.innerHTML = `
+    <div class="panel confirm-card raid-ticket-card" role="alertdialog" aria-modal="true">
+      <h3>👿 レイドボスに ちょうせん！</h3>
+      <div class="raid-ticket-card-icon">${stageRewardIcon('ticket', 'raid-ticket', 1, 72)}</div>
+      <div class="confirm-message">
+        レイドチケットを <b>1まい</b> つかうよ！<br>
+        <span class="raid-ticket-change">🎟️ ×${test ? '∞' : have} <span class="arrow">→</span> <b>×${test ? '∞' : have - 1}</b></span>
+        ${test ? '<br><small>（テストモードは へらないよ）</small>' : ''}
+      </div>
+      <div class="confirm-actions">
+        <button class="btn" id="btn-raid-use-no">やめる</button>
+        <button class="btn btn-primary" id="btn-raid-use-yes">ちょうせんする！</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  bindStageRewardTooltips(overlay);
+  $('btn-raid-use-no').onclick = () => { hideTooltip(); overlay.remove(); };
+  $('btn-raid-use-yes').onclick = () => { hideTooltip(); overlay.remove(); startRaidBattle(); };
+}
+
+/* 戦闘中の「わからない」：負けずに レイドを おえる（ここまでのダメージは きろくされる） */
+function confirmRaidRetreat(){
+  if (!battle || !battle.enemy?.isRaid || battle.over) return;
+  showConfirmModal('🏳 わからない？', 'ここで レイドを おわるよ。<br>ここまでの ダメージは ちゃんと きろくされるよ！', () => {
+    if (!battle || battle.over) return;
+    loseBattle();
+  });
+}
+
 async function startRaidBattle() {
   if (!G || !currentSlotKey) return;
   if (raidSyncStatus !== 'ready' && !G.isTestMode) return;
@@ -13586,6 +13836,11 @@ async function startRaidBattle() {
   raidStarting = false;
   if (G !== game) return;
   if (getRaidData().defeatedAt || getRaidTotalDamage() >= getRaidMaxHp()) { showRaidBossMenu(); return; }
+  if (!G.isTestMode) {
+    if (!(G.raidTickets > 0)) { renderRaidBossMenu(); return; }
+    G.raidTickets--;
+    save(true);
+  }
   grantRaidParticipationBackground();
   syncRaidState();
   hideBattleMenus();
@@ -13843,6 +14098,6 @@ if (import.meta.env && import.meta.env.DEV) {
     get G(){ return G; }, get explore(){ return explore; }, set explore(v){ explore = v; },
     get rewardSettings(){ return rewardSettings; },
     recordStageClear, grantBossClearState, generateStageEnemy, rollBattleDrops, grantPrintRewards,
-    stageTotalClearCount, stageRepeatDropMult, AREA_STAGES, stageAreaCleared, showBossClearOverlay, grantQuestExtras, QUEST_MEDAL_MILESTONES, showQuestRewardToast, generateStoryQuest, questRewardFor, questAllowedTiers, QUEST_STEP_ITEMS, getActivePickup, choosePickupStage, openAdventure, showStageClearOverlay, recordStageClear2:recordStageClear,
+    stageTotalClearCount, stageRepeatDropMult, AREA_STAGES, stageAreaCleared, showBossClearOverlay, grantQuestExtras, QUEST_MEDAL_MILESTONES, showQuestRewardToast, generateStoryQuest, questRewardFor, questAllowedTiers, QUEST_STEP_ITEMS, getActivePickup, choosePickupStage, openAdventure, showStageClearOverlay, recordStageClear2:recordStageClear, startChallenge, enterAreaStage, enterAreaBoss,
   };
 }
