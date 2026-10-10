@@ -570,7 +570,12 @@ window.AdminGiftAPI = {
         targetSlotKey: target.slotKey,
         playerName: target.playerName || '',
         gold: Math.max(0, Math.floor(Number(gift.gold) || 0)),
-        items: (gift.items || []).map(item => ({ id: String(item.id), count: Math.max(1, Math.floor(Number(item.count) || 1)) })),
+        items: (gift.items || []).map(item => {
+          const out = { id: String(item.id), count: Math.max(1, Math.floor(Number(item.count) || 1)) };
+          if (item.kind) out.kind = String(item.kind);
+          if (item.rarity) out.rarity = Math.max(1, Math.floor(Number(item.rarity) || 1));
+          return out;
+        }),
         message: String(gift.message || '').slice(0, 200),
         createdAt,
         claimed: false,

@@ -7711,10 +7711,11 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
 #print-sheet .p-frac-blank i { display: block; width: 56px; height: 1.3em; border: 1px solid #222; border-radius: 3px; }
 #print-sheet .p-frac-blank i.p-frac-bar { height: 2px; border: 0; background: #222; border-radius: 0; }
 
-/* 拠点：もっているチケット・メダル */
-.home-tickets { display: flex; flex-wrap: wrap; gap: 4px 8px; margin: 0 0 8px; }
-.home-ticket-cell { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px 2px 4px; background: rgba(20,16,34,0.78); border: 2px solid var(--panel-border); border-radius: 999px; color: #fff; font-size: 13px; }
-.home-ticket-cell .stage-reward-icon { background: none; border: 0; padding: 0; cursor: help; }
+/* 拠点：もっているチケット・メダル（ステータス窓の中、ゴールドの下に小さく横並び） */
+.home-tickets { display: flex; flex-wrap: nowrap; justify-content: space-between; gap: 2px; margin: 0 0 6px; }
+.home-ticket-cell { display: inline-flex; align-items: center; gap: 1px; padding: 1px 4px 1px 1px; background: rgba(0,0,0,0.35); border-radius: 6px; color: #fff; font-size: 12px; white-space: nowrap; }
+.home-ticket-cell .stage-reward-icon { width: 24px; height: 24px; flex: 0 0 24px; padding: 0; background: none; border: 0; font-size: 18px; cursor: help; }
+.home-ticket-cell .stage-reward-icon img { width: 100%; height: 100%; object-fit: contain; }
 .home-ticket-cell b { color: #ffd34e; }
 
 /* バトル上部：いま何たいめか わかる星 */
@@ -7726,3 +7727,45 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
 @keyframes pstarBlink { from { transform: scale(1); opacity: 0.55; } to { transform: scale(1.25); opacity: 1; } }
 .progress-stars { flex-wrap: wrap; max-width: 100%; }
 @media (max-width: 640px) { .progress-stars .pstar { font-size: 17px; } .progress-stars .pstar.now { font-size: 20px; } }
+
+/* 拠点のステータス窓を コンパクトに（デスクトップ幅のみ。スマホ幅は従来どおり） */
+@media (min-width: 821px) {
+  #town-map .town-status-overlay { width: 176px; padding: 5px 8px; }
+  #town-map .town-status-overlay .gold-badge { margin: 2px 0 4px; padding: 2px 8px; }
+  #town-map .town-status-overlay .gold-badge-icon, #town-map .town-status-overlay .gold-badge-num { font-size: 13px; }
+  #town-map .town-status-overlay .stat-bar-wrap { margin: 2px 0; }
+  #town-map .town-status-overlay .stat-label { width: 26px; display: flex; flex-direction: row; align-items: center; gap: 1px; font-size: 9px; }
+  #town-map .town-status-overlay .stat-bar, #town-map .town-status-overlay .hp-bar-container, #town-map .town-status-overlay .mp-bar-container, #town-map .town-status-overlay .exp-bar-container { height: 10px; }
+  #town-map .town-status-overlay .stat-bar.atb, #town-map .town-status-overlay .stat-bar-wrap:has(.atb) { display: none; } /* 拠点では ATBゲージは いらない */
+  #town-map #home-avatar-window { width: 104px !important; height: 128px !important; }
+  .home-tickets { margin-bottom: 4px; }
+  .home-ticket-cell { font-size: 11px; padding-right: 2px; }
+  .home-ticket-cell .stage-reward-icon { width: 20px; height: 20px; flex-basis: 20px; }
+}
+
+/* チケットは 装備アイコンの横に、横ならび（下そろえ） */
+.town-status-cluster > .home-tickets { align-self: flex-end; flex-wrap: nowrap; justify-content: flex-start; gap: 4px; margin: 0 0 0 2px; }
+.town-status-cluster > .home-tickets .home-ticket-cell { background: rgba(20,16,34,0.88); border: 2px solid var(--panel-border); border-radius: 8px; padding: 1px 5px 1px 2px; }
+@media (max-width: 820px) { #town-map .town-status-cluster > .home-tickets { flex-wrap: wrap; justify-content: flex-end; margin: 6px 0 0; } }
+
+/* 管理者：プレゼント機能 */
+.admin-gift-section { display: flex; flex-direction: column; gap: 12px; }
+.admin-gift-block { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 2px solid var(--panel-border); border-radius: 8px; background: rgba(0,0,0,0.25); }
+.admin-gift-block-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.admin-gift-target-list { max-height: 180px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 4px; }
+.admin-gift-target { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-radius: 6px; background: rgba(255,255,255,0.06); cursor: pointer; }
+.admin-gift-target small { margin-left: auto; opacity: .7; }
+.admin-gift-gold-row, .admin-gift-item-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.admin-gift-item-rows { display: flex; flex-direction: column; gap: 6px; }
+.admin-gift-item-select { flex: 1 1 220px; min-width: 0; }
+.admin-gift-item-count { width: 72px; }
+.admin-gift-status[data-kind="error"] { color: #ff7b7b; }
+.admin-gift-status[data-kind="success"] { color: #7bff9b; }
+.admin-gift-history-item { padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.15); }
+.admin-gift-history-item .details { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.admin-gift-history-item .details span { display: inline-flex; align-items: center; gap: 4px; }
+.admin-gift-notice-list li { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+.admin-gift-notice-list li b { margin-left: auto; }
+.admin-gift-notice-list .stage-reward-icon, .admin-gift-history-item .stage-reward-icon { width: 32px; height: 32px; flex: 0 0 32px; padding: 1px; }
+.admin-gift-history-item .stage-reward-icon { width: 24px; height: 24px; flex-basis: 24px; }
+.admin-gift-item-icon { font-size: 28px; }

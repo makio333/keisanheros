@@ -8551,15 +8551,33 @@ function startCodeEntry(s){
 /* ==========================================================
    古代装備の せっけいず プリント＆あんごう
    ========================================================== */
+/* 古代の設計図の プリントは、いまの「チャレンジステージ」（ピックアップステージ）の もんだいで つくる。
+   あんごうは こたえの 一の位を つかうので、数字で おわる こたえの 算数ステージだけ 使える（漢字ステージ等は 従来の もんだい） */
+function blueprintChallengeSource(bp){
+  try {
+    const pk = G && typeof getActivePickup === 'function' ? getActivePickup() : null;
+    const area = pk && AREA_STAGES[pk.areaId];
+    const stage = area && area.stages[pk.stageIndex];
+    if (!stage) return null;
+    for (let i = 0; i < 5; i++) {
+      const sample = stage.generateProblem();
+      if (!sample || typeof sample.text !== 'string' || !/\d$/.test(String(sample.answer))) return null;
+    }
+    return { gen: () => stage.generateProblem(), label: `${area.name} ${stage.name}`, bg: area.bgImage };
+  } catch (e) { return null; }
+}
+
 function printBlueprintSheet(bp, uid){
   const count = 20;
+  const challenge = blueprintChallengeSource(bp);
+  const sourceLabel = challenge ? `チャレンジステージ：${challenge.label}` : `えんざん：${OP_LABELS[bp.tier]}`;
 
   const variants = ['🅰 Aセット', '🅱 Bセット', '🅲 Cセット'].map((label, vi) => {
     const problems = [];
-    for (let i = 0; i < count; i++) problems.push(generateProblem(bp.tier));
+    for (let i = 0; i < count; i++) problems.push(challenge ? challenge.gen() : generateProblem(bp.tier));
     return {
       problems,
-      opLabel: OP_LABELS[bp.tier],
+      opLabel: challenge ? challenge.label : OP_LABELS[bp.tier],
       onSelect: () => {
         const p1 = problems.slice(0, 10).map((p, i) =>
           `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
@@ -8572,7 +8590,7 @@ function printBlueprintSheet(bp, uid){
         save();
         openPrintWindow(`
           <h1>古代の設計図</h1>
-          <div class="p-sub">えんざん：${OP_LABELS[bp.tier]}／${label}／${count}もん／暗号を入力して古代装備を手に入れよう！</div>
+          <div class="p-sub">${sourceLabel}／${label}／${count}もん／暗号を入力して古代装備を手に入れよう！</div>
           <div class="p-sub" style="font-size:20px; font-weight:bold;">【プリント番号: ${printId}】</div>
           <div class="p-sheet">${p1}${p2}</div>
         `, av('画像/ステージ/沼地.jpg'));
@@ -13914,6 +13932,58 @@ function getGiftableItemDefs() {
   return ITEM_DB.filter(d => !d.internal && d.id !== 'ticket');
 }
 
+/* プレゼントの 1項目：{ kind:'item'|'ticket'|'equip'|'medal', id, count, rarity? }（kind なし＝むかしの どうぐ） */
+const GIFT_TICKETS = [
+  { id: 'equip-ten-ticket', name: '装備ガチャ10連チケット' },
+  { id: 'skin-ticket', name: '背景スキンガチャチケット' },
+  { id: 'raid-ticket', name: 'レイドチケット' },
+];
+function giftEntryKind(e) { return e && e.kind ? e.kind : 'item'; }
+function giftEntryName(e) {
+  const kind = giftEntryKind(e);
+  if (kind === 'equip') { const db = getEquipTemplate(e.id); return `${db?.name || e.id}（${RARITY_NAME[e.rarity] || '★' + e.rarity}）`; }
+  if (kind === 'ticket') return GIFT_TICKETS.find(t => t.id === e.id)?.name || e.id;
+  if (kind === 'medal') return 'クエストメダル';
+  return getItemTemplate(e.id)?.name || e.id;
+}
+function giftEntryIconHtml(e, size = 32) {
+  const kind = giftEntryKind(e);
+  try {
+    if (kind === 'equip') return stageRewardIcon('equip', e.id, Number(e.rarity) || 1, size);
+    if (kind === 'ticket') return stageRewardIcon('ticket', e.id, 1, size);
+    if (kind === 'medal') return stageRewardIcon('medal', 'quest-medal', 1, size);
+    return stageRewardIcon('item', e.id, 1, size);
+  } catch (_) { return '📦'; }
+}
+/* うけとった プレゼント1項目を セーブデータに 入れる */
+function applyGiftEntry(game, e) {
+  const n = Math.max(0, Math.floor(Number(e?.count) || 0));
+  if (!e?.id || n <= 0) return;
+  const kind = giftEntryKind(e);
+  if (kind === 'equip') {
+    const rarity = Math.min(6, Math.max(1, Math.floor(Number(e.rarity) || 1)));
+    for (let i = 0; i < n; i++) game.ownedEquips.push({ uid: game.nextUid++, id: e.id, rarity, ability: rollAbility(rarity) });
+  } else if (kind === 'ticket') {
+    if (e.id === 'equip-ten-ticket') game.equipGachaTenPullTickets = (game.equipGachaTenPullTickets || 0) + n;
+    else if (e.id === 'skin-ticket') game.skinGachaTickets = (game.skinGachaTickets || 0) + n;
+    else if (e.id === 'raid-ticket') game.raidTickets = (game.raidTickets || 0) + n;
+  } else if (kind === 'medal') {
+    game.questMedals = (game.questMedals || 0) + n;
+  } else {
+    addItem(e.id, n);
+  }
+}
+function giftEntryOptionsHtml() {
+  const equipGroup = (label, slot) => {
+    const list = [...EQUIP_DB, ...ANCIENT_EQUIP_DB, ...LIMITED_EQUIP_DB].filter(d => d.slot === slot);
+    return list.length ? `<optgroup label="${label}">${list.map(d => `<option value="equip:${d.id}">${escapeHtml(d.name)}</option>`).join('')}</optgroup>` : '';
+  };
+  return `<option value="">-- えらぶ --</option>
+    <optgroup label="🎫 チケット・メダル">${GIFT_TICKETS.map(t => `<option value="ticket:${t.id}">${escapeHtml(t.name)}</option>`).join('')}<option value="medal:quest-medal">クエストメダル</option></optgroup>
+    <optgroup label="🧪 どうぐ">${getGiftableItemDefs().map(d => `<option value="item:${d.id}">${escapeHtml(d.name)}</option>`).join('')}</optgroup>
+    ${equipGroup('⚔ そうび（ぶき）', 'weapon')}${equipGroup('🛡 そうび（よろい）', 'armor')}${equipGroup('💍 そうび（アクセサリ）', 'accessory')}`;
+}
+
 function renderAdminGiftTargets() {
   const listEl = $('admin-gift-target-list');
   if (!listEl) return;
@@ -13944,10 +14014,11 @@ async function renderAdminGiftHistory() {
       <div class="meta">${new Date(r.createdAt).toLocaleString('ja-JP')} 宛先: <b>${escapeHtml(r.playerName)}</b></div>
       <div class="details">
         ${r.gold ? `<span>💰${Number(r.gold).toLocaleString()}G</span>` : ''}
-        ${(r.items || []).map(it => { const def = getItemTemplate(it.id); return `<span>${giftItemIconHtml(def)} ${def?.name||it.id} x${it.count}</span>`; }).join('')}
+        ${(r.items || []).map(it => `<span>${giftEntryIconHtml(it, 24)} ${escapeHtml(giftEntryName(it))} x${it.count}</span>`).join('')}
       </div>
       <div class="status">${r.claimed ? '✅ 受取済' : '⏳ 未受取'}</div>
     </div>`).join('');
+    bindStageRewardTooltips(el);
   } catch(e) {
     el.innerHTML = '<div class="admin-gift-empty">エラーが発生しました</div>';
   }
@@ -13965,13 +14036,14 @@ function addAdminGiftItemRow() {
   const row = document.createElement('div');
   row.className = 'admin-gift-item-row';
   row.innerHTML = `
-    <select class="admin-gift-item-select">
-      <option value="">-- アイテムをえらぶ --</option>
-      ${getGiftableItemDefs().map(d => `<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('')}
-    </select>
+    <select class="admin-gift-item-select">${giftEntryOptionsHtml()}</select>
+    <select class="admin-gift-rarity-select" hidden title="そうびの レアリティ">${[1,2,3,4,5,6].map(r => `<option value="${r}"${r === 1 ? ' selected' : ''}>★${r} ${RARITY_NAME[r]}</option>`).join('')}</select>
     <input type="number" class="admin-gift-item-count" min="1" max="999" value="1" inputmode="numeric">
     <button type="button" class="btn admin-gift-small-btn admin-gift-del-btn">×</button>
   `;
+  const sel = row.querySelector('.admin-gift-item-select');
+  const raritySel = row.querySelector('.admin-gift-rarity-select');
+  sel.onchange = () => { raritySel.hidden = !sel.value.startsWith('equip:'); };
   row.querySelector('.admin-gift-del-btn').onclick = () => row.remove();
   container.appendChild(row);
 }
@@ -13990,11 +14062,18 @@ async function sendAdminGiftFromUI() {
   const gold = Math.max(0, Math.floor(Number($('admin-gift-gold')?.value) || 0));
   const itemMap = new Map();
   document.querySelectorAll('#admin-gift-item-rows .admin-gift-item-row').forEach(row => {
-    const id = row.querySelector('select').value;
-    const count = Math.max(0, Math.floor(Number(row.querySelector('input').value) || 0));
-    if (id && count > 0) itemMap.set(id, (itemMap.get(id) || 0) + count);
+    const val = row.querySelector('.admin-gift-item-select').value;
+    const count = Math.max(0, Math.floor(Number(row.querySelector('.admin-gift-item-count').value) || 0));
+    if (!val || count <= 0) return;
+    const [kind, ...rest] = val.split(':');
+    const id = rest.join(':');
+    const rarity = kind === 'equip' ? Number(row.querySelector('.admin-gift-rarity-select').value) || 1 : undefined;
+    const key = `${kind}:${id}:${rarity || ''}`;
+    const cur = itemMap.get(key) || { kind, id, count: 0, ...(rarity ? { rarity } : {}) };
+    cur.count += count;
+    itemMap.set(key, cur);
   });
-  const items = [...itemMap].map(([id, count]) => ({ id, count }));
+  const items = [...itemMap.values()];
   const message = ($('admin-gift-message')?.value || '').trim();
 
   if (!targets.length) { setStatus('宛先が ありません。', 'error'); return; }
@@ -14006,10 +14085,8 @@ async function sendAdminGiftFromUI() {
   setStatus('そうしん中...', 'working');
 
   try {
-    for (const target of targets) {
-      await window.AdminGiftAPI.send(target.slotKey, target.playerName, gold, items, message);
-    }
-    setStatus('プレゼントを おくりました！', 'success');
+    await window.AdminGiftAPI.send(targets, { gold, items, message });
+    setStatus(`${targets.length}人に プレゼントを おくりました！`, 'success');
     $('admin-gift-gold').value = 0;
     $('admin-gift-item-rows').innerHTML = '';
     addAdminGiftItemRow();
@@ -14017,7 +14094,7 @@ async function sendAdminGiftFromUI() {
     renderAdminGiftHistory();
   } catch (err) {
     console.error('AdminGift send error:', err);
-    setStatus('エラーが おきました。', 'error');
+    setStatus(`エラーが おきました。（${err && err.message ? err.message : err}）`, 'error');
   } finally {
     if (btn) btn.disabled = false;
   }
@@ -14027,14 +14104,16 @@ function showAdminGiftNotice(gifts) {
   document.querySelector('.admin-gift-notice-overlay')?.remove();
   const totalGold = gifts.reduce((sum, gift) => sum + (Number(gift.gold) || 0), 0);
   const itemTotals = new Map();
-  gifts.forEach(gift => (gift.items || []).forEach(item => itemTotals.set(item.id, (itemTotals.get(item.id) || 0) + (Number(item.count) || 0))));
+  gifts.forEach(gift => (gift.items || []).forEach(item => {
+    const key = `${giftEntryKind(item)}:${item.id}:${item.rarity || ''}`;
+    const cur = itemTotals.get(key) || { ...item, count: 0 };
+    cur.count += Number(item.count) || 0;
+    itemTotals.set(key, cur);
+  }));
   const messages = gifts.map(gift => String(gift.message || '').trim()).filter(Boolean);
   const rows = [
     totalGold ? `<li><span class="admin-gift-item-icon">💰</span><span>ゴールド</span><b>${totalGold.toLocaleString()} G</b></li>` : '',
-    ...[...itemTotals].map(([id, count]) => {
-      const def = getItemTemplate(id);
-      return `<li>${giftItemIconHtml(def)}<span>${escapeHtml(def?.name || id)}</span><b>x ${count}</b></li>`;
-    })
+    ...[...itemTotals.values()].map(e => `<li>${giftEntryIconHtml(e, 32)}<span>${escapeHtml(giftEntryName(e))}</span><b>x ${e.count}</b></li>`)
   ].join('');
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay admin-gift-notice-overlay active';
@@ -14050,6 +14129,7 @@ function showAdminGiftNotice(gifts) {
   
   const app = document.getElementById('app') || document.body;
   app.appendChild(overlay);
+  bindStageRewardTooltips(overlay);
   
   if (typeof SM !== 'undefined' && SM.playBeep) SM.playBeep('heal');
   const ok = overlay.querySelector('#btn-admin-gift-notice-ok');
@@ -14071,9 +14151,7 @@ async function checkAdminGifts() {
       if (G !== game || currentSlotKey !== slotKey) break;
       if (!await window.AdminGiftAPI.claim(gift.id)) continue;
       game.player.gold = (game.player.gold || 0) + (Number(gift.gold) || 0);
-      (gift.items || []).forEach(item => {
-        if (item?.id && Number(item.count) > 0) addItem(item.id, Math.floor(Number(item.count)));
-      });
+      (gift.items || []).forEach(item => applyGiftEntry(game, item));
       received.push(gift);
     }
     
@@ -14098,6 +14176,6 @@ if (import.meta.env && import.meta.env.DEV) {
     get G(){ return G; }, get explore(){ return explore; }, set explore(v){ explore = v; },
     get rewardSettings(){ return rewardSettings; },
     recordStageClear, grantBossClearState, generateStageEnemy, rollBattleDrops, grantPrintRewards,
-    stageTotalClearCount, stageRepeatDropMult, AREA_STAGES, stageAreaCleared, showBossClearOverlay, grantQuestExtras, QUEST_MEDAL_MILESTONES, showQuestRewardToast, generateStoryQuest, questRewardFor, questAllowedTiers, QUEST_STEP_ITEMS, getActivePickup, choosePickupStage, openAdventure, showStageClearOverlay, recordStageClear2:recordStageClear, startChallenge, enterAreaStage, enterAreaBoss,
+    stageTotalClearCount, stageRepeatDropMult, AREA_STAGES, stageAreaCleared, showBossClearOverlay, grantQuestExtras, QUEST_MEDAL_MILESTONES, showQuestRewardToast, generateStoryQuest, questRewardFor, questAllowedTiers, QUEST_STEP_ITEMS, getActivePickup, choosePickupStage, openAdventure, showStageClearOverlay, recordStageClear2:recordStageClear, startChallenge, enterAreaStage, enterAreaBoss, applyGiftEntry, giftEntryName, giftEntryOptionsHtml, showAdminGiftNotice,
   };
 }
