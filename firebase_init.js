@@ -410,7 +410,14 @@ window.RaidBossAPI = {
         const orderedRows = [...rows.values()]
           .filter(row => row.participated || (row.totalDamage || 0) > 0)
           .sort((a, b) => (b.totalDamage || 0) - (a.totalDamage || 0) || String(a.slotKey || '').localeCompare(String(b.slotKey || '')));
-        finalRankings = orderedRows.map(row => ({ slotKey: row.slotKey, totalDamage: row.totalDamage || 0 }));
+        finalRankings = orderedRows.map(row => ({
+          slotKey: row.slotKey, totalDamage: row.totalDamage || 0,
+          playerName: row.playerName || '勇者', avatar: row.avatar || '',
+          avatarBackground: row.avatarBackground || 'default',
+          avatarHolographic: !!row.avatarHolographic,
+          avatarBackgroundHolographic: !!row.avatarBackgroundHolographic,
+          level: row.level || 1, equipment: row.equipment || {}, cheerCount: row.cheerCount || 0
+        }));
         finalHitters = finisherSlotKeys.map(key => {
           const row = orderedRows.find(entry => entry.slotKey === key);
           return { slotKey: key, playerName: row?.playerName || (key === slotKey ? profile.playerName : '勇者') };

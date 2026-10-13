@@ -67,7 +67,7 @@
 <div id="volume-control-container" class="volume-control-container">
   <div id="volume-slider-popup" class="volume-slider-popup">
     <span class="volume-icon-indicator" id="volume-icon-indicator">🔊</span>
-    <input type="range" id="volume-slider" class="volume-slider" min="0" max="100" value="70" step="1" title="おんりょうを ちょうせつ">
+    <input type="range" id="volume-slider" class="volume-slider" min="0" max="100" value="70" step="1" title="BGM・こうかおんの おんりょうを ちょうせつ" aria-label="BGM・効果音の音量">
     <span id="volume-text" class="volume-text">70%</span>
   </div>
   <button id="btn-mute" class="mute-button" title="BGM/SE をミュート">🔊</button>
@@ -331,6 +331,9 @@
         <button id="hotspot-raid-boss" class="town-hotspot" style="left:75%; top:15%;">
           <span class="hotspot-tag" style="background:linear-gradient(45deg, #e74c3c, #c0392b); font-weight:900;">👿 レイドボス</span>
         </button>
+        <button id="hotspot-halloween" class="town-hotspot halloween-home-entry hidden" style="left:50%; top:17%;">
+          <span class="hotspot-tag halloween-home-tag"><img src="assets/halloween/pumpkin_imp.png" alt="" width="48" height="48"><span>🎃 ハロウィンの森<br><small>10/31まで・復習チャレンジ</small></span></span>
+        </button>
         <button id="hotspot-adventure" class="town-hotspot town-hotspot-adventure" style="left:58%; top:75%;">
           <span class="hotspot-tag hotspot-tag-adventure">⚔ ぼうけんに でる</span>
         </button>
@@ -486,6 +489,7 @@
         <div class="gacha-page-tabs" role="tablist" aria-label="ガチャの種類">
           <button id="btn-gacha-tab-skins" type="button" role="tab" aria-controls="skin-gacha-section" aria-selected="true">背景スキンガチャ</button>
           <button id="btn-gacha-tab-items" type="button" role="tab" aria-controls="gacha-item-section" aria-selected="false">装備ガチャ</button>
+          <button id="btn-gacha-tab-halloween" type="button" role="tab" aria-controls="halloween-gacha-section" aria-selected="false">ハロウィンガチャ</button>
         </div>
         <section id="skin-gacha-section" class="skin-gacha-panel" role="tabpanel" aria-labelledby="btn-gacha-tab-skins">
           <div class="gacha-showcase">
@@ -527,6 +531,7 @@
           <div class="gacha-collection-heading"><h3>通常装備</h3><span>ぶき・よろい・アクセサリ / ★3〜★5も抽選</span></div>
           <div id="equipment-gacha-collection" class="equipment-gacha-collection"></div>
         </section>
+        <section id="halloween-gacha-section" class="hidden" role="tabpanel" aria-labelledby="btn-gacha-tab-halloween"></section>
       </div>
     </section>
 
@@ -861,7 +866,10 @@
         <div id="battle-field" class="battle-field">
           <canvas id="game-canvas"></canvas>
           <div class="battle-field-enemy">
-            <span id="battle-enemy-emoji" class="enemy-sprite">👾</span>
+            <div class="battle-enemy-figure">
+              <div id="battle-enemy-progress" class="hidden"></div>
+              <span id="battle-enemy-emoji" class="enemy-sprite">👾</span>
+            </div>
             <div id="battle-enemy-name" class="enemy-name"></div>
             <div class="enemy-bars">
               <div class="stat-bar"><div id="battle-enemy-hp-ghost" class="stat-bar-fill ghost-fill"></div><div id="battle-enemy-hp" class="stat-bar-fill hp"></div></div>
@@ -898,10 +906,11 @@
              <div id="kana-location-question" style="font-size: 24px; font-weight: bold;"></div>
              <div id="kana-location-buttons" style="display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap;"></div>
           </div>
-          <!-- 促音2択UI -->
+          <!-- ひらがな・カタカナの2択UI -->
           <div class="problem-display hidden" id="kana-choice-display" style="flex-direction: column; align-items: center; gap: 16px;">
             <div id="kana-choice-question" style="font-size: 16px; color: #ccc; margin-bottom: 4px;">どっちが ただしい？</div>
-            <div id="kana-choice-buttons" style="display: flex; gap: 20px; align-items: center; justify-content: center;"></div>
+            <div id="kana-choice-buttons"></div>
+            <div id="kana-choice-feedback" class="kana-choice-feedback" role="status" aria-live="polite"></div>
           </div>
           <div id="kanji-hint" class="kanji-hint hidden"></div>
           <div class="input-display" id="kanji-input-display">
@@ -1368,11 +1377,19 @@
 
 
   <div id="raid-history-modal" class="modal-overlay hidden">
-    <div class="modal-panel" style="max-width: 600px; max-height: 80vh; display: flex; flex-direction: column;">
+    <div class="modal-panel raid-history-panel">
       <h2>レイド討伐履歴</h2>
-      <div id="raid-history-list" style="flex: 1; overflow-y: auto; margin-top: 15px;">
+      <nav class="raid-history-nav" aria-label="討伐履歴の切り替え">
+        <button type="button" id="btn-raid-history-older" class="btn" aria-label="古い討伐のランキング" disabled>◀ 前の討伐</button>
+        <span id="raid-history-position" aria-live="polite"></span>
+        <button type="button" id="btn-raid-history-newer" class="btn" aria-label="新しい討伐のランキング" disabled>次の討伐 ▶</button>
+      </nav>
+      <div id="raid-history-summary" class="raid-history-summary" aria-live="polite"></div>
+      <h3>🏆 ダメージランキング</h3>
+      <div id="raid-history-list" aria-label="過去の討伐のダメージランキング" aria-busy="false">
         <div style="text-align:center;">よみこみ中...</div>
       </div>
+      <button type="button" id="btn-raid-history-retry" class="btn hidden">もう一度よみこむ</button>
       <button type="button" class="btn btn-primary" onclick="document.getElementById('raid-history-modal').classList.add('hidden')" style="margin-top: 15px;">とじる</button>
     </div>
   </div>

@@ -3303,7 +3303,7 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 .gacha-page-header h2 { margin: 0; padding: 0; border: 0; font-size: 20px; }
 .gacha-wallet { display: flex; align-items: center; gap: 12px; color: #d3d8d5; font-size: 12px; }
 .gacha-wallet strong { color: #ffdc72; font-size: 20px; white-space: nowrap; }
-.gacha-page-tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 2px solid #ae914e; }
+.gacha-page-tabs { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); border-bottom: 2px solid #ae914e; }
 .gacha-page-tabs button { padding: 12px 16px; border: 1px solid #526057; border-bottom: 0; background: #1a2822; color: #bacbc1; font: inherit; font-weight: bold; cursor: pointer; }
 .gacha-page-tabs button[aria-selected="true"] { background: #344334; color: #ffe196; border-color: #ae914e; }
 #skin-gacha-section.skin-gacha-panel { margin: 0; padding: 0; border: 0; border-radius: 0; background: #121b19; }
@@ -7287,6 +7287,14 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
 .raid-ranking-section { border-top: 1px solid #555; padding-top: 8px; }
 .raid-ranking-section > h3 { text-align: center; color: #feca57; font-size: 18px; margin: 0 0 8px; }
 #raid-ranking-list { display: flex; flex-direction: column; gap: 6px; }
+#raid-history-list { display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 0; overflow-y: auto; }
+#raid-history-modal .raid-history-panel { max-width: 800px; height: 80vh; max-height: 80vh; overflow: hidden; }
+.raid-history-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0; }
+.raid-history-nav .btn { width: auto; min-width: 0; padding: 8px 10px; font-size: 14px; }
+#raid-history-position { white-space: nowrap; color: #feca57; }
+.raid-history-summary { white-space: pre-line; line-height: 1.6; padding: 10px; border: 1px solid #555; border-radius: 6px; background: #11141a; }
+.raid-history-panel > h3 { color: #feca57; margin: 12px 0 8px; font-size: 18px; text-align: center; }
+.raid-history-cheers { color: #feca57; font-size: 11px; white-space: nowrap; }
 .raid-learning-recommendation { display: flex; align-items: baseline; justify-content: center; flex-wrap: wrap; gap: 5px 12px; margin-top: 8px; padding: 7px 10px; border-top: 1px solid rgba(255,255,255,0.12); color: #b9c0c6; font-size: 12px; text-align: center; }
 .raid-learning-recommendation:empty { display: none; }
 .raid-learning-recommendation.has-recommendation { color: #f4d58a; background: rgba(254,202,87,0.08); border: 1px solid rgba(254,202,87,0.28); border-radius: 5px; }
@@ -7297,14 +7305,18 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
 .raid-sync-line button { border: 1px solid #666; border-radius: 4px; background: #242932; color: #eee; padding: 3px 6px; font-size: 11px; cursor: pointer; flex-shrink: 0; }
 .raid-empty-ranking { padding: 16px 8px; text-align: center; color: #b9c0c6; font-size: 14px; }
 .raid-ranking-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid; border-radius: 6px; background: #11141a; min-width: 0; }
-.raid-ranking-avatar { display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; flex: 0 0 56px; overflow: hidden; border: 2px solid; border-radius: 6px; box-sizing: border-box; }
-.raid-ranking-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.raid-ranking-avatar { display: flex; align-items: center; justify-content: center; width: 112px; height: 112px; flex: 0 0 112px; overflow: hidden; border: 2px solid; border-radius: 6px; box-sizing: border-box; }
+.raid-ranking-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
 .raid-ranking-main, .raid-ranking-secondary { display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; }
 .raid-ranking-player { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; min-width: 0; }
 .raid-ranking-name { font-size: 18px; font-weight: 700; overflow-wrap: anywhere; }
 .raid-ranking-level { font-size: 11px; padding: 1px 4px; border-radius: 3px; background: #343a43; white-space: nowrap; }
 .raid-ranking-damage { font-size: 22px; font-weight: 700; color: #ff9c93; white-space: nowrap; }
-.raid-ranking-equip { width: 26px; height: 26px; background: #201e28; }
+.raid-ranking-damage-unit { font-size: 13px; }
+.raid-ranking-equip { width: 40px; height: 40px; flex: 0 0 40px; font-size: 25px; background: #201e28; }
+.raid-ranking-equip img { width: 100%; height: 100%; object-fit: contain; }
+.raid-review-bonus { flex-basis: 100%; }
+.raid-learning-recommendation #btn-raid-review { margin: 2px 0; min-height: 36px; padding: 6px 12px; font-size: 14px; }
 .raid-ranking-secondary button { min-height: 28px; font-size: 11px !important; }
 @media (max-width: 600px) {
   .raid-menu-header { flex-wrap: wrap; gap: 6px; }
@@ -7316,7 +7328,8 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
   #screen-raid-boss .raid-boss-stats > h3 { font-size: 15px !important; margin-bottom: 3px; }
   .raid-boss-overview #btn-raid-challenge { min-height: 34px; padding: 5px 8px; font-size: 13px; }
   .raid-ranking-row { padding: 6px; gap: 6px; }
-  .raid-ranking-avatar { width: 40px; height: 48px; flex-basis: 40px; }
+  .raid-ranking-avatar { width: 80px; height: 80px; flex-basis: 80px; }
+  .raid-ranking-equip { width: 34px; height: 34px; flex-basis: 34px; font-size: 22px; }
   .raid-ranking-name { font-size: 14px; }
   .raid-ranking-damage { font-size: 18px; }
   .raid-ranking-info { gap: 2px; }
@@ -7726,6 +7739,62 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
 .progress-stars .pstar.now { color: #fff6a8; font-size: 24px; text-shadow: 0 0 6px #ffd34e, 0 0 12px #ff9f1a; animation: pstarBlink 0.9s ease-in-out infinite alternate; }
 @keyframes pstarBlink { from { transform: scale(1); opacity: 0.55; } to { transform: scale(1.25); opacity: 1; } }
 .progress-stars { flex-wrap: wrap; max-width: 100%; }
+.frontier-drop-tag { color: #82edb2; font-size: 11px; font-weight: 800; padding: 2px 5px; border: 1px solid #67bf91; border-radius: 5px; white-space: nowrap; background: rgba(20,60,40,.8); }
+.halloween-home-tag { display: flex; align-items: center; gap: 6px; border-color: #ffbe61; color: #fff0cd; background: linear-gradient(135deg,#61357e,#bd572b); box-shadow: 0 0 18px rgba(239,141,45,.35); }
+.halloween-home-tag img { image-rendering: pixelated; object-fit: contain; }
+.halloween-home-tag small { font-size: 10px; }
+.halloween-event-card { width: min(700px,92vw); max-height: 85dvh; overflow-y: auto; border: 2px solid #ffbd66; background: radial-gradient(ellipse at top,#50306d,#201525 75%); text-align: center; padding: 22px; box-sizing: border-box; }
+.halloween-event-card h2 { color: #ffd089; }
+.halloween-event-date { display: inline-block; font-size: 12px; color: #ffcf87; padding: 5px 12px; border-radius: 20px; border: 1px solid #b8794c; }
+.halloween-monster-parade { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; margin: 18px 0; }
+.halloween-monster-parade img { width: 100%; height: 92px; object-fit: contain; image-rendering: pixelated; border-radius: 8px; background: rgba(255,255,255,.04); }
+.halloween-source { border: 1px solid #836096; border-radius: 10px; padding: 12px; background: rgba(0,0,0,.25); }
+.halloween-source p { margin-bottom: 0; font-size: 14px; line-height: 1.6; }
+.halloween-clear-reward { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 14px; color: #ffe09b; }
+.halloween-clear-reward small { font-size: 11px; }
+.halloween-hub { width: min(940px,96vw); height: min(900px,90dvh); max-height: 90dvh; padding: 0; display: flex; flex-direction: column; overflow: hidden; }
+.halloween-hub-header { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 10px 16px; flex-shrink: 0; }
+.halloween-hub-header h2 { margin: 0; padding: 0; border: none; font-size: 22px; }
+.halloween-candy-balance { display: flex; align-items: center; gap: 6px; margin-left: auto; color: #ffe4ac; }
+.halloween-candy-balance b { font-size: 24px; }
+.halloween-event-banner { position: relative; flex: 0 0 150px; overflow: hidden; }
+.halloween-event-banner > img { width: 100%; height: 100%; object-fit: cover; object-position: center 42%; image-rendering: pixelated; }
+.halloween-event-banner > div { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; padding: 14px 20px; text-align: left; background: linear-gradient(transparent 20%,rgba(22,12,34,.88)); }
+.halloween-event-banner strong { color: #ffe4a2; font-size: clamp(18px,3vw,28px); text-shadow: 0 2px 3px #000; }
+.halloween-event-banner span { color: #fff; font-size: 13px; margin-top: 5px; }
+.halloween-tabs { display: flex; flex-shrink: 0; background: #211329; border-bottom: 1px solid #8b658b; }
+.halloween-tabs button { flex: 1; min-height: 44px; color: #dec9e6; background: none; border: none; border-bottom: 3px solid transparent; font: inherit; font-weight: bold; cursor: pointer; }
+.halloween-tabs button[aria-selected="true"] { color: #ffe1a5; border-color: #ffb24d; background: #4b2a51; }
+.halloween-tab-panel { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 18px; }
+.halloween-hub-footer { padding: 8px 18px; border-top: 1px solid #674765; flex-shrink: 0; }
+.halloween-hub-footer .btn { margin: 0; min-height: 36px; }
+.halloween-panel-lead { margin: 0 0 8px; color: #ffe6bb; font-size: 17px; font-weight: 700; }
+.halloween-panel-note { font-size: 12px; color: #d4c5d9; line-height: 1.6; margin: 10px 0; }
+.halloween-start-button { width: min(380px,100%); }
+.halloween-prize-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+.halloween-prize-card { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 12px; background: rgba(255,255,255,.045); border: 1px solid #805876; border-radius: 10px; min-width: 0; }
+.halloween-prize-card.is-owned { border-color: #74cba3; }
+.halloween-prize-type { color: #dab4e4; font-size: 11px; }
+.halloween-prize-art .stage-reward-icon { width: 96px; height: 96px; }
+.halloween-prize-art img { max-width: 88px; max-height: 88px; object-fit: contain; image-rendering: pixelated; }
+.halloween-prize-card b { font-size: 14px; overflow-wrap: anywhere; }
+.halloween-prize-price { color: #ffd08a; font-size: 13px; }
+.halloween-prize-card > .btn { min-height: 36px; margin: auto 0 0; padding: 6px; font-size: 13px; width: 100%; }
+.halloween-gacha-prizes { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 18px 0; }
+.halloween-gacha-rates { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; padding: 12px; border-radius: 8px; background: rgba(0,0,0,.25); font-size: 13px; }
+.halloween-gacha-rates b { color: #ffd08a; }
+.halloween-gacha-result { margin-top: 18px; padding: 16px; border: 1px solid #9b709f; border-radius: 12px; background: radial-gradient(ellipse,#624071,#281831); animation: halloween-prize-pop .4s ease-out; }
+.halloween-gacha-result.is-jackpot { border-color: #ffd071; box-shadow: 0 0 18px #efb24755; }
+.halloween-gacha-result b { display: block; margin-top: 8px; color: #ffe2a5; }
+.halloween-action-message { padding: 10px; color: #a4f1c9; border-radius: 8px; background: #17382c; }
+@keyframes halloween-prize-pop { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
+@media (max-width: 640px) { .halloween-prize-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; } .halloween-hub-header { padding: 8px; } .halloween-hub-header h2 { font-size: 18px; } .halloween-event-banner { flex-basis: 110px; } .halloween-event-banner > div { padding: 8px 10px; } .halloween-event-banner span { font-size: 11px; } .halloween-tab-panel { padding: 10px; } .halloween-hub .halloween-prize-card { padding: 8px; } }
+#screen-battle.halloween-battle-screen { background-color: #2b183e; }
+#screen-battle.halloween-battle-screen .battle-field { background: radial-gradient(ellipse,rgba(159,66,185,.12),transparent 75%); }
+@media (max-width: 640px) { .halloween-home-tag { font-size: 12px; padding: 4px; } .halloween-home-tag img { width: 32px; height: 32px; } .halloween-monster-parade img { height: 70px; } .halloween-event-card { padding: 14px; } }
+.battle-enemy-figure { position: relative; flex: 0 0 auto; }
+#battle-enemy-progress { position: absolute; top: -42px; left: 50%; transform: translateX(-50%); z-index: 21; width: max-content; max-width: 90vw; padding: 5px 9px; border-radius: 8px; background: rgba(22,18,34,.65); pointer-events: none; }
+#battle-enemy-progress .progress-stars { margin: 0; }
 @media (max-width: 640px) { .progress-stars .pstar { font-size: 17px; } .progress-stars .pstar.now { font-size: 20px; } }
 
 /* 拠点のステータス窓を コンパクトに（デスクトップ幅のみ。スマホ幅は従来どおり） */
@@ -7769,3 +7838,13 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
 .admin-gift-notice-list .stage-reward-icon, .admin-gift-history-item .stage-reward-icon { width: 32px; height: 32px; flex: 0 0 32px; padding: 1px; }
 .admin-gift-history-item .stage-reward-icon { width: 24px; height: 24px; flex-basis: 24px; }
 .admin-gift-item-icon { font-size: 28px; }
+
+.halloween-gacha-showcase { text-align:center; padding:16px; background:linear-gradient(#292037,#161521); }
+.halloween-gacha-logo { width:min(440px,90%); height:190px; object-fit:contain; image-rendering:pixelated; }
+.halloween-gacha-controls { padding:16px; }
+.halloween-gacha-controls .skin-gacha-balance { display:flex; align-items:center; gap:8px; }
+.halloween-candy-balance .stage-reward-icon { width:42px; height:42px; min-width:42px; }
+.halloween-event-card.halloween-hub { padding:0; }
+.halloween-hub .halloween-prize-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.halloween-hub-footer { display:flex; justify-content:space-between; gap:8px; }
+@media (max-width:600px) { .halloween-gacha-logo { height:135px; } }

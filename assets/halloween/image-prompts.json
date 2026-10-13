@@ -1,0 +1,38 @@
+{
+  "generator": "built-in image_gen",
+  "transparent_background": true,
+  "assets": [
+    {
+      "file": "pumpkin_imp.png",
+      "prompt": "Game asset for a Japanese children's fantasy RPG Halloween event. One enemy only: a mischievous orange jack-o-lantern imp with tiny clawed arms and crooked leafy legs, purple glow inside carved face. Beautiful 16-bit SNES pixel art sprite, crisp clearly visible square pixels, rich limited palette, strong dark pixel outlines, playful spooky but child-friendly, front-facing three-quarter view, full body centered, consistent sprite scale, fills about 75 percent of square image with clear transparent margin. Isolated character on a genuinely transparent background, no scenery, no ground plane, no drop shadow outside character, no typography, no labels, no watermark. PNG with alpha."
+    },
+    {
+      "file": "candy_slime.png",
+      "prompt": "Game asset for a Japanese children's fantasy RPG Halloween event. One enemy only: a translucent purple candy slime monster wearing a tiny orange candy-corn crown, wrapped candies suspended in its body. Beautiful 16-bit SNES pixel art sprite, crisp clearly visible square pixels, rich limited palette, strong dark pixel outlines, playful spooky but child-friendly, front-facing three-quarter view, full body centered, consistent sprite scale, fills about 75 percent of square image with clear transparent margin. Isolated character on a genuinely transparent background, no scenery, no ground plane, no drop shadow outside character, no typography, no labels, no watermark. PNG with alpha."
+    },
+    {
+      "file": "witch_cat.png",
+      "prompt": "Game asset for a Japanese children's fantasy RPG Halloween event. One enemy only: a charcoal black witch cat monster with bright emerald eyes, oversized purple pointed witch hat, floating broom and small orange pumpkin charm. Beautiful 16-bit SNES pixel art sprite, crisp clearly visible square pixels, rich limited palette, strong dark pixel outlines, playful spooky but child-friendly, front-facing three-quarter view, full body centered, consistent sprite scale, fills about 75 percent of square image with clear transparent margin. Isolated character on a genuinely transparent background, no scenery, no ground plane, no drop shadow outside character, no typography, no labels, no watermark. PNG with alpha."
+    },
+    {
+      "file": "vampire_bat.png",
+      "prompt": "Game asset for a Japanese children's fantasy RPG Halloween event. One enemy only: a cute spooky vampire bat monster, purple and crimson wings spread wide, little fangs, white ruffled collar and miniature black cape. Beautiful 16-bit SNES pixel art sprite, crisp clearly visible square pixels, rich limited palette, strong dark pixel outlines, playful spooky but child-friendly, front-facing three-quarter view, full body centered, consistent sprite scale, fills about 75 percent of square image with clear transparent margin. Isolated character on a genuinely transparent background, no scenery, no ground plane, no drop shadow outside character, no typography, no labels, no watermark. PNG with alpha."
+    },
+    {
+      "file": "mummy_knight.png",
+      "prompt": "Game asset for a Japanese children's fantasy RPG Halloween event. One enemy only: a tiny mummy knight monster wrapped in ivory bandages, glowing amber eyes, holding a chipped candy-colored shield and toy-like bronze sword. Beautiful 16-bit SNES pixel art sprite, crisp clearly visible square pixels, rich limited palette, strong dark pixel outlines, playful spooky but child-friendly, front-facing three-quarter view, full body centered, consistent sprite scale, fills about 75 percent of square image with clear transparent margin. Isolated character on a genuinely transparent background, no scenery, no ground plane, no drop shadow outside character, no typography, no labels, no watermark. PNG with alpha."
+    },
+    {
+      "file": "lantern_ghost.png",
+      "prompt": "Game asset for a Japanese children's fantasy RPG Halloween event. One enemy only: a friendly pale mint ghost monster emerging from an ornate orange Halloween lantern, curling wispy tail and purple magical flames. Beautiful 16-bit SNES pixel art sprite, crisp clearly visible square pixels, rich limited palette, strong dark pixel outlines, playful spooky but child-friendly, front-facing three-quarter view, full body centered, consistent sprite scale, fills about 75 percent of square image with clear transparent margin. Isolated character on a genuinely transparent background, no scenery, no ground plane, no drop shadow outside character, no typography, no labels, no watermark. PNG with alpha."
+    },
+    {
+      "file": "candy_spider.png",
+      "prompt": "Game asset for a Japanese children's fantasy RPG Halloween event. One enemy only: a round mischievous spider monster with eight purple legs, orange candy-striped belly, tiny witch hat and bright lime eyes. Beautiful 16-bit SNES pixel art sprite, crisp clearly visible square pixels, rich limited palette, strong dark pixel outlines, playful spooky but child-friendly, front-facing three-quarter view, full body centered, consistent sprite scale, fills about 75 percent of square image with clear transparent margin. Isolated character on a genuinely transparent background, no scenery, no ground plane, no drop shadow outside character, no typography, no labels, no watermark. PNG with alpha."
+    },
+    {
+      "file": "scarecrow_king.png",
+      "prompt": "Game asset for a Japanese children's fantasy RPG Halloween event. One enemy only: a Halloween boss monster: regal haunted scarecrow king with a carved pumpkin head, crooked purple crown-like witch hat, ragged violet cloak, straw limbs and a carved wooden staff with orange magical glow. Beautiful 16-bit SNES pixel art sprite, crisp clearly visible square pixels, rich limited palette, strong dark pixel outlines, playful spooky but child-friendly, front-facing three-quarter view, full body centered, consistent sprite scale, fills about 75 percent of square image with clear transparent margin. Isolated character on a genuinely transparent background, no scenery, no ground plane, no drop shadow outside character, no typography, no labels, no watermark. PNG with alpha."
+    }
+  ]
+}

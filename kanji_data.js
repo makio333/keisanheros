@@ -9,9 +9,12 @@
 
 /* ================= ひらがな（長音・促音・拗音・特殊） ================= */
 const KANA_HIRA_S1 = [
-  { answer: 'おかあさん', text: 'おかあさん', special: 'あ' }, { answer: 'おにいさん', text: 'おにいさん', special: 'い' },
-  { answer: 'おねえさん', text: 'おねえさん', special: 'え' }, { answer: 'こおり', text: 'こおり', special: 'お' },
-  { answer: 'ふうせん', text: 'ふうせん', special: 'う' }, { answer: 'ほうき', text: 'ほうき', special: 'う' },
+  { answer: 'おかあさん', text: 'おかあさん', wrongAnswer: 'おかさん', explanation: '「かあ」と のばして、「あ」を かくよ。' },
+  { answer: 'おにいさん', text: 'おにいさん', wrongAnswer: 'おにさん', explanation: '「にい」と のばして、「い」を かくよ。' },
+  { answer: 'おねえさん', text: 'おねえさん', wrongAnswer: 'おねさん', explanation: '「ねえ」と のばして、「え」を かくよ。' },
+  { answer: 'こおり', text: 'こおり', wrongAnswer: 'こうり', explanation: '「こおり」は「お」で のばすよ。' },
+  { answer: 'ふうせん', text: 'ふうせん', wrongAnswer: 'ふせん', prompt: 'ふくらませて あそぶものは、どっち？', explanation: '「ふう」と のばして、「う」を かくよ。' },
+  { answer: 'ほうき', text: 'ほうき', wrongAnswer: 'ほおき', explanation: '「ほうき」は「う」で のばすよ。' },
 ];
 const KANA_HIRA_S2 = [
   { answer: 'がっき', text: 'がっき', special: 'っ' },
@@ -36,26 +39,38 @@ const KANA_HIRA_S2 = [
   { answer: 'ざっし', text: 'ざっし', special: 'っ' },
 ];
 const KANA_HIRA_S3 = [
-  { answer: 'きゅうり', text: 'きゅうり', special: 'ゅ' }, { answer: 'にんじゃ', text: 'にんじゃ', special: 'ゃ' },
-  { answer: 'きゃく', text: 'きゃく', special: 'ゃ' }, { answer: 'きんぎょ', text: 'きんぎょ', special: 'ょ' },
-  { answer: 'ちゅうしゃ', text: 'ちゅうしゃ', special: 'ゅ' }, { answer: 'でんしゃ', text: 'でんしゃ', special: 'ゃ' },
+  { answer: 'きゅうり', text: 'きゅうり', wrongAnswer: 'きゆうり', explanation: '「きゅ」は 小さい「ゅ」を つかうよ。' },
+  { answer: 'にんじゃ', text: 'にんじゃ', wrongAnswer: 'にんじや', explanation: '「じゃ」は 小さい「ゃ」を つかうよ。' },
+  { answer: 'きゃく', text: 'きゃく', wrongAnswer: 'きやく', prompt: 'おみせに くる ひとは、どっち？', explanation: 'おきゃくさんの「きゃ」は 小さい「ゃ」だよ。' },
+  { answer: 'きんぎょ', text: 'きんぎょ', wrongAnswer: 'きんぎよ', explanation: '「ぎょ」は 小さい「ょ」を つかうよ。' },
+  { answer: 'ちゅうしゃ', text: 'ちゅうしゃ', wrongAnswer: 'ちゆうしや', explanation: '「ゅ」と「ゃ」は どちらも 小さく かくよ。' },
+  { answer: 'でんしゃ', text: 'でんしゃ', wrongAnswer: 'でんしや', explanation: '「しゃ」は 小さい「ゃ」を つかうよ。' },
 ];
 const KANA_HIRA_S4 = [
-  { answer: 'おばあさん', text: 'おばあさん', special: 'あ' }, { answer: 'おとうさん', text: 'おとうさん', special: 'う' },
-  { answer: 'しょくどう', text: 'しょくどう', special: 'う' }, { answer: 'びょういん', text: 'びょういん', special: 'ょ' },
-  { answer: 'じどうしゃ', text: 'じどうしゃ', special: 'ゃ' }, { answer: 'しょうぼうしゃ', text: 'しょうぼうしゃ', special: 'ょ' },
+  { answer: 'がっこう', text: 'がっこう', wrongAnswer: 'がつこう', explanation: '小さい「っ」と、のばす「う」を つかうよ。' },
+  { answer: 'がっきゅう', text: 'がっきゅう', wrongAnswer: 'がっきゆう', explanation: '「っ」と「ゅ」は 小さく、「う」で のばすよ。' },
+  { answer: 'きゅうしょく', text: 'きゅうしょく', wrongAnswer: 'きゆうしよく', explanation: '「ゅ」と「ょ」は 小さく、「う」で のばすよ。' },
+  { answer: 'ちゅうがっこう', text: 'ちゅうがっこう', wrongAnswer: 'ちゆうがつこう', explanation: '「ゅ」と「っ」は 小さく、のばす音には「う」を かくよ。' },
+  { answer: 'びょういん', text: 'びょういん', wrongAnswer: 'びよういん', prompt: 'おいしゃさんが いるのは、どっち？', explanation: 'びょういんの「ょ」は 小さく、「う」で のばすよ。' },
+  { answer: 'しょうぼうしゃ', text: 'しょうぼうしゃ', wrongAnswer: 'しようぼうしや', explanation: '「ょ」と「ゃ」は 小さく、のばす音には「う」を かくよ。' },
 ];
 const KANA_HIRA_S5 = [
-  { answer: 'こんにちは', text: 'こんにちは', special: 'は' }, { answer: 'こんばんは', text: 'こんばんは', special: 'は' },
-  { answer: 'わたしは', text: 'わたしは', special: 'は' }, { answer: 'えへ', text: 'えへ', special: 'へ' },
-  { answer: 'おとうと', text: 'おとうと', special: 'う' }, { answer: 'いもうと', text: 'いもうと', special: 'う' },
+  { answer: 'こんにちは', text: 'こんにちは', wrongAnswer: 'こんにちわ', explanation: 'あいさつの「こんにちは」は、さいごに「は」を かくよ。' },
+  { answer: 'こんばんは', text: 'こんばんは', wrongAnswer: 'こんばんわ', explanation: 'あいさつの「こんばんは」は、さいごに「は」を かくよ。' },
+  { answer: 'わたしは いちねんせい', text: 'わたしは いちねんせい', wrongAnswer: 'わたしわ いちねんせい', explanation: '「わたしは」の「は」は「わ」と よむよ。' },
+  { answer: 'がっこうへ いく', text: 'がっこうへ いく', wrongAnswer: 'がっこうえ いく', explanation: 'いく ばしょを あらわす「へ」は「え」と よむよ。' },
+  { answer: 'ほんを よむ', text: 'ほんを よむ', wrongAnswer: 'ほんお よむ', explanation: 'なにを するかを つなぐときは「を」を かくよ。' },
+  { answer: 'みずを のむ', text: 'みずを のむ', wrongAnswer: 'みずお のむ', explanation: 'のむ ものを つなぐときは「を」を かくよ。' },
 ];
 
 /* ================= カタカナ（長音・促音・拗音・外来音） ================= */
 const KANA_KATA_S1 = [
-  { answer: 'ケーキ', text: 'ケーキ', special: 'ー' }, { answer: 'ジュース', text: 'ジュース', special: 'ュ' },
-  { answer: 'ノート', text: 'ノート', special: 'ー' }, { answer: 'ゲーム', text: 'ゲーム', special: 'ー' },
-  { answer: 'スポーツ', text: 'スポーツ', special: 'ー' }, { answer: 'プール', text: 'プール', special: 'ー' },
+  { answer: 'ケーキ', text: 'ケーキ', wrongAnswer: 'ケキ', explanation: 'カタカナで のばす音は「ー」を つかうよ。' },
+  { answer: 'ジュース', text: 'ジュース', wrongAnswer: 'ジュス', explanation: '「ジュ」の あとに「ー」を かいて のばすよ。' },
+  { answer: 'ノート', text: 'ノート', wrongAnswer: 'ノト', explanation: '「ノ」の あとに「ー」を かいて のばすよ。' },
+  { answer: 'ゲーム', text: 'ゲーム', wrongAnswer: 'ゲム', explanation: '「ゲ」の あとに「ー」を かいて のばすよ。' },
+  { answer: 'スポーツ', text: 'スポーツ', wrongAnswer: 'スポツ', explanation: '「ポ」の あとに「ー」を かいて のばすよ。' },
+  { answer: 'プール', text: 'プール', wrongAnswer: 'プル', explanation: '「プ」の あとに「ー」を かいて のばすよ。' },
 ];
 const KANA_KATA_S2 = [
   { answer: 'コップ', text: 'コップ', special: 'ッ' }, { answer: 'ベッド', text: 'ベッド', special: 'ッ' },
@@ -63,19 +78,28 @@ const KANA_KATA_S2 = [
   { answer: 'ペット', text: 'ペット', special: 'ッ' }, { answer: 'チケット', text: 'チケット', special: 'ッ' },
 ];
 const KANA_KATA_S3 = [
-  { answer: 'シャツ', text: 'シャツ', special: 'ャ' }, { answer: 'チョコ', text: 'チョコ', special: 'ョ' },
-  { answer: 'ジャム', text: 'ジャム', special: 'ャ' }, { answer: 'カメラ', text: 'カメラ' },
-  { answer: 'パンダ', text: 'パンダ' }, { answer: 'メロン', text: 'メロン' },
+  { answer: 'シャツ', text: 'シャツ', wrongAnswer: 'シヤツ', explanation: '「シャ」は 小さい「ャ」を つかうよ。' },
+  { answer: 'チョコ', text: 'チョコ', wrongAnswer: 'チヨコ', explanation: '「チョ」は 小さい「ョ」を つかうよ。' },
+  { answer: 'ジャム', text: 'ジャム', wrongAnswer: 'ジヤム', explanation: '「ジャ」は 小さい「ャ」を つかうよ。' },
+  { answer: 'キャベツ', text: 'キャベツ', wrongAnswer: 'キヤベツ', explanation: '「キャ」は 小さい「ャ」を つかうよ。' },
+  { answer: 'シュート', text: 'シュート', wrongAnswer: 'シユート', explanation: '「シュ」は 小さい「ュ」を つかうよ。' },
+  { answer: 'リュック', text: 'リュック', wrongAnswer: 'リユック', explanation: '「リュ」は 小さい「ュ」を つかうよ。' },
 ];
 const KANA_KATA_S4 = [
-  { answer: 'コンピューター', text: 'コンピューター', special: 'ュ' }, { answer: 'チョコレート', text: 'チョコレート', special: 'ョ' },
-  { answer: 'ハンバーグ', text: 'ハンバーグ', special: 'ー' }, { answer: 'サンドイッチ', text: 'サンドイッチ', special: 'ッ' },
-  { answer: 'レストラン', text: 'レストラン' }, { answer: 'カレンダー', text: 'カレンダー', special: 'ー' },
+  { answer: 'コンピューター', text: 'コンピューター', wrongAnswer: 'コンピユータ', explanation: '小さい「ュ」と、のばす「ー」を つかうよ。' },
+  { answer: 'チョコレート', text: 'チョコレート', wrongAnswer: 'チヨコレート', explanation: '「チョ」の「ョ」は 小さく、「レ」の あとは「ー」だよ。' },
+  { answer: 'ハンバーグ', text: 'ハンバーグ', wrongAnswer: 'ハンバグ', explanation: '「バ」の あとに「ー」を かいて のばすよ。' },
+  { answer: 'サンドイッチ', text: 'サンドイッチ', wrongAnswer: 'サンドイツチ', explanation: '「ッチ」の「ッ」は 小さく かくよ。' },
+  { answer: 'サッカー', text: 'サッカー', wrongAnswer: 'サツカ', explanation: '小さい「ッ」と、のばす「ー」を つかうよ。' },
+  { answer: 'カレンダー', text: 'カレンダー', wrongAnswer: 'カレンダ', explanation: '「ダ」の あとに「ー」を かいて のばすよ。' },
 ];
 const KANA_KATA_S5 = [
-  { answer: 'パーティー', text: 'パーティー', special: 'ー' }, { answer: 'ファイト', text: 'ファイト' },
-  { answer: 'ウェディング', text: 'ウェディング' }, { answer: 'ウォーター', text: 'ウォーター', special: 'ー' },
-  { answer: 'チェック', text: 'チェック', special: 'ッ' }, { answer: 'シェフ', text: 'シェフ' },
+  { answer: 'パーティー', text: 'パーティー', wrongAnswer: 'パーテイー', explanation: '「ティ」は 小さい「ィ」を つかうよ。' },
+  { answer: 'ファイト', text: 'ファイト', wrongAnswer: 'フアイト', explanation: '「ファ」は 小さい「ァ」を つかうよ。' },
+  { answer: 'ウェディング', text: 'ウェディング', wrongAnswer: 'ウエデイング', explanation: '「ウェ」「ディ」の「ェ」「ィ」は 小さく かくよ。' },
+  { answer: 'ウォーター', text: 'ウォーター', wrongAnswer: 'ウオーター', explanation: '「ウォ」は 小さい「ォ」を つかうよ。' },
+  { answer: 'チェック', text: 'チェック', wrongAnswer: 'チエック', explanation: '「チェ」は 小さい「ェ」を つかうよ。' },
+  { answer: 'シェフ', text: 'シェフ', wrongAnswer: 'シエフ', explanation: '「シェ」は 小さい「ェ」を つかうよ。' },
 ];
 
 /* ================= 1年（80字） ================= */
@@ -562,9 +586,7 @@ function generateKanjiProblem(tier) {
   const data = pool[idx];
 
   return {
-    answer: data.answer,
-    text: data.text,
-    special: data.special,
+    ...data,
     tier: tier
   };
 }

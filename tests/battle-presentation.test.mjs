@@ -1,0 +1,60 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+
+const source = fs.readFileSync(new URL('../game.js', import.meta.url), 'utf8');
+const canvasRect = { left: 100, top: 40, width: 600, height: 400 };
+const targetRect = { left: 350, top: 100, width: 100, height: 100 };
+const canvas = { width: 300, height: 200, getBoundingClientRect: () => canvasRect };
+const frame = { id: 'battle-enemy-emoji', isConnected: true, getBoundingClientRect: () => targetRect };
+const stars = { innerHTML: '', hidden: true, classList: { contains: () => stars.hidden, toggle(_name, value) { stars.hidden = value; } } };
+const context = vm.createContext({
+  window: {}, document: {},
+  $: id => id === 'battle-enemy-progress' ? stars : frame,
+  explore: { stageMode: true, isBoss: false, stageKillCount: 1 }, ENEMIES_PER_STAGE: 5,
+});
+vm.runInContext(source.slice(source.indexOf('class CanvasManager {'), source.indexOf('class SlashEffect {')), context);
+vm.runInContext('this.CM = new CanvasManager();', context);
+const cm = context.CM;
+cm.canvas = canvas;
+cm.ctx = { clearRect() {} };
+vm.runInContext(source.slice(source.indexOf('const enemyArtworkBounds ='), source.indexOf('function playEnemyAttackAnim(')), context);
+let point = context.getEnemyCanvasCoords();
+assert.equal(canvas.width, 600, 'canvas size is synchronized before sampling attack coordinates');
+assert.equal(point.x, 300);
+assert.equal(point.y, 110);
+const effect = { draw() {}, x: 0, y: 0 };
+cm.addEffect(effect, frame);
+cm.draw();
+assert.equal(effect.x, 300);
+targetRect.left += 70;
+targetRect.top += 20;
+cm.draw();
+assert.equal(effect.x, 370, 'attack follows moving enemy');
+assert.equal(effect.y, 130);
+canvasRect.width = 800;
+canvasRect.left = 20;
+cm.draw();
+assert.equal(canvas.width, 800, 'resize is synchronized while effect is active');
+assert.equal(effect.x, 450, 'viewport resize does not leave attack at old coordinates');
+vm.runInContext(source.slice(source.indexOf('function progressStarsHtml('), source.indexOf('/* エリア2は エリア1をクリア')), context);
+context.renderBattleProgressStars();
+assert.equal(stars.hidden, false);
+assert.match(stars.innerHTML, /2／5/);
+assert.equal((stars.innerHTML.match(/pstar /g) || []).length, 5);
+context.explore = { stageMode: true, isBoss: true, bossPhase: 2 };
+context.renderBattleProgressStars();
+assert.match(stars.innerHTML, /2／2/);
+context.explore = { isRaid: true };
+context.renderBattleProgressStars();
+assert.equal(stars.hidden, true, 'raid has no ordinary stage progress stars');
+const alpha = new Uint8ClampedArray(128 * 128 * 4);
+for (let y = 48; y < 112; y++) for (let x = 16; x < 80; x++) alpha[(y * 128 + x) * 4 + 3] = 255;
+context.document.createElement = () => ({ getContext: () => ({ drawImage() {}, getImageData: () => ({ data: alpha }) }) });
+frame.querySelector = () => ({ complete: true, naturalWidth: 256, naturalHeight: 128, src: 'padded.png', getBoundingClientRect: () => targetRect });
+const artwork = context.enemyArtworkRect(frame);
+assert.equal(artwork.left, targetRect.left + 12.5, 'transparent left padding is excluded');
+assert.equal(artwork.top, targetRect.top + 43.75, 'object-fit letterbox and transparent top padding are excluded');
+assert.equal(artwork.width, 50);
+assert.equal(artwork.height, 25);
+console.log('PASS: attack coordinates after resize and movement, stage/boss stars and raid reset');

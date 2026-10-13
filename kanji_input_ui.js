@@ -157,13 +157,8 @@ function setupKanjiChallenge(problemData) {
   
   const tierStr = String(problemData.tier || '');
   
-  // 促音ステージ（2択形式）か判定
-  const isSokuonStage = tierStr === 'kana_hira_2' || tierStr === 'kana_kata_2';
-  const choiceProb = isSokuonStage ? ((window.createSokuonChoiceProblem || createSokuonChoiceProblem)(problemData)) : null;
-  
-  // 場所当てモード（促音以外のkanaステージ）
-  const locProb = !choiceProb && tierStr.startsWith('kana') ? ((window.createKanaLocationProblem || createKanaLocationProblem)(problemData)) : null;
-  
+  const choiceProb = tierStr.startsWith('kana') ? window.createKanaChoiceProblem?.(problemData) : null;
+
   const normalDisplay = document.getElementById('kanji-normal-display');
   const locDisplay = document.getElementById('kana-location-display');
   const choiceDisplay = document.getElementById('kana-choice-display');
@@ -182,65 +177,39 @@ function setupKanjiChallenge(problemData) {
   };
   
   if (choiceProb) {
-    // ===== 促音2択モード =====
     hideAll();
     if (choiceDisplay) { choiceDisplay.classList.remove('hidden'); choiceDisplay.style.display = 'flex'; }
-    
+    document.getElementById('kana-choice-question').textContent = choiceProb.prompt || 'どっちが ただしい？';
+    const feedback = document.getElementById('kana-choice-feedback');
+    if (feedback) { feedback.textContent = ''; feedback.className = 'kana-choice-feedback'; }
     const btnContainer = document.getElementById('kana-choice-buttons');
     btnContainer.innerHTML = '';
-    
-    // Aボタン
-    const btnA = document.createElement('button');
-    btnA.style.cssText = 'font-size:28px; font-weight:bold; padding:16px 28px; border-radius:12px; background:#3a5fc8; color:#fff; border:3px solid #6a8fff; cursor:pointer; min-width:120px;';
-    btnA.innerHTML = `<span style="font-size:14px;color:#adf;">Ａ</span><br>${choiceProb.optionA}`;
-    btnA.onclick = () => {
-      submitKanjiAnswer(choiceProb.correctOption === 'A');
-    };
-    
-    // Bボタン
-    const btnB = document.createElement('button');
-    btnB.style.cssText = 'font-size:28px; font-weight:bold; padding:16px 28px; border-radius:12px; background:#c85a3a; color:#fff; border:3px solid #ff9a6a; cursor:pointer; min-width:120px;';
-    btnB.innerHTML = `<span style="font-size:14px;color:#ffd;">Ｂ</span><br>${choiceProb.optionB}`;
-    btnB.onclick = () => {
-      submitKanjiAnswer(choiceProb.correctOption === 'B');
-    };
-    
-    btnContainer.appendChild(btnA);
-    btnContainer.appendChild(btnB);
-
-  } else if (locProb) {
-    // ===== 場所当てモード（促音以外のkana） =====
-    hideAll();
-    if (locDisplay) { locDisplay.classList.remove('hidden'); locDisplay.style.display = 'flex'; }
-    
-    document.getElementById('kana-location-question').textContent = `「${locProb.specialChar}」が はいるのは どこ？`;
-    
-    const btnContainer = document.getElementById('kana-location-buttons');
-    btnContainer.innerHTML = '';
-    
-    // ボタンの生成 (文字と隙間のボタンを交互に配置)
-    for (let i = 0; i <= locProb.baseChars.length; i++) {
+    const buttons = [];
+    for (const option of ['A', 'B']) {
       const btn = document.createElement('button');
-      btn.className = 'btn btn-primary';
-      btn.style.padding = '10px 15px';
-      btn.style.fontSize = '20px';
-      btn.textContent = 'ここ';
+      btn.className = 'btn kana-choice-button';
+      const label = document.createElement('span');
+      label.className = 'kana-choice-label';
+      label.textContent = option;
+      const word = document.createElement('span');
+      word.textContent = option === 'A' ? choiceProb.optionA : choiceProb.optionB;
+      btn.appendChild(label);
+      btn.appendChild(word);
       btn.onclick = () => {
-        if (i === locProb.correctIndex) {
-          submitKanjiAnswer(true);
-        } else {
-          submitKanjiAnswer(false);
+        if (!currentChallengeAnswer) return;
+        const correct = option === choiceProb.correctOption;
+        for (const item of buttons) item.disabled = true;
+        buttons[choiceProb.correctOption === 'A' ? 0 : 1].classList.add('is-correct');
+        if (!correct) btn.classList.add('is-incorrect');
+        if (feedback) {
+          feedback.className = 'kana-choice-feedback ' + (correct ? 'is-correct' : 'is-incorrect');
+          feedback.textContent = (correct ? 'せいかい！' : 'せいかいは「' + choiceProb.correctWord + '」だよ。') +
+            (choiceProb.explanation ? '\n' + choiceProb.explanation : '');
         }
+        submitKanjiAnswer(correct);
       };
+      buttons.push(btn);
       btnContainer.appendChild(btn);
-      
-      if (i < locProb.baseChars.length) {
-        const span = document.createElement('span');
-        span.style.fontSize = '28px';
-        span.style.fontWeight = 'bold';
-        span.textContent = locProb.baseChars[i];
-        btnContainer.appendChild(span);
-      }
     }
   } else {
     // ===== 通常入力モード =====
@@ -253,11 +222,8 @@ function setupKanjiChallenge(problemData) {
     
     const textEl = document.getElementById('challenge-problem-text');
     if(textEl) {
-      if (typeof window.renderReadingHints === 'function') {
-        textEl.innerHTML = window.renderReadingHints(problemData.text, { [problemData.text]: problemData.answer });
-      } else {
-        textEl.textContent = problemData.text;
-      }
+      // 読みを答える出題にはヒントを付けない。textContentで前問のヒントも除去する。
+      textEl.textContent = problemData.text;
     }
     
     const inputEl = document.getElementById('challenge-input');
@@ -281,8 +247,9 @@ function submitKanjiAnswer(forceResult) {
   if (!currentChallengeAnswer) return;
   
   if (typeof forceResult === 'boolean') {
-    if (onAnswerCallback) onAnswerCallback(forceResult);
     currentChallengeAnswer = null;
+    showResultOverlay(forceResult);
+    if (onAnswerCallback) onAnswerCallback(forceResult);
     return;
   }
   

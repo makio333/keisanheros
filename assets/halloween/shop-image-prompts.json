@@ -1,0 +1,95 @@
+{
+  "generator": "built-in image_gen",
+  "assets": [
+    {
+      "id": "candy_token",
+      "prompt": "Game asset for Japanese children's fantasy RPG. A single Halloween exchange-token icon: three colorful wrapped sweets and one orange pumpkin-shaped candy tied with a purple ribbon. Isolated full object, transparent background, readable at 40 pixels. Consistent beautiful 16-bit SNES pixel art, crisp chunky square pixels, dark pixel outline, orange/purple Halloween palette with limited accent colors, clean readable silhouette, detailed but not photorealistic. Centered entire asset with generous empty margin, no scenery for isolated assets, no ground shadow, no text, no watermark.",
+      "transparent_background": true
+    },
+    {
+      "id": "skin_pumpkin_knight",
+      "prompt": "Game asset for Japanese children's fantasy RPG. A collectible heroic character skin: youthful pumpkin knight, orange jack-o-lantern helmet, purple cape, bronze armor, glowing pumpkin sword and shield. Friendly brave expression, full body standing, front three-quarter view, isolated on transparent background. Consistent beautiful 16-bit SNES pixel art, crisp chunky square pixels, dark pixel outline, orange/purple Halloween palette with limited accent colors, clean readable silhouette, detailed but not photorealistic. Centered entire asset with generous empty margin, no scenery for isolated assets, no ground shadow, no text, no watermark.",
+      "transparent_background": true
+    },
+    {
+      "id": "skin_moon_witch",
+      "prompt": "Game asset for Japanese children's fantasy RPG. A collectible heroic character skin: friendly young moon witch, purple pointed hat with orange bow, teal hair, violet dress and orange striped stockings, holding a crescent-moon staff. Full body standing, front three-quarter view, isolated on transparent background. Consistent beautiful 16-bit SNES pixel art, crisp chunky square pixels, dark pixel outline, orange/purple Halloween palette with limited accent colors, clean readable silhouette, detailed but not photorealistic. Centered entire asset with generous empty margin, no scenery for isolated assets, no ground shadow, no text, no watermark.",
+      "transparent_background": true
+    },
+    {
+      "id": "skin_vampire_prince",
+      "prompt": "Game asset for Japanese children's fantasy RPG. A collectible heroic character skin: charming youthful vampire prince, silver hair, crimson and black cape, ornate purple vest, small fangs, holding a ruby rapier. Friendly child-appropriate Halloween costume. Full body standing, front three-quarter view, transparent background. Consistent beautiful 16-bit SNES pixel art, crisp chunky square pixels, dark pixel outline, orange/purple Halloween palette with limited accent colors, clean readable silhouette, detailed but not photorealistic. Centered entire asset with generous empty margin, no scenery for isolated assets, no ground shadow, no text, no watermark.",
+      "transparent_background": true
+    },
+    {
+      "id": "skin_ghost_ranger",
+      "prompt": "Game asset for Japanese children's fantasy RPG. A collectible heroic character skin: youthful ghost ranger in a pale mint hooded cloak with purple lining, amber eyes, orange pumpkin pouch and luminous teal short bow. Friendly mystical adventurer. Full body standing, front three-quarter view, isolated transparent background. Consistent beautiful 16-bit SNES pixel art, crisp chunky square pixels, dark pixel outline, orange/purple Halloween palette with limited accent colors, clean readable silhouettes, detailed but not photorealistic. No text, no watermark.",
+      "transparent_background": true
+    },
+    {
+      "id": "background_haunted_ballroom",
+      "prompt": "Game asset for Japanese children's fantasy RPG. Square collectible avatar backdrop: enchanted Halloween castle ballroom with tall violet gothic windows, moonlight, pumpkin lanterns, floating candles, polished dark floor, gold details. Empty center suitable behind a character, cozy spooky and child-friendly, no characters, no text. Consistent beautiful 16-bit SNES pixel art, crisp chunky square pixels, dark pixel outline, orange/purple Halloween palette with limited accent colors, clean readable silhouettes, detailed but not photorealistic. No text, no watermark.",
+      "transparent_background": false
+    },
+    {
+      "id": "background_candy_village",
+      "prompt": "Game asset for Japanese children's fantasy RPG. Square collectible avatar backdrop: cozy Halloween candy village at dusk, orange lanterns, candy-striped cottages, purple autumn trees, jack-o-lanterns, cobblestone square. Empty center suitable behind a character, whimsical magical and child-friendly, no characters, no text. Consistent beautiful 16-bit SNES pixel art, crisp chunky square pixels, dark pixel outline, orange/purple Halloween palette with limited accent colors, clean readable silhouettes, detailed but not photorealistic. No text, no watermark.",
+      "transparent_background": false
+    },
+    {
+      "id": "equip_pumpkin_blade",
+      "prompt": "Game asset for Japanese children's fantasy RPG. Single collectible weapon item icon: magical pumpkin blade, orange and bronze jagged sword with glowing jack-o-lantern gem in crossguard, violet wrapped handle, clean diagonal silhouette. Entire weapon isolated centered on transparent background with clear margin. Consistent beautiful 16-bit SNES pixel art, crisp chunky square pixels, dark pixel outline, orange/purple Halloween palette with limited accent colors, clean readable silhouettes, detailed but not photorealistic. No text, no watermark.",
+      "transparent_background": true
+    },
+    {
+      "id": "equip_witch_mantle",
+      "prompt": "Game asset for Japanese children's fantasy RPG. Single collectible armor item icon: magical witch mantle, violet cape with orange lining and tiny gold star fasteners, pumpkin clasp, displayed empty with no person. Isolated entire item centered on transparent background with clear margin. Consistent beautiful 16-bit SNES pixel art, crisp clearly visible square pixels, rich purple/orange Halloween palette, detailed but not photorealistic. No text, no watermark.",
+      "transparent_background": true
+    },
+    {
+      "id": "equip_moon_charm",
+      "prompt": "Game asset for Japanese children's fantasy RPG. Single collectible accessory item icon: magical moon charm necklace, gold crescent pendant wrapped around a tiny violet ghost flame and orange gemstone, visible loop and dark chain in a compact silhouette. Isolated centered on transparent background with clear margin. Consistent beautiful 16-bit SNES pixel art, crisp clearly visible square pixels, rich purple/orange Halloween palette, detailed but not photorealistic. No text, no watermark.",
+      "transparent_background": true
+    },
+    {
+      "id": "battle_background",
+      "prompt": "Game asset for Japanese children's fantasy RPG. Wide landscape 16:9 battle background for a Halloween forest: moonlit purple autumn woodland, crooked trees around both sides, orange jack-o-lanterns and tiny floating lights at edges, distant haunted manor beneath a full moon. A large empty grassy clearing occupies the middle foreground for an enemy sprite and bottom UI. Cozy spooky child-friendly mood, no characters or creatures, no interface, no text, no border. Consistent beautiful 16-bit SNES pixel art, crisp clearly visible square pixels, rich purple/orange Halloween palette, detailed but not photorealistic. No text, no watermark.",
+      "transparent_background": false
+    },
+    {
+      "id": "event_banner",
+      "prompt": "Wide 16:9 hero illustration for a Japanese children's fantasy RPG Halloween event page. A cozy pixel-art medieval village at night decorated with orange pumpkin lanterns, under a bright crescent moon. A playful spooky horde approaches the town: jack-o-lantern imps, purple candy slimes, witch cats on brooms, vampire bats, small mummy knights, mint lantern ghosts, candy spiders and a pumpkin scarecrow king. In the foreground two brave young adventurers, a violet-cloaked witch and an orange-armored pumpkin knight, stand protectively at the town gates facing the horde. Exciting 'defend the town from Halloween ghosts' storytelling, whimsical child-friendly mood, crisp high-quality 16-bit SNES pixel art, rich purple and orange palette, clear readable shapes. Compose an atmospheric dramatic panorama suitable for cropping to a wide UI banner. No text, no letters, no logos, no watermark, no UI.",
+      "transparent_background": false
+    },
+    {
+      "id": "gacha_logo",
+      "prompt": "Game UI title logo for a Japanese children's fantasy RPG Halloween gacha. Exact Japanese text: 「ハロウィンガチャ」. Large perfectly legible bold playful lettering, warm orange and gold letters with a deep purple pixel-art outline, small jack-o-lanterns, wrapped candies, a witch hat, crescent moon, tiny cute bats around the lettering. Wide horizontal composition, entire logo centered with generous transparent padding, beautiful 16-bit pixel-art inspired RPG typography and decorations. Isolated on genuinely transparent background, no extra words, no Latin text, no watermark, no scenery.",
+      "transparent_background": true
+    },
+    {
+      "id": "exchange_skin_queen",
+      "prompt": "Game asset for Japanese children's fantasy RPG. Exchange-exclusive character skin: a friendly youthful queen of the Halloween festival with silver hair, small ornate pumpkin-and-moon crown, elegant violet and orange layered festival gown, a floating golden lantern at her side. Confident protective expression, full body standing, front three-quarter view, isolated transparent background with generous margin. Beautiful consistent 16-bit SNES pixel art, crisp clearly visible square pixels, strong dark outlines, rich orange and purple Halloween colors with limited accents, child-friendly whimsical atmosphere. No text, no watermark.",
+      "transparent_background": true
+    },
+    {
+      "id": "exchange_background_moon_garden",
+      "prompt": "Game asset for Japanese children's fantasy RPG. Square exchange-exclusive avatar background: enchanted moon-viewing garden in a Halloween night, glowing orange pumpkin lanterns, violet maple trees, small Japanese-inspired garden bridge over a reflecting pond, huge golden full moon, wisps of friendly ghost light. Clear empty foreground for an avatar, no people, no words. Beautiful consistent 16-bit SNES pixel art, crisp clearly visible square pixels, strong dark outlines, rich orange and purple Halloween colors with limited accents, child-friendly whimsical atmosphere. No text, no watermark.",
+      "transparent_background": false
+    },
+    {
+      "id": "exchange_equip_lantern_staff",
+      "prompt": "Game asset for Japanese children's fantasy RPG. Exchange-exclusive legendary weapon icon: a long ornate golden lantern staff carrying a carved orange pumpkin lantern, curling violet metalwork, pale mint ghost flame and a tiny crescent moon charm. Distinct long diagonal silhouette, entire item centered isolated transparent background with generous margin. Beautiful consistent 16-bit SNES pixel art, crisp clearly visible square pixels, strong dark outlines, rich orange and purple Halloween colors with limited accents, child-friendly whimsical atmosphere. No text, no watermark.",
+      "transparent_background": true
+    },
+    {
+      "id": "ticket_icon",
+      "prompt": "Game asset for Japanese children's fantasy RPG. A single Halloween gacha ticket icon: orange and violet admission ticket with scalloped punched edges, gold border, a jack-o-lantern emblem, tiny crescent moon and purple ribbon, clear readable compact rectangular silhouette. No text. Isolated centered on transparent background with generous margin. Beautiful consistent 16-bit SNES pixel art, crisp clearly visible square pixels, strong dark outlines, rich orange and purple Halloween colors with limited accents, child-friendly whimsical atmosphere. No text, no watermark.",
+      "transparent_background": true
+    },
+    {
+      "id": "exchange_skin_king",
+      "prompt": "Exchange-exclusive male character skin for a Japanese children's fantasy RPG Halloween festival: friendly youthful pumpkin festival king, short silver hair, small ornate pumpkin-and-crescent crown, regal violet and orange coat over polished gold armor, flowing purple cape, holding a glowing golden lantern scepter. A protective handsome young male adventurer, matching a silver-haired purple-gowned Halloween festival queen in style. Full body standing, front three-quarter view, centered with generous transparent margin. Beautiful 16-bit SNES pixel art, crisp chunky square pixels, rich orange and purple palette, dark pixel outlines, child-friendly whimsical mood. Isolated on genuinely transparent background, no scenery, no ground shadow, no text, no watermark.",
+      "transparent_background": true
+    }
+  ]
+}

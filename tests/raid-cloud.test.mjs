@@ -55,7 +55,7 @@ await Promise.all([
   api.syncPlayer('a', profile, { bossId: 'boss_50', legacyDamage: 200 })
 ]);
 assert.equal(global().totalDamageDealt, 200, 'Cloned legacy scores are imported once');
-const threeChallengeState = { playerName: 'Test Hero', player: { lvl: 7, gold: 0 }, skinGachaTenPullTickets: 0 };
+const threeChallengeState = { playerName: 'Test Hero', player: { lvl: 7, gold: 0 }, equipGachaTenPullTickets: 0, skinGachaTickets: 0 };
 const threeChallenges = await api.syncPlayer('a', profile, { bossId: 'boss_50', events: [
   { id: 'battle-a1', bossId: 'boss_50', damage: 200 },
   { id: 'battle-a2', bossId: 'boss_50', damage: 200 },
@@ -70,18 +70,22 @@ assert.equal(rank('a').totalDamage, 700);
 assert.equal(rank('b').totalDamage, 400);
 assert.ok(global().defeatedAt);
 assert.equal(threeChallenges.challengeCount, 3, 'Unique raid challenge events are counted once');
-assert.equal(threeChallenges.challenge2SeedCount, 3, 'The second challenge grants three cost seeds');
-assert.equal(threeChallenges.challenge3TicketCount, 1, 'The third challenge grants one 10-pull ticket');
-assert.equal(JSON.parse(documents.get('saves/a').gameData).skinGachaTenPullTickets, 1);
-assert.equal(JSON.parse(documents.get('saves/a').gameData).items.find(item => item.id === 'cost_seed').count, 3);
+assert.equal(threeChallenges.challenge2EquipTenCount, 1, 'The second challenge grants one equipment 10-pull ticket');
+assert.equal(threeChallenges.challenge3SkinTicketCount, 1, 'The third challenge grants one background skin ticket');
+assert.equal(JSON.parse(documents.get('saves/a').gameData).equipGachaTenPullTickets, 1);
+assert.equal(JSON.parse(documents.get('saves/a').gameData).skinGachaTickets, 1);
 const repeatedMilestones = await api.syncPlayer('a', profile, { bossId: 'boss_50', events: [{ id: 'battle-a3', bossId: 'boss_50', damage: 100 }], state: threeChallengeState });
-assert.equal(repeatedMilestones.challenge2SeedCount, null, 'Challenge milestone rewards cannot be claimed twice');
-assert.equal(repeatedMilestones.challenge3TicketCount, null, '10-pull ticket cannot be claimed twice');
+assert.equal(repeatedMilestones.challenge2EquipTenCount, null, 'Equipment ticket cannot be claimed twice');
+assert.equal(repeatedMilestones.challenge3SkinTicketCount, null, 'Background skin ticket cannot be claimed twice');
 
 const state = { playerName: 'Test Hero', player: { lvl: 7, gold: 20 } };
 now = global().settlesAt + 1;
 const finalized = await api.syncPlayer('a', profile, { bossId: 'boss_50' });
 assert.ok(finalized.finalizedAt, 'Defeated raid finalizes after its ten-minute settlement window');
+const snapshotProfile = documents.get('raidGlobal/currentBoss').finalRankings.find(row => row.slotKey === 'a');
+assert.equal(snapshotProfile.playerName, profile.playerName, 'Final rankings preserve player names');
+assert.equal(snapshotProfile.avatar, profile.avatar, 'Final rankings preserve avatars');
+assert.equal(snapshotProfile.level, profile.level, 'Final rankings preserve levels');
 assert.equal(global().startsAt, now, 'Next boss opens as soon as aggregation finalizes');
 const rewards = await Promise.all([
   api.settleReward('a', 'boss_50', state, game => { game.player.gold += 500; }),
