@@ -1,0 +1,27 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+const source = fs.readFileSync(new URL('../game.js', import.meta.url), 'utf8');
+const context = vm.createContext({ escapeHtml: value => value, iconHtml: icon => `<img src="${icon}">`, rarityLabelHtml: value => `★${value}` });
+vm.runInContext(source.slice(source.indexOf('function aggregateRewardDrops('), source.indexOf('/* 獲得報酬アイテムにポッポ')), context);
+const drops = [1,2,1,1,1,1,1,4].map(count => ({kind:'halloween-candy',name:`ハロウィンのお菓子 ×${count}`,icon:'candy.png',count}));
+const before = JSON.stringify(drops);
+const grouped = context.aggregateRewardDrops(drops);
+assert.equal(grouped.length, 1);
+assert.equal(grouped[0].count, 12);
+assert.equal(grouped[0].name, 'ハロウィンのお菓子');
+assert.equal(JSON.stringify(drops), before, 'rendering never changes earned rewards');
+const gear = [{kind:'equip',id:'sword',name:'剣',rarity:2,ability:null}, {kind:'equip',id:'sword',name:'剣',rarity:3,ability:null}, {kind:'equip',id:'sword',name:'剣',rarity:3,ability:'fire'}, {kind:'equip',id:'sword',name:'剣',rarity:3,ability:'fire'}];
+const gearGroups = context.aggregateRewardDrops(gear);
+assert.equal(gearGroups.length, 3);
+assert.equal(gearGroups[2].count, 2);
+const html = context.generateDropsSummaryHtml(drops, 26, {exp:47});
+assert.equal((html.match(/data-drop-json=/g) || []).length, 1);
+assert.match(html, /reward-icon-count">×12/);
+assert.match(html, /けいけんち \+47/);
+assert.match(html, /\+26 ゴールド/);
+vm.runInContext(source.slice(source.indexOf('function itemCardBodyHtml('),source.indexOf('/* ==========================================================', source.indexOf('function itemCardBodyHtml('))),context);
+assert.equal((context.itemCardBodyHtml(drops.at(-1), 56).match(/×4/g) || []).length, 1, 'old quantity-bearing names show their quantity once');
+console.log('PASS: reward aggregation, gear variants, immutable drops, icon counts and legacy quantity names');
+
+assert.match(context.itemCardBodyHtml({name:'報酬チケット ×3',icon:'ticket.png'},56), /報酬チケット ×3/, 'quantity stored only in legacy name remains visible');

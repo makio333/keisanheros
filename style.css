@@ -7292,7 +7292,7 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
 .raid-history-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0; }
 .raid-history-nav .btn { width: auto; min-width: 0; padding: 8px 10px; font-size: 14px; }
 #raid-history-position { white-space: nowrap; color: #feca57; }
-.raid-history-summary { white-space: pre-line; line-height: 1.6; padding: 10px; border: 1px solid #555; border-radius: 6px; background: #11141a; }
+.raid-history-summary { flex-shrink: 0; white-space: nowrap; overflow-x: auto; font-size: 12px; line-height: 1.5; padding: 6px 8px; border: 1px solid #555; border-radius: 6px; background: #11141a; }
 .raid-history-panel > h3 { color: #feca57; margin: 12px 0 8px; font-size: 18px; text-align: center; }
 .raid-history-cheers { color: #feca57; font-size: 11px; white-space: nowrap; }
 .raid-learning-recommendation { display: flex; align-items: baseline; justify-content: center; flex-wrap: wrap; gap: 5px 12px; margin-top: 8px; padding: 7px 10px; border-top: 1px solid rgba(255,255,255,0.12); color: #b9c0c6; font-size: 12px; text-align: center; }
@@ -7757,14 +7757,15 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
 .halloween-hub-header h2 { margin: 0; padding: 0; border: none; font-size: 22px; }
 .halloween-candy-balance { display: flex; align-items: center; gap: 6px; margin-left: auto; color: #ffe4ac; }
 .halloween-candy-balance b { font-size: 24px; }
-.halloween-event-banner { position: relative; flex: 0 0 150px; overflow: hidden; }
-.halloween-event-banner > img { width: 100%; height: 100%; object-fit: cover; object-position: center 42%; image-rendering: pixelated; }
+.halloween-event-banner { position: relative; flex: 0 0 auto; aspect-ratio: 2103 / 748; overflow: hidden; }
+.halloween-event-banner > img { display: block; width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
 .halloween-event-banner > div { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; padding: 14px 20px; text-align: left; background: linear-gradient(transparent 20%,rgba(22,12,34,.88)); }
 .halloween-event-banner strong { color: #ffe4a2; font-size: clamp(18px,3vw,28px); text-shadow: 0 2px 3px #000; }
 .halloween-event-banner span { color: #fff; font-size: 13px; margin-top: 5px; }
-.halloween-tabs { display: flex; flex-shrink: 0; background: #211329; border-bottom: 1px solid #8b658b; }
-.halloween-tabs button { flex: 1; min-height: 44px; color: #dec9e6; background: none; border: none; border-bottom: 3px solid transparent; font: inherit; font-weight: bold; cursor: pointer; }
-.halloween-tabs button[aria-selected="true"] { color: #ffe1a5; border-color: #ffb24d; background: #4b2a51; }
+.halloween-tabs { display: flex; flex-shrink: 0; gap: 10px; padding: 12px; background: #211329; border-bottom: 1px solid #8b658b; }
+.halloween-tabs button { flex: 1; min-width: 0; min-height: 56px; padding: 10px 6px; color: #f1e6f6; background: #392540; border: 2px solid #8b658b; border-radius: 12px; font: inherit; font-size: clamp(14px,2.4vw,20px); font-weight: bold; cursor: pointer; }
+.halloween-tabs button[aria-selected="true"] { color: #2d1735; border-color: #ffe1a5; background: linear-gradient(135deg,#ffdf8b,#ffad4d); box-shadow: 0 0 14px #ffb24d33; }
+.halloween-tabs button:hover, .halloween-tabs button:focus-visible { outline: 2px solid #ffd083; outline-offset: 2px; }
 .halloween-tab-panel { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 18px; }
 .halloween-hub-footer { padding: 8px 18px; border-top: 1px solid #674765; flex-shrink: 0; }
 .halloween-hub-footer .btn { margin: 0; min-height: 36px; }
@@ -7788,7 +7789,7 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
 .halloween-gacha-result b { display: block; margin-top: 8px; color: #ffe2a5; }
 .halloween-action-message { padding: 10px; color: #a4f1c9; border-radius: 8px; background: #17382c; }
 @keyframes halloween-prize-pop { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
-@media (max-width: 640px) { .halloween-prize-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; } .halloween-hub-header { padding: 8px; } .halloween-hub-header h2 { font-size: 18px; } .halloween-event-banner { flex-basis: 110px; } .halloween-event-banner > div { padding: 8px 10px; } .halloween-event-banner span { font-size: 11px; } .halloween-tab-panel { padding: 10px; } .halloween-hub .halloween-prize-card { padding: 8px; } }
+@media (max-width: 640px) { .halloween-prize-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; } .halloween-hub-header { padding: 8px; } .halloween-hub-header h2 { font-size: 18px; } .halloween-event-banner > div { padding: 8px 10px; } .halloween-event-banner span { font-size: 11px; } .halloween-tab-panel { padding: 10px; } .halloween-hub .halloween-prize-card { padding: 8px; } }
 #screen-battle.halloween-battle-screen { background-color: #2b183e; }
 #screen-battle.halloween-battle-screen .battle-field { background: radial-gradient(ellipse,rgba(159,66,185,.12),transparent 75%); }
 @media (max-width: 640px) { .halloween-home-tag { font-size: 12px; padding: 4px; } .halloween-home-tag img { width: 32px; height: 32px; } .halloween-monster-parade img { height: 70px; } .halloween-event-card { padding: 14px; } }
@@ -7848,3 +7849,217 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
 .halloween-hub .halloween-prize-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
 .halloween-hub-footer { display:flex; justify-content:space-between; gap:8px; }
 @media (max-width:600px) { .halloween-gacha-logo { height:135px; } }
+
+/* 獲得品は同じ種類をまとめて、アイコンと個数で見せる */
+.rewards-grid .reward-icon-card { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 100px; min-height: 96px; padding: 10px 8px; font-family: inherit; color: var(--text); }
+.reward-icon-card .reward-icon-count { font-size: 18px; color: #ffe4a5; line-height: 1.2; }
+.reward-icon-card small { font-size: 11px; }
+.reward-icon-card:focus-visible { outline: 3px solid #ffd064; outline-offset: 3px; }
+.halloween-summon { position: fixed; inset: 0; z-index: 100000; display: grid; place-items: center; overflow: auto; isolation: isolate; background: radial-gradient(ellipse at 50% 45%,#733483e8,#13091cf5 70%),url('assets/halloween/background_haunted_ballroom.png') center/cover; }
+.halloween-summon-stage { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; width: min(600px,94vw); min-height: min(650px,95dvh); padding: 24px 12px; box-sizing: border-box; text-align: center; }
+.halloween-summon-eyebrow { color: #ffcb7d; letter-spacing: .25em; font-size: 13px; z-index: 1; }
+.halloween-summon-orbit { position: absolute; top: 21%; width: min(340px,75vw); aspect-ratio: 1; border: 3px solid #ffa73d; border-radius: 50%; box-shadow: 0 0 36px #ff993c88,inset 0 0 45px #c567ff88; outline: 1px dashed #ffc16f; outline-offset: 15px; animation: halloween-orbit 5s linear infinite; }
+.halloween-summon-pumpkin { display: grid; place-items: center; height: 300px; z-index: 1; }
+.halloween-summon-pumpkin img { width: min(230px,55vw); filter: drop-shadow(0 0 25px #ffae49); animation: halloween-charge .45s ease-in-out infinite alternate; }
+.halloween-summon-copy { z-index: 1; min-height: 110px; }
+.halloween-summon-copy h2 { border: 0; margin: 12px 0; padding: 0; font-size: clamp(20px,5vw,30px); color: #ffe5af; text-shadow: 0 0 20px #f89642; }
+.halloween-summon-copy p { color: #e2c9ef; }
+.halloween-summon-stage > .btn { z-index: 1; min-width: 180px; margin-top: 12px; }
+.halloween-summon-prize { height: 300px; display: grid; place-items: center; z-index: 1; animation: halloween-reveal .65s cubic-bezier(.2,.9,.3,1.2) both; }
+.halloween-summon-prize .stage-reward-icon { width: min(260px,66vw); height: 260px; border: none; background: transparent; box-shadow: none; }
+.halloween-summon-prize img { width: 100% !important; height: 100% !important; filter: drop-shadow(0 0 18px #ffc572); }
+.halloween-summon-type { color: #ffd580 !important; font-weight: bold; letter-spacing: .12em; }
+.halloween-summon-stars { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.halloween-summon-stars i { position: absolute; left: 50%; top: 43%; width: 6px; height: 12px; border-radius: 50%; background: #ffd886; box-shadow: 0 0 12px #ffc35c; transform: rotate(var(--angle)) translateY(190px); animation: halloween-spark 1.2s var(--delay) ease-in-out infinite alternate; }
+.halloween-summon[data-phase="revealed"] { background: radial-gradient(ellipse at 50% 43%,#b8733270,#261039ee 65%),url('assets/halloween/background_haunted_ballroom.png') center/cover; }
+.halloween-summon[data-phase="revealed"] .halloween-summon-orbit { border-color: #ffe5a6; box-shadow: 0 0 65px #ffc24b99,inset 0 0 65px #ffc24b55; }
+@keyframes halloween-charge { from { transform: translateY(8px) rotate(-6deg) scale(.94); } to { transform: translateY(-10px) rotate(6deg) scale(1.05); } }
+@keyframes halloween-orbit { to { transform: rotate(360deg); } }
+@keyframes halloween-spark { to { opacity: .3; transform: rotate(var(--angle)) translateY(290px) scale(.5); } }
+@keyframes halloween-reveal { from { opacity: 0; transform: scale(.3) translateY(30px); filter: brightness(3); } to { opacity: 1; transform: scale(1); filter: brightness(1); } }
+@media (max-height: 650px) { .halloween-summon-stage { min-height: 100dvh; padding: 12px; } .halloween-summon-pumpkin,.halloween-summon-prize { height: 220px; } .halloween-summon-prize .stage-reward-icon { height: 200px; width: 200px; } .halloween-summon-orbit { width: 230px; } .halloween-summon-copy { min-height: 90px; } }
+@media (prefers-reduced-motion: reduce) { .halloween-summon *, .reward-icon-card { animation: none !important; } }
+.halloween-summon[data-phase="revealed"]::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 50% 43%,#fff1c8dd,transparent 65%); animation: halloween-light-burst .7s ease-out both; }
+@keyframes halloween-light-burst { from { opacity: 1; transform: scale(.4); } to { opacity: 0; transform: scale(1.4); } }
+@media (prefers-reduced-motion: reduce) { .halloween-summon::before { animation: none !important; opacity: 0; } }
+
+/* 景品・交換品・獲得品のクリック拡大 */
+.stage-reward-icon, .reward-icon-card { cursor: zoom-in; }
+.reward-artwork-preview { position: fixed; inset: 0; z-index: 110000; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; background: rgba(9,5,17,.88); }
+.reward-artwork-panel { width: min(620px,100%); max-height: 92dvh; overflow-y: auto; padding: 18px; box-sizing: border-box; border: 2px solid #ffd083; border-radius: 18px; background: radial-gradient(ellipse at top,#49305c,#1b1428 75%); box-shadow: 0 0 48px #bd772d30; text-align: center; }
+.reward-artwork-panel h2 { font-size: clamp(20px,5vw,28px); color: #ffe2a1; margin: 12px 0; padding: 0; border: 0; }
+.reward-artwork-close { display: block; margin-left: auto; }
+.reward-artwork-image { display: grid; place-items: center; width: 100%; height: min(420px,48dvh); border-radius: 12px; background: radial-gradient(ellipse,#956f7344,transparent 75%); }
+.reward-artwork-image img { width: 100% !important; height: 100% !important; max-width: 100%; object-fit: contain; }
+.reward-artwork-image > span { font-size: min(160px,30vw) !important; }
+.reward-artwork-detail { margin-top: 16px; color: #eee1f5; font-size: 14px; line-height: 1.6; text-align: left; }
+.skin-gacha-preview-modal { z-index: 110000; }
+.reward-artwork-image { position: relative; }
+.reward-artwork-image img { position: absolute; inset: 0; min-width: 0; min-height: 0; max-height: 100%; }
+
+/* タイトル帯もイベント背景に重ね、画像との切れ目をなくす */
+.halloween-hero { position: relative; flex: 0 0 auto; }
+.halloween-hero .halloween-hub-header { position: absolute; inset: 0 0 auto; z-index: 2; box-sizing: border-box; background: linear-gradient(rgba(24,12,38,.78),rgba(24,12,38,.2),transparent); text-shadow: 0 2px 5px #000; }
+.halloween-hero .halloween-event-banner { flex: none; }
+@media (max-width: 640px) {
+  .halloween-hero .halloween-event-banner { aspect-ratio: auto; height: 230px; background: #211329; }
+  .halloween-hero .halloween-event-banner > img { position: absolute; inset: 0; }
+  .halloween-hero .halloween-hub-header { background: linear-gradient(rgba(24,12,38,.8),transparent); }
+}
+
+/* 挑戦画面は詳細と開始ボタンを常に見せる */
+.halloween-hub.is-stage .halloween-tab-panel { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; overflow: visible; }
+.halloween-hub.is-stage .halloween-source { width: 100%; box-sizing: border-box; padding: 10px; }
+.halloween-hub.is-stage .halloween-source p { margin: 6px 0 0; font-size: 12px; }
+.halloween-hub.is-stage .halloween-start-button { flex-shrink: 0; margin: 0; min-height: 44px; }
+@media (max-height: 650px) {
+  .halloween-hero .halloween-event-banner { aspect-ratio: auto; height: min(180px,28dvh); }
+  .halloween-hero .halloween-event-banner > img { object-fit: contain; }
+  .halloween-event-banner > div { padding: 6px 12px; }
+  .halloween-event-banner strong { font-size: 16px; }
+  .halloween-event-banner span { display: none; }
+  .halloween-tabs { padding: 6px 10px; }
+  .halloween-tabs button { min-height: 42px; padding: 6px; }
+  .halloween-hub.is-stage .halloween-tab-panel { gap: 6px; padding: 8px 12px; }
+}
+
+/* 挑戦は1つのボタン、その下に交換一覧を常設 */
+.halloween-stage-entry { flex-shrink: 0; padding: 12px 18px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid #674765; }
+.halloween-stage-entry .halloween-source { flex: 1; min-width: 0; padding: 8px 10px; font-size: 14px; }
+.halloween-stage-entry .halloween-source p { margin: 4px 0 0; font-size: 12px; }
+.halloween-stage-entry .halloween-start-button { flex: 0 0 auto; width: auto; margin: 0; min-height: 48px; padding: 10px 18px; }
+.halloween-tab-panel > h3.halloween-panel-lead { margin: 0 0 8px; text-align: center; }
+@media (max-width: 640px) {
+  .halloween-stage-entry { flex-direction: column; gap: 8px; padding: 8px 10px; }
+  .halloween-stage-entry .halloween-source { width: 100%; box-sizing: border-box; }
+  .halloween-stage-entry .halloween-start-button { width: 100%; }
+}
+
+/* 景品画像は96px枠・88px画像のまま、交換カードを詰める */
+.halloween-hub .halloween-prize-grid { grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; }
+.halloween-hub .halloween-exchange-card { gap: 4px; padding: 8px; }
+.halloween-exchange-card > b { font-size: 12px; line-height: 1.3; min-height: 32px; display: flex; align-items: center; justify-content: center; text-align: center; }
+.halloween-exchange-actions { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; margin-top: auto; }
+.halloween-exchange-actions .halloween-prize-price { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; white-space: nowrap; }
+.halloween-exchange-actions .halloween-prize-price b { font-size: 13px; }
+.halloween-exchange-actions .btn { flex: 1; width: auto; min-width: 0; min-height: 30px; padding: 4px; margin: 0; font-size: 11px; white-space: nowrap; }
+@media (max-width: 640px) { .halloween-hub .halloween-prize-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+
+/* ハロウィンガチャ：月夜のお城とお菓子の街 */
+#halloween-gacha-section { border: 1px solid #bd865b; border-radius: 0 0 18px 18px; overflow: hidden; background: #24132d; box-shadow: 0 12px 42px #0006; }
+#halloween-gacha-section .halloween-gacha-showcase { position: relative; padding: 18px 16px 14px; background: linear-gradient(180deg,rgba(26,10,47,.15),rgba(34,13,48,.32) 65%,#281333),url('assets/halloween/background_haunted_ballroom.png') center 38% / cover; border-bottom: 1px solid #cb915d; }
+#halloween-gacha-section .halloween-gacha-logo { position: relative; filter: drop-shadow(0 0 14px #ffad4655) drop-shadow(0 3px 5px #160622); }
+#halloween-gacha-section .halloween-gacha-showcase p { position: relative; width: fit-content; max-width: 100%; margin: 10px auto 0; padding: 8px 16px; box-sizing: border-box; border: 1px solid #e7bc7955; border-radius: 24px; background: #21112ddd; color: #ffe5b5; text-shadow: 0 1px 3px #000; }
+#halloween-gacha-section .halloween-gacha-controls { padding: 18px; background: linear-gradient(180deg,rgba(29,12,43,.76),rgba(29,12,43,.88)),url('assets/halloween/background_candy_village.png') center / cover; }
+#halloween-gacha-section .skin-gacha-balance { width: fit-content; max-width: 100%; padding: 8px 12px; box-sizing: border-box; border: 1px solid #e5b66e99; border-radius: 12px; background: #281635e8; color: #ffe2a5; box-shadow: 0 0 20px #ffa63a17; }
+#halloween-gacha-section .menu-grid > .btn { border: 1px solid #d1a163; background: linear-gradient(135deg,#60367b,#382047); color: #ffe8b8; }
+#halloween-gacha-section .menu-grid > .btn-primary { background: linear-gradient(135deg,#ffdf8b,#ff9d43); color: #341733; border-color: #ffe8b8; box-shadow: 0 0 20px #ffa53433; }
+#halloween-gacha-section .halloween-panel-note { color: #ead9f0; }
+#halloween-gacha-section .halloween-prize-card { position: relative; border: 1px solid #c4966e; background: radial-gradient(ellipse at 50% 20%,#75418177,transparent 70%),linear-gradient(145deg,#34203ded,#1d122ce8); box-shadow: inset 0 0 18px #cf984b12,0 4px 14px #0004; }
+#halloween-gacha-section .halloween-prize-art { padding: 5px; border-radius: 50%; background: radial-gradient(ellipse,#de995c33,transparent 70%); }
+#halloween-gacha-section .halloween-prize-card > b { color: #ffe2a5; }
+#halloween-gacha-section .halloween-prize-card > span { color: #dfc3ef; font-size: 12px; }
+#halloween-gacha-section .halloween-prize-card.is-owned { border-color: #92d7b2; box-shadow: inset 0 0 16px #70c99116; }
+#screen-gacha:has(#halloween-gacha-section:not(.hidden)) #btn-gacha-tab-halloween { background: linear-gradient(135deg,#623674,#3f224d); color: #ffe0a0; border-color: #e1af66; }
+@media (max-width: 600px) { #halloween-gacha-section .halloween-gacha-controls { padding: 12px; } #halloween-gacha-section .halloween-gacha-showcase p { padding: 6px 10px; font-size: 12px; } }
+
+/* ハロウィンガチャの外側も夜の森で包む */
+#screen-gacha:has(#halloween-gacha-section:not(.hidden)) {
+  background: linear-gradient(rgba(19,9,32,.48),rgba(19,9,32,.68)),url('assets/halloween/battle_background.png') center / cover;
+}
+#screen-gacha:has(#halloween-gacha-section:not(.hidden)) .gacha-page-header {
+  padding: 8px 12px;
+  border: 1px solid #d6a56b66;
+  border-radius: 12px;
+  background: rgba(27,13,40,.8);
+  box-shadow: 0 4px 18px #0004;
+}
+
+/* 合成工房：装備選択 → 素材選択 → 専用計算 */
+.synthesis-panel { position: relative; width: min(1000px,94vw); margin: 20px auto; padding: 24px; box-sizing: border-box; background: radial-gradient(ellipse at top,#41305e,#1c172b 70%); border: 2px solid #b89bdf; }
+.synthesis-panel h2 { color: #ffe4a3; }
+.synthesis-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(150px,1fr)); gap: 10px; margin-top: 16px; }
+.synthesis-inventory-card { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; padding: 12px 8px; border: 1px solid #b195d3; border-radius: 12px; background: #30263e; color: #f6ebff; font: inherit; cursor: pointer; }
+.synthesis-inventory-card b { font-size: 14px; }
+.synthesis-inventory-card > span, .synthesis-inventory-card small { font-size: 12px; }
+.synthesis-inventory-card:disabled { opacity: .45; cursor: default; }
+.synthesis-inventory-card:not(:disabled):hover, .synthesis-inventory-card[aria-pressed="true"] { border-color: #ffd184; background: #4a345b; box-shadow: 0 0 14px #fbc36633; }
+.synthesis-inventory-card:focus-visible { outline: 3px solid #ffd184; outline-offset: 2px; }
+.synthesis-recipe { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; }
+.synthesis-recipe:empty { display: none; }
+.synthesis-slot, .synthesis-success { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 150px; padding: 12px 8px; border: 1px solid #a68bbd; border-radius: 12px; background: #21182e; text-align: center; }
+.synthesis-slot b { font-size: 14px; }
+.synthesis-slot span, .synthesis-slot small { font-size: 12px; }
+.synthesis-symbol { color: #ffd584; font-size: 24px; }
+.synthesis-target { border-color: #e4c476; }
+.synthesis-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; }
+.synthesis-actions small { width: 100%; text-align: center; color: #cfbedc; }
+.synthesis-equipped { color: #91e1c1; }
+.synthesis-art { display: grid; place-items: center; }
+.synthesis-calc-panel { max-width: 780px; }
+#synthesis-calc-result { display: flex; justify-content: center; margin: 16px 0; }
+.synthesis-success { border-color: #ffd183; box-shadow: 0 0 24px #ffa94a33; width: 220px; }
+body:has(#screen-synthesis-calc.active) :is(#analog-clock-widget,#btn-menu,#menu-dropdown,#volume-control-container) { visibility: hidden; pointer-events: none; }
+@media(max-width:600px) { .synthesis-panel { padding: 16px 12px; } .synthesis-slot { width: 90px; padding: 8px 4px; } .synthesis-recipe { gap: 6px; } .synthesis-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+#synthesis-challenge .challenge-main { min-width: 0; max-width: 100%; box-sizing: border-box; }
+#synthesis-challenge #ch-form { display: flex; gap: 8px; width: 100%; }
+#synthesis-challenge #ch-input { flex: 1; min-width: 0; width: 100%; box-sizing: border-box; }
+#synthesis-challenge #ch-submit { flex: 0 0 auto; width: auto; margin: 0; padding: 8px 12px; }
+#synthesis-challenge .portrait-calc-pad { width: 100%; box-sizing: border-box; }
+
+/* シーズン2：同時に出現した敵から攻撃対象を選ぶ */
+#screen-battle.halloween-party-battle #battle-enemy-emoji,
+#screen-battle.halloween-party-battle #battle-enemy-name,
+#screen-battle.halloween-party-battle .enemy-bars { display: none; }
+#screen-battle.halloween-party-battle .battle-field { height: min(260px,30dvh); min-height: 180px; }
+#screen-battle.halloween-party-battle .battle-enemy-figure { width: min(760px,100%); }
+#halloween-enemy-party { width: 100%; }
+.halloween-target-hint { color: #ffe2a4; font-size: 12px; margin: 0 0 6px; text-shadow: 0 1px 3px #000; }
+.halloween-party-grid { display: grid; gap: 8px; }
+.halloween-party-target { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; padding: 6px; border: 2px solid #9a749b; border-radius: 12px; background: #261832bb; color: #fff0d5; font: inherit; cursor: pointer; }
+.halloween-party-target[aria-pressed="true"] { border-color: #ffd174; box-shadow: 0 0 16px #ffc04e55; background: #51304abb; }
+#screen-battle .halloween-party-target .enemy-sprite { display: grid; place-items: center; width: 100%; height: clamp(65px,12vw,115px); max-width: 130px; aspect-ratio: auto; }
+#screen-battle .halloween-party-target .enemy-sprite img { width: 100% !important; height: 100% !important; object-fit: contain; }
+.halloween-party-target b { font-size: 11px; line-height: 1.2; min-height: 26px; }
+.halloween-party-target small { font-size: 10px; }
+.halloween-party-health { height: 6px; width: 100%; border-radius: 5px; overflow: hidden; background: #170c22; }
+.halloween-party-health i { display: block; height: 100%; background: linear-gradient(90deg,#ff7a70,#ffc385); }
+.halloween-party-target.is-defeated { opacity: .3; filter: grayscale(1); }
+.halloween-party-target:focus-visible { outline: 3px solid #fff1ab; outline-offset: 2px; }
+@media(max-width:600px) {
+  .halloween-party-grid { gap: 3px; }
+  .halloween-party-target { padding: 4px 2px; border-radius: 8px; gap: 3px; }
+  #screen-battle .halloween-party-target .enemy-sprite { height: 65px; }
+  .halloween-party-target b { font-size: 9px; }
+  .halloween-party-target small { font-size: 8px; }
+  #screen-battle.halloween-party-battle .battle-field { height: 185px; min-height: 185px; padding: 0 6px; }
+}
+@media(max-width:600px) {
+  #screen-battle.halloween-party-battle:has(#battle-challenge:not(.hidden)) .battle-field { height: 160px; min-height: 160px; }
+  #screen-battle.halloween-party-battle .halloween-party-target .enemy-sprite,
+  #screen-battle.halloween-party-battle:has(#battle-challenge:not(.hidden)) .halloween-party-target .enemy-sprite { height: 55px; min-height: 0; }
+  #screen-battle.halloween-party-battle .halloween-target-hint { margin-bottom: 3px; font-size: 10px; }
+}
+#screen-battle .halloween-party-target .enemy-sprite { position: relative; display: block; }
+#screen-battle .halloween-party-target .enemy-sprite img { position: absolute; inset: 0; min-height: 0; max-height: 100%; }
+.halloween-season2-entry { flex-shrink: 0; display: flex; flex-direction: column; gap: 3px; padding: 6px 18px 10px; border-bottom: 1px solid #674765; }
+.halloween-season2-entry .btn { margin: 0; min-height: 40px; background: linear-gradient(135deg,#7946a8,#482458); color: #ffe7b2; border: 1px solid #d4a565; }
+.halloween-season2-entry small { color: #d7bfdc; font-size: 11px; text-align: center; }
+.halloween-season2-panel { width: min(680px,94vw); max-height: 90dvh; overflow-y: auto; box-sizing: border-box; padding: 20px; border: 2px solid #ffbd74; background: linear-gradient(#321e46ed,#1a122bed),url('assets/halloween/battle_background.png') center/cover; }
+.halloween-season2-stage-list { display: grid; gap: 10px; margin: 16px 0; }
+.halloween-season2-stage { display: flex; flex-direction: column; gap: 6px; padding: 14px; border: 1px solid #ba8fbc; border-radius: 12px; background: #493252cc; color: #ffeacd; font: inherit; cursor: pointer; text-align: left; }
+.halloween-season2-stage b { font-size: 18px; color: #ffd88d; }
+.halloween-season2-stage span { font-size: 14px; }
+.halloween-season2-stage small { color: #dec9ed; font-size: 12px; }
+.halloween-season2-stage strong { align-self: flex-end; color: #ffdc84; font-size: 14px; }
+.halloween-season2-stage:hover, .halloween-season2-stage:focus-visible { outline: 2px solid #ffd184; outline-offset: 2px; background: #684275dd; }
+.halloween-operation-select { display: flex; justify-content: center; align-items: center; gap: 10px; color: #ffe6b6; }
+.halloween-operation-select select { font: inherit; color: #ffe6b6; background: #463050; border: 1px solid #d4a568; border-radius: 8px; padding: 8px 14px; }
+.halloween-party-target { position: relative; }
+.halloween-party-number { position: absolute; top: 0; left: 4px; z-index: 2; min-width: 28px; padding: 2px 5px; border: 1px solid #ffe099; border-radius: 8px; background: #2c153eee; color: #ffe7a3; font-size: 20px; font-weight: bold; line-height: 1.2; text-shadow: 0 1px 2px #000; }
+.halloween-math-challenge { width: 100%; box-sizing: border-box; }
+.halloween-math-tools { display: flex; gap: 8px; justify-content: center; }
+.halloween-math-tools .btn { width: auto; }
+#halloween-math-selection { color: #ffe3a8; font-size: 14px; min-height: 22px; }
+.halloween-math-timer { font-size: 12px; color: #dac5e8; margin: 8px 0 0; }
+@media(max-width:600px) { .halloween-party-number { font-size: 16px; min-width: 20px; padding: 1px 3px; left: 1px; } #halloween-math-selection { font-size: 12px; } }

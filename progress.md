@@ -126,3 +126,37 @@ TODO:
 - Fixed master-volume scaling across BGM and sound effects. Slider changes update all loaded BGM tracks (preserving the quieter home-music baseline) and currently playing audio-file sound effects; generated beep/rumble effects continue to use the same master-volume value for new playback.
 - Removed furigana from challenge question text and removed question-bank-derived readings so answer data cannot leak into hover hints. Furigana now applies only to safe quest names/titles and item names, descriptions, and usage guidance, including inventory and battle item lists.
 - Verification: `npm run build` and `git diff --check` passed. The game browser showed the volume slider changing from 70% to 35% and back. The required Playwright client could not launch because Chromium is not installed in this environment.
+
+## 2026-10-13 — ハロウィン演出・報酬表示
+- Request: ハロウィンガチャの演出改善、リザルトをアイコン＋同じアイテムの合計に変更、お菓子の「×4 ×4」を修正。
+- Added Halloween summon overlay: pumpkin charge, magic ring, sparks, light burst, large prize reveal; skip/Escape, focus handling, reduced motion.
+- Reward summary groups identical drops; equipment with different rarity/ability remains separate. Cards show icons + totals and support tooltip keyboard focus.
+- Removed embedded quantity from candy drop name and normalized legacy names in the shared acquisition card renderer.
+- Validation: build, halloween-shop test, reward-summary regression test passed. Skill Playwright client used installed Chrome via temporary adapter because bundled Chromium was missing. Desktop browser checks passed (summon, skip, auto reveal, ticket/gold deduction, reduced motion, no page errors); mobile QA also passed. Final light-burst adjustment built successfully and desktop recheck passed.
+- No unrelated gameplay state or reward probabilities changed. Test hooks were injected in the test browser only, with save stubbed.
+
+## 2026-10-13 — クリックで景品を拡大
+- Added full-size artwork/detail modal for shared reward icons: Halloween gacha catalog, exchange catalog, summon results and earned reward summary. Close button/backdrop/Escape and keyboard focus restore supported.
+- Existing normal skin/background/equipment previews now support Escape/focus handling; equipment images reset hidden/holographic state inherited from prior previews.
+- Desktop/mobile Playwright checks passed for all 9 Halloween prizes, all 4 exchanges, normal gacha categories, result icons, nested summon preview and unchanged currency/ownership. No page errors.
+- Adjusted enlarged images to stay within their artwork container. Build and syntax checks passed; screenshots saved under output/artwork-preview-qa. No production deployment or Git push.
+
+## 2026-10-14 — 合成工房とランタン
+- Exchange lantern rarity changed from ★5 to ★4 (超激レア); previously acquired inventory is preserved.
+- Replaced automatic pair selection with inventory cards, explicit base UID and matching material UID, recipe/result preview and a dedicated synthesis calculation screen.
+- Two correct problems consume only the selected copies and create the next rarity. Fail/cancel consumes nothing; stale callbacks and invalidated pairs are guarded. Equipped consumed copies are unequipped; extra copies remain. Abilities reroll as before.
+- Validation: synthesis regression tests, Halloween shop test, build and diff checks passed. Desktop/mobile browser checks covered actual selection, calculation, success/failure/cancel and found no page errors. Screenshots reviewed under output/synthesis-qa.
+
+## 2026-10-14 — ハロウィン シーズン2
+- Release gate: 2026-10-21 00:00 JST, active until existing October event closes. Release occurs in game code; no deployment performed.
+- User requested up to approximately five simultaneous monsters: three groups of 2, 3 and 5 (10 total). Run snapshots its season at entry. Season1 stays one monster per battle and eight encounters.
+- Tappable targets with separate HP; target switches are locked while damage and counterattacks resolve. Surviving enemies counterattack on a wrong answer. Clearing a group requires defeating every member.
+- Group gold/experience and individual monster drop rolls award once, guarded against repeated victory callbacks. Existing event inventory and once-per-event first-clear claims carry over.
+- Tested JST boundary, in-progress run snapshot, party composition/progression, target locks, survivor transition and once-only group rewards; original event/shop and battle presentation tests passed. Build passed. Desktop/mobile Chrome checks covered five visible enemies, target damage and counterattacks and 2→3→5 progression without page errors. Mobile sizing refined to preserve HP visibility.
+
+## 2026-10-14 — シーズン2の別ステージ・先行テスト・四則問題
+- Classic event entry always remains season1, even after October 21. Separate S2 entry opens three dedicated stages; before release it explicitly says 先行テスト and can launch now.
+- S2 stages have their own cleared counts; they do not advance classic challenge progression or consume its first-clear claim. Normal earned battle items/currency remain shared.
+- Added four-operation selector and enemy-number math: small stage chooses the enemy carrying the answer; plaza combines two enemy numbers in selection order; boss course mixes both modes. Correct combinations damage both selected targets. One remaining monster falls back to answer selection.
+- Guaranteed solvable questions for addition/subtraction/multiplication/division; division answers are integral. Questions persist across skill/item menu detours; countdown expires into surviving-enemy retaliation.
+- Property/regression tests cover all four operations, 1/2/3/5 enemies, unique answers, ordered pair validity, release/preview gating, separate progression and prior battle presentation. Build passed. Desktop/mobile browser validation passed for preview entry, four operations in both modes, exact one/two-target damage, wrong-answer retaliation and classic entry. Reviewed stage chooser and division screenshots.

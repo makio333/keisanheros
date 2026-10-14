@@ -1848,7 +1848,7 @@ function renderBattleProgressStars() {
   el.classList.toggle('hidden', raid);
   if (raid) { el.innerHTML = ''; return; }
   const total = explore.stageMode ? (explore.isBoss ? 2 : ENEMIES_PER_STAGE) : 10;
-  const eventTotal = explore.isHalloween ? HALLOWEEN_MONSTERS.length : total;
+  const eventTotal = explore.isHalloween ? halloweenEncounterTotal(explore) : total;
   const current = explore.isHalloween ? explore.halloweenIndex + 1 : explore.stageMode
     ? (explore.isBoss ? (explore.bossPhase === 2 ? 2 : 1) : Math.min(total, (explore.stageKillCount || 0) + 1))
     : explore.floor;
@@ -4403,6 +4403,10 @@ function startBattle(animateFloor){
     over: false,
     currentTurnProblem: null,
   };
+  if (explore.isHalloween) {
+    const party = generateHalloweenParty(explore);
+    if (party) { battle.enemies = party; battle.enemy = party[0]; }
+  }
   showScreen('screen-battle');
   $('screen-battle').classList.remove('raid-battle-screen');
   const bg = isStageMode
@@ -4414,7 +4418,7 @@ function startBattle(animateFloor){
     ? stageBattleTitleHtml(explore.areaId, explore.stageIndex, explore.isBoss, explore.bossPhase, explore.stageKillCount)
     : `${zoneName(explore.zone)} ${floorLabelHTML(explore.zone, explore.floor)}／10（${OP_LABELS[opTierForZoneFloor(explore.zone, explore.floor)]}）`;
   $('screen-battle').classList.toggle('halloween-battle-screen', !!explore.isHalloween);
-  if (explore.isHalloween) $('battle-floor-title').textContent = `🎃 ハロウィンの森 ${explore.halloweenIndex + 1}／${HALLOWEEN_MONSTERS.length}たいめ・${AREA_STAGES[explore.areaId].stages[explore.stageIndex].name}`;
+  if (explore.isHalloween) $('battle-floor-title').textContent = `🎃 ハロウィンの森${explore.halloweenSeason === 2 ? ' S2' : ''} ${explore.halloweenIndex + 1}／${halloweenEncounterTotal(explore)}たいめ・${halloweenSeason2Stage(explore)?.name || AREA_STAGES[explore.areaId].stages[explore.stageIndex].name}${explore.halloweenTest ? '（テスト）' : ''}`;
   renderBattleProgressStars();
   if (animateFloor){
     const numEl = $('floor-num');
@@ -4431,9 +4435,10 @@ function startBattle(animateFloor){
   } else {
     sprite.textContent = enemy.emoji;
   }
+  renderHalloweenParty();
   $('battle-player-lv').textContent = `Lv${G.player.lvl}`;
   hideBattleMenus();
-  blog(`<span class="bad">${enemy.name}</span>が あらわれた！`);
+  blog(`<span class="bad">${battle.enemies ? battle.enemies.map(e => e.name).join('、') : enemy.name}</span>が あらわれた！`);
   updateBattleBars();
   battle.running = true;
   // ATBループの代わりに、開始後すぐにプレイヤーの行動選択へ移行する
@@ -4441,10 +4446,55 @@ function startBattle(animateFloor){
     openActionMenu();
   }, 1000); // メッセージを少し見せるために1秒待つ
   CM.start();
-  if (explore && explore.stageMode && !explore.isBoss && explore.stageKillCount === 0) {
+  if (explore && explore.stageMode && !explore.isHalloween && !explore.isBoss && explore.stageKillCount === 0) {
     // ステージ突入時に「1 / 10」を表示
     showKillProgressPopup(1, 1, ENEMIES_PER_STAGE);
   }
+}
+
+function activeEnemySprite() {
+  const enemy = battle?.attackingEnemy || battle?.enemy;
+  return battle?.enemies ? document.querySelector(`[data-party-id="${enemy?.partyId}"] .enemy-sprite`) : $('battle-enemy-emoji');
+}
+
+function renderHalloweenParty() {
+  const group = $('halloween-enemy-party');
+  if (!group) return;
+  const party = battle?.enemies;
+  $('screen-battle').classList.toggle('halloween-party-battle', !!party);
+  group.classList.toggle('hidden', !party);
+  if (!party) { group.innerHTML = ''; return; }
+  // Preserve sprite elements while attacks animate.
+  if (group._battle !== battle) {
+    group._battle = battle;
+    group.innerHTML = `<p class="halloween-target-hint">こうげきする おばけをタップ</p><div class="halloween-party-grid" style="grid-template-columns:repeat(${party.length},minmax(0,1fr))">${party.map(e => `<button type="button" class="halloween-party-target" data-party-id="${e.partyId}"><span class="halloween-party-number hidden"></span><span class="enemy-sprite">${iconHtml(e.emoji,110)}</span><b>${escapeHtml(e.name)}</b><span class="halloween-party-health"><i></i></span><small></small></button>`).join('')}</div>`;
+    group.querySelectorAll('[data-party-id]').forEach(button => {
+      button.onclick = () => selectHalloweenTarget(Number(button.dataset.partyId));
+    });
+  }
+  for (const enemy of party) {
+    const button = group.querySelector(`[data-party-id="${enemy.partyId}"]`);
+    button.disabled = enemy.hp <= 0 || !!battle.targetLocked;
+    button.classList.toggle('is-defeated', enemy.hp <= 0);
+    button.setAttribute('aria-pressed', String(battle.season2Question ? battle.season2Question.selected.includes(enemy.partyId) : enemy === battle.enemy));
+    const number = button.querySelector('.halloween-party-number');
+    number.classList.toggle('hidden', !battle.season2Question || enemy.hp <= 0);
+    number.textContent = battle.season2Question?.values[enemy.partyId] ?? '';
+    button.setAttribute('aria-label', `${enemy.name}${battle.season2Question ? ` 数字 ${battle.season2Question.values[enemy.partyId]}` : ''} ${enemy.hp <= 0 ? '撃破' : `HP ${enemy.hp}/${enemy.maxHp}・攻撃対象に選ぶ`}`);
+    button.querySelector('i').style.width = `${Math.max(0,enemy.hp/enemy.maxHp*100)}%`;
+    button.querySelector('small').textContent = enemy.hp <= 0 ? '撃破！' : `${enemy === battle.enemy ? '▶ ' : ''}HP ${enemy.hp}/${enemy.maxHp}`;
+  }
+}
+
+function selectHalloweenTarget(partyId) {
+  const enemy = battle?.enemies?.find(e => e.partyId === partyId && e.hp > 0);
+  if (!enemy || battle.over || battle.targetLocked) return false;
+  if (battle.season2Question) { answerHalloweenEnemy(partyId); return true; }
+  battle.enemy = enemy;
+  $('battle-enemy-name').textContent = enemy.name;
+  $('atb-compare-enemy-name').textContent = enemy.name;
+  updateBattleBars();
+  return true;
 }
 
 function blog(html){ logTo('battle-log', html); }
@@ -4457,6 +4507,7 @@ function updateBattleBars(){
   $('battle-enemy-hp').style.width = enemyHpPct;
   $('battle-enemy-hp-ghost').style.width = enemyHpPct;
   $('battle-enemy-atb').style.width = `${battle.eGauge}%`;
+  renderHalloweenParty();
   updateHud();
 }
 
@@ -4477,6 +4528,7 @@ function hideBattleMenus(){
 }
 
 function openActionMenu(){
+  if (battle?.enemies) { battle.targetLocked = false; renderHalloweenParty(); }
   hideBattleMenus();
   doAttack();
 }
@@ -4585,6 +4637,8 @@ function currentAttackProblem(){
   }
 
   const generateRaw = () => {
+    const eventStage = explore.isHalloween && explore.halloweenSeason === 2 ? halloweenSeason2Stage(explore) : null;
+    if (eventStage) return {problem:generateProblem(halloweenSeason2Tier(eventStage,explore.halloweenOperation)),timeLimit:problemTimeLimit(halloweenSeason2Tier(eventStage,explore.halloweenOperation))+2000};
     if (explore.stageMode){
       const area = AREA_STAGES[explore.areaId];
       if (explore.isBoss){
@@ -4644,6 +4698,7 @@ function getOrGenerateTurnProblem(){
 }
 
 function doAttack(){
+  if (battle?.enemies && halloweenSeason2Stage(explore)?.mathMode) { startHalloweenMathChallenge(); return; }
   const { problem, timeLimit } = getOrGenerateTurnProblem();
   startChallenge($('battle-challenge'),
     { problem, timeLimit, prompt: getChallengePrompt(problem, true), showBattleCommands: true },
@@ -4673,12 +4728,74 @@ function doAttack(){
         dealToEnemy(dmg, 'こうげき', isCrit, () => afterPlayerAction());
       } else {
         // 不正解の場合は敵の攻撃（ターン制）
+        if (battle.enemies) { battle.targetLocked = true; renderHalloweenParty(); }
         blog(`<span class="bad">まちがえた！ てきの ターン！</span>`);
         setTimeout(() => {
           turnBasedEnemyAct(() => afterPlayerAction());
         }, 500);
       }
     });
+}
+
+function startHalloweenMathChallenge() {
+  destroyChallenge();
+  const owner = battle;
+  const stage = halloweenSeason2Stage(explore);
+  const mode = stage.mathMode === 'mixed' ? ((explore.halloweenWave || 0) % 2 ? 'combine' : 'answer') : stage.mathMode;
+  const question = battle.halloweenTurnQuestion ||= createHalloweenMathQuestion(battle.enemies.filter(e => e.hp > 0), explore.halloweenOperation, mode);
+  battle.season2Question = question;
+  battle.targetLocked = false;
+  const container = $('battle-challenge');
+  container.classList.remove('hidden');
+  container.innerHTML = `<div class="challenge-main halloween-math-challenge"><p class="challenge-prompt">${question.mode === 'combine' ? '数字のついた敵を2体選ぼう！ 選んだ順に計算します。' : '答えの数字を持つ敵をタップ！'}</p><div class="challenge-problem">${question.mode === 'combine' ? `□ ${question.symbol} □ ＝ ${question.target}` : `${question.a} ${question.symbol} ${question.b} ＝ ？`}</div><p id="halloween-math-selection" role="status">${question.mode === 'combine' ? '1体目 → 2体目の順に選ぶ。もう一度タップで選び直せます。' : '敵に表示された数字から答えを選ぼう。'}</p><div class="halloween-math-tools"><button type="button" class="btn" data-skill>✨ とくぎ</button><button type="button" class="btn" data-item>🧪 どうぐ</button></div><p class="halloween-math-timer" id="halloween-math-timer"></p></div>`;
+  container.querySelector('[data-skill]').onclick = openSkillMenu;
+  container.querySelector('[data-item]').onclick = openItemMenu;
+  const deadline = question.deadline ||= Date.now()+15000;
+  let finished = false;
+  const timer = setInterval(() => {
+    if (battle !== owner || battle.over) { destroyChallenge(); return; }
+    const remaining = Math.max(0,Math.ceil((deadline-Date.now())/1000));
+    $('halloween-math-timer').textContent = `あと ${remaining}秒`;
+    if (!remaining) finish(false,[]);
+  },100);
+  function finish(correct, selected) {
+    if (finished || battle !== owner || battle.over) return;
+    finished = true;
+    destroyChallenge();
+    battle.targetLocked = true;
+    renderHalloweenParty();
+    if (!correct) {
+      blog('<span class="bad">まちがえた！ 残った敵が反撃！</span>');
+      turnBasedEnemyAct(() => afterPlayerAction()); return;
+    }
+    blog(`<span class="good">正解！ ${selected.length}体に攻撃！</span>`);
+    let index=0;
+    const strike = () => {
+      if (battle !== owner || battle.over) return;
+      if (index >= selected.length) { afterPlayerAction(); return; }
+      const targetId = selected[index++];
+      const enemy = battle.enemies.find(e => e.partyId === targetId && e.hp > 0);
+      if (!enemy) { strike(); return; }
+      battle.enemy = enemy;
+      dealToEnemy(basicAttackDamage(effectiveAtk(),enemy.def || 0),'数字の攻撃',false,strike);
+    };
+    strike();
+  }
+  question.finish = finish;
+  currentChallenge = {destroy() { clearInterval(timer); if (battle === owner) { battle.season2Question = null; renderHalloweenParty(); } }};
+  renderHalloweenParty();
+  $('halloween-math-timer').textContent = 'あと 15秒';
+}
+
+function answerHalloweenEnemy(partyId) {
+  const question = battle?.season2Question;
+  if (!question || battle.over || battle.targetLocked) return;
+  if (question.mode === 'answer') { question.finish(halloweenMathSelectionCorrect(question,[partyId]),[partyId]); return; }
+  const index=question.selected.indexOf(partyId);
+  if (index >= 0) question.selected.splice(index,1); else question.selected.push(partyId);
+  renderHalloweenParty();
+  $('halloween-math-selection').textContent = `${question.selected.map(id=>question.values[id]).join(` ${question.symbol} `)}${question.selected.length === 1 ? ` ${question.symbol} □` : ''} ＝ ${question.target}`;
+  if (question.selected.length === 2) question.finish(halloweenMathSelectionCorrect(question,question.selected),[...question.selected]);
 }
 
 /* --- スキル --- */
@@ -5056,7 +5173,7 @@ function enemyArtworkRect(frame) {
 
 function positionBattleProgressStars() {
   const stars = $('battle-enemy-progress');
-  const frame = $('battle-enemy-emoji');
+  const frame = battle?.enemies ? $('halloween-enemy-party') : $('battle-enemy-emoji');
   const figure = frame?.parentElement;
   if (!stars || stars.classList.contains('hidden') || !figure) return;
   const rect = enemyArtworkRect(frame);
@@ -5078,7 +5195,7 @@ function canvasTargetPoint(manager, target) {
 }
 
 function getEnemyCanvasCoords() {
-  const frame = $('battle-enemy-emoji');
+  const frame = activeEnemySprite();
   if (frame && CM?.canvas) return { ...canvasTargetPoint(CM, frame), frame };
   return { x: (CM?.canvas?.width || 400) / 2, y: (CM?.canvas?.height || 300) / 2, frame };
 }
@@ -5090,7 +5207,7 @@ function playPlayerAttackAnim() {
 }
 
 function playEnemyAttackAnim() {
-  const frame = document.querySelector('.enemy-sprite');
+  const frame = activeEnemySprite();
   if (!frame) return;
   frame.classList.remove('enemy-attack-lean');
   void frame.offsetWidth;
@@ -5119,8 +5236,9 @@ function handlePostDamageEffects(dmg, cb) {
 
 function dealAncientDoubleStrike(atk, timeFrac, cb){
   if (!battle || !battle.enemy) return;
+  if (battle.enemies) { battle.targetLocked = true; renderHalloweenParty(); }
   const enemy = battle.enemy;
-  const frame = getEnemyCanvasCoords().frame || document.querySelector('.enemy-sprite');
+  const frame = getEnemyCanvasCoords().frame || activeEnemySprite();
   const eDef = enemy.def || 0;
   const raidMult = explore && explore.isRaid
     ? 1 + (explore.raidAreaIdx || 0) * 0.5 + (explore.raidStageIdx || 0) * 0.1
@@ -5156,11 +5274,12 @@ function dealAncientDoubleStrike(atk, timeFrac, cb){
 }
 
 function dealToEnemy(dmg, label, isCrit, cb, skillId){
+  if (battle?.enemies) { battle.targetLocked = true; renderHalloweenParty(); }
   if (battle && battle.enemy && battle.enemy.isRaid) {
     battle.raidDamageDealt = (battle.raidDamageDealt || 0) + dmg;
   }
   const coords = getEnemyCanvasCoords();
-  const frame = coords.frame || document.querySelector('.enemy-sprite');
+  const frame = coords.frame || activeEnemySprite();
 
   // れんぞく斬り（renzoku / renzoku2）: 専用スプライトアニメーション＆多段ヒットダメージ
   if (skillId === 'renzoku' || skillId === 'renzoku2') {
@@ -5249,7 +5368,7 @@ function dealToEnemy(dmg, label, isCrit, cb, skillId){
 /* ボスが フェーズ2（限界突破）へ いこうする演出：オーラを つけて もんだいの なんいどを あげる */
 function triggerBossPhase2(){
   explore.bossPhase = 2;
-  const frame = document.querySelector('.enemy-sprite');
+  const frame = activeEnemySprite();
   if (frame) frame.classList.add('boss-phase2-aura');
   blog(`<span class="accent">${battle.enemy.name}が ちからを かいほうした…！【フェーズ2：限界突破】</span>`);
   $('battle-floor-title').innerHTML = stageBattleTitleHtml(explore.areaId, explore.stageIndex, true, 2);
@@ -5257,13 +5376,27 @@ function triggerBossPhase2(){
 }
 
 
-function turnBasedEnemyAct(callback){
+function turnBasedEnemyAct(callback, attacker = null){
   if (!battle || battle.over) return;
+  if (battle.enemies && !attacker) {
+    const owner = battle;
+    const living = battle.enemies.filter(enemy => enemy.hp > 0);
+    let index = 0;
+    const next = () => {
+      if (battle !== owner || battle.over) return;
+      battle.attackingEnemy = null;
+      if (index >= living.length) { if (callback) callback(); return; }
+      const enemy = living[index++];
+      battle.attackingEnemy = enemy;
+      turnBasedEnemyAct(next, enemy);
+    };
+    next(); return;
+  }
   
   // 回避判定（すばやさから計算: 10ptで5%、30%を超えると10ptで1%）
   const evadeChance = calcSpdRate(totalStat('spd')) + (equippedAbilities().has('dodge_up') ? 0.08 : 0);
   const isEvaded = Math.random() < evadeChance;
-  const e = battle.enemy;
+  const e = attacker || battle.enemy;
 
   if (isEvaded) {
     playEnemyAttackAnim();
@@ -5298,9 +5431,21 @@ function turnBasedEnemyAct(callback){
 }
 
 function afterPlayerAction(){
+  if (battle) battle.halloweenTurnQuestion = null;
+  if (battle?.enemies && battle.enemy.hp <= 0) {
+    const next = battle.enemies.find(enemy => enemy.hp > 0);
+    if (next) {
+      blog(`${battle.enemy.name}を たおした！`);
+      battle.enemy = next;
+      battle.attackingEnemy = null;
+      $('battle-enemy-name').textContent = next.name;
+      updateBattleBars();
+      resumeBattle('player'); return;
+    }
+  }
   if (battle) battle.currentTurnProblem = null;
   if (battle.enemy.hp <= 0){
-    const frame = document.querySelector('.enemy-sprite');
+    const frame = activeEnemySprite();
     if (frame) {
       frame.classList.remove('enemy-damage-hit');
       void frame.offsetWidth;
@@ -5507,6 +5652,7 @@ function stageRepeatDropMult(){
 }
 
 function winBattle(){
+  if (battle?.enemies) { if (battle.rewardsGranted) return; battle.rewardsGranted = true; }
   endBattleLoop();
   if (battle && battle.enemy && battle.enemy.isRaid) {
     // 見事倒した場合の処理
@@ -5518,8 +5664,9 @@ function winBattle(){
     showRaidBattleResult(dmg, true);
     return;
   }
-  const e = battle.enemy;
-  const gold = rnd(e.goldMin, e.goldMax);
+  const defeated = battle.enemies || [battle.enemy];
+  const e = {...battle.enemy, exp:defeated.reduce((sum,enemy) => sum + enemy.exp,0), name:defeated.map(enemy => enemy.name).join('、')};
+  const gold = defeated.reduce((sum,enemy) => sum + rnd(enemy.goldMin,enemy.goldMax),0);
   G.player.gold += gold;
   const rewards = [
     `${e.name}を たおした！`,
@@ -5527,7 +5674,7 @@ function winBattle(){
     `${gold}ゴールドを てにいれた！`,
   ];
 
-  const drops = rollBattleDrops(e, rewards);
+  const drops = defeated.flatMap(enemy => rollBattleDrops(enemy, rewards));
   
   if (explore) {
     if (!explore.sessionDrops) explore.sessionDrops = [];
@@ -5631,7 +5778,7 @@ function itemCardBodyHtml(res, iconSize){
   const rarityClass = res.rarity ? ` rarity-${res.rarity}` : '';
   return `
     <div class="item-card-icon${rarityClass}">${iconHtml(res.icon, iconSize)}</div>
-    <div class="item-card-name${rarityClass}">${res.name}${res.count > 1 ? ` ×${res.count}` : ''}</div>
+    <div class="item-card-name${rarityClass}">${res.count ? res.name.replace(/\s*[×✕]\s*\d+\s*$/, '') : res.name}${res.count > 1 ? ` ×${res.count}` : ''}</div>
     ${res.rarity ? `<div class="item-card-stars${rarityClass}">${RARITY_NAME[res.rarity] || res.rarity}</div>` : ''}
     ${ability ? `<div class="item-card-ability">✨ ${ability.name}</div>` : ''}
   `;
@@ -5927,6 +6074,19 @@ function getDropTooltipHtml(d) {
 }
 
 /* 獲得報酬を順番にポップイン（ポッポぽっぽ）表示し、共通ホバーカード化するHTML生成 */
+/* 表示用にまとめる。能力・レアリティの違う装備は別のままにする。 */
+function aggregateRewardDrops(drops = []) {
+  const grouped = new Map();
+  for (const drop of drops || []) {
+    const name = drop.name.replace(/\s*[×✕]\s*\d+\s*$/, '');
+    const key = JSON.stringify([drop.kind, drop.id || name, drop.rarity || 0, drop.ability || null]);
+    const count = Math.max(1, Number(drop.count) || 1);
+    if (grouped.has(key)) grouped.get(key).count += count;
+    else grouped.set(key, { ...drop, name, count });
+  }
+  return [...grouped.values()];
+}
+
 function generateDropsSummaryHtml(drops, gold, opts = {}) {
   const hasDrops = drops && drops.length > 0;
   const hasGold = typeof gold === 'number' && gold > 0;
@@ -5954,24 +6114,13 @@ function generateDropsSummaryHtml(drops, gold, opts = {}) {
 
   // ドロップアイテム・装備
   if (hasDrops) {
-    drops.forEach(d => {
-      const delay = (animIndex * 0.12).toFixed(2);
-      animIndex++;
+    aggregateRewardDrops(drops).forEach(d => {
+      const delay = (animIndex++ * 0.12).toFixed(2);
       const jsonStr = encodeURIComponent(JSON.stringify(d));
-      let contentHtml = '';
-      if (d.kind === 'equip') {
-        contentHtml = `${iconHtml(d.icon, 24)} <span class="rarity-${d.rarity || 1}">${rarityLabelHtml(d.rarity || 1)} ${d.name}</span>`;
-      } else if (d.kind === 'blueprint') {
-        contentHtml = `${iconHtml(d.icon, 24)} <span>📜 ${d.name}</span>`;
-      } else {
-        contentHtml = `${iconHtml(d.icon, 24)} <span>${d.name}</span>`;
-      }
-
-      html += `
-        <div class="drop-reward-card reward-pop-item" data-drop-json="${jsonStr}" style="animation-delay:${delay}s;" title="ホバーで詳細をみる">
-          ${contentHtml}
-        </div>
-      `;
+      html += `<button type="button" class="drop-reward-card reward-icon-card reward-pop-item${d.kind === 'equip' ? ` rarity-${d.rarity || 1}` : ''}" data-drop-json="${jsonStr}" style="animation-delay:${delay}s;" aria-label="${escapeHtml(d.name)} ×${d.count}の詳細">
+        ${iconHtml(d.icon, 56)}<b class="reward-icon-count">×${d.count}</b>
+        ${d.rarity ? `<small>${rarityLabelHtml(d.rarity)}</small>` : ''}
+      </button>`;
     });
   }
 
@@ -5998,10 +6147,14 @@ function bindDropItemTooltips(container) {
       const tooltipHtml = getDropTooltipHtml(d);
       if (tooltipHtml) {
         itemEl.onmouseover = (e) => showTooltip(e, tooltipHtml);
+        itemEl.onfocus = () => { const rect = itemEl.getBoundingClientRect(); showTooltip({clientX:rect.left, clientY:rect.bottom}, tooltipHtml); };
+        itemEl.onblur = hideTooltip;
+        itemEl.onkeydown = event => { if (event.key === 'Escape') hideTooltip(); };
         itemEl.onmousemove = (e) => updateTooltipPos(e);
         itemEl.onmouseout = () => hideTooltip();
         itemEl.onclick = (e) => {
-          showTooltip(e, tooltipHtml);
+          e.stopPropagation();
+          showRewardArtworkPreview({name:d.name, icon:d.icon}, tooltipHtml);
         };
       }
     } catch(err) {}
@@ -6714,7 +6867,36 @@ function rewardTooltipHtml(kind, id, rarity = 1, count = 1){
 
 function stageRewardIcon(kind, id, rarity = 1, size = 56){
   const info = rewardIconInfo(kind, id);
-  return `<button type="button" class="stage-reward-icon${kind === 'equip' ? ` equip-icon rarity-${rarity}` : ''}" data-reward-kind="${kind}" data-reward-id="${id}" data-reward-rarity="${rarity}" aria-label="${info.name}${kind === 'equip' ? `・${RARITY_NAME[rarity]}` : ''}の詳細">${iconHtml(info.icon, size)}</button>`;
+  return `<button type="button" class="stage-reward-icon${kind === 'equip' ? ` equip-icon rarity-${rarity}` : ''}" data-reward-kind="${kind}" data-reward-id="${id}" data-reward-rarity="${rarity}" aria-label="${info.name}${kind === 'equip' ? `・${RARITY_NAME[rarity]}` : ''}を拡大表示">${iconHtml(info.icon, size)}</button>`;
+}
+
+/* 入手前でも、限定品の絵と性能をクリックで確認できる。 */
+function showRewardArtworkPreview(info, detail = '') {
+  if (!info?.icon) return;
+  document.querySelector('.reward-artwork-preview')?.remove();
+  hideTooltip();
+  const previousFocus = document.activeElement;
+  const overlay = document.createElement('div');
+  overlay.className = 'reward-artwork-preview';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'reward-artwork-title');
+  overlay.innerHTML = `<section class="reward-artwork-panel">
+    <button type="button" class="btn reward-artwork-close" aria-label="拡大表示を閉じる">とじる ×</button>
+    <h2 id="reward-artwork-title">${escapeHtml(info.name)}</h2>
+    <div class="reward-artwork-image">${iconHtml(info.icon, 420)}</div>
+    <div class="reward-artwork-detail">${detail}</div>
+  </section>`;
+  const close = () => { hideTooltip(); overlay.remove(); if (previousFocus?.isConnected) previousFocus.focus({preventScroll:true}); };
+  overlay.querySelector('.reward-artwork-close').onclick = close;
+  overlay.onclick = event => { if (event.target === overlay) close(); };
+  overlay.onkeydown = event => {
+    event.stopPropagation();
+    if (event.key === 'Escape') { event.preventDefault(); close(); }
+    if (event.key === 'Tab') { event.preventDefault(); overlay.querySelector('.reward-artwork-close').focus(); }
+  };
+  document.body.appendChild(overlay);
+  overlay.querySelector('.reward-artwork-close').focus({preventScroll:true});
 }
 
 function bindStageRewardTooltips(container){
@@ -6726,7 +6908,7 @@ function bindStageRewardTooltips(container){
     button.onmouseout = hideTooltip;
     button.onfocus = () => { const rect = button.getBoundingClientRect(); showTooltip({ clientX: rect.left, clientY: rect.bottom }, detail); };
     button.onblur = hideTooltip;
-    button.onclick = event => { const rect = button.getBoundingClientRect(); showTooltip({ clientX: rect.left, clientY: rect.bottom }, detail); event.stopPropagation(); };
+    button.onclick = event => { event.stopPropagation(); showRewardArtworkPreview(rewardIconInfo(kind, id), detail); };
     button.onkeydown = event => { if (event.key === 'Escape') hideTooltip(); };
   });
 }
@@ -9294,6 +9476,28 @@ function renderEquipmentGachaControls() {
   });
 }
 
+let gachaPreviewPreviousFocus = null;
+function closeGachaArtworkPreview() {
+  $('skin-gacha-preview-modal').classList.add('hidden');
+  if (gachaPreviewPreviousFocus?.isConnected) gachaPreviewPreviousFocus.focus({preventScroll:true});
+}
+function presentGachaArtworkPreview() {
+  hideTooltip();
+  const modal = $('skin-gacha-preview-modal');
+  if (modal.classList.contains('hidden')) gachaPreviewPreviousFocus = document.activeElement;
+  modal.classList.remove('hidden');
+  $('btn-skin-gacha-preview-close').focus({preventScroll:true});
+  modal.onkeydown = event => {
+    event.stopPropagation();
+    if (event.key === 'Escape') { event.preventDefault(); closeGachaArtworkPreview(); }
+    if (event.key === 'Tab') {
+      const controls = [...modal.querySelectorAll('button')].filter(button => !button.closest('.hidden'));
+      const index = controls.indexOf(document.activeElement);
+      event.preventDefault(); controls[(index + (event.shiftKey ? -1 : 1) + controls.length) % controls.length]?.focus();
+    }
+  };
+}
+
 let equipmentPreviewEquipId = null;
 let equipmentPreviewRarity = 3;
 function openEquipmentGachaPreview(id) {
@@ -9305,10 +9509,12 @@ function openEquipmentGachaPreview(id) {
   $('skin-gacha-preview-title').textContent = db.name;
   $('equipment-preview-rarities').classList.remove('hidden');
   renderEquipmentGachaPreviewRarity();
+  $('skin-gacha-preview-image').classList.remove('hidden', 'avatar-holographic');
+  $('skin-gacha-preview-image').closest('.skin-gacha-preview-art')?.classList.remove('holo-character-prism');
   $('skin-gacha-preview-image').src = av(db.emoji);
   $('skin-gacha-preview-image').alt = db.name;
   $('skin-gacha-preview-bg').classList.add('hidden');
-  $('skin-gacha-preview-modal').classList.remove('hidden');
+  presentGachaArtworkPreview();
 }
 
 function renderEquipmentGachaPreviewRarity() {
@@ -9390,7 +9596,7 @@ function openSkinGachaPreview(kind, id) {
   if (characterPreview) characterPreview.style.setProperty('--character-foil-mask', `url("${av(hero.image)}")`);
   applyAvatarBackground($('skin-gacha-preview-bg'), background.id, isBackground && holographic);
   $('skin-gacha-preview-image').classList.toggle('hidden', isBackground);
-  $('skin-gacha-preview-modal').classList.remove('hidden');
+  presentGachaArtworkPreview();
 }
 
 function doSkinGacha(payment = 'gold'){
@@ -9714,86 +9920,105 @@ function doGacha(times, cost, payment) {
   }, 1000);
 }
 
-function showSynthesis(){
+function synthesisMatches(base, game = G) {
+  if (!base || base.rarity >= RARITY_MAX) return [];
+  return game.ownedEquips.filter(eq => eq.uid !== base.uid && eq.id === base.id && eq.rarity === base.rarity);
+}
+
+function synthesisPairValid(baseUid, materialUid, game = G) {
+  const base = game.ownedEquips.find(eq => eq.uid === baseUid);
+  return !!base && synthesisMatches(base, game).some(eq => eq.uid === materialUid);
+}
+
+function commitSynthesis(baseUid, materialUid) {
+  if (!synthesisPairValid(baseUid, materialUid)) return null;
+  const base = G.ownedEquips.find(eq => eq.uid === baseUid);
+  const result = { uid:G.nextUid++, id:base.id, rarity:base.rarity + 1, ability:rollAbility(base.rarity + 1) };
+  G.ownedEquips = G.ownedEquips.filter(eq => eq.uid !== baseUid && eq.uid !== materialUid);
+  for (const slot of EQUIP_SLOTS) {
+    if ([baseUid, materialUid].includes(G.equipment[slot]?.uid)) G.equipment[slot] = null;
+  }
+  G.ownedEquips.push(result);
+  save();
+  return result;
+}
+
+function synthesisEquipmentHtml(eq, size = 64) {
+  const db = getEquipTemplate(eq.id);
+  const ability = eq.ability ? getAbility(eq.ability) : null;
+  const equipped = EQUIP_SLOTS.some(slot => G.equipment[slot]?.uid === eq.uid);
+  return `<div class="synthesis-art rarity-${eq.rarity}">${iconHtml(db.emoji,size)}</div><b>${escapeHtml(db.name)}</b><span class="rarity-${eq.rarity}">${rarityLabelHtml(eq.rarity)}</span>${ability ? `<small>${escapeHtml(ability.name)}</small>` : ''}${equipped ? '<small class="synthesis-equipped">装備中</small>' : ''}`;
+}
+
+function showSynthesis(baseUid = null, materialUid = null) {
+  hideTooltip();
   showScreen('screen-synthesis');
+  const base = G.ownedEquips.find(eq => eq.uid === baseUid);
+  const material = base && synthesisMatches(base).find(eq => eq.uid === materialUid);
+  $('synthesis-step').textContent = !base ? '① 2つ以上ある装備を選ぶ' : !material ? '② 同じ種類・レアリティの装備を素材に選ぶ' : '③ 2問の計算に正解して、レアリティを上げる';
+  const recipe = $('synthesis-recipe');
+  recipe.innerHTML = base ? `<div class="synthesis-slot">${synthesisEquipmentHtml(base)}</div><span class="synthesis-symbol">＋</span><div class="synthesis-slot">${material ? synthesisEquipmentHtml(material) : '<span>素材を選ぼう</span>'}</div><span class="synthesis-symbol">→</span><div class="synthesis-slot synthesis-target">${synthesisEquipmentHtml({...base,uid:null,rarity:base.rarity+1,ability:null})}</div><div class="synthesis-actions"><button type="button" class="btn" data-reset>選び直す</button><button type="button" class="btn btn-primary" data-start ${material ? '' : 'disabled'}>合成の計算へ</button><small>選んだ2つを消費。追加能力は再抽選。失敗・中断では消費しません。</small></div>` : '';
+  recipe.querySelector('[data-reset]')?.addEventListener('click', () => showSynthesis());
+  recipe.querySelector('[data-start]')?.addEventListener('click', () => startSynthesisFlow({baseUid:base.uid,materialUid:material.uid}));
   const list = $('synthesis-list');
   list.innerHTML = '';
-  
-  let candidates = [];
-
-  // Find duplicate equips（そうびは★5が上限。アイテムはレアリティがないので合成対象外）
-  let eqCount = {};
-  for (const eq of G.ownedEquips) {
-    if (eq.rarity >= RARITY_MAX) continue;
-    let key = `${eq.id}_${eq.rarity}`;
-    if(!eqCount[key]) eqCount[key] = { uids:[], id:eq.id, rarity:eq.rarity };
-    eqCount[key].uids.push(eq.uid);
-  }
-  for (const key in eqCount) {
-    if (eqCount[key].uids.length >= 2) {
-      const c = eqCount[key];
-      const db = getEquipTemplate(c.id);
-      if(db) {
-        candidates.push({ uids: c.uids, id: c.id, rarity: c.rarity, name: db.name, opTier: db.opTier, count: c.uids.length });
-      }
-    }
-  }
-
-  if (candidates.length === 0) {
-    list.innerHTML = '<div class="flavor">合成できる そうびがない。（同じレアリティの そうびが2つ必要。レジェンドは合成不可）</div>';
-    return;
-  }
-
-  for (const c of candidates) {
-    const row = document.createElement('div');
-    row.className = 'inv-row';
-    row.innerHTML = `<div class="info"><span class="rarity-${c.rarity}">${rarityLabelHtml(c.rarity)} ${c.name}</span> (所持:${c.count}) <br><small>2つ消費して1つ上のレアリティにする</small></div>`;
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-primary';
-    btn.textContent = '合成する';
-    btn.onclick = () => startSynthesisFlow(c);
-    row.appendChild(btn);
-    list.appendChild(row);
+  const inventory = base ? synthesisMatches(base) : G.ownedEquips;
+  if (!inventory.length) list.innerHTML = '<p class="flavor">装備がありません。同じ種類・同じレアリティを2つ集めよう。</p>';
+  for (const eq of inventory) {
+    const db = getEquipTemplate(eq.id);
+    if (!db) continue;
+    const matches = synthesisMatches(eq);
+    const selectable = !!base || matches.length > 0;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'synthesis-inventory-card';
+    button.disabled = !selectable;
+    button.dataset.equipUid = eq.uid;
+    button.setAttribute('aria-pressed', String(eq.uid === material?.uid));
+    button.innerHTML = `${synthesisEquipmentHtml(eq)}<small>${eq.rarity >= RARITY_MAX ? '合成上限' : `同じ装備 ×${matches.length + 1}`}</small><span>${!selectable ? '素材が足りない' : base ? '素材に選ぶ' : 'この装備を選ぶ'}</span>`;
+    button.onclick = () => showSynthesis(base ? base.uid : eq.uid, base ? eq.uid : null);
+    list.appendChild(button);
   }
 }
 
-function startSynthesisFlow(c) {
-  showScreen('screen-training');
-  $('btn-training-quit').textContent = 'やめる';
-  $('training-title').textContent = `「${c.name}」の 合成`;
+let synthesisRun = null;
+function quitSynthesisFlow() {
+  synthesisRun = null;
+  destroyChallenge();
+  showSynthesis();
+}
 
-  const tier = c.opTier || 'add1';
-  let stage = 0;
-
-  function nextProblem(){
-    stage++;
-    $('training-progress').innerHTML = `けいさん ${stage}/2 もんめ。りょうほう せいかいで ごうせい せいこう！`;
-    startChallenge($('training-challenge'),
-      { problem:generateProblem(tier), timeLimit:problemTimeLimit(tier) + 3000, prompt:`${stage}もんめ！ けいさんに こたえよう！` },
-      (res) => {
-        destroyChallenge();
-        if (!res.success){
-          trainingDone('しっぱいした…。アイテムは なくなっていない。もういちど ちょうせんしよう。');
-          return;
-        }
-        hitTrainingDummy();
-        if (stage < 2){ nextProblem(); return; }
-        const nextRarity = Math.min(RARITY_MAX, c.rarity + 1);
-        // そうび: 2つの うでを けす
-        const uidsToRemove = c.uids.slice(0, 2);
-        G.ownedEquips = G.ownedEquips.filter(eq => !uidsToRemove.includes(eq.uid));
-        // 装備中なら はずす
-        for(const slot of EQUIP_SLOTS) {
-          if(G.equipment[slot] && uidsToRemove.includes(G.equipment[slot].uid)) {
-            G.equipment[slot] = null;
-          }
-        }
-        const ability = rollAbility(nextRarity);
-        const abilityInfo = ability ? getAbility(ability) : null;
-        G.ownedEquips.push({ uid: G.nextUid++, id: c.id, rarity: nextRarity, ability });
-        save();
-        trainingDone(`ごうせい せいこう！ 「<span class="rarity-${nextRarity}">${rarityLabelHtml(nextRarity)} ${c.name}</span>」になった！${abilityInfo ? `<br><span class="tag ability">✨ ${abilityInfo.name}（${abilityInfo.desc}）</span>` : ''}`);
-      });
+function startSynthesisFlow({baseUid, materialUid}) {
+  if (!synthesisPairValid(baseUid, materialUid)) { showSynthesis(); return; }
+  const base = G.ownedEquips.find(eq => eq.uid === baseUid);
+  const material = G.ownedEquips.find(eq => eq.uid === materialUid);
+  const db = getEquipTemplate(base.id);
+  const run = synthesisRun = {baseUid, materialUid, stage:0};
+  showScreen('screen-synthesis-calc');
+  $('synthesis-calc-recipe').innerHTML = `<div class="synthesis-slot">${synthesisEquipmentHtml(base)}</div><span class="synthesis-symbol">＋</span><div class="synthesis-slot">${synthesisEquipmentHtml(material)}</div>`;
+  $('synthesis-calc-result').innerHTML = '';
+  $('btn-synthesis-calc-quit').textContent = '合成をやめる';
+  const finish = (result) => {
+    synthesisRun = null;
+    $('synthesis-challenge').innerHTML = '';
+    $('synthesis-calc-progress').textContent = result ? '合成成功！' : '合成失敗。装備は消費していません。';
+    $('synthesis-calc-result').innerHTML = result ? `<div class="synthesis-success">${synthesisEquipmentHtml(result,96)}</div>` : '<p>装備を選び直して、もう一度挑戦しよう。</p>';
+    $('btn-synthesis-calc-quit').textContent = '装備一覧へ戻る';
+    $('btn-synthesis-calc-quit').focus({preventScroll:true});
+    if (result) SM.play('se_gacha_result2');
+  };
+  function nextProblem() {
+    if (synthesisRun !== run) return;
+    run.stage++;
+    $('synthesis-calc-progress').textContent = `合成の計算 ${run.stage} / 2問 · 2問とも正解で成功`;
+    const tier = db.opTier || 'add1';
+    startChallenge($('synthesis-challenge'), {problem:generateProblem(tier), timeLimit:problemTimeLimit(tier)+3000, prompt:`魔力を合わせよう！ ${run.stage}問目`}, res => {
+      if (synthesisRun !== run) return;
+      destroyChallenge();
+      if (!res.success) { finish(null); return; }
+      if (run.stage < 2) { nextProblem(); return; }
+      finish(commitSynthesis(baseUid,materialUid));
+    });
   }
   nextProblem();
 }
@@ -9912,7 +10137,7 @@ function bindEvents(){
   on('hotspot-weapon-shop', showWeaponShop);
   on('hotspot-status', showStatus);
   on('hotspot-gacha', showGacha);
-  on('hotspot-synthesis', showSynthesis);
+  on('hotspot-synthesis', () => showSynthesis());
   on('hotspot-quest-board', showQuestBoard);
   on('hotspot-raid-boss', showRaidBossMenu);
   on('hotspot-halloween', showHalloweenMenu);
@@ -10179,6 +10404,7 @@ on('btn-raid-history', showRaidHistory);
   on('btn-item-shop-goto-use', showItems);
   on('btn-weapon-shop-back', showHome);
   on('btn-synthesis-back', showHome);
+  on('btn-synthesis-calc-quit', quitSynthesisFlow);
   on('btn-quest-board-back', () => {
     $('screen-quest-board').classList.add('hidden');
   });
@@ -10201,7 +10427,7 @@ on('btn-raid-history', showRaidHistory);
   });
   on('btn-skin-gacha-draw', () => doSkinGacha('gold'));
   on('btn-skin-gacha-ticket', () => doSkinGacha('ticket'));
-  on('btn-skin-gacha-preview-close', () => $('skin-gacha-preview-modal').classList.add('hidden'));
+  on('btn-skin-gacha-preview-close', closeGachaArtworkPreview);
   $('equipment-preview-rarities')?.addEventListener('click', event => {
     const button = event.target.closest('button[data-rarity]');
     if (!button) return;
@@ -10213,7 +10439,7 @@ on('btn-raid-history', showRaidHistory);
     if (trigger) openSkinGachaPreview(trigger.dataset.previewKind, trigger.dataset.previewId);
   });
   $('skin-gacha-preview-modal')?.addEventListener('click', event => {
-    if (event.target.id === 'skin-gacha-preview-modal') event.currentTarget.classList.add('hidden');
+    if (event.target.id === 'skin-gacha-preview-modal') closeGachaArtworkPreview();
   });
 
   on('btn-clear-continue', () => {
@@ -10517,7 +10743,8 @@ function recordRaidLearningAnswer(problem, isCorrect) {
    ========================================================== */
 const HALLOWEEN_EVENT = {
   id: 'halloween_2026', startsAt: Date.parse('2026-10-01T00:00:00+09:00'),
-  endsAt: Date.parse('2026-11-01T00:00:00+09:00'), firstClearRaidTickets: 2,
+  endsAt: Date.parse('2026-11-01T00:00:00+09:00'),
+  season2StartsAt: Date.parse('2026-10-21T00:00:00+09:00'), firstClearRaidTickets: 2,
   gachaGoldCost:2000, gachaTicketCost:1, ticketIcon:'assets/halloween/ticket_icon.png',
   candyIcon:'assets/halloween/candy_token.png', battleBackground:'assets/halloween/battle_background.png',
   ticketDropRates:{normal:0.1,boss:0.5}
@@ -10532,6 +10759,60 @@ const HALLOWEEN_MONSTERS = [
   { id:'candy_spider', name:'おかしの くも' },
   { id:'scarecrow_king', name:'かぼちゃの かかしおう' }
 ];
+
+const HALLOWEEN_SEASON2_WAVES = [[0,1],[2,3,4],[5,6,0,1,7]];
+const HALLOWEEN_SEASON2_STAGES = [
+  {id:'candy-path',name:'お菓子の小道',mathMode:'answer',tier:'add1',grade:1,description:'2体ずつの敵で、対象選択を練習',waves:[[0,1],[2,3]]},
+  {id:'moon-square',name:'月夜のおばけ広場',mathMode:'combine',tier:'add2',grade:1.2,description:'3体同時。倒す順番を考えよう',waves:[[2,3,4],[5,6,1]]},
+  {id:'night-party',name:'かかし王の夜会',mathMode:'mixed',tier:'add3',grade:1.5,description:'2体 → 3体 → ボスを含む5体',waves:HALLOWEEN_SEASON2_WAVES},
+];
+const HALLOWEEN_MATH_OPERATIONS = {add:{label:'たし算',symbol:'＋'},sub:{label:'ひき算',symbol:'−'},mul:{label:'かけ算',symbol:'×'},div:{label:'わり算',symbol:'÷'}};
+function halloweenSeason2Tier(stage, operation = 'add') {
+  return operation === 'add' ? stage.tier : operation === 'sub' ? stage.tier.replace('add','sub') : operation === 'mul' ? 'mul1' : 'div1';
+}
+function createHalloweenMathQuestion(enemies, operation = 'add', mode = 'answer', random = Math.random) {
+  const op = HALLOWEEN_MATH_OPERATIONS[operation] ? operation : 'add';
+  const number = (min,max) => min + Math.floor(random() * (max-min+1));
+  let a = number(2,9), b = number(2,9);
+  if (op === 'sub') { if (a <= b) a += b; }
+  if (op === 'div') a *= b;
+  const calculate = (left,right) => op === 'add' ? left+right : op === 'sub' ? left-right : op === 'mul' ? left*right : left/right;
+  const target = calculate(a,b);
+  const actualMode = enemies.length >= 2 ? mode : 'answer';
+  const shuffled = [...enemies];
+  for (let i=shuffled.length-1;i>0;i--) { const j=number(0,i); [shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]]; }
+  const values = {};
+  if (actualMode === 'combine') {
+    shuffled.forEach((enemy,index) => { values[enemy.partyId] = index === 0 ? a : index === 1 ? b : number(1,12); });
+  } else {
+    const used = new Set([target]);
+    shuffled.forEach((enemy,index) => { let value = target; if (index) { value=number(1,30); while(used.has(value)) value++; used.add(value); } values[enemy.partyId]=value; });
+  }
+  return {operation:op,mode:actualMode,target,a,b,values,selected:[],symbol:HALLOWEEN_MATH_OPERATIONS[op].symbol};
+}
+function halloweenMathSelectionCorrect(question, selected) {
+  if (question.mode === 'answer') return selected.length === 1 && question.values[selected[0]] === question.target;
+  if (selected.length !== 2 || selected[0] === selected[1]) return false;
+  const a=question.values[selected[0]], b=question.values[selected[1]];
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return false;
+  const result=question.operation==='add'?a+b:question.operation==='sub'?a-b:question.operation==='mul'?a*b:b ? a/b : NaN;
+  return result===question.target;
+}
+
+function halloweenSeason2Stage(run) { return HALLOWEEN_SEASON2_STAGES.find(stage => stage.id === run?.halloweenStageId); }
+function halloweenWaves(run) { return halloweenSeason2Stage(run)?.waves || HALLOWEEN_SEASON2_WAVES; }
+
+function halloweenSeason(now = Date.now()) {
+  return isHalloweenActive(now) && now >= HALLOWEEN_EVENT.season2StartsAt ? 2 : 1;
+}
+function halloweenEncounterTotal(run) { return run?.halloweenSeason === 2 ? halloweenWaves(run).flat().length : HALLOWEEN_MONSTERS.length; }
+function halloweenWaveSize(run) { return run?.halloweenSeason === 2 ? halloweenWaves(run)[run.halloweenWave || 0].length : 1; }
+function generateHalloweenParty(run) {
+  if (run.halloweenSeason !== 2) return null;
+  return halloweenWaves(run)[run.halloweenWave || 0].map((index, position) => ({
+    ...generateHalloweenEnemy({...run, halloweenIndex:index}), partyId:position,
+  }));
+}
 
 function isHalloweenActive(now = Date.now()) {
   return now >= HALLOWEEN_EVENT.startsAt && now < HALLOWEEN_EVENT.endsAt;
@@ -10557,7 +10838,7 @@ const HALLOWEEN_EXCHANGE_PRIZES = [
   { id:'halloween_festival_king', kind:'skin', name:'ハロウィンの王', cost:100 },
   { id:'halloween_festival_queen', kind:'skin', name:'ハロウィンの女王', cost:100 },
   { id:'halloween_moon_garden', kind:'background', name:'月灯りのハロウィン庭園', cost:80 },
-  { id:'halloween_lantern_staff', kind:'equip', name:'月灯りのランタン杖', cost:80, rarity:5 }
+  { id:'halloween_lantern_staff', kind:'equip', name:'月灯りのランタン杖', cost:80, rarity:4 }
 ];
 
 function halloweenTicketBalance(game = G) {
@@ -10583,7 +10864,7 @@ function rollHalloweenCandyDrop(enemy) {
   if (Math.random() >= chance) return null;
   const count = eventBattle ? (enemy.isBoss ? rnd(3,4) : rnd(1,2)) : 1;
   G.halloweenCandy = halloweenCandyBalance() + count;
-  return { kind:'halloween-candy', name:`ハロウィンのお菓子 ×${count}`, icon:HALLOWEEN_EVENT.candyIcon, count };
+  return { kind:'halloween-candy', name:'ハロウィンのお菓子', icon:HALLOWEEN_EVENT.candyIcon, count };
 }
 
 function rollHalloweenTicketDrop(enemy) {
@@ -10639,6 +10920,60 @@ function drawHalloweenGacha(payment = 'ticket', random = Math.random) {
   return { ok:true, prize, message:prize.name + 'を獲得！' };
 }
 
+function showHalloweenGachaSummon(result) {
+  const previousFocus = document.activeElement;
+  const overlay = document.createElement('div');
+  overlay.className = 'halloween-summon';
+  overlay.dataset.phase = 'charging';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', 'ハロウィン限定品の召喚');
+  const type = result.prize.kind === 'skin' ? '限定スキン' : result.prize.kind === 'background' ? '限定背景' : '★4 限定装備';
+  overlay.innerHTML = `<div class="halloween-summon-stars" aria-hidden="true">${Array.from({length:18}, (_, i) => `<i style="--angle:${i * 20}deg;--delay:${i % 5 * .12}s"></i>`).join('')}</div>
+    <section class="halloween-summon-stage">
+      <p class="halloween-summon-eyebrow">HALLOWEEN SUMMON</p>
+      <div class="halloween-summon-orbit" aria-hidden="true"></div>
+      <div class="halloween-summon-pumpkin"><img src="${av('assets/halloween/pumpkin_imp.png')}" alt=""></div>
+      <div class="halloween-summon-prize hidden">${stageRewardIcon(result.prize.kind, result.prize.id, result.prize.rarity || 1, 240)}</div>
+      <div class="halloween-summon-copy" role="status"><h2>おばけの魔力が集まっている…</h2><p>かぼちゃの中から、何が出る？</p></div>
+      <button class="btn" type="button" data-action="reveal">スキップ</button>
+      <button class="btn btn-primary hidden" type="button" data-action="close">ガチャへ戻る</button>
+    </section>`;
+  document.body.appendChild(overlay);
+  let timer;
+  const reveal = () => {
+    if (overlay.dataset.phase !== 'charging') return;
+    clearTimeout(timer);
+    overlay.dataset.phase = 'revealed';
+    overlay.querySelector('.halloween-summon-pumpkin').classList.add('hidden');
+    overlay.querySelector('.halloween-summon-prize').classList.remove('hidden');
+    overlay.querySelector('.halloween-summon-copy').innerHTML = `<p class="halloween-summon-type">${type} GET!</p><h2>${escapeHtml(result.prize.name)}</h2><p>ハロウィン限定コレクションに追加！</p>`;
+    overlay.querySelector('[data-action="reveal"]').classList.add('hidden');
+    const close = overlay.querySelector('[data-action="close"]');
+    close.classList.remove('hidden'); close.focus({preventScroll:true});
+    SM.play('se_gacha_result2');
+  };
+  const close = () => {
+    clearTimeout(timer); hideTooltip(); overlay.remove();
+    const target = previousFocus?.isConnected ? previousFocus : document.querySelector('#halloween-gacha-section [data-payment]:not(:disabled)') || $('btn-gacha-tab-halloween');
+    target?.focus({preventScroll:true});
+  };
+  overlay.querySelector('[data-action="reveal"]').onclick = reveal;
+  overlay.querySelector('[data-action="close"]').onclick = close;
+  overlay.onkeydown = event => {
+    if (event.key === 'Escape') { event.preventDefault(); overlay.dataset.phase === 'charging' ? reveal() : close(); }
+    if (event.key === 'Tab') {
+      const controls = [...overlay.querySelectorAll('button')].filter(button => !button.closest('.hidden'));
+      const index = controls.indexOf(document.activeElement);
+      event.preventDefault(); controls[(index + (event.shiftKey ? -1 : 1) + controls.length) % controls.length]?.focus();
+    }
+  };
+  bindStageRewardTooltips(overlay);
+  overlay.querySelector('[data-action="reveal"]').focus({preventScroll:true});
+  SM.play('se_decide');
+  timer = setTimeout(reveal, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 200 : 2800);
+}
+
 function renderHalloweenGacha(result = null) {
   const panel = $('halloween-gacha-section');
   if (!panel || !G) return;
@@ -10654,9 +10989,10 @@ function renderHalloweenGacha(result = null) {
   bindStageRewardTooltips(panel);
   panel.querySelectorAll('[data-payment]').forEach(button => {
     button.onclick = () => {
+      if (document.querySelector('.halloween-summon')) return;
       button.disabled = true;
       const drawn = drawHalloweenGacha(button.dataset.payment);
-      if (drawn.ok) SM.play('se_gacha_result2');
+      if (drawn.ok) showHalloweenGachaSummon(drawn);
       $('gacha-current-gold').textContent = G.player.gold;
       renderHalloweenGacha(drawn); renderEquipmentGachaControls(); renderSkinGachaControls();
     };
@@ -10696,41 +11032,34 @@ function halloweenChallengeSource() {
 
 function showHalloweenMenu(tab = 'stage', message = '') {
   if (!G || !isHalloweenActive()) return;
-  if (!['stage','exchange'].includes(tab)) tab = 'stage';
   document.querySelector('.halloween-menu')?.remove();
   const source = halloweenChallengeSource();
   const area = AREA_STAGES[source.areaId], stage = area.stages[source.stageIndex];
-  const claimed = !!G.halloweenEvent?.[HALLOWEEN_EVENT.id]?.firstClearClaimed;
   const candy = halloweenCandyBalance();
-  const tabs = [{id:'stage',label:'ステージ'},{id:'exchange',label:'景品交換'}];
-  let body = '';
-  if (tab === 'stage') {
-    body = `<p class="halloween-panel-lead">8たいの おばけを たおして、町を守ろう！</p>
-      <div class="halloween-monster-parade">${HALLOWEEN_MONSTERS.map(monster => `<img src="${av(`assets/halloween/${monster.id}.png`)}" alt="${monster.name}" title="${monster.name}">`).join('')}</div>
-      <div class="halloween-source"><b>チャレンジ ${source.level + 1}：${escapeHtml(area.name)}・${escapeHtml(stage.name)}</b><p>${escapeHtml(source.reason)}</p><p>1回クリアで次の問題ステージへ。敵の強さも1.1倍ずつ（今回は ×${Math.pow(1.1,source.level).toFixed(2)}）。</p></div>
-      <div class="halloween-clear-reward">${stageRewardIcon('ticket','raid-ticket',1,32)}<span>初回クリア：レイドチケット ×${HALLOWEEN_EVENT.firstClearRaidTickets}<br><small>${claimed ? '受け取り済み' : '今年のイベントにつき1回'}</small></span></div>
-      <p class="halloween-panel-note">お菓子は95%で1〜2個！ 最後のボスは必ず3〜4個。ハロウィンチケットは通常敵10%・ボス50%で1枚。何回遊んでもイベントのドロップ率は下がらないよ。</p>
-      <button type="button" class="btn btn-primary halloween-start-button" data-action="start">🎃 町を守りにいく！</button>`;
-  } else if (tab === 'exchange') {
-    body = `<p class="halloween-panel-lead">お菓子を使って、ほしい限定品と交換しよう！</p><p class="halloween-panel-note">ここでしか手に入らないスキン男女1種ずつ・背景1種・★5装備1種。お菓子を消費して、各1回ずつ交換できます。</p>
+  const season = halloweenSeason();
+  const stageEntry = `<div class="halloween-source"><b>チャレンジ ${source.level + 1}：${escapeHtml(area.name)}・${escapeHtml(stage.name)}</b><p>従来ステージ · 1体ずつのバトル<br>クリアで次のステージへ · 敵の強さ ×${Math.pow(1.1,source.level).toFixed(2)}</p></div>
+    <button type="button" class="btn btn-primary halloween-start-button" data-action="start">⚔️ 従来ステージに挑戦</button>`;
+  const body = `<h3 id="halloween-exchange-title" class="halloween-panel-lead">🎁 景品を交換</h3>
       <div class="halloween-prize-grid">${HALLOWEEN_EXCHANGE_PRIZES.map(prize => {
         const owned = halloweenPrizeOwned(prize);
-        return `<article class="halloween-prize-card${owned ? ' is-owned' : ''}"><span class="halloween-prize-type">${prize.kind === 'skin' ? 'キャラスキン' : prize.kind === 'background' ? '背景' : '★5 交換限定装備'}</span><div class="halloween-prize-art">${stageRewardIcon(prize.kind,prize.id,prize.rarity || 1,88)}</div><b>${escapeHtml(prize.name)}</b><span class="halloween-prize-price">お菓子 ${prize.cost}個</span><button type="button" class="btn" data-exchange="${prize.id}" ${owned || candy < prize.cost ? 'disabled' : ''}>${owned ? '✓ 獲得済み' : candy < prize.cost ? 'お菓子が足りない' : '交換する'}</button></article>`;
+        return `<article class="halloween-prize-card halloween-exchange-card${owned ? ' is-owned' : ''}"><div class="halloween-prize-art">${stageRewardIcon(prize.kind,prize.id,prize.rarity || 1,88)}</div><b>${escapeHtml(prize.name)}</b><div class="halloween-exchange-actions"><span class="halloween-prize-price" aria-label="必要なお菓子 ${prize.cost}個">${iconHtml(HALLOWEEN_EVENT.candyIcon,22)}<b>×${prize.cost}</b></span><button type="button" class="btn" data-exchange="${prize.id}" ${owned || candy < prize.cost ? 'disabled' : ''}>${owned ? '✓ 獲得済み' : candy < prize.cost ? '足りない' : '交換する'}</button></div></article>`;
       }).join('')}</div>`;
-  }
   const overlay = document.createElement('div');
   overlay.className = 'confirm-overlay halloween-menu';
   overlay.innerHTML = `<div class="panel halloween-event-card halloween-hub" role="dialog" aria-modal="true" aria-labelledby="halloween-title">
+    <div class="halloween-hero">
     <header class="halloween-hub-header"><h2 id="halloween-title">🎃 ハロウィンの森</h2><span class="halloween-event-date">10月31日まで</span><div class="halloween-candy-balance">${stageRewardIcon('halloween-candy','halloween-candy',1,34)}<span>お菓子 <b>${candy}</b>個</span></div></header>
     <div class="halloween-event-banner"><img src="${av('assets/halloween/event_banner.png')}" alt="たくさんのおばけから町を守る冒険者たち"><div><strong>お化けがたくさんやってくる！</strong><span>お化けから町を守れ！ お菓子を集めて限定品を手に入れよう。</span></div></div>
-    <nav class="halloween-tabs" role="tablist" aria-label="ハロウィンイベント">${tabs.map(page => `<button type="button" role="tab" id="halloween-tab-${page.id}" aria-selected="${tab === page.id}" aria-controls="halloween-tab-panel" data-page="${page.id}">${page.label}</button>`).join('')}</nav>
-    <section class="halloween-tab-panel" id="halloween-tab-panel" role="tabpanel" aria-labelledby="halloween-tab-${tab}">${message ? `<p class="halloween-action-message" role="status">${escapeHtml(message)}</p>` : ''}${body}</section>
+    </div>
+    <section class="halloween-stage-entry" aria-label="従来のイベントステージ">${stageEntry}</section>
+    <div class="halloween-season2-entry"><button type="button" class="btn btn-primary" data-action="season2-stages">👻 シーズン2のステージを選ぶ${season < 2 ? '（テストプレイ）' : ''}</button><small>${season < 2 ? '10/21正式開幕 · 今すぐ先行テストで遊べます' : '複数モンスター戦 · 2〜5体同時出現'}</small></div>
+    <section class="halloween-tab-panel" id="halloween-tab-panel" aria-labelledby="halloween-exchange-title">${message ? `<p class="halloween-action-message" role="status">${escapeHtml(message)}</p>` : ''}${body}</section>
     <footer class="halloween-hub-footer"><button type="button" class="btn" data-action="open-gacha">🎃 ハロウィンガチャへ</button><button type="button" class="btn" data-action="close">とじる</button></footer>
   </div>`;
   document.body.appendChild(overlay);
   bindStageRewardTooltips(overlay);
   overlay.querySelector('[data-action="close"]').onclick = () => { hideTooltip(); overlay.remove(); };
-  overlay.querySelectorAll('[data-page]').forEach(button => { button.onclick = () => { hideTooltip(); showHalloweenMenu(button.dataset.page); }; });
+  overlay.querySelector('[data-action="season2-stages"]').onclick = showHalloweenSeason2Stages;
   overlay.querySelector('[data-action="start"]')?.addEventListener('click', () => { hideTooltip(); overlay.remove(); startHalloweenChallenge(source); });
   overlay.querySelectorAll('[data-exchange]').forEach(button => { button.onclick = () => {
     button.disabled = true;
@@ -10739,17 +11068,46 @@ function showHalloweenMenu(tab = 'stage', message = '') {
     hideTooltip(); showHalloweenMenu('exchange',result.message);
   }; });
   overlay.querySelector('[data-action="open-gacha"]').onclick = () => { hideTooltip(); overlay.remove(); showGacha('halloween'); };
-  overlay.querySelector('[aria-selected="true"]').focus({preventScroll:true});
+  (tab === 'exchange' ? overlay.querySelector('[data-exchange]:not(:disabled)') || overlay.querySelector('[data-action="start"]') : overlay.querySelector('[data-action="start"]')).focus({preventScroll:true});
 }
 
-function startHalloweenChallenge(source = halloweenChallengeSource()) {
+function showHalloweenSeason2Stages() {
+  if (!G || !isHalloweenActive()) return;
+  document.querySelector('.halloween-season2-select')?.remove();
+  hideTooltip();
+  const preview = halloweenSeason() < 2;
+  const clears = G.halloweenEvent?.[HALLOWEEN_EVENT.id]?.season2StageClears || {};
+  const overlay = document.createElement('div');
+  overlay.className = 'confirm-overlay halloween-season2-select';
+  overlay.innerHTML = `<section class="panel halloween-season2-panel" role="dialog" aria-modal="true" aria-labelledby="halloween-season2-title"><h2 id="halloween-season2-title">👻 シーズン2${preview ? ' 先行テスト' : ''}</h2><p class="flavor">敵をタップして選ぶ → 計算に正解して攻撃 → 全員倒してクリア。<br>まちがえると、生き残った敵全員が反撃します。</p><label class="halloween-operation-select">計算の種類 <select id="halloween-season2-operation">${Object.entries(HALLOWEEN_MATH_OPERATIONS).map(([key,op]) => `<option value="${key}">${op.label}</option>`).join('')}</select></label><div class="halloween-season2-stage-list">${HALLOWEEN_SEASON2_STAGES.map(stage => `<button type="button" class="halloween-season2-stage" data-season2-stage="${stage.id}"><b>${stage.name}</b><span>${stage.description}</span><small>${stage.mathMode === 'answer' ? '答えの敵を選ぶ' : stage.mathMode === 'combine' ? '2体を組み合わせる' : '両方の問題'} · ${stage.waves.length}戦 · クリア ${clears[stage.id] || 0}回</small><strong>${preview ? 'テストで遊ぶ' : 'このステージに挑戦'}</strong></button>`).join('')}</div><button type="button" class="btn" data-close>もどる</button></section>`;
+  const close = () => { overlay.remove(); document.querySelector('[data-action="season2-stages"]')?.focus({preventScroll:true}); };
+  overlay.querySelector('[data-close]').onclick = close;
+  overlay.querySelectorAll('[data-season2-stage]').forEach(button => {
+    button.onclick = () => { const operation = overlay.querySelector('#halloween-season2-operation').value; overlay.remove(); document.querySelector('.halloween-menu')?.remove(); startHalloweenSeason2Challenge(button.dataset.season2Stage, preview, operation); };
+  });
+  overlay.onkeydown = event => { if (event.key === 'Escape') { event.stopPropagation(); close(); } };
+  document.body.appendChild(overlay);
+  overlay.querySelector('[data-season2-stage]').focus({preventScroll:true});
+}
+
+function startHalloweenSeason2Challenge(stageId, preview = false, operation = 'add') {
+  const stage = HALLOWEEN_SEASON2_STAGES.find(entry => entry.id === stageId);
+  if (!stage || !G || !isHalloweenActive() || (halloweenSeason() < 2 && !preview)) return false;
+  startHalloweenChallenge({areaId:'area1',stageIndex:0}, {season:2,stageId:stage.id,test:preview,operation});
+  return true;
+}
+
+function startHalloweenChallenge(source = halloweenChallengeSource(), options = {}) {
   if (!G || !isHalloweenActive() || !AREA_STAGES[source.areaId]?.stages[source.stageIndex]) return;
   const state = halloweenEventState();
-  state.baseSource ||= {...halloweenInitialChallengeSource()};
+  if (options.season !== 2) state.baseSource ||= {...halloweenInitialChallengeSource()};
+  const season2Stage = HALLOWEEN_SEASON2_STAGES.find(stage => stage.id === options.stageId);
   explore = {
-    stageMode:true, isHalloween:true, areaId:source.areaId, stageIndex:source.stageIndex,
-    halloweenLevel:Math.max(0, Math.floor(Number(state.clears) || 0)),
-    halloweenBaseAreaId:state.baseSource.areaId,
+    stageMode:true, isHalloween:true, halloweenSeason:options.season === 2 ? 2 : 1, halloweenWave:0,
+    halloweenStageId:season2Stage?.id || null, halloweenTest:!!options.test,
+    halloweenOperation:HALLOWEEN_MATH_OPERATIONS[options.operation] ? options.operation : 'add', areaId:source.areaId, stageIndex:source.stageIndex,
+    halloweenLevel:options.season === 2 ? 0 : Math.max(0, Math.floor(Number(state.clears) || 0)),
+    halloweenBaseAreaId:options.season === 2 ? 'area1' : state.baseSource.areaId,
     isBoss:false, halloweenIndex:0, sessionDrops:[], sessionGold:0,
     stageDrops:[], stageGold:0, stageExp:0, usedProblems:new Set()
   };
@@ -10760,12 +11118,13 @@ function startHalloweenChallenge(source = halloweenChallengeSource()) {
 function generateHalloweenEnemy(run) {
   const index = Math.max(0, Math.min(HALLOWEEN_MONSTERS.length - 1, run.halloweenIndex || 0));
   const monster = HALLOWEEN_MONSTERS[index];
-  const grade = getDefaultAreaDifficultyMultiplier(run.halloweenBaseAreaId || run.areaId);
+  const grade = halloweenSeason2Stage(run)?.grade || getDefaultAreaDifficultyMultiplier(run.halloweenBaseAreaId || run.areaId);
   const isBoss = index === HALLOWEEN_MONSTERS.length - 1;
   const multiplier = Math.pow(1.1, run.halloweenLevel || 0);
-  const hp = Math.round(((isBoss ? 18 : 8) + grade * (isBoss ? 8 : 4)) * multiplier);
+  const hp = Math.round(((isBoss ? 32 : 8) + grade * (isBoss ? 14 : 4)) * multiplier);
   return { name:monster.name, emoji:`assets/halloween/${monster.id}.png`,
-    maxHp:hp, hp, atk:Math.max(1, Math.round(grade * 2 * multiplier)), def:0, spd:5 * multiplier,
+    maxHp:hp, hp, atk:Math.max(1, Math.round((isBoss ? 3 + grade * 3 : grade * 2) * multiplier)),
+    def:isBoss ? Math.max(1, Math.round(grade * multiplier)) : 0, spd:5 * multiplier,
     goldMin:2, goldMax:isBoss ? 12 : 5, exp:isBoss ? 12 : 5, isBoss };
 }
 
@@ -10781,25 +11140,33 @@ function grantHalloweenClearReward() {
 
 function proceedHalloweenBattle() {
   const run = explore;
-  const count = run.halloweenIndex + 1;
-  showKillProgressPopup(count, count === HALLOWEEN_MONSTERS.length ? count + 1 : count, HALLOWEEN_MONSTERS.length, () => {
+  const count = run.halloweenIndex + halloweenWaveSize(run);
+  const total = halloweenEncounterTotal(run);
+  showKillProgressPopup(count, count === total ? count + 1 : count, total, () => {
     if (explore !== run) return;
-    if (count < HALLOWEEN_MONSTERS.length) {
-      run.halloweenIndex++;
+    if (count < total) {
+      run.halloweenIndex = count;
+      run.halloweenWave++;
       startBattle(false);
       return;
     }
-    const bonus = grantHalloweenClearReward();
+    let bonus = null;
+    if (run.halloweenSeason === 2) {
+      const state = halloweenEventState();
+      state.season2StageClears ||= {};
+      const key = run.halloweenStageId || 'night-party';
+      state.season2StageClears[key] = (state.season2StageClears[key] || 0) + 1;
+    } else { bonus = grantHalloweenClearReward(); }
     const rewards = { gold:run.sessionGold, exp:run.stageExp, drops:run.sessionDrops, milestoneRewards:bonus ? [bonus] : [] };
     G.player.hp = totalMaxHp(); G.player.mp = totalMaxMp();
     explore = null;
     save(true);
     const overlay = document.createElement('div');
     overlay.className = 'confirm-overlay halloween-menu';
-    overlay.innerHTML = `<div class="panel halloween-event-card"><h2>🎃 ハロウィンの森 クリア！</h2><p>8たいの おばけを たおした！</p>${stageClearRewardsHtml(rewards)}<p class="flavor">${bonus ? 'ふくしゅう がんばったね！' : '初回クリア報酬は受け取り済み。復習は何回でもできるよ。'}</p><button type="button" class="btn btn-primary">きょてんに もどる</button></div>`;
+    overlay.innerHTML = `<div class="panel halloween-event-card"><h2>🎃 ハロウィンの森 クリア！</h2><p>${total}たいの おばけを たおした！${run.halloweenSeason === 2 ? ' シーズン2クリア！' : ''}</p>${stageClearRewardsHtml(rewards)}<p class="flavor">${run.halloweenSeason === 2 ? 'シーズン2の別ステージにも挑戦してみよう！' : 'ふくしゅう がんばったね！'}</p><button type="button" class="btn btn-primary" data-action="return-home">きょてんに もどる</button></div>`;
     document.body.appendChild(overlay);
     bindDropItemTooltips(overlay);
-    overlay.querySelector('button').onclick = () => { hideTooltip(); overlay.remove(); showHome(); showHalloweenMenu('stage'); };
+    overlay.querySelector('[data-action="return-home"]').onclick = () => { hideTooltip(); overlay.remove(); showHome(); showHalloweenMenu('stage'); };
   });
 }
 
@@ -14016,7 +14383,7 @@ async function renderRaidHistory() {
   $('raid-history-position').textContent = `${raidHistoryIndex + 1} / ${raidHistoryEntries.length}`;
   const date = entry.defeatedAt ? new Date(entry.defeatedAt).toLocaleString('ja-JP') : '記録なし';
   const finishers = (entry.finalHitters || []).map(row => row.playerName || '勇者').join('、') || '記録なし';
-  $('raid-history-summary').textContent = `暗黒竜 ダークバハムート Lv.${entry.bossLevel || 50}\n討伐日時：${date}\n最大HP：${(entry.maxHp || 1000).toLocaleString()}\n🔥 最後の一撃：${finishers}`;
+  $('raid-history-summary').textContent = `暗黒竜 ダークバハムート Lv.${entry.bossLevel || 50} ｜ 討伐：${date} ｜ 最大HP：${(entry.maxHp || 1000).toLocaleString()} ｜ 🔥 最後の一撃：${finishers}`;
   list.innerHTML = '<div class="raid-empty-ranking">ランキングをよみこみ中…</div>';
   list.setAttribute('aria-busy', 'true');
   try {

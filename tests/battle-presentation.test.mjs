@@ -9,7 +9,7 @@ const canvas = { width: 300, height: 200, getBoundingClientRect: () => canvasRec
 const frame = { id: 'battle-enemy-emoji', isConnected: true, getBoundingClientRect: () => targetRect };
 const stars = { innerHTML: '', hidden: true, classList: { contains: () => stars.hidden, toggle(_name, value) { stars.hidden = value; } } };
 const context = vm.createContext({
-  window: {}, document: {},
+  window: {}, document: {}, battle:null,
   $: id => id === 'battle-enemy-progress' ? stars : frame,
   explore: { stageMode: true, isBoss: false, stageKillCount: 1 }, ENEMIES_PER_STAGE: 5,
 });
@@ -18,6 +18,7 @@ vm.runInContext('this.CM = new CanvasManager();', context);
 const cm = context.CM;
 cm.canvas = canvas;
 cm.ctx = { clearRect() {} };
+vm.runInContext(source.slice(source.indexOf('function activeEnemySprite()'), source.indexOf('function renderHalloweenParty()')), context);
 vm.runInContext(source.slice(source.indexOf('const enemyArtworkBounds ='), source.indexOf('function playEnemyAttackAnim(')), context);
 let point = context.getEnemyCanvasCoords();
 assert.equal(canvas.width, 600, 'canvas size is synchronized before sampling attack coordinates');

@@ -552,13 +552,24 @@
       </div>
     </div>
 
-    <!-- 合成 -->
+    <!-- 合成：装備選択と専用計算 -->
     <section id="screen-synthesis" class="screen">
-      <div class="panel" style="position: relative;">
+      <div class="panel synthesis-panel">
         <button id="btn-synthesis-back" class="window-nav-btn window-back-btn">← もどる</button>
-        <h2>＊ごうせい＊</h2>
-        <p class="flavor">同じレアリティの そうびを2つ組み合わせて、けいさんに正解するとレアリティが上がる！</p>
-        <div id="synthesis-list" class="inventory-list"></div>
+        <h2>🌀 装備の合成</h2>
+        <p id="synthesis-step" class="flavor"></p>
+        <div id="synthesis-recipe" class="synthesis-recipe"></div>
+        <div id="synthesis-list" class="synthesis-grid"></div>
+      </div>
+    </section>
+    <section id="screen-synthesis-calc" class="screen">
+      <div class="panel synthesis-panel synthesis-calc-panel">
+        <h2>🌀 合成のけいさん</h2>
+        <div id="synthesis-calc-recipe" class="synthesis-recipe"></div>
+        <p id="synthesis-calc-progress" class="flavor" role="status"></p>
+        <div id="synthesis-challenge" class="challenge-area"></div>
+        <div id="synthesis-calc-result" role="status"></div>
+        <button id="btn-synthesis-calc-quit" class="btn">合成をやめる</button>
       </div>
     </section>
 
@@ -869,6 +880,7 @@
             <div class="battle-enemy-figure">
               <div id="battle-enemy-progress" class="hidden"></div>
               <span id="battle-enemy-emoji" class="enemy-sprite">👾</span>
+              <div id="halloween-enemy-party" class="hidden" aria-label="同時出現したモンスター"></div>
             </div>
             <div id="battle-enemy-name" class="enemy-name"></div>
             <div class="enemy-bars">
