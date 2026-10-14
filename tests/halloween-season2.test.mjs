@@ -2,44 +2,45 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 const source=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');
-let now=Date.parse('2026-10-20T23:59:59+09:00');
-const c=vm.createContext({Date:class extends Date{static now(){return now;}},G:{halloweenEvent:{},player:{},raidTickets:0},explore:null,Math,getDefaultAreaDifficultyMultiplier:()=>1,save(){},startBattle(){},choosePickupStage:()=>null,AREA_STAGES:{area1:{stages:[{}]}},showKillProgressPopup:(_from,_to,_total,cb)=>cb(),totalMaxHp:()=>30,totalMaxMp:()=>10,stageClearRewardsHtml:()=>'',bindDropItemTooltips(){},document:{createElement:()=>({querySelector:()=>({})}),body:{appendChild(){}}}});
+let now=Date.parse('2026-10-20T23:59:59+09:00'),rolls=0,won=0;
+const c=vm.createContext({Date:class extends Date{static now(){return now;}},G:{halloweenEvent:{},player:{gold:0},raidTickets:0},explore:null,Math,
+ getDefaultAreaDifficultyMultiplier:()=>1,save(){},startBattle(){},choosePickupStage:()=>null,AREA_STAGES:{area1:{stages:[{}]}},
+ showKillProgressPopup:(_from,_to,_total,cb)=>cb(),totalMaxHp:()=>30,totalMaxMp:()=>10,stageClearRewardsHtml:()=>'',bindDropItemTooltips(){},
+ document:{createElement:()=>({querySelector:()=>({})}),body:{appendChild(){}}},
+ blog(){},SM:{playBGM(){}},$:()=>({}),renderBattleProgressStars(){},updateBattleBars(){},resumeBattle(){},
+ rnd:min=>min,grantExp:()=>({leveledUp:false}),rollBattleDrops(){rolls++;return [{kind:'halloween-candy',count:1}];},winBattle(){won++;c.battle.over=true;}
+});
 vm.runInContext(source.slice(source.indexOf('const HALLOWEEN_EVENT ='),source.indexOf('const PICKUP_STAGE_MAP =')),c);
-assert.equal(c.halloweenSeason(),1);
-c.startHalloweenChallenge({areaId:'area1',stageIndex:0});const oldRun=c.explore;
+assert.equal(c.halloweenSeason(),1);c.startHalloweenChallenge({areaId:'area1',stageIndex:0});const oldRun=c.explore;
 now=Date.parse('2026-10-21T00:00:00+09:00');assert.equal(c.halloweenSeason(),2);
-assert.equal(c.generateHalloweenParty(oldRun),null,'season freezes at entry across release time');
-c.startHalloweenChallenge({areaId:'area1',stageIndex:0});assert.equal(c.explore.halloweenSeason,1,'classic remains selectable after release');
-c.startHalloweenSeason2Challenge('night-party');assert.equal(c.explore.halloweenSeason,2);assert.equal(c.halloweenEncounterTotal(c.explore),10);
-for(const [wave,size] of [[0,2],[1,3],[2,5]]){
- assert.equal(c.explore.halloweenWave,wave);
- const party=c.generateHalloweenParty(c.explore);assert.equal(party.length,size);assert.equal(new Set(party.map(e=>e.partyId)).size,size);
- assert.equal(party.filter(e=>e.isBoss).length,wave===2?1:0);
- for(const enemy of party)assert.ok(fs.existsSync(new URL('../'+enemy.emoji,import.meta.url)));
- c.proceedHalloweenBattle();
+assert.equal(c.generateHalloweenParty(oldRun),null,'season freezes at entry');
+c.startHalloweenChallenge({areaId:'area1',stageIndex:0});assert.equal(c.explore.halloweenSeason,1);
+c.startHalloweenSeason2Challenge('night-party');assert.equal(c.halloweenEncounterTotal(c.explore),5);
+const party=c.generateHalloweenParty(c.explore);assert.equal(party.length,10);assert.equal(new Set(party.map(e=>e.partyId)).size,10);
+assert.equal(party.some(e=>e.isBoss),false);
+for(const enemy of party)assert.ok(fs.existsSync(new URL('../'+enemy.emoji,import.meta.url)));
+c.battle={enemies:party,enemy:party[0],over:false};const run=c.explore;
+for(let i=0;i<4;i++){
+ c.battle.enemies.forEach(e=>e.hp=0);c.battle.halloweenAnswerOutcome={correct:true,submitted:true};c.finishHalloweenSeason2Action();
+ assert.equal(c.explore,run);assert.equal(run.halloweenAnswers,i+1);
+ assert.equal(c.battle.enemies.filter(e=>e.hp>0).length,10,'choices replenished even after all ten die');
+ assert.equal(c.battle.enemies.filter(e=>e.isBoss).length,i===3?1:0,'boss only on last star');
 }
-assert.equal(c.explore,null,'only cleared after all three groups');assert.equal(c.G.halloweenEvent.halloween_2026.clears,0,'S2 does not advance the classic curriculum');
-assert.equal(c.G.halloweenEvent.halloween_2026.season2StageClears['night-party'],1);
-assert.equal(c.G.raidTickets,0,'S2 does not consume the classic first-clear claim');
-now=Date.parse('2026-10-14T12:00:00+09:00');
-assert.equal(c.startHalloweenSeason2Challenge('candy-path'),false,'early formal entry is gated');
-assert.equal(c.startHalloweenSeason2Challenge('candy-path',true),true,'explicit preview is playable now');
-assert.equal(c.explore.halloweenTest,true);assert.equal(c.halloweenEncounterTotal(c.explore),4);
-c.startHalloweenSeason2Challenge('moon-square',true);assert.equal(c.halloweenWaveSize(c.explore),3);assert.equal(c.halloweenEncounterTotal(c.explore),6);
-assert.equal(c.startHalloweenSeason2Challenge('invalid-stage',true),false);
-now=Date.parse('2026-11-01T00:00:00+09:00');assert.equal(c.isHalloweenActive(),false);
-let bars=0,resumed=0;
-const battle={enemies:[{partyId:0,hp:0},{partyId:1,hp:8},{partyId:2,hp:5}],targetLocked:false,over:false};battle.enemy=battle.enemies[0];
-const ctx=vm.createContext({battle,$:()=>({textContent:''}),updateBattleBars(){bars++;},resumeBattle(){resumed++;},blog(){}});
-vm.runInContext(source.slice(source.indexOf('function selectHalloweenTarget('),source.indexOf('function blog(html)')),ctx);
-assert.equal(ctx.selectHalloweenTarget(0),false);assert.equal(ctx.selectHalloweenTarget(1),true);assert.equal(battle.enemy.partyId,1);
-battle.targetLocked=true;assert.equal(ctx.selectHalloweenTarget(2),false,'target cannot change during damage/counterattack');battle.targetLocked=false;battle.enemy=battle.enemies[0];
-vm.runInContext(source.slice(source.indexOf('function afterPlayerAction(){'),source.indexOf('function showRaidDefeatRumble')),ctx);
-ctx.afterPlayerAction();assert.equal(battle.enemy.partyId,1);assert.equal(resumed,1,'one kill with survivors does not end group');
-console.log('PASS: JST release boundary, run snapshot, 2/3/5 enemies, three waves, once-only clear reward, targeting locks and survivor transition');
-let gainedExp=0, rolls=0, saved=0;
-const rewardsContext=vm.createContext({battle:{enemies:[{name:'A',exp:5,goldMin:2,goldMax:4},{name:'B',exp:12,goldMin:3,goldMax:6}]},G:{player:{gold:0}},explore:{isHalloween:true,stageMode:true},endBattleLoop(){},rnd:min=>min,rollBattleDrops(enemy){rolls++;return [{kind:'halloween-candy',name:'お菓子',count:enemy.exp===12?4:1}];},grantExp(exp){gainedExp+=exp;return {leveledUp:false};},save(){saved++;},playItemRevealSequence(){}});
-rewardsContext.battle.enemy=rewardsContext.battle.enemies[1];
-vm.runInContext(source.slice(source.indexOf('function winBattle(){'),source.indexOf('/* db.emoji')),rewardsContext);
-rewardsContext.winBattle();rewardsContext.winBattle();
-assert.equal(gainedExp,17);assert.equal(rolls,2,'drop rolls once per monster');assert.equal(rewardsContext.G.player.gold,5);assert.equal(rewardsContext.explore.sessionDrops.length,2);assert.equal(saved,1,'duplicate group victory cannot duplicate rewards');
+assert.equal(won,0);assert.equal(rolls,4,'four normal rolls regardless of kill count');
+c.finishHalloweenSeason2Action();assert.equal(run.halloweenAnswers,4);assert.equal(rolls,4,'no-question callback cannot grant loot');
+c.battle.enemies.find(e=>e.isBoss).hp=0;c.battle.halloweenAnswerOutcome={correct:true,submitted:true};c.finishHalloweenSeason2Action();
+assert.equal(won,1);c.finishHalloweenSeason2Action();assert.equal(won,1);
+c.proceedHalloweenBattle();assert.equal(c.explore,null);assert.equal(c.G.halloweenEvent.halloween_2026.season2StageClears['night-party'],1);
+assert.equal(c.G.halloweenEvent.halloween_2026.clears,0);assert.equal(c.G.raidTickets,0);
+now=Date.parse('2026-10-14T12:00:00+09:00');assert.equal(c.startHalloweenSeason2Challenge('candy-path'),false);
+assert.equal(c.startHalloweenSeason2Challenge('candy-path',true),true);assert.equal(c.halloweenEncounterTotal(c.explore),5);
+c.battle={enemies:c.generateHalloweenParty(c.explore),over:false};c.battle.enemy=c.battle.enemies[0];
+c.battle.halloweenAnswerOutcome={correct:false,submitted:false};c.finishHalloweenSeason2Action();assert.equal(c.explore.halloweenAnswers,0,'timeout is not an answer');
+c.battle.halloweenAnswerOutcome={correct:false,submitted:true};c.finishHalloweenSeason2Action();assert.equal(c.explore.halloweenAnswers,1);assert.equal(rolls,4,'wrong answer has no loot');
+c.startHalloweenSeason2Challenge('moon-square',true);assert.equal(c.halloweenEncounterTotal(c.explore),5);
+assert.equal(c.startHalloweenSeason2Challenge('invalid-stage',true),false);now=Date.parse('2026-11-01T00:00:00+09:00');assert.equal(c.isHalloweenActive(),false);
+let finalRolls=0,exp=0;
+const r=vm.createContext({battle:{enemies:[{exp:5},{name:'boss',exp:12,goldMin:3,goldMax:6}]},G:{player:{gold:0}},explore:{isHalloween:true,halloweenSeason:2,stageMode:true},endBattleLoop(){},rnd:min=>min,rollBattleDrops(){finalRolls++;return [];},grantExp(n){exp+=n;return {leveledUp:false};},save(){},playItemRevealSequence(){}});
+r.battle.enemy=r.battle.enemies[1];vm.runInContext(source.slice(source.indexOf('function winBattle(){'),source.indexOf('/* db.emoji')),r);
+r.winBattle();r.winBattle();assert.equal(finalRolls,1,'boss only, not all ten enemies');assert.equal(exp,12);
+console.log('PASS: ten persistent targets, answer progress, last-star boss, timeout, four normal + one boss loot cap, release gate and once-only completion');

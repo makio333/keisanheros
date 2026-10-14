@@ -4,9 +4,7 @@
 // ※ このスクリプトを利用するには、HTML側に特定のIDを持つ要素が存在している必要があります。
 // 詳しくは README.md を参照してください。
 
-/* 五十音表と おなじ ならびの キーボード。
-   1つの配列＝表の「たて1れつ」（あ→お）。CSS側で grid-auto-flow:column に して
-   がっこうで ならう 五十音表と おなじ みため に する。'' は あきマス。 */
+/* あ行・か行ごとに「あ→お」を横に並べる。'' は入力できない空きマス。 */
 const KANA_COLUMNS_MAIN = [
   ['あ', 'い', 'う', 'え', 'お'],
   ['か', 'き', 'く', 'け', 'こ'],
@@ -17,17 +15,7 @@ const KANA_COLUMNS_MAIN = [
   ['ま', 'み', 'む', 'め', 'も'],
   ['や', '',   'ゆ', '',   'よ'],
   ['ら', 'り', 'る', 'れ', 'ろ'],
-  ['わ', 'を', 'ん', 'ー', ''  ],
-];
-
-/* だくおん・はんだくおん・ちいさい字＋けすキー */
-const KANA_COLUMNS_SUB = [
-  ['が', 'ぎ', 'ぐ', 'げ', 'ご'],
-  ['ざ', 'じ', 'ず', 'ぜ', 'ぞ'],
-  ['だ', 'ぢ', 'づ', 'で', 'ど'],
-  ['ば', 'び', 'ぶ', 'べ', 'ぼ'],
-  ['ぱ', 'ぴ', 'ぷ', 'ぺ', 'ぽ'],
-  ['ゃ', 'ゅ', 'ょ', 'っ', 'BS'],
+  ['わ', 'を', 'ん', 'ー', ''],
 ];
 
 let isFlickMode = false;
@@ -68,8 +56,16 @@ function initKanjiInputUI(callback) {
   const container = document.getElementById('software-keyboard');
   if (container) {
     container.innerHTML = '';
-    container.appendChild(buildKanaGrid(KANA_COLUMNS_MAIN));
-    container.appendChild(buildKanaGrid(KANA_COLUMNS_SUB));
+    const section=document.createElement('div'); section.className='kana-board-section';
+    section.appendChild(buildKanaGrid(KANA_COLUMNS_MAIN,['あ行','か行','さ行','た行','な行','は行','ま行','や行','ら行','わ行']));
+    container.appendChild(section);
+    const modifiers=document.createElement('div'); modifiers.className='kana-board-modifiers';
+    for(const [key,label,accessibleLabel] of [['DAKUTEN','゛','濁点'],['HANDAKUTEN','゜','半濁点'],['SMALL','小さく','小さく'],['BS','⌫ けす','けす']]) {
+      const button=document.createElement('button'); button.type='button'; button.className='key-btn key-fn';
+      button.textContent=label; button.setAttribute('aria-label',accessibleLabel);
+      button.onclick=()=>handleKeyClick(key); modifiers.appendChild(button);
+    }
+    container.appendChild(modifiers);
   }
 
   const toggleBtn = document.getElementById('btn-toggle-input');
@@ -93,21 +89,30 @@ function initKanjiInputUI(callback) {
   }
 }
 
-/* たて1れつずつの配列から、五十音表のかたちの グリッドを つくる */
-function buildKanaGrid(columns) {
+/* 行名と5文字をひとまとまりにして、探しやすい五十音表を作る。 */
+function buildKanaGrid(columns, labels = []) {
   const grid = document.createElement('div');
-  grid.className = 'kana-grid';
-  columns.forEach(col => {
-    col.forEach(char => {
+  grid.className = 'kana-grid kana-board-grid';
+  grid.style.gridTemplateRows='repeat(5,minmax(22px,1fr))';
+  columns.forEach((col,index) => {
+    const label=document.createElement('span'); label.className='kana-row-label';
+    const gridRow=index%5+1, firstColumn=index<5?1:7;
+    label.style.gridRow=String(gridRow); label.style.gridColumn=String(firstColumn);
+    label.textContent=labels[index] || ''; grid.appendChild(label);
+    col.forEach((char,charIndex) => {
       const btn = document.createElement('button');
+      btn.type='button';
+      btn.style.gridRow=String(gridRow); btn.style.gridColumn=String(firstColumn+charIndex+1);
       if (!char) {
         btn.className = 'key-btn key-blank';
+        btn.disabled=true; btn.setAttribute('aria-hidden','true');
         btn.tabIndex = -1;
         grid.appendChild(btn);
         return;
       }
       btn.className = char === 'BS' ? 'key-btn key-fn' : 'key-btn';
       btn.textContent = char === 'BS' ? 'けす' : char;
+      btn.setAttribute('aria-label',char==='ー'?'のばす':char);
       btn.onclick = () => handleKeyClick(char);
       grid.appendChild(btn);
     });
@@ -121,6 +126,25 @@ function handleKeyClick(char) {
   
   if (char === 'BS') {
     input.value = input.value.slice(0, -1);
+  } else if(['DAKUTEN','HANDAKUTEN','SMALL'].includes(char)) {
+    if(!input.value)return;
+    const last=input.value.slice(-1);
+    let replacement=last;
+    if(char==='SMALL') {
+      const large='あいうえおやゆよつわアイウエオヤユヨツワ', small='ぁぃぅぇぉゃゅょっゎァィゥェォャュョッヮ';
+      const largeIndex=large.indexOf(last),smallIndex=small.indexOf(last);
+      replacement=largeIndex>=0?small[largeIndex]:smallIndex>=0?large[smallIndex]:last;
+    } else {
+      const plain=last.normalize('NFD')[0];
+      const supported=char==='DAKUTEN'?'かきくけこさしすせそたちつてとはひふへほうカキクケコサシスセソタチツテトハヒフヘホウ':'はひふへほハヒフヘホ';
+      if(supported.includes(plain)) {
+        const mark=char==='DAKUTEN'?'\u3099':'\u309a';
+        const converted=(plain+mark).normalize('NFC');
+        replacement=last===converted?plain:converted;
+      }
+    }
+    input.value=input.value.slice(0,-1)+replacement;
+    if(replacement!==last)spawnInputEffect();
   } else {
     input.value += char;
     spawnInputEffect();
@@ -184,22 +208,26 @@ function setupKanjiChallenge(problemData) {
     if (feedback) { feedback.textContent = ''; feedback.className = 'kana-choice-feedback'; }
     const btnContainer = document.getElementById('kana-choice-buttons');
     btnContainer.innerHTML = '';
+    btnContainer.style.display = 'grid';
+    btnContainer.style.gridTemplateColumns = 'repeat(2,minmax(0,1fr))';
     const buttons = [];
-    for (const option of ['A', 'B']) {
+    for (let index=0;index<choiceProb.options.length;index++) {
+      const option = 'ABCD'[index];
       const btn = document.createElement('button');
       btn.className = 'btn kana-choice-button';
       const label = document.createElement('span');
       label.className = 'kana-choice-label';
       label.textContent = option;
       const word = document.createElement('span');
-      word.textContent = option === 'A' ? choiceProb.optionA : choiceProb.optionB;
+      word.textContent = choiceProb.options[index];
+      word.style.fontSize = `clamp(12px,${(29 / choiceProb.options[index].length).toFixed(2)}vw,28px)`;
       btn.appendChild(label);
       btn.appendChild(word);
       btn.onclick = () => {
         if (!currentChallengeAnswer) return;
-        const correct = option === choiceProb.correctOption;
+        const correct = index === choiceProb.correctIndex;
         for (const item of buttons) item.disabled = true;
-        buttons[choiceProb.correctOption === 'A' ? 0 : 1].classList.add('is-correct');
+        buttons[choiceProb.correctIndex].classList.add('is-correct');
         if (!correct) btn.classList.add('is-incorrect');
         if (feedback) {
           feedback.className = 'kana-choice-feedback ' + (correct ? 'is-correct' : 'is-incorrect');
@@ -244,6 +272,7 @@ function setupKanjiChallenge(problemData) {
 
 
 function submitKanjiAnswer(forceResult) {
+
   if (!currentChallengeAnswer) return;
   
   if (typeof forceResult === 'boolean') {
@@ -265,6 +294,7 @@ function submitKanjiAnswer(forceResult) {
   
   // 演出を見せるために少し待ってからコールバックを呼ぶ
   setTimeout(() => {
+
     if (onAnswerCallback) {
       onAnswerCallback(isCorrect);
     }

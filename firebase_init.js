@@ -1,4 +1,5 @@
 import { initializeApp } from "firebase/app";
+import { eventRaidRewardEntitlements, eventRaidBonusEntitlements } from './event_raid.js';
 import { getAnalytics, isSupported } from "firebase/analytics";
 import { 
   initializeFirestore, 
@@ -280,6 +281,31 @@ window.addEventListener('beforeunload', () => {
 });
 
 // Global Raid Boss API
+window.EventRaidAPI = {
+  async recordBest(eventId, slotKey, record) {
+    if (!slotKey || !Number.isSafeInteger(record.bestKills) || record.bestKills < 0) throw new Error('Invalid event raid record');
+    const ref=doc(db,'eventRaidRankings_'+eventId,slotKeyToDocId(slotKey));
+    const claimsRef=doc(db,'eventRaidClaims_'+eventId,slotKeyToDocId(slotKey));
+    return runTransaction(db,async transaction=>{
+      const snap=await transaction.get(ref);
+      const claimsSnap=await transaction.get(claimsRef);
+      const previous=snap.exists()?snap.data():null;
+      const {participationDay,participationDays,...profile}=record;
+      const next=previous && previous.bestKills>=record.bestKills?previous:{...profile,slotKey,bestKills:record.bestKills,updatedAt:Date.now()};
+      const rewards={...(claimsSnap.exists()?claimsSnap.data().rewards || {}:{})};
+      const bonuses={...(claimsSnap.exists()?claimsSnap.data().bonuses || {}:{}),...eventRaidBonusEntitlements(next.bestKills)};
+      for(const day of Array.isArray(participationDays)?participationDays:[participationDay]) Object.assign(rewards,eventRaidRewardEntitlements(next.bestKills,day));
+      if(next!==previous) transaction.set(ref,next);
+      transaction.set(claimsRef,{rewards,bonuses});
+      return {...next,rewards,bonuses};
+    });
+  },
+  async getRankings(eventId) {
+    const snap=await getDocs(query(collection(db,'eventRaidRankings_'+eventId),orderBy('bestKills','desc'),limit(100)));
+    return snap.docs.map(entry=>entry.data());
+  }
+};
+
 window.RaidBossAPI = {
   async syncPlayer(slotKey, profile, progress = {}) {
     const globalRef = doc(db, 'raidGlobal', 'currentBoss');

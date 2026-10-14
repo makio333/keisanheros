@@ -62,4 +62,9 @@ const merged = context.mergeRaidHistoryRankings({ finalRankings: [{ slotKey: 'me
 assert.equal(merged[0].totalDamage, 123, 'final damage wins over old collection data');
 assert.equal(merged[0].playerName, '昔の勇者');
 assert.equal(context.changeRaidHistory(1), undefined, 'navigation stops at oldest entry');
+context.renderRaidRankingList(el('event-ranking'),[{...oldProfile,bestKills:25,totalDamage:999999,rank:1},{...oldProfile,slotKey:'other',bestKills:25,rank:1},{...oldProfile,slotKey:'third',bestKills:10,rank:3}],true,'kills');
+const eventRows=el('event-ranking').children;
+assert.match(eventRows[0].innerHTML,/25<span class="raid-ranking-damage-unit">体討伐<\/span>/);
+assert.doesNotMatch(eventRows[0].innerHTML,/999,999|>ダメージ<\/span>|btn-cheer-action/,'event rankings never display or submit world-raid damage');
+assert.match(eventRows[0].name.textContent,/1位/);assert.match(eventRows[1].name.textContent,/1位/);assert.match(eventRows[2].name.textContent,/3位/);
 console.log('PASS: history cards, archive profiles, navigation boundaries, caching and asynchronous race protection');

@@ -1,4 +1,7 @@
 
+import { EVENT_RAID_RULES, EVENT_RAID_BONUSES, EventRaidRun, eventRaidTargetCount, rankEventRaidRecords, eventRaidRewardEntitlements, eventRaidBonusEntitlements, eventRaidGaugeRatio, formatEventRaidTime } from './event_raid.js';
+window.addEventListener('online',()=>{ if(G) for(const mode of ['math','kanji']) if(eventRaidState(mode).pendingBest) syncEventRaidRecord(mode).catch(()=>{}); });
+
 function skillPower(s){
   if (s.dmgMult) return s.dmgMult;
   if (s.healPct) return 1 + s.healPct * 4;
@@ -318,6 +321,13 @@ class SoundManager {
       gain.gain.exponentialRampToValueAtTime(0.01 * volBase, now + 0.05);
       osc.start(now);
       osc.stop(now + 0.05);
+    } else if (type === 'correct') {
+      osc.type='sine';
+      osc.frequency.setValueAtTime(659.25,now);
+      osc.frequency.setValueAtTime(1046.5,now+.09);
+      gain.gain.setValueAtTime(.35*volBase,now);
+      gain.gain.exponentialRampToValueAtTime(.01*volBase,now+.25);
+      osc.start(now); osc.stop(now+.25);
     } else if (type === 'hit') {
       osc.type = 'square';
       osc.frequency.setValueAtTime(400, now);
@@ -1239,15 +1249,17 @@ const AREA_STAGES = {
     bgImage: '画像/ステージ/かけ算の森.jpg',
     bossName: 'もりの まじん',
     stages: [
-      { name: '長音（のばす音）', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_hira_1') },
-      { name: '促音（小さい「つ」）', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_hira_2') },
+      { name: 'かんたんな長音・2択', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_hira_1') },
+      { name: '長い言葉の長音・4択', timeLimit: 20000, generateProblem: () => generateKanjiProblem('kana_hira_7') },
+      { name: '3文字の促音・2択', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_hira_2') },
+      { name: '長い言葉の促音・4択', timeLimit: 20000, generateProblem: () => generateKanjiProblem('kana_hira_6') },
       { name: '拗音（小さいやゆよ）', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_hira_3') },
       { name: '長音と小さい文字の複合', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_hira_4') },
       { name: '特殊な読み・助詞', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_hira_5') },
     ],
     bossTimeLimit1: 15000, bossTimeLimit2: 15000,
     bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area14.stages),
-    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area14.stages),
+    bossPhase2Problem: () => generateKanjiProblem(Math.random() < 0.5 ? 'kana_hira_6' : 'kana_hira_7'),
   },
   area15: {
     name: 'カタカナの森',
@@ -1260,15 +1272,17 @@ const AREA_STAGES = {
     bgImage: '画像/ステージ/かけ算の森.jpg',
     bossName: 'どうくつの まじん',
     stages: [
-      { name: '長音（のばす音）', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_kata_1') },
-      { name: '促音（小さい「ツ」）', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_kata_2') },
+      { name: 'かんたんな長音・2択', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_kata_1') },
+      { name: '長い言葉の長音・4択', timeLimit: 20000, generateProblem: () => generateKanjiProblem('kana_kata_7') },
+      { name: '3文字の促音・2択', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_kata_2') },
+      { name: '長い言葉の促音・4択', timeLimit: 20000, generateProblem: () => generateKanjiProblem('kana_kata_6') },
       { name: '拗音など', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_kata_3') },
       { name: '複合', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_kata_4') },
       { name: '外来音', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_kata_5') },
     ],
     bossTimeLimit1: 15000, bossTimeLimit2: 15000,
     bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area15.stages),
-    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area15.stages),
+    bossPhase2Problem: () => generateKanjiProblem(Math.random() < 0.5 ? 'kana_kata_6' : 'kana_kata_7'),
   },
 
   area1: {
@@ -1844,7 +1858,7 @@ function stageBattleTitleHtml(areaId, stageIndex, isBoss, bossPhase, killCount){
 function renderBattleProgressStars() {
   const el = $('battle-enemy-progress');
   if (!el) return;
-  const raid = !explore || !!explore.isRaid;
+  const raid = !explore || !!explore.isRaid || !!explore.isEventRaid;
   el.classList.toggle('hidden', raid);
   if (raid) { el.innerHTML = ''; return; }
   const total = explore.stageMode ? (explore.isBoss ? 2 : ENEMIES_PER_STAGE) : 10;
@@ -2813,6 +2827,7 @@ function newGameState(name, avatarId){
     clearCounts: { tower:0, dungeon:0, crypt:0, bandit:0 }, // ステージの クリアかいすう（0〜3、★の数）
     stageClearCounts: {}, // 新ステージ制（1-1など個別ステージ）ごとの クリアかいすう（areaId → [0〜3, ...]）
     stageRewardClaims: {},
+    kanaStagesVersion: 2,
     areaBossClearCounts: {},
     skinGachaTickets: 0,
     equipGachaTenPullTickets: 0,
@@ -2892,7 +2907,41 @@ function createSaveSlot(name, avatarId){
 
 /* 旧バージョンの N/R/SR/SSR（文字列）レアリティを ★1〜4（数値）に へんかんする */
 const RARITY_LETTER_MAP = { N:1, R:2, SR:3, SSR:4 };
+function migrateKanaStages(data) {
+  if (!data || data.kanaStagesVersion === 2) return data;
+  const indices = [0,2,4,5,6];
+  for (const field of ['stageClearCounts','stageTotalClears']) {
+    for (const areaId of ['area14','area15']) {
+      const old = data[field]?.[areaId];
+      if (!old) continue;
+      const next = Array(7).fill(0);
+      indices.forEach((target,index)=>{next[target]=old[index] || 0;});
+      data[field][areaId] = next;
+    }
+  }
+  for (const [container,separator] of [[data.stageRewardClaims,':'],[data.stageDropOpportunities,':'],[data.raidLearning,'_'],[data.studyStats?.stageHistory,'_']]) {
+    if (!container) continue;
+    const moved = Object.entries(container).map(([key,value])=>{
+      const match = key.match(new RegExp(`^(area14|area15)${separator}([0-4])$`));
+      return [match ? `${match[1]}${separator}${indices[Number(match[2])]}` : key,value];
+    });
+    Object.keys(container).forEach(key=>delete container[key]);
+    moved.forEach(([key,value])=>{container[key]=value;});
+  }
+  const moveSource = source => {
+    if (source && ['area14','area15'].includes(source.areaId) && indices[source.stageIndex] !== undefined) {
+      source.stageIndex = indices[source.stageIndex];
+      if (source.learningKey) source.learningKey = `${source.areaId}_${source.stageIndex}`;
+    }
+  };
+  moveSource(data.pickup);
+  Object.values(data.halloweenEvent || {}).forEach(event=>moveSource(event?.baseSource));
+  data.kanaStagesVersion = 2;
+  return data;
+}
+
 function normalizeRarityData(data){
+  migrateKanaStages(data);
   const legacyBlueprintUidMap = new Map();
   if (data.items){
     // アイテム（どうぐ）は レアリティ廃止。ふるいセーブに のこっていたら 消す
@@ -3417,6 +3466,7 @@ function totalMaxMp(){ return G.player.maxMp + equipBonus().mp; }
    画面管理
    ========================================================== */
 function showScreen(id){
+  if (explore?.isEventRaid && id !== 'screen-battle') endEventRaidBattle(false);
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   $(id).classList.add('active');
   updateHud();
@@ -3441,7 +3491,7 @@ function showScreen(id){
 }
 
 function bgmKeyForScreen(id){
-  if (id === 'screen-battle' && explore?.isHalloween) return battle?.enemy?.isBoss ? 'bgm_halloween_boss' : 'bgm_halloween_normal';
+  if (id === 'screen-battle' && explore?.isHalloween) return explore.halloweenBossSpawned || battle?.enemy?.isBoss ? 'bgm_halloween_boss' : 'bgm_halloween_normal';
   /* タイトルと、そこから ひらく「あたらしく はじめる」「セーブデータ せんたく」は タイトル専用BGM
      （セーブえらびや 名前入力の とちゅうで きょくが きりかわらないように、タイトルのBGMを流しっぱなしにする） */
   if (id === 'screen-title' || id === 'screen-new-save' || id === 'screen-load-save') return 'bgm_title';
@@ -3601,6 +3651,7 @@ function logTo(id, html){
   const box = $(id);
   const div = document.createElement('div');
   div.innerHTML = html;
+  if(id==='battle-log')box.innerHTML='';
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
 }
@@ -3955,14 +4006,17 @@ window.createSokuonChoiceProblem = createSokuonChoiceProblem;
 function createKanaChoiceProblem(problemData) {
   const tier = String(problemData?.tier || '');
   if (!tier.startsWith('kana')) return null;
-  if (tier === 'kana_hira_2' || tier === 'kana_kata_2') return createSokuonChoiceProblem(problemData);
   const word = problemData.answer;
-  const wrong = problemData.wrongAnswer;
-  if (!word || !wrong || word === wrong) return null;
-  const correctIsA = Math.random() < 0.5;
+  const fallback = (tier === 'kana_hira_2' || tier === 'kana_kata_2') ? createSokuonChoiceProblem(problemData) : null;
+  const wrongs = problemData.wrongAnswers || [problemData.wrongAnswer || (fallback && [fallback.optionA,fallback.optionB].find(option=>option !== word))];
+  const count = problemData.choiceCount === 4 ? 4 : 2;
+  const distractors = [...new Set(wrongs)].filter(value=>value && value !== word).slice(0,count-1);
+  if (!word || distractors.length !== count-1) return null;
+  const options = [word,...distractors];
+  for (let i=options.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [options[i],options[j]]=[options[j],options[i]]; }
+  const correctIndex = options.indexOf(word);
   return {
-    correctWord: word, optionA: correctIsA ? word : wrong,
-    optionB: correctIsA ? wrong : word, correctOption: correctIsA ? 'A' : 'B',
+    correctWord:word, options, correctIndex, optionA:options[0], optionB:options[1], correctOption:'ABCD'[correctIndex],
     prompt: problemData.prompt || 'ただしい かきかたは どっち？',
     explanation: problemData.explanation || ''
   };
@@ -4022,9 +4076,11 @@ function startChallenge(container, opts, cb){
     // 漢字入力UIを初期化＆問題セット
     if (typeof initKanjiInputUI === 'function') {
       initKanjiInputUI((isCorrect) => {
+
         if (done) return;
         done = true;
         const elapsed = Date.now() - start;
+        opts.onAnswered?.(elapsed,isCorrect);
         recordStudyAnswer(problem, isCorrect, elapsed, false);
         recordRaidLearningAnswer(problem, isCorrect);
         const timeFrac = Math.max(0, 1 - elapsed / timeLimit);
@@ -4035,9 +4091,10 @@ function startChallenge(container, opts, cb){
         }
         currentChallenge = null;
         setTimeout(() => {
+          if (opts.isActive && !opts.isActive()) return;
           if (kanjiCenter) kanjiCenter.classList.add('hidden');
           if (kanjiChallenge) kanjiChallenge.classList.add('hidden');
-          cb({ success: isCorrect, timeFrac });
+          cb({ success: isCorrect, timeFrac, elapsedMs: elapsed });
         }, 450);
       });
     }
@@ -4190,6 +4247,7 @@ function startChallenge(container, opts, cb){
     if (done) return;
     done = true;
     const elapsed = Date.now() - start;
+    opts.onAnswered?.(elapsed,success);
     recordStudyAnswer(problem, success, elapsed, (typeof hasAssist === 'function' ? hasAssist() : false));
     recordRaidLearningAnswer(problem, success);
     if (slotted) {
@@ -4224,8 +4282,9 @@ function startChallenge(container, opts, cb){
     if (typeof window.showResultOverlay === 'function') window.showResultOverlay(success);
     currentChallenge = null;
     setTimeout(() => {
+      if (opts.isActive && !opts.isActive()) return;
       if (calcCenter) calcCenter.classList.add('hidden');
-      cb({ success, timeFrac });
+      cb({ success, timeFrac, elapsedMs: elapsed });
     }, 450);
   }
 
@@ -4404,7 +4463,7 @@ function startBattle(animateFloor){
     currentTurnProblem: null,
   };
   if (explore.isHalloween) {
-    const party = generateHalloweenParty(explore);
+    const party = explore.isEventRaid ? explore.eventRaid.enemies : generateHalloweenParty(explore);
     if (party) { battle.enemies = party; battle.enemy = party[0]; }
   }
   showScreen('screen-battle');
@@ -4418,7 +4477,11 @@ function startBattle(animateFloor){
     ? stageBattleTitleHtml(explore.areaId, explore.stageIndex, explore.isBoss, explore.bossPhase, explore.stageKillCount)
     : `${zoneName(explore.zone)} ${floorLabelHTML(explore.zone, explore.floor)}／10（${OP_LABELS[opTierForZoneFloor(explore.zone, explore.floor)]}）`;
   $('screen-battle').classList.toggle('halloween-battle-screen', !!explore.isHalloween);
+  $('screen-battle').classList.toggle('event-raid-battle', !!explore.isEventRaid);
+  $('screen-battle').classList.toggle('event-raid-kanji', explore.eventRaid?.mode==='kanji');
   if (explore.isHalloween) $('battle-floor-title').textContent = `🎃 ハロウィンの森${explore.halloweenSeason === 2 ? ' S2' : ''} ${explore.halloweenIndex + 1}／${halloweenEncounterTotal(explore)}たいめ・${halloweenSeason2Stage(explore)?.name || AREA_STAGES[explore.areaId].stages[explore.stageIndex].name}${explore.halloweenTest ? '（テスト）' : ''}`;
+  if (explore.halloweenSeason === 2) $('battle-floor-title').textContent = halloweenSeason2Title(explore);
+  if (explore.isEventRaid) $('battle-floor-title').textContent = '🎃 イベント専用レイド・討伐数チャレンジ';
   renderBattleProgressStars();
   if (animateFloor){
     const numEl = $('floor-num');
@@ -4442,7 +4505,9 @@ function startBattle(animateFloor){
   updateBattleBars();
   battle.running = true;
   // ATBループの代わりに、開始後すぐにプレイヤーの行動選択へ移行する
+  const battleOwner = battle;
   setTimeout(() => {
+    if (battle !== battleOwner || battleOwner.over) return;
     openActionMenu();
   }, 1000); // メッセージを少し見せるために1秒待つ
   CM.start();
@@ -4467,23 +4532,41 @@ function renderHalloweenParty() {
   // Preserve sprite elements while attacks animate.
   if (group._battle !== battle) {
     group._battle = battle;
-    group.innerHTML = `<p class="halloween-target-hint">こうげきする おばけをタップ</p><div class="halloween-party-grid" style="grid-template-columns:repeat(${party.length},minmax(0,1fr))">${party.map(e => `<button type="button" class="halloween-party-target" data-party-id="${e.partyId}"><span class="halloween-party-number hidden"></span><span class="enemy-sprite">${iconHtml(e.emoji,110)}</span><b>${escapeHtml(e.name)}</b><span class="halloween-party-health"><i></i></span><small></small></button>`).join('')}</div>`;
+    group.innerHTML = `<p class="halloween-target-hint">数字のついた おばけを選ぼう・倒すと仲間が補充されるよ</p><div class="halloween-party-grid">${party.map(e => `<button type="button" class="halloween-party-target" data-party-id="${e.partyId}"><span class="halloween-party-number hidden"></span><span class="halloween-party-level hidden"></span><span class="enemy-sprite">${iconHtml(e.emoji,110)}</span><b>${escapeHtml(e.name)}</b><span class="halloween-party-health"><i></i></span><small></small></button>`).join('')}</div>`;
     group.querySelectorAll('[data-party-id]').forEach(button => {
       button.onclick = () => selectHalloweenTarget(Number(button.dataset.partyId));
     });
   }
   for (const enemy of party) {
     const button = group.querySelector(`[data-party-id="${enemy.partyId}"]`);
-    button.disabled = enemy.hp <= 0 || !!battle.targetLocked;
+    button.disabled = enemy.hp <= 0 || !!battle.targetLocked || !!explore?.isEventRaid;
     button.classList.toggle('is-defeated', enemy.hp <= 0);
+    button.classList.toggle('is-boss', !!enemy.isBoss);
+    const image = button.querySelector('.enemy-sprite img');
+    if (image && image.getAttribute('src') !== av(enemy.emoji)) image.src = av(enemy.emoji);
+    if(explore?.isEventRaid) {
+      const spawnId=String(enemy.spawnId), previous=button.dataset.spawnId;
+      button.dataset.spawnId=spawnId;
+      if(previous!==undefined && previous!==spawnId) {
+        const frame=button.querySelector('.enemy-sprite'), owner=battle;
+        frame.classList.remove('halloween-enemy-arrive','enemy-damage-hit','event-raid-special-hit');
+        void frame.offsetWidth; frame.classList.add('halloween-enemy-arrive');
+        setTimeout(()=>{if(battle===owner && button.dataset.spawnId===spawnId)frame.classList.remove('halloween-enemy-arrive');},750);
+      }
+    }
+    button.querySelector('b').textContent = enemy.isBoss ? `👑 ${enemy.name}` : enemy.name;
+    const level=button.querySelector('.halloween-party-level');
+    level.classList.toggle('hidden',!explore?.isEventRaid);
+    level.textContent=explore?.isEventRaid?`Lv.${enemy.level}`:'';
     button.setAttribute('aria-pressed', String(battle.season2Question ? battle.season2Question.selected.includes(enemy.partyId) : enemy === battle.enemy));
     const number = button.querySelector('.halloween-party-number');
     number.classList.toggle('hidden', !battle.season2Question || enemy.hp <= 0);
     number.textContent = battle.season2Question?.values[enemy.partyId] ?? '';
-    button.setAttribute('aria-label', `${enemy.name}${battle.season2Question ? ` 数字 ${battle.season2Question.values[enemy.partyId]}` : ''} ${enemy.hp <= 0 ? '撃破' : `HP ${enemy.hp}/${enemy.maxHp}・攻撃対象に選ぶ`}`);
+    button.setAttribute('aria-label', `${enemy.name}${explore?.isEventRaid?` Lv.${enemy.level}`:''}${battle.season2Question ? ` 数字 ${battle.season2Question.values[enemy.partyId]}` : ''} ${enemy.hp <= 0 ? '撃破' : `HP ${enemy.hp}/${enemy.maxHp}・攻撃対象に選ぶ`}`);
     button.querySelector('i').style.width = `${Math.max(0,enemy.hp/enemy.maxHp*100)}%`;
     button.querySelector('small').textContent = enemy.hp <= 0 ? '撃破！' : `${enemy === battle.enemy ? '▶ ' : ''}HP ${enemy.hp}/${enemy.maxHp}`;
   }
+  if(explore?.isEventRaid) group.querySelector('.halloween-target-hint').textContent='正解するとランダムなおばけを順番に攻撃！';
 }
 
 function selectHalloweenTarget(partyId) {
@@ -4528,6 +4611,7 @@ function hideBattleMenus(){
 }
 
 function openActionMenu(){
+  if (explore?.isEventRaid) { startEventRaidQuestion(); return; }
   if (battle?.enemies) { battle.targetLocked = false; renderHalloweenParty(); }
   hideBattleMenus();
   doAttack();
@@ -4638,7 +4722,7 @@ function currentAttackProblem(){
 
   const generateRaw = () => {
     const eventStage = explore.isHalloween && explore.halloweenSeason === 2 ? halloweenSeason2Stage(explore) : null;
-    if (eventStage) return {problem:generateProblem(halloweenSeason2Tier(eventStage,explore.halloweenOperation)),timeLimit:problemTimeLimit(halloweenSeason2Tier(eventStage,explore.halloweenOperation))+2000};
+    if (eventStage) return {problem:generateProblem(halloweenSeason2Tier(eventStage,explore.halloweenOperation)),timeLimit:30000};
     if (explore.stageMode){
       const area = AREA_STAGES[explore.areaId];
       if (explore.isBoss){
@@ -4647,7 +4731,7 @@ function currentAttackProblem(){
         return { problem, timeLimit };
       }
       const stage = area.stages[explore.stageIndex];
-      return { problem: stage.generateProblem(), timeLimit: stage.timeLimit };
+      return { problem: stage.generateProblem(), timeLimit: explore.isHalloween ? 30000 : stage.timeLimit };
     }
     const tier = opTierForZoneFloor(explore.zone, explore.floor);
     return { problem: generateProblem(tier), timeLimit: problemTimeLimit(tier) };
@@ -4698,6 +4782,7 @@ function getOrGenerateTurnProblem(){
 }
 
 function doAttack(){
+  if (explore?.isEventRaid) { startEventRaidQuestion(); return; }
   if (battle?.enemies && halloweenSeason2Stage(explore)?.mathMode) { startHalloweenMathChallenge(); return; }
   const { problem, timeLimit } = getOrGenerateTurnProblem();
   startChallenge($('battle-challenge'),
@@ -4741,7 +4826,7 @@ function startHalloweenMathChallenge() {
   destroyChallenge();
   const owner = battle;
   const stage = halloweenSeason2Stage(explore);
-  const mode = stage.mathMode === 'mixed' ? ((explore.halloweenWave || 0) % 2 ? 'combine' : 'answer') : stage.mathMode;
+  const mode = stage.mathMode === 'mixed' ? ((explore.halloweenAnswers || 0) % 2 ? 'combine' : 'answer') : stage.mathMode;
   const question = battle.halloweenTurnQuestion ||= createHalloweenMathQuestion(battle.enemies.filter(e => e.hp > 0), explore.halloweenOperation, mode);
   battle.season2Question = question;
   battle.targetLocked = false;
@@ -4749,18 +4834,30 @@ function startHalloweenMathChallenge() {
   container.classList.remove('hidden');
   container.innerHTML = `<div class="challenge-main halloween-math-challenge"><p class="challenge-prompt">${question.mode === 'combine' ? '数字のついた敵を2体選ぼう！ 選んだ順に計算します。' : '答えの数字を持つ敵をタップ！'}</p><div class="challenge-problem">${question.mode === 'combine' ? `□ ${question.symbol} □ ＝ ${question.target}` : `${question.a} ${question.symbol} ${question.b} ＝ ？`}</div><p id="halloween-math-selection" role="status">${question.mode === 'combine' ? '1体目 → 2体目の順に選ぶ。もう一度タップで選び直せます。' : '敵に表示された数字から答えを選ぼう。'}</p><div class="halloween-math-tools"><button type="button" class="btn" data-skill>✨ とくぎ</button><button type="button" class="btn" data-item>🧪 どうぐ</button></div><p class="halloween-math-timer" id="halloween-math-timer"></p></div>`;
   container.querySelector('[data-skill]').onclick = openSkillMenu;
+  if (owner.halloweenPendingSkill) container.querySelector('.challenge-prompt').textContent = `✨ ${owner.halloweenPendingSkill.name}（MP${skillMpCost(owner.halloweenPendingSkill)}）・正解すると全体攻撃！`;
   container.querySelector('[data-item]').onclick = openItemMenu;
-  const deadline = question.deadline ||= Date.now()+15000;
+  container.querySelector('.halloween-math-challenge').insertAdjacentHTML('beforeend','<div class="halloween-attack-gauge" role="progressbar" aria-label="敵の反撃までの残り時間" aria-valuemin="0" aria-valuemax="30"><i></i></div>');
+  const gauge = container.querySelector('.halloween-attack-gauge');
+  const deadline = question.deadline ||= Date.now()+30000;
   let finished = false;
-  const timer = setInterval(() => {
+  const updateTimer = () => {
     if (battle !== owner || battle.over) { destroyChallenge(); return; }
-    const remaining = Math.max(0,Math.ceil((deadline-Date.now())/1000));
-    $('halloween-math-timer').textContent = `あと ${remaining}秒`;
-    if (!remaining) finish(false,[]);
-  },100);
-  function finish(correct, selected) {
+    const remainingMs = Math.max(0,deadline-Date.now());
+    const remaining = Math.ceil(remainingMs/1000);
+    $('halloween-math-timer').textContent = `反撃まで あと ${remaining}秒`;
+    gauge.setAttribute('aria-valuenow',String(remaining));
+    gauge.classList.toggle('is-urgent',remaining <= 5);
+    gauge.querySelector('i').style.width = `${remainingMs / 30000 * 100}%`;
+    if (!remaining) finish(false,[],false);
+  };
+  const timer = setInterval(updateTimer,100);
+  function finish(correct, selected, submitted = true) {
     if (finished || battle !== owner || battle.over) return;
     finished = true;
+    const skill = owner.halloweenPendingSkill;
+    owner.halloweenPendingSkill = null;
+    if (skill) G.player.mp = Math.max(0,G.player.mp-skillMpCost(skill));
+    owner.halloweenAnswerOutcome = {correct,submitted};
     destroyChallenge();
     battle.targetLocked = true;
     renderHalloweenParty();
@@ -4768,7 +4865,10 @@ function startHalloweenMathChallenge() {
       blog('<span class="bad">まちがえた！ 残った敵が反撃！</span>');
       turnBasedEnemyAct(() => afterPlayerAction()); return;
     }
-    blog(`<span class="good">正解！ ${selected.length}体に攻撃！</span>`);
+    const finalBoss = explore?.halloweenBossSpawned && owner.enemies.find(enemy => enemy.isBoss && enemy.hp > 0);
+    if (skill?.targetAll) selected = owner.enemies.filter(enemy=>enemy.hp>0).map(enemy=>enemy.partyId);
+    else if (finalBoss) selected = [finalBoss.partyId];
+    blog(`<span class="good">正解！ ${finalBoss ? 'ボスへとどめの攻撃！' : `${selected.length}体に攻撃！`}</span>`);
     let index=0;
     const strike = () => {
       if (battle !== owner || battle.over) return;
@@ -4777,14 +4877,15 @@ function startHalloweenMathChallenge() {
       const enemy = battle.enemies.find(e => e.partyId === targetId && e.hp > 0);
       if (!enemy) { strike(); return; }
       battle.enemy = enemy;
-      dealToEnemy(basicAttackDamage(effectiveAtk(),enemy.def || 0),'数字の攻撃',false,strike);
+      const damage = finalBoss && enemy.isBoss ? enemy.hp : basicAttackDamage(Math.round(effectiveAtk()*(skill?.dmgMult || 1)),enemy.def || 0);
+      dealToEnemy(damage,skill?.name || '数字の攻撃',false,strike);
     };
     strike();
   }
   question.finish = finish;
   currentChallenge = {destroy() { clearInterval(timer); if (battle === owner) { battle.season2Question = null; renderHalloweenParty(); } }};
   renderHalloweenParty();
-  $('halloween-math-timer').textContent = 'あと 15秒';
+  updateTimer();
 }
 
 function answerHalloweenEnemy(partyId) {
@@ -4800,6 +4901,7 @@ function answerHalloweenEnemy(partyId) {
 
 /* --- スキル --- */
 function openSkillMenu(){
+  if (explore?.isEventRaid) return;
   destroyChallenge();
   const sub = $('battle-sub-menu');
   sub.innerHTML = '';
@@ -4810,7 +4912,7 @@ function openSkillMenu(){
   title.textContent = '✨ つかう とくぎを えらぼう';
   sub.appendChild(title);
 
-  const usable = SKILL_DB.filter(s => G.skills[s.id] && G.skills[s.id].level >= 1);
+  const usable = explore?.halloweenSeason === 2 ? HALLOWEEN_PARTY_SKILLS : SKILL_DB.filter(s => G.skills[s.id] && G.skills[s.id].level >= 1);
   if (usable.length === 0){
     const d = document.createElement('div');
     d.className = 'flavor';
@@ -4847,6 +4949,15 @@ function openSkillMenu(){
 }
 
 function useSkill(s){
+  if (explore?.halloweenSeason === 2) {
+    const skill = HALLOWEEN_PARTY_SKILLS.find(entry=>entry.id === s.id);
+    if (!skill || !battle || battle.over || G.player.mp < skillMpCost(skill)) return;
+    battle.halloweenPendingSkill = skill;
+    $('battle-sub-menu').classList.add('hidden');
+    startHalloweenMathChallenge();
+    return;
+  }
+  const skillBattle = battle;
   $('battle-sub-menu').classList.add('hidden');
   const cost = skillMpCost(s);
   G.player.mp -= cost;
@@ -4859,6 +4970,8 @@ function useSkill(s){
       promptInKanji: true,
       prompt:`✨ ${s.name}！ こたえて はつどう！` },
     (res) => {
+      if (battle !== skillBattle || battle.over) return;
+      if (explore?.halloweenSeason === 2) battle.halloweenAnswerOutcome = {correct:!!res.success,submitted:!!res.success || res.timeFrac > 0};
       destroyChallenge();
       if (s.healPct){
         if (!res.success){
@@ -4905,6 +5018,7 @@ function useSkill(s){
 
 /* --- アイテム --- */
 function openItemMenu(){
+  if (explore?.isEventRaid) return;
   destroyChallenge();
   const sub = $('battle-sub-menu');
   if (!sub) return;
@@ -5431,6 +5545,7 @@ function turnBasedEnemyAct(callback, attacker = null){
 }
 
 function afterPlayerAction(){
+  if (explore?.halloweenSeason === 2 && battle?.enemies) { finishHalloweenSeason2Action(); return; }
   if (battle) battle.halloweenTurnQuestion = null;
   if (battle?.enemies && battle.enemy.hp <= 0) {
     const next = battle.enemies.find(enemy => enemy.hp > 0);
@@ -5516,6 +5631,7 @@ function enemyAct(){
 }
 
 function endBattleLoop(){
+  if (explore?.isEventRaid) { endEventRaidBattle(false); return; }
   if (!battle) return;
   battle.over = true;
   battle.running = false;
@@ -5664,7 +5780,7 @@ function winBattle(){
     showRaidBattleResult(dmg, true);
     return;
   }
-  const defeated = battle.enemies || [battle.enemy];
+  const defeated = explore?.halloweenSeason === 2 ? [battle.enemy] : battle.enemies || [battle.enemy];
   const e = {...battle.enemy, exp:defeated.reduce((sum,enemy) => sum + enemy.exp,0), name:defeated.map(enemy => enemy.name).join('、')};
   const gold = defeated.reduce((sum,enemy) => sum + rnd(enemy.goldMin,enemy.goldMax),0);
   G.player.gold += gold;
@@ -10760,13 +10876,14 @@ const HALLOWEEN_MONSTERS = [
   { id:'scarecrow_king', name:'かぼちゃの かかしおう' }
 ];
 
-const HALLOWEEN_SEASON2_WAVES = [[0,1],[2,3,4],[5,6,0,1,7]];
+const HALLOWEEN_SEASON2_WAVES = [Array.from({length:10},(_,index)=>index % 7)];
 const HALLOWEEN_SEASON2_STAGES = [
-  {id:'candy-path',name:'お菓子の小道',mathMode:'answer',tier:'add1',grade:1,description:'2体ずつの敵で、対象選択を練習',waves:[[0,1],[2,3]]},
-  {id:'moon-square',name:'月夜のおばけ広場',mathMode:'combine',tier:'add2',grade:1.2,description:'3体同時。倒す順番を考えよう',waves:[[2,3,4],[5,6,1]]},
-  {id:'night-party',name:'かかし王の夜会',mathMode:'mixed',tier:'add3',grade:1.5,description:'2体 → 3体 → ボスを含む5体',waves:HALLOWEEN_SEASON2_WAVES},
+  {id:'candy-path',name:'お菓子の小道',mathMode:'answer',tier:'add1',grade:1,questionGoal:5,description:'10体から答えを選ぶ・5問でクリア・最後はボス',waves:HALLOWEEN_SEASON2_WAVES},
+  {id:'moon-square',name:'月夜のおばけ広場',mathMode:'combine',tier:'add2',grade:1.2,questionGoal:5,description:'10体の数字を組み合わせる・5問でクリア・最後はボス',waves:HALLOWEEN_SEASON2_WAVES},
+  {id:'night-party',name:'かかし王の夜会',mathMode:'mixed',tier:'add3',grade:1.5,questionGoal:5,description:'2つの問題形式に挑戦・5問でクリア・最後はボス',waves:HALLOWEEN_SEASON2_WAVES},
 ];
 const HALLOWEEN_MATH_OPERATIONS = {add:{label:'たし算',symbol:'＋'},sub:{label:'ひき算',symbol:'−'},mul:{label:'かけ算',symbol:'×'},div:{label:'わり算',symbol:'÷'}};
+const HALLOWEEN_PARTY_SKILLS = [{id:'pumpkin_wave',name:'かぼちゃの波',mp:5,dmgMult:1,targetAll:true,desc:'正解すると敵全員を攻撃するイベント専用特技。MP5。'}];
 function halloweenSeason2Tier(stage, operation = 'add') {
   return operation === 'add' ? stage.tier : operation === 'sub' ? stage.tier.replace('add','sub') : operation === 'mul' ? 'mul1' : 'div1';
 }
@@ -10805,13 +10922,71 @@ function halloweenWaves(run) { return halloweenSeason2Stage(run)?.waves || HALLO
 function halloweenSeason(now = Date.now()) {
   return isHalloweenActive(now) && now >= HALLOWEEN_EVENT.season2StartsAt ? 2 : 1;
 }
-function halloweenEncounterTotal(run) { return run?.halloweenSeason === 2 ? halloweenWaves(run).flat().length : HALLOWEEN_MONSTERS.length; }
+function halloweenEncounterTotal(run) { return run?.halloweenSeason === 2 ? (halloweenSeason2Stage(run)?.questionGoal || 5) : HALLOWEEN_MONSTERS.length; }
 function halloweenWaveSize(run) { return run?.halloweenSeason === 2 ? halloweenWaves(run)[run.halloweenWave || 0].length : 1; }
 function generateHalloweenParty(run) {
   if (run.halloweenSeason !== 2) return null;
   return halloweenWaves(run)[run.halloweenWave || 0].map((index, position) => ({
     ...generateHalloweenEnemy({...run, halloweenIndex:index}), partyId:position,
   }));
+}
+
+function halloweenSeason2Title(run) {
+  const goal = halloweenEncounterTotal(run);
+  return `🎃 S2・${halloweenSeason2Stage(run)?.name || 'おばけの夜会'}　回答 ${Math.min(run.halloweenAnswers || 0,goal)}／${goal}問${run.halloweenBossSpawned ? '・最後の★ ボス戦！' : '・最後の★でボス出現'}${run.halloweenTest ? '（テスト）' : ''}`;
+}
+
+function grantHalloweenAnswerReward(run, correct) {
+  // Ten targets and unlimited replacements never multiply loot: up to four normal rolls + one boss roll for five questions.
+  const checkpoint = Math.floor(Math.min(run.halloweenAnswers || 0,halloweenEncounterTotal(run)-1) * Math.min(7,halloweenEncounterTotal(run)-1) / (halloweenEncounterTotal(run)-1));
+  if (!correct || (run.halloweenRewardRolls || 0) >= checkpoint) return;
+  run.halloweenRewardRolls = (run.halloweenRewardRolls || 0) + 1;
+  const enemy = generateHalloweenEnemy({...run,halloweenIndex:0});
+  const messages = [];
+  const drops = rollBattleDrops(enemy,messages);
+  const gold = rnd(enemy.goldMin,enemy.goldMax);
+  G.player.gold += gold;
+  const level = grantExp(enemy.exp);
+  run.sessionDrops.push(...drops); run.stageDrops.push(...drops);
+  run.sessionGold += gold; run.stageGold += gold; run.stageExp += enemy.exp;
+  messages.forEach(message => blog(message));
+  if (level.leveledUp) blog(`<span class="good">レベル${G.player.lvl}にあがった！</span>`);
+  save(true);
+}
+
+function finishHalloweenSeason2Action() {
+  if (!battle || battle.over || !explore) return;
+  const run = explore;
+  const result = battle.halloweenAnswerOutcome;
+  battle.halloweenAnswerOutcome = null;
+  battle.halloweenTurnQuestion = null; battle.currentTurnProblem = null;
+  const goal = halloweenEncounterTotal(run);
+  if (result?.submitted) run.halloweenAnswers = Math.min(goal-1,(run.halloweenAnswers || 0)+1);
+  grantHalloweenAnswerReward(run,!!result?.correct);
+  const boss = battle.enemies.find(enemy => enemy.isBoss);
+  if (run.halloweenBossSpawned && boss?.hp <= 0) {
+    run.halloweenAnswers = goal;
+    battle.enemy = boss;
+    winBattle(); return;
+  }
+  for (let i=0;i<battle.enemies.length;i++) {
+    const enemy = battle.enemies[i];
+    if (enemy.hp <= 0) battle.enemies[i] = {...generateHalloweenEnemy({...run,halloweenIndex:((run.halloweenSpawnCount || 0)+i)%7}),partyId:enemy.partyId};
+  }
+  run.halloweenSpawnCount = (run.halloweenSpawnCount || 0)+1;
+  if (!run.halloweenBossSpawned && (run.halloweenAnswers || 0) >= goal-1) {
+    run.halloweenBossSpawned = true;
+    const slot = battle.enemies.length - 1;
+    battle.enemies[slot] = {...generateHalloweenEnemy({...run,halloweenIndex:7}),partyId:battle.enemies[slot].partyId};
+    blog('<span class="bad">最後の★！ かかし王が現れた！</span>');
+    SM.playBGM('bgm_halloween_boss');
+  }
+  battle.enemy = battle.enemies.find(enemy => enemy.hp > 0);
+  battle.attackingEnemy = null; battle.targetLocked = false;
+  run.halloweenIndex = run.halloweenAnswers || 0;
+  $('battle-floor-title').textContent = halloweenSeason2Title(run);
+  renderBattleProgressStars(); updateBattleBars();
+  resumeBattle('player');
 }
 
 function isHalloweenActive(now = Date.now()) {
@@ -11052,7 +11227,7 @@ function showHalloweenMenu(tab = 'stage', message = '') {
     <div class="halloween-event-banner"><img src="${av('assets/halloween/event_banner.png')}" alt="たくさんのおばけから町を守る冒険者たち"><div><strong>お化けがたくさんやってくる！</strong><span>お化けから町を守れ！ お菓子を集めて限定品を手に入れよう。</span></div></div>
     </div>
     <section class="halloween-stage-entry" aria-label="従来のイベントステージ">${stageEntry}</section>
-    <div class="halloween-season2-entry"><button type="button" class="btn btn-primary" data-action="season2-stages">👻 シーズン2のステージを選ぶ${season < 2 ? '（テストプレイ）' : ''}</button><small>${season < 2 ? '10/21正式開幕 · 今すぐ先行テストで遊べます' : '複数モンスター戦 · 2〜5体同時出現'}</small></div>
+    <div class="halloween-season2-entry"><button type="button" class="btn btn-primary" data-action="season2-stages">👻 イベント専用レイド・ランキング</button><small>おばけから町を守れ！ 討伐数の最高記録に挑戦</small></div>
     <section class="halloween-tab-panel" id="halloween-tab-panel" aria-labelledby="halloween-exchange-title">${message ? `<p class="halloween-action-message" role="status">${escapeHtml(message)}</p>` : ''}${body}</section>
     <footer class="halloween-hub-footer"><button type="button" class="btn" data-action="open-gacha">🎃 ハロウィンガチャへ</button><button type="button" class="btn" data-action="close">とじる</button></footer>
   </div>`;
@@ -11061,17 +11236,447 @@ function showHalloweenMenu(tab = 'stage', message = '') {
   overlay.querySelector('[data-action="close"]').onclick = () => { hideTooltip(); overlay.remove(); };
   overlay.querySelector('[data-action="season2-stages"]').onclick = showHalloweenSeason2Stages;
   overlay.querySelector('[data-action="start"]')?.addEventListener('click', () => { hideTooltip(); overlay.remove(); startHalloweenChallenge(source); });
-  overlay.querySelectorAll('[data-exchange]').forEach(button => { button.onclick = () => {
-    button.disabled = true;
-    const result = exchangeHalloweenPrize(button.dataset.exchange);
-    if (result.ok) SM.play('se_clear');
-    hideTooltip(); showHalloweenMenu('exchange',result.message);
-  }; });
+  overlay.querySelectorAll('[data-exchange]').forEach(button => { button.onclick = () => confirmHalloweenExchange(button.dataset.exchange,button); });
   overlay.querySelector('[data-action="open-gacha"]').onclick = () => { hideTooltip(); overlay.remove(); showGacha('halloween'); };
   (tab === 'exchange' ? overlay.querySelector('[data-exchange]:not(:disabled)') || overlay.querySelector('[data-action="start"]') : overlay.querySelector('[data-action="start"]')).focus({preventScroll:true});
 }
 
+function confirmHalloweenExchange(id, opener) {
+  const prize=HALLOWEEN_EXCHANGE_PRIZES.find(entry=>entry.id===id);
+  if(!G || !prize || document.querySelector('.halloween-exchange-confirm')) return;
+  const owner=G, slot=currentSlotKey, candy=halloweenCandyBalance();
+  const dialog=document.createElement('div'); dialog.className='confirm-overlay halloween-exchange-confirm';
+  dialog.innerHTML=`<section class="panel" role="dialog" aria-modal="true" aria-labelledby="halloween-exchange-confirm-title"><h3 id="halloween-exchange-confirm-title">お菓子を使って交換しますか？</h3><div class="halloween-exchange-confirm-art">${stageRewardIcon(prize.kind,prize.id,prize.rarity || 1,88)}</div><p><b>${escapeHtml(prize.name)}</b>を<br>お菓子 <strong>${prize.cost}個</strong>で交換します。</p><p class="flavor">所持 ${candy}個 → 交換後 ${Math.max(0,candy-prize.cost)}個</p><div class="halloween-exchange-confirm-actions"><button type="button" class="btn" data-cancel>やめる</button><button type="button" class="btn btn-primary" data-confirm>お菓子${prize.cost}個で交換する</button></div></section>`;
+  let settled=false;
+  function cancel() { if(settled)return; settled=true; dialog.remove(); opener?.focus({preventScroll:true}); }
+  dialog.querySelector('[data-cancel]').onclick=cancel;
+  dialog.querySelector('[data-confirm]').onclick=()=>{
+    if(settled)return; settled=true;
+    dialog.querySelector('[data-confirm]').disabled=true; dialog.remove();
+    if(G!==owner || currentSlotKey!==slot)return;
+    const result=exchangeHalloweenPrize(id);
+    if(result.ok)SM.play('se_clear');
+    hideTooltip(); showHalloweenMenu('exchange',result.message);
+  };
+  dialog.onkeydown=event=>{ if(event.key==='Escape'){event.stopPropagation();cancel();} };
+  hideTooltip(); document.body.appendChild(dialog);
+  dialog.querySelector('[data-cancel]').focus();
+}
+
+let eventRaidMenuRequest = 0;
+const EVENT_RAID_ID = 'halloween_2026_raid_v1';
+let eventRaidMenuMode='kanji';
+function eventRaidId(mode) { return mode==='kanji'?EVENT_RAID_ID+'_kanji':EVENT_RAID_ID; }
+
+function eventRaidState(mode = eventRaidMenuMode) {
+  const state=halloweenEventState();
+  state.raid ||= {bestKills:0,pendingBest:null};
+  state.kanjiRaid ||= {bestKills:0,pendingBest:null};
+  const bonusClaims={...state.raid.bonusClaims,...state.kanjiRaid.bonusClaims};
+  state.raid.bonusClaims=bonusClaims; state.kanjiRaid.bonusClaims=bonusClaims;
+  if(mode==='kanji') {
+    state.kanjiRaid ||= {bestKills:0,pendingBest:null};
+    const claims={...state.raid.rewardClaims,...state.kanjiRaid.rewardClaims};
+    state.raid.rewardClaims=claims; state.kanjiRaid.rewardClaims=claims;
+    return state.kanjiRaid;
+  }
+  if(state.kanjiRaid) {
+    const claims={...state.raid.rewardClaims,...state.kanjiRaid.rewardClaims};
+    state.raid.rewardClaims=claims; state.kanjiRaid.rewardClaims=claims;
+  }
+  return state.raid;
+}
+
+const EVENT_RAID_MATH_AREA_IDS=['area1','area13','area2','area3','area4','area11','area12'];
+function eventRaidKanjiSource(answerCount=0) {
+  const stages=['area5','area6','area7','area8','area9','area10'].flatMap((areaId,index)=>
+    AREA_STAGES[areaId].stages.map((_,stageIndex)=>({areaId,stageIndex,grade:index+1})));
+  const index=Math.min(stages.length-1,Math.floor(Math.max(0,answerCount)/5));
+  return {...stages[index],isLast:index===stages.length-1};
+}
+function eventRaidChallengeSource(source = halloweenChallengeSource()) {
+  const valid=entry=>EVENT_RAID_MATH_AREA_IDS.includes(entry?.areaId) && !!AREA_STAGES[entry.areaId]?.stages[entry.stageIndex];
+  if(valid(source)) return source;
+  const review=raidReviewCandidates().find(valid);
+  if(review) return {areaId:review.areaId,stageIndex:review.stageIndex};
+  const attempted=Object.entries(G?.studyStats?.stageHistory || {}).map(([key,stat])=>{
+    const match=key.match(/^(area\d+)_(\d+)$/);
+    return match && stat.total>0?{areaId:match[1],stageIndex:Number(match[2])}:null;
+  }).filter(valid).sort((a,b)=>stageDropDifficulty(b.areaId,b.stageIndex)-stageDropDifficulty(a.areaId,a.stageIndex));
+  return attempted[0] || {areaId:'area1',stageIndex:0};
+}
+
+function eventRaidEnemy(enemy) {
+  const monster=HALLOWEEN_MONSTERS[enemy.monsterIndex];
+  return Object.assign(enemy,{name:monster.name,emoji:`assets/halloween/${monster.id}.png`,spd:0,isBoss:false});
+}
+
+function eventRaidProfile(kills) {
+  const equipment={};
+  for(const type of ['weapon','armor','accessory']) {
+    const eq=G.ownedEquips?.find(item=>item.uid===G.equipment?.[type]?.uid);
+    if(eq) { equipment[type+'Id']=eq.id; equipment[type+'Rarity']=eq.rarity || 1; }
+  }
+  return {slotKey:currentSlotKey,bestKills:kills,playerName:G.playerName || '勇者',avatar:G.avatar || 'hero',
+    avatarBackground:G.avatarBackground || 'default',avatarHolographic:!!G.avatarHolographic,
+    avatarBackgroundHolographic:!!G.avatarBackgroundHolographic,level:G.player.lvl,equipment};
+}
+
+function applyEventRaidRewards(state, rewards, game = G) {
+  state.rewardClaims ||= {};
+  const oldAmounts={'kills:10':3,'kills:25':5,'kills:50':10};
+  for(const [id,amount] of Object.entries(oldAmounts)) if(state.rewardClaims[id]===true)state.rewardClaims[id]=amount;
+  if(state.rewardClaims['kills:25'])state.rewardClaims['kills:20']=Math.max(Number(state.rewardClaims['kills:20']) || 0,5);
+  let candy=0;
+  for(const [id,count] of Object.entries(rewards)) {
+    if(id==='kills:25')continue;
+    const paid=state.rewardClaims[id]===true?count:Number(state.rewardClaims[id]) || 0;
+    if(paid>=count) continue;
+    state.rewardClaims[id]=count; candy+=count-paid;
+  }
+  game.halloweenCandy=halloweenCandyBalance(game)+candy;
+  return candy;
+}
+
+function applyEventRaidBonuses(state, bonuses, game = G) {
+  state.bonusClaims ||= {};
+  const gained=[];
+  for(const [id,row] of Object.entries(bonuses)) {
+    if(state.bonusClaims[id])continue;
+    for(const key of ['halloweenTickets','skinGachaTickets','equipGachaTenPullTickets'])if(row[key])game[key]=(Number(game[key]) || 0)+row[key];
+    if(row.costSeeds) {
+      game.items ||= [];
+      const seed=game.items.find(item=>item.id==='cost_seed');
+      if(seed)seed.count+=row.costSeeds;
+      else game.items.push({uid:game.nextUid++,id:'cost_seed',count:row.costSeeds});
+    }
+    state.bonusClaims[id]=true; gained.push(row.kills);
+  }
+  return gained;
+}
+
+async function syncEventRaidRecord(mode = eventRaidMenuMode) {
+  const game=G, slot=currentSlotKey, state=eventRaidState(mode), pending=state.pendingBest;
+  if(!pending) return;
+  if(!window.EventRaidAPI) throw new Error('イベントの通信を準備中です');
+  const remote=await window.EventRaidAPI.recordBest(eventRaidId(mode),slot,pending);
+  state.bestKills=Math.max(state.bestKills || 0,remote.bestKills || 0);
+  applyEventRaidRewards(state,remote.rewards || {},game);
+  applyEventRaidBonuses(state,remote.bonuses || {},game);
+  if(state.pendingBest===pending) state.pendingBest=null;
+  if(G===game && currentSlotKey===slot) save(true);
+  else { storageSet(slot,JSON.stringify(game)); window.CloudSave?.saveSlot(slot,game,true).catch(()=>{}); }
+}
+
+async function showEventRaidMenu(message = '', mode = eventRaidMenuMode) {
+  if(!G) return;
+  mode='kanji'; eventRaidMenuMode=mode;
+  document.querySelector('.halloween-menu')?.remove();
+  hideTooltip();
+  const state=eventRaidState(mode), eventId=eventRaidId(mode);
+  let modal=$('screen-event-raid');
+  if(!modal) {
+    modal=$('screen-raid-boss').cloneNode(true);
+    modal.id='screen-event-raid';
+    modal.querySelectorAll('[id]').forEach(element=>element.id=element.id.replace(/^raid-/, 'event-raid-').replace(/^btn-raid-/, 'btn-event-raid-'));
+    modal.querySelector('.window-close-btn').removeAttribute('onclick');
+    modal.querySelector('.window-close-btn').onclick=()=>{ ++eventRaidMenuRequest; modal.classList.add('hidden'); showHalloweenMenu(); };
+    modal.querySelector('.raid-menu-title').id='event-raid-title';
+    modal.querySelector('.raid-menu-title').textContent='🎃 イベント専用レイド';
+    modal.setAttribute('role','dialog'); modal.setAttribute('aria-modal','true');
+    modal.setAttribute('aria-labelledby','event-raid-title');
+    modal.querySelector('#event-raid-rules').setAttribute('aria-labelledby','event-raid-how-to-play-title');
+    modal.querySelector('#btn-event-raid-history').remove();
+    modal.querySelector('#event-raid-learning-recommendation').remove();
+    modal.querySelector('#event-raid-final-result').remove();
+    modal.querySelector('#event-raid-challenge-rewards').remove();
+    modal.querySelector('.raid-participation-reward').remove();
+    modal.querySelector('.raid-boss-portrait img').src=av('assets/halloween/event_banner.png');
+    modal.querySelector('.raid-boss-portrait img').alt='たくさんのおばけが町に押し寄せるハロウィンイベント';
+    modal.querySelector('#event-raid-boss-name').textContent='おばけから町を守れ！';
+    modal.querySelector('.raid-hp-labels span').textContent='あなたの最高討伐数';
+    modal.querySelector('.raid-hp-track').remove();
+    modal.querySelector('.raid-boss-summary').insertAdjacentHTML('afterend','<p id="event-raid-source" class="event-raid-source" role="status"></p>');
+    modal.querySelector('.raid-ranking-section h3').textContent='🏆 討伐数ランキング';
+    modal.querySelector('#event-raid-ranking-list').setAttribute('aria-label','最高討伐数のランキング');
+    modal.querySelector('#btn-event-raid-rules').setAttribute('aria-controls','event-raid-rules');
+    modal.querySelector('#btn-event-raid-rules').onclick=()=>{
+      const hidden=modal.querySelector('#event-raid-rules').classList.toggle('hidden');
+      modal.querySelector('#btn-event-raid-rules').setAttribute('aria-expanded',String(!hidden));
+    };
+    modal.querySelector('#btn-event-raid-sync-retry').onclick=()=>showEventRaidMenu();
+    modal.querySelector('#btn-event-raid-challenge').onclick=()=>startEventRaidBattle(modal._eventRaidSource,eventRaidMenuMode);
+    document.body.appendChild(modal);
+  }
+  modal.classList.remove('hidden');
+  let rewardPanel=modal.querySelector('.event-raid-rewards');
+  if(!rewardPanel) {
+    modal.querySelector('.raid-ranking-section').insertAdjacentHTML('beforeend','<section class="event-raid-rewards"><h3>🎁 討伐数突破ボーナス</h3><div></div></section>');
+    rewardPanel=modal.querySelector('.event-raid-rewards');
+  }
+  const renderRewards=()=>{rewardPanel.querySelector('div').innerHTML='<p>1日1回の参加で 🍬 お菓子2個。突破ボーナスは各1回、挑戦終了時に自動で獲得します。</p>'+EVENT_RAID_BONUSES.map(row=>{
+    const received=state.bonusClaims?.['breakthrough:'+row.kills] && Number(state.rewardClaims?.['kills:'+row.kills])>=row.candy;
+    const extra=[row.halloweenTickets?`🎃 チケット${row.halloweenTickets}枚`:'',row.skinGachaTickets?'🎟 背景スキンガチャ1枚':'',row.equipGachaTenPullTickets?'🎟 装備ガチャ10連1枚':'',row.costSeeds?`🌱 コストプラスのたね${row.costSeeds}個`:''].filter(Boolean).join(' ／ ');
+    return `<p class="event-raid-reward-row"><b>${row.kills}体突破！</b><span>🍬 お菓子${row.candy}個${extra?' ／ '+extra:''}</span><strong>${received?'✅ 受取済み':state.bestKills>=row.kills?'達成・次の挑戦終了時に獲得':`あと${row.kills-(state.bestKills || 0)}体`}</strong></p>`;
+  }).join('');};
+  renderRewards();
+  modal._eventRaidSource=eventRaidKanjiSource();
+  modal.querySelector('.raid-ranking-section h3').textContent='🏆 漢字・討伐数ランキング';
+  $('event-raid-rules').innerHTML=`<h3 id="event-raid-how-to-play-title">討伐数チャレンジのルール</h3><ol><li><b>町を守ろう</b><span>2分経過か自分のHPが0で終了。実際に倒したおばけの数を記録。種類はランダムで補充され、ボスは出ません。</span></li><li><b>速く答えるほどたくさん攻撃</b><span>10秒以内で4体、20秒以内で3体、それ以降は2体。攻撃する敵はランダムです。</span></li><li><b>自動でとくぎ発動</b><span>5問正解でチャージ完了！ 次の正解でランダムな7体へ「かぼちゃの波」。まちがえてもチャージは残り、おばけ1体が反撃します。</span></li><li><b>最高記録に挑戦</b><span>1回の最高討伐数を記録。同数は同順位。敵の初期HPは10。ダメージは通常の攻撃力・装備・回答速度・会心を反映します。参加費はありません。</span></li><li><b>お菓子を集めよう</b><span>1日1回の参加報酬2個。最高討伐数5・10・20・30・50体で突破ボーナス。お菓子5・10・20・30・50個に、ガチャチケットやコストプラスのたねを各1回もらえます。敵ごとのドロップ抽選はありません。</span></li></ol>`;
+  $('event-raid-boss-damage').textContent=`${state.bestKills || 0}体`;
+  const sourceArea=AREA_STAGES[modal._eventRaidSource.areaId];
+  $('event-raid-ticket-count').textContent='参加費なし';
+  $('event-raid-source').textContent=`${message?message+' ／ ':''}出題：${sourceArea.name}・${sourceArea.stages[modal._eventRaidSource.stageIndex].name}（1年生の最初から、5問回答で次のステージへ）`;
+  $('event-raid-rules').insertAdjacentHTML('beforeend','<p>漢字の読みをひらがなで入力します。おばけ7体は横一列に並び、攻撃は1体ずつテンポよく順番に当たります。1体倒すごとに、補充される敵のHPが5、攻撃力・守備力が1ずつ上がります。敵のレベルは初期Lv.1、補充時点の討伐数＋1です。</p>');
+  const button=$('btn-event-raid-challenge');
+  button.textContent='⚔ 漢字レイドに参加';
+  $('event-raid-rules').insertAdjacentHTML('beforeend','<p>毎回1年生の最初から開始。正解・誤答を含め5問回答すると次のステージへ進み、1年生から6年生まで順に難しくなります。最終ステージ到達後はその問題を続けます。</p>');
+  button.disabled=!isHalloweenActive();
+  const request=++eventRaidMenuRequest, slot=currentSlotKey;
+  const status=$('event-raid-sync-status'), list=$('event-raid-ranking-list');
+  status.textContent='ランキングを同期中…';
+  list.setAttribute('aria-busy','true');
+  try {
+    await syncEventRaidRecord(mode);
+    if(!window.EventRaidAPI) throw new Error('offline');
+    const records=await window.EventRaidAPI.getRankings(eventId);
+    if(request!==eventRaidMenuRequest || slot!==currentSlotKey) return;
+    storageSet('event_raid_rankings_'+eventId,JSON.stringify(records));
+    $('event-raid-boss-damage').textContent=`${state.bestKills || 0}体`;
+    renderEventRaidRankings(list,records);
+    renderRewards();
+    status.textContent='共有ランキングを同期しました';
+  } catch(error) {
+    if(request!==eventRaidMenuRequest || slot!==currentSlotKey) return;
+    let cached=[];
+    try { cached=JSON.parse(storageGet('event_raid_rankings_'+eventId) || '[]'); } catch(_) {}
+    if(state.participated) {
+      const cachedMine=cached.find(row=>row.slotKey===slot);
+      if(!cachedMine || cachedMine.bestKills<=state.bestKills) cached=[...cached.filter(row=>row.slotKey!==slot),state.pendingBest || eventRaidProfile(state.bestKills)];
+    }
+    renderEventRaidRankings(list,cached);
+    status.textContent=state.pendingBest?'通信待ち：最高記録は保存済みです。再同期で送信できます。':'通信できません。保存済みのランキングを表示しています。';
+  } finally { if(request===eventRaidMenuRequest) list.setAttribute('aria-busy','false'); }
+}
+
+function renderEventRaidRankings(list,records) {
+  const rows=rankEventRaidRecords(records);
+  if(!rows.length) { list.innerHTML='<div class="raid-empty-ranking">討伐数の記録はまだありません。</div>'; return; }
+  renderRaidRankingList(list,rows,true,'kills');
+}
+
+function playEventRaidUltimate(owner) {
+  if(battle!==owner || owner.over || !explore?.isEventRaid) return;
+  $('result-overlay')?.classList?.add('hidden');
+  $('battle-challenge')?.classList?.add('hidden');
+  owner.eventRaidUltimate?.remove();
+  const effect=document.createElement('div');
+  effect.className='event-raid-ultimate'; effect.setAttribute('aria-hidden','true');
+  effect.innerHTML=`<div class="event-raid-ultimate-vortex"></div><div class="event-raid-ultimate-title">🎃 かぼちゃの波<span>全体攻撃！</span></div>${Array.from({length:12},(_,i)=>`<i class="event-raid-ultimate-spark" style="--angle:${i*30}deg;--delay:${i%3*70}ms">✦</i>`).join('')}${Array.from({length:9},(_,i)=>`<img class="event-raid-ultimate-ghost" src="${av('assets/halloween/'+(i%2?'lantern_ghost':'pumpkin_imp')+'.png')}" alt="" style="--lane:${12+i%3*12};--delay:${i*65}ms;--tilt:${i%2?-18:18}deg">`).join('')}`;
+  $('screen-battle').appendChild(effect); owner.eventRaidUltimate=effect;
+  SM.play('se_crit');
+  setTimeout(()=>{effect.remove();if(owner.eventRaidUltimate===effect)owner.eventRaidUltimate=null;},1500);
+}
+
+function startEventRaidBattle(source = null, mode = eventRaidMenuMode) {
+  if(!G || !isHalloweenActive()) return;
+  mode='kanji';
+  source=eventRaidKanjiSource();
+  ++eventRaidMenuRequest;
+  $('screen-event-raid')?.classList.add('hidden');
+  const run=new EventRaidRun(Date.now()+1000);
+  run.mode=mode;
+  run.enemies.forEach(eventRaidEnemy);
+  explore={stageMode:true,isHalloween:true,isEventRaid:true,halloweenSeason:2,areaId:source.areaId,stageIndex:source.stageIndex,
+    halloweenIndex:0,halloweenOperation:'add',eventRaid:run,sessionDrops:[],sessionGold:0,stageDrops:[],stageGold:0,stageExp:0,usedProblems:new Set()};
+  startBattle(false);
+  const owner=battle;
+  $('battle-floor-title').innerHTML='<div class="event-raid-battle-hud"><strong id="event-raid-kill-counter" role="status" aria-live="polite">0体討伐！</strong><time id="event-raid-digital-timer" role="timer" aria-label="イベントレイドの残り時間">02:00</time></div>';
+  renderEventRaidBattleHud(run);
+  owner.eventRaidTick=setInterval(()=>{
+    if(battle!==owner || !explore?.isEventRaid) { clearInterval(owner.eventRaidTick); return; }
+    if(!run.remaining(Date.now())) { endEventRaidBattle(); return; }
+    renderEventRaidBattleHud(run);
+  },100);
+}
+
+function renderEventRaidBattleHud(run) {
+  const counter=$('event-raid-kill-counter'), timer=$('event-raid-digital-timer');
+  if(counter) counter.textContent=`${run.kills}体討伐！`;
+  if(timer) {
+    timer.textContent=formatEventRaidTime(Math.min(run.rules.durationMs,run.remaining(Date.now())));
+    timer.classList.toggle('is-urgent',run.remaining(Date.now())<=15000);
+  }
+}
+
+function clearEventRaidSidePanel() {
+  const toggle=$('kanji-input-toggle');
+  if(toggle?.closest?.('.event-raid-status')) $('kanji-problem-center').insertBefore(toggle,$('kanji-battle-commands'));
+  document.querySelector('.event-raid-status')?.remove();
+}
+
+function startEventRaidQuestion() {
+  if(!explore?.isEventRaid || !battle || battle.over) return;
+  const owner=battle, run=explore.eventRaid;
+  if(owner.eventRaidQuestion) return;
+  if(!run.remaining(Date.now()) || G.player.hp<=0) { endEventRaidBattle(); return; }
+  destroyChallenge(); hideBattleMenus();
+  run.beginQuestion(Date.now());
+  if(run.mode==='kanji') {
+    const source=eventRaidKanjiSource(run.answers);
+    if(explore.areaId!==source.areaId || explore.stageIndex!==source.stageIndex) {
+      explore.usedProblems.clear(); owner.currentTurnProblem=null;
+      blog(`<span class="heal">${source.grade}年生・${AREA_STAGES[source.areaId].stages[source.stageIndex].name}の問題へ！</span>`);
+    }
+    explore.areaId=source.areaId; explore.stageIndex=source.stageIndex;
+  }
+  const question={};
+  owner.eventRaidQuestion=question; owner.season2Question=null; owner.targetLocked=true;
+  const {problem,timeLimit}=getOrGenerateTurnProblem();
+  const container=$('battle-challenge');
+  const active=()=>battle===owner && !owner.over && owner.eventRaidQuestion===question;
+  document.querySelector('.event-raid-learning-stage')?.remove();
+  clearEventRaidSidePanel();
+  startChallenge(container,{problem,timeLimit,prompt:getChallengePrompt(problem,true),showBattleCommands:false,isActive:active,onAnswered:(elapsed,correct)=>{question.elapsedMs=elapsed;if(correct)SM.playBeep('correct');}},finish);
+  const host=isKanjiProblem(problem)?$('kanji-problem-center'):container.querySelector('.challenge-main');
+  const side=document.createElement('aside'); side.className='event-raid-status event-raid-side';
+  side.setAttribute('aria-label','攻撃対象数と特技の状況');
+  side.innerHTML='<div id="event-raid-target-label" class="event-raid-target-label" role="status"></div><div id="event-raid-gauge" class="halloween-attack-gauge" role="progressbar" aria-label="次の攻撃で狙う敵の数" aria-valuemin="2" aria-valuemax="4"><i></i></div><p id="event-raid-charge" class="event-raid-charge" role="status"></p><button type="button" class="btn" id="event-raid-end">🏳 この挑戦を終了する</button>';
+  $('screen-battle').appendChild(side);
+  $('event-raid-end').onclick=()=>endEventRaidBattle();
+  if(run.mode==='kanji') {
+    const source=eventRaidKanjiSource(run.answers);
+    host.insertAdjacentHTML('afterbegin',`<p class="event-raid-learning-stage">${source.grade}年生・${escapeHtml(AREA_STAGES[source.areaId].stages[source.stageIndex].name)} ／ ${source.isLast?'最終ステージ':`${run.answers%5+1}問目・5問で次のステージ`}</p>`);
+  }
+  const gauge=$('event-raid-gauge');
+  const update=()=>{
+    if(!active()) return;
+    const ready=run.charge>=EVENT_RAID_RULES.chargeGoal;
+    const elapsed=question.elapsedMs ?? Date.now()-run.questionAt;
+    const count=ready?EVENT_RAID_RULES.specialTargets:eventRaidTargetCount(elapsed);
+    $('event-raid-target-label').textContent=ready?'✨ 次の正解でとくぎ！ ランダムな7体を攻撃':`次の正解で ${count}体を攻撃`;
+    gauge.setAttribute('aria-valuenow',String(count));
+    gauge.setAttribute('aria-valuemax',String(ready?7:4));
+    gauge.querySelector('i').style.width=`${(ready?1:eventRaidGaugeRatio(elapsed))*100}%`;
+    gauge.classList.toggle('is-urgent',count===2);
+    $('event-raid-charge').textContent=ready?'🎃 かぼちゃの波：チャージ完了！':`🎃 とくぎチャージ ${run.charge}／5 正解`;
+  };
+  owner.eventRaidQuestionTimer=setInterval(update,100);
+  function finish(result) {
+    if(!active()) return;
+    const outcome=run.answer(result.success,Date.now(),Math.random,result.elapsedMs ?? Date.now()-run.questionAt);
+    if(!outcome) { if(!run.remaining(Date.now())) endEventRaidBattle(); return; }
+    clearInterval(owner.eventRaidQuestionTimer); owner.eventRaidQuestion=null;
+    clearEventRaidSidePanel();
+    hideBattleMenus(); container.classList.remove('hidden');
+    if(!result.success) {
+      blog('<span class="bad">まちがい！ チャージはそのまま。次の問題に挑戦！</span>');
+      container.innerHTML='<div class="event-raid-judgement is-wrong">まちがい！</div>';
+      eventRaidCounterattack(owner);
+      setTimeout(next,250);
+    } else {
+      outcome.timeFrac=result.timeFrac || 0;
+      blog(`<span class="good">${outcome.special?'✨ かぼちゃの波！':'正解！'} ${outcome.targets.length}体を攻撃！</span>`);
+      container.innerHTML=`<div class="event-raid-judgement${outcome.special?' is-special':''}">${outcome.special?'🎃 かぼちゃの波！':'正解！'}</div>`;
+      if(outcome.special) {
+        playEventRaidUltimate(owner);
+        setTimeout(()=>{if(battle===owner && !owner.over)strikeEventRaidTargets(owner,outcome,()=>setTimeout(next,180));},240);
+      } else strikeEventRaidTargets(owner,outcome,()=>setTimeout(next,180));
+    }
+    function next() {
+      if(battle!==owner || owner.over) return;
+      run.refill(); run.enemies.forEach(eventRaidEnemy); owner.enemies=run.enemies;
+      owner.enemy=owner.enemies[0]; owner.currentTurnProblem=null;
+      renderHalloweenParty(); updateBattleBars(); startEventRaidQuestion();
+    }
+  }
+  renderHalloweenParty(); update();
+}
+
+function strikeEventRaidTargets(owner,outcome,done) {
+  const run=explore.eventRaid;
+  let index=0, hitIndex=0;
+  function strike() {
+    if(battle!==owner || owner.over || run.over) return;
+    if(!run.remaining(Date.now())) { endEventRaidBattle(); return; }
+    if(index>=outcome.targets.length) { done(); return; }
+    const enemy=outcome.targets[index];
+    if(enemy.hp>0 && owner.enemies.includes(enemy)) {
+      owner.enemy=enemy;
+      const frame=document.querySelector(`[data-party-id="${enemy.partyId}"] .enemy-sprite`);
+      const atk=effectiveAtk(), double=equippedAncientIds().has('anc_w1');
+      const base=double?Math.max(1,Math.round(Math.max(atk*0.8*BALANCE.atkMinRatio,atk*0.8-(enemy.def || 0)))):basicAttackDamage(atk,enemy.def || 0);
+      const crit=Math.random()<Math.min(0.95,calcSpdRate(totalStat('spd'))+(equippedAbilities().has('crit_up')?0.10:0)+ancientCritBonus());
+      let damage=Math.round(base*(1+(outcome.timeFrac || 0)*BALANCE.timeBonus));
+      if(crit) damage=Math.floor(damage*BALANCE.critMult);
+      const dealt=Math.min(enemy.hp,damage);
+      run.hit(enemy,Date.now(),damage);
+      if(equippedAbilities().has('lifesteal')) G.player.hp=Math.min(totalMaxHp(),G.player.hp+Math.max(1,Math.round(dealt*.15)));
+      SM.play(crit || (outcome.special && index===0 && hitIndex===0)?'se_crit':'se_slash');
+      playPlayerAttackAnim();
+      if(frame) {
+        frame.classList.remove('enemy-damage-hit','event-raid-special-hit'); void frame.offsetWidth;
+        frame.classList.add(outcome.special?'event-raid-special-hit':'enemy-damage-hit');
+        spawnFloatingDamage(frame,dealt,`enemy-dmg${crit?' crit':''}${outcome.special?' skill-dmg':''}`);
+      }
+      renderHalloweenParty(); updateBattleBars(); renderEventRaidBattleHud(run);
+      if(double && hitIndex===0 && enemy.hp>0) hitIndex=1;
+      else { index++; hitIndex=0; }
+    } else { index++; hitIndex=0; }
+    if(index>=outcome.targets.length) done();
+    else setTimeout(strike,EVENT_RAID_RULES.hitIntervalMs);
+  }
+  strike();
+}
+
+function endEventRaidBattle(showMenu = true) {
+  if(!explore?.isEventRaid || !battle) return;
+  const run=explore.eventRaid;
+  if(!run.end()) return;
+  const owner=battle;
+  owner.over=true; owner.running=false;
+  owner.eventRaidUltimate?.remove(); owner.eventRaidUltimate=null;
+  clearInterval(owner.eventRaidTick); clearInterval(owner.eventRaidQuestionTimer);
+  owner.eventRaidQuestion=null; destroyChallenge();
+  clearEventRaidSidePanel();
+  hideBattleMenus();
+  document.querySelector('.event-raid-learning-stage')?.remove();
+  const mode=run.mode || 'math', state=eventRaidState(mode);
+  state.participated=true; state.bestKills=Math.max(state.bestKills || 0,run.kills);
+  const day=new Date(run.startedAt+9*60*60*1000).toISOString().slice(0,10);
+  const candy=applyEventRaidRewards(state,eventRaidRewardEntitlements(state.bestKills,day));
+  const bonuses=applyEventRaidBonuses(state,eventRaidBonusEntitlements(state.bestKills));
+  state.pendingBest={...eventRaidProfile(state.bestKills),participationDay:day,
+    participationDays:Object.keys(state.rewardClaims || {}).filter(id=>id.startsWith('participation:')).map(id=>id.slice(14))};
+  const reason=G.player.hp<=0?'HPが0になりました。':Date.now()>=run.endsAt?'2分間終了！':'挑戦終了。';
+  save(true); CM.stop(); explore=null; battle=null;
+  showHome();
+  if(showMenu) showEventRaidMenu(`${reason} 今回 ${run.kills}体 ／ 最高 ${state.bestKills}体${candy?`・お菓子 +${candy}個`:''}${bonuses.length?`・${bonuses.join('／')}体突破ボーナス獲得！`:''}`,mode);
+}
+
+function eventRaidCounterattack(owner) {
+  if(battle!==owner || owner.over || !explore?.isEventRaid) return;
+  const living=owner.enemies.filter(enemy=>enemy.hp>0);
+  if(!living.length) return;
+  owner.attackingEnemy=living[Math.floor(Math.random()*living.length)];
+  playEnemyAttackAnim();
+  let damage=Math.max(1,Math.round(owner.attackingEnemy.atk*1.5)-totalStat('def'));
+  if(equippedAbilities().has('guard')) damage=Math.max(1,Math.round(damage*.85));
+  damage=ancientDamageReduction(damage);
+  G.player.hp=Math.max(0,G.player.hp-damage);
+  SM.playBeep('damage'); flashScreenRed();
+  spawnFloatingDamage($('battle-player-hp'),damage,'player-dmg');
+  blog(`<span class="bad">${owner.attackingEnemy.name}の反撃！ ${damage}ダメージ！</span>`);
+  owner.attackingEnemy=null; updateBattleBars();
+  if(G.player.hp<=0) endEventRaidBattle();
+}
+
 function showHalloweenSeason2Stages() {
+  showEventRaidMenu();
+}
+
+// Kept for legacy data and combat reuse; the hub now leads to the dedicated raid.
+function showLegacyHalloweenSeason2Stages() {
   if (!G || !isHalloweenActive()) return;
   document.querySelector('.halloween-season2-select')?.remove();
   hideTooltip();
@@ -11079,7 +11684,7 @@ function showHalloweenSeason2Stages() {
   const clears = G.halloweenEvent?.[HALLOWEEN_EVENT.id]?.season2StageClears || {};
   const overlay = document.createElement('div');
   overlay.className = 'confirm-overlay halloween-season2-select';
-  overlay.innerHTML = `<section class="panel halloween-season2-panel" role="dialog" aria-modal="true" aria-labelledby="halloween-season2-title"><h2 id="halloween-season2-title">👻 シーズン2${preview ? ' 先行テスト' : ''}</h2><p class="flavor">敵をタップして選ぶ → 計算に正解して攻撃 → 全員倒してクリア。<br>まちがえると、生き残った敵全員が反撃します。</p><label class="halloween-operation-select">計算の種類 <select id="halloween-season2-operation">${Object.entries(HALLOWEEN_MATH_OPERATIONS).map(([key,op]) => `<option value="${key}">${op.label}</option>`).join('')}</select></label><div class="halloween-season2-stage-list">${HALLOWEEN_SEASON2_STAGES.map(stage => `<button type="button" class="halloween-season2-stage" data-season2-stage="${stage.id}"><b>${stage.name}</b><span>${stage.description}</span><small>${stage.mathMode === 'answer' ? '答えの敵を選ぶ' : stage.mathMode === 'combine' ? '2体を組み合わせる' : '両方の問題'} · ${stage.waves.length}戦 · クリア ${clears[stage.id] || 0}回</small><strong>${preview ? 'テストで遊ぶ' : 'このステージに挑戦'}</strong></button>`).join('')}</div><button type="button" class="btn" data-close>もどる</button></section>`;
+  overlay.innerHTML = `<section class="panel halloween-season2-panel" role="dialog" aria-modal="true" aria-labelledby="halloween-season2-title"><h2 id="halloween-season2-title">👻 シーズン2${preview ? ' 先行テスト' : ''}</h2><p class="flavor">10体から数字を選んで計算。倒した敵はすぐ補充。<br>回答するごとに★が進み、最後の★で現れるボスを倒してクリア。<br>まちがえると、生き残った敵全員が反撃します。</p><label class="halloween-operation-select">計算の種類 <select id="halloween-season2-operation">${Object.entries(HALLOWEEN_MATH_OPERATIONS).map(([key,op]) => `<option value="${key}">${op.label}</option>`).join('')}</select></label><div class="halloween-season2-stage-list">${HALLOWEEN_SEASON2_STAGES.map(stage => `<button type="button" class="halloween-season2-stage" data-season2-stage="${stage.id}"><b>${stage.name}</b><span>${stage.description}</span><small>${stage.mathMode === 'answer' ? '答えの敵を選ぶ' : stage.mathMode === 'combine' ? '2体を組み合わせる' : '両方の問題'} · ${stage.questionGoal}問・5問目はボス · クリア ${clears[stage.id] || 0}回</small><strong>${preview ? 'テストで遊ぶ' : 'このステージに挑戦'}</strong></button>`).join('')}</div><button type="button" class="btn" data-close>もどる</button></section>`;
   const close = () => { overlay.remove(); document.querySelector('[data-action="season2-stages"]')?.focus({preventScroll:true}); };
   overlay.querySelector('[data-close]').onclick = close;
   overlay.querySelectorAll('[data-season2-stage]').forEach(button => {
@@ -11105,6 +11710,7 @@ function startHalloweenChallenge(source = halloweenChallengeSource(), options = 
   explore = {
     stageMode:true, isHalloween:true, halloweenSeason:options.season === 2 ? 2 : 1, halloweenWave:0,
     halloweenStageId:season2Stage?.id || null, halloweenTest:!!options.test,
+    halloweenAnswers:0, halloweenRewardRolls:0, halloweenBossSpawned:false,
     halloweenOperation:HALLOWEEN_MATH_OPERATIONS[options.operation] ? options.operation : 'add', areaId:source.areaId, stageIndex:source.stageIndex,
     halloweenLevel:options.season === 2 ? 0 : Math.max(0, Math.floor(Number(state.clears) || 0)),
     halloweenBaseAreaId:options.season === 2 ? 'area1' : state.baseSource.areaId,
@@ -11140,7 +11746,7 @@ function grantHalloweenClearReward() {
 
 function proceedHalloweenBattle() {
   const run = explore;
-  const count = run.halloweenIndex + halloweenWaveSize(run);
+  const count = run.halloweenSeason === 2 ? halloweenEncounterTotal(run) : run.halloweenIndex + halloweenWaveSize(run);
   const total = halloweenEncounterTotal(run);
   showKillProgressPopup(count, count === total ? count + 1 : count, total, () => {
     if (explore !== run) return;
@@ -11163,7 +11769,7 @@ function proceedHalloweenBattle() {
     save(true);
     const overlay = document.createElement('div');
     overlay.className = 'confirm-overlay halloween-menu';
-    overlay.innerHTML = `<div class="panel halloween-event-card"><h2>🎃 ハロウィンの森 クリア！</h2><p>${total}たいの おばけを たおした！${run.halloweenSeason === 2 ? ' シーズン2クリア！' : ''}</p>${stageClearRewardsHtml(rewards)}<p class="flavor">${run.halloweenSeason === 2 ? 'シーズン2の別ステージにも挑戦してみよう！' : 'ふくしゅう がんばったね！'}</p><button type="button" class="btn btn-primary" data-action="return-home">きょてんに もどる</button></div>`;
+    overlay.innerHTML = `<div class="panel halloween-event-card"><h2>🎃 ハロウィンの森 クリア！</h2><p>${run.halloweenSeason === 2 ? `${total}問クリア！ ボスを倒した！` : `${total}たいの おばけを たおした！`}${run.halloweenSeason === 2 ? ' シーズン2クリア！' : ''}</p>${stageClearRewardsHtml(rewards)}<p class="flavor">${run.halloweenSeason === 2 ? 'シーズン2の別ステージにも挑戦してみよう！' : 'ふくしゅう がんばったね！'}</p><button type="button" class="btn btn-primary" data-action="return-home">きょてんに もどる</button></div>`;
     document.body.appendChild(overlay);
     bindDropItemTooltips(overlay);
     overlay.querySelector('[data-action="return-home"]').onclick = () => { hideTooltip(); overlay.remove(); showHome(); showHalloweenMenu('stage'); };
@@ -14407,7 +15013,7 @@ async function renderRaidHistory() {
   }
 }
 
-function renderRaidRankingList(listEl, rankings, historical = false) {
+function renderRaidRankingList(listEl, rankings, historical = false, metric = 'damage') {
   if (listEl) {
     listEl.innerHTML = '';
     if (rankings.length === 0) {
@@ -14419,13 +15025,14 @@ function renderRaidRankingList(listEl, rankings, historical = false) {
       const todayStr = new Date().toISOString().slice(0, 10);
 
       rankings.forEach((r, i) => {
-        let rankMedal = `${i+1}位`;
-        if (i===0) rankMedal = '🥇1位';
-        if (i===1) rankMedal = '🥈2位';
-        if (i===2) rankMedal = '🥉3位';
+        const rank = metric === 'kills' ? (r.rank || i+1) : i+1;
+        let rankMedal = `${rank}位`;
+        if (rank===1) rankMedal = '🥇1位';
+        if (rank===2) rankMedal = '🥈2位';
+        if (rank===3) rankMedal = '🥉3位';
 
         const isMe = (r.slotKey === currentSlotKey) || (!r.slotKey && r.playerName === G?.playerName);
-        let nameColor = i < 3 ? '#feca57' : '#fff';
+        let nameColor = rank <= 3 ? '#feca57' : '#fff';
         if (isMe) nameColor = '#74b9ff';
 
         // プレイヤー情報補完
@@ -14497,7 +15104,9 @@ function renderRaidRankingList(listEl, rankings, historical = false) {
         const cheerCount = r.cheerCount || 0;
 
         let cheerActionHtml = '';
-        if (historical) {
+        if (metric === 'kills') {
+          cheerActionHtml = '<span class="raid-history-cheers">最高記録</span>';
+        } else if (historical) {
           cheerActionHtml = `<span class="raid-history-cheers">👏 ${cheerCount} エール獲得</span>`;
         } else if (isMe) {
           cheerActionHtml = `
@@ -14523,7 +15132,7 @@ function renderRaidRankingList(listEl, rankings, historical = false) {
 
         const row = document.createElement('div');
         row.className = `raid-ranking-row${isMe ? ' is-me' : ''}`;
-        row.style.borderColor = isMe ? '#74b9ff' : (i < 3 ? '#feca57' : '#666');
+        row.style.borderColor = isMe ? '#74b9ff' : (rank <= 3 ? '#feca57' : '#666');
 
         row.innerHTML = `
           <!-- スキン（アバター） -->
@@ -14540,7 +15149,7 @@ function renderRaidRankingList(listEl, rankings, historical = false) {
               </div>
               <div style="flex-shrink: 0;">
                 <span class="raid-ranking-damage">
-                  ${(r.totalDamage || 0).toLocaleString()}<span class="raid-ranking-damage-unit">ダメージ</span>
+                  ${(metric === 'kills' ? r.bestKills || 0 : r.totalDamage || 0).toLocaleString()}<span class="raid-ranking-damage-unit">${metric === 'kills' ? '体討伐' : 'ダメージ'}</span>
                 </span>
               </div>
             </div>

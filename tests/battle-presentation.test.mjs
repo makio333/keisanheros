@@ -58,4 +58,15 @@ assert.equal(artwork.left, targetRect.left + 12.5, 'transparent left padding is 
 assert.equal(artwork.top, targetRect.top + 43.75, 'object-fit letterbox and transparent top padding are excluded');
 assert.equal(artwork.width, 50);
 assert.equal(artwork.height, 25);
+const logBox = () => ({ entries: [], set innerHTML(value) { if(value==='')this.entries=[]; }, appendChild(div) { this.entries.push(div); } });
+const battleLog=logBox(), otherLog=logBox();
+const logContext=vm.createContext({$:id=>id==='battle-log'?battleLog:otherLog,document:{createElement:()=>({innerHTML:''})}});
+vm.runInContext(source.slice(source.indexOf('function logTo('),source.indexOf('/* ==========================================================',source.indexOf('function logTo('))),logContext);
+logContext.logTo('battle-log','前の攻撃');
+logContext.logTo('battle-log','最新の攻撃');
+assert.equal(battleLog.entries.length,1,'battle logs keep only the latest message');
+assert.equal(battleLog.entries[0].innerHTML,'最新の攻撃');
+logContext.logTo('other-log','前の記録');
+logContext.logTo('other-log','最新の記録');
+assert.equal(otherLog.entries.length,2,'other logs preserve their history');
 console.log('PASS: attack coordinates after resize and movement, stage/boss stars and raid reset');

@@ -270,6 +270,26 @@
   font-size: clamp(9px, 0.9vw, 12px);
 }
 
+.kana-board-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; flex:0 0 auto; }
+.kana-board-tab { font:inherit; font-size:13px; font-weight:bold; min-height:32px; padding:4px 2px; color:#d9eaff; background:#24344d; border:1px solid #6a829f; border-radius:6px; cursor:pointer; }
+.kana-board-tab[aria-pressed="true"] { color:#172133; background:#ffda85; border-color:#ffe9b6; }
+.kana-board-section { display:flex; flex-direction:column; flex:1 1 0; min-height:0; overflow:auto; scrollbar-width:thin; }
+.kana-grid.kana-board-grid { grid-auto-flow:row; grid-template-columns:repeat(2,20px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)); gap:4px; flex:1 0 auto; }
+.kana-board-grid .key-btn { font-size:clamp(17px,1.7vw,23px); font-weight:bold; background:#2c3c57; border-color:#8a9db8; border-radius:6px; min-height:28px; }
+.kana-board-grid .key-btn:nth-child(12n+8),.kana-board-grid .key-btn:nth-child(12n+9),.kana-board-grid .key-btn:nth-child(12n+10),.kana-board-grid .key-btn:nth-child(12n+11),.kana-board-grid .key-btn:nth-child(12n+12) { background:#3a3451; }
+.kana-row-label { display:flex; align-items:center; justify-content:center; font-size:10px; color:#ffe2a0; line-height:1.2; text-align:center; }
+.kana-board-actions { display:grid; grid-template-columns:1fr 1fr 2.2fr; gap:5px; flex:0 0 auto; }
+.kana-board-actions { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.kana-board-modifiers { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; flex:0 0 auto; }
+.kana-board-modifiers .key-btn { min-height:30px; padding:3px 1px; font-size:12px; font-weight:bold; }
+.kana-board-modifiers .key-btn:nth-child(-n+2) { font-size:24px; line-height:1; }
+.kana-board-grid .key-btn { min-height:22px; }
+.kana-grid.kana-board-grid { gap:2px 4px; }
+.kana-board-actions .key-btn { min-height:34px; font-size:17px; font-weight:bold; }
+.kana-board-actions .key-fn { font-size:12px; color:#ffe0bb; }
+.kana-board-tab:focus-visible,.kana-board-grid .key-btn:focus-visible,.kana-board-actions .key-btn:focus-visible { outline:2px solid #ffe08a; outline-offset:-2px; }
+.kana-board-grid .key-btn:active { background:#72d9ea; color:#142331; }
+
 /* ===== 演出用レイヤー ===== */
 #effect-container {
   position: fixed;
@@ -509,6 +529,10 @@
 #kana-choice-buttons { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; justify-content: center; width: 100%; }
 .kana-choice-button { display: flex; flex-direction: column; gap: 8px; justify-content: center; align-items: center; width: auto; flex: 1 1 180px; min-width: 0; max-width: 360px; padding: 16px; font-size: clamp(20px, 4vw, 28px); font-weight: bold; overflow-wrap: anywhere; border: 3px solid #6a8fff; border-radius: 12px; background: #3a5fc8; color: #fff; }
 .kana-choice-button:nth-child(2) { background: #c85a3a; border-color: #ff9a6a; }
+.kana-choice-button:nth-child(3) { background:#57612b; border-color:#bdcc74; }
+.kana-choice-button:nth-child(4) { background:#6b438a; border-color:#bb8fe0; }
+#kana-choice-buttons .kana-choice-button { width:100%; max-width:none; box-sizing:border-box; }
+@media(max-width:640px) { #kana-choice-buttons .kana-choice-button { padding:12px 8px; } }
 .kana-choice-label { font-size: 14px; opacity: .8; }
 .kana-choice-button:disabled { opacity: .65; }
 .kana-choice-button.is-correct { background: #17633b; border-color: #73efa3; opacity: 1; }

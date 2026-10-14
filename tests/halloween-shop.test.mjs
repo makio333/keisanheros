@@ -119,4 +119,15 @@ vm.runInContext(source.slice(source.indexOf('function bgmKeyForScreen('),source.
 assert.equal(context.bgmKeyForScreen('screen-battle'),'bgm_halloween_normal');
 context.battle.enemy.isBoss=true;
 assert.equal(context.bgmKeyForScreen('screen-battle'),'bgm_halloween_boss');
-console.log('PASS: exclusive catalogs, two genders, consumption, ticket/gold draws, duplicate prevention, drop rates and stage-by-stage progression');
+// Confirmation must not consume candy until the explicit final action.
+now=Date.parse('2026-10-14T12:00:00+09:00');context.G={halloweenCandy:300,player:{gold:0},nextUid:1};
+context.currentSlotKey='qa';let activeDialog=null;
+context.document={querySelector:()=>activeDialog,body:{appendChild(dialog){activeDialog=dialog;}},createElement(){const buttons=new Map();return {innerHTML:'',querySelector(key){if(!buttons.has(key))buttons.set(key,{focus(){}});return buttons.get(key);},remove(){activeDialog=null;}};}};
+context.stageRewardIcon=()=>'';context.escapeHtml=value=>value;context.hideTooltip=()=>{};context.showHalloweenMenu=()=>{};context.SM={play(){}};
+context.confirmHalloweenExchange(exchange[0].id,{focus(){}});assert.equal(context.G.halloweenCandy,300,'opening a confirmation does not consume candy');
+activeDialog.querySelector('[data-cancel]').onclick();assert.equal(context.G.halloweenCandy,300,'cancel consumes nothing');
+context.confirmHalloweenExchange(exchange[0].id,{focus(){}});const confirm=activeDialog.querySelector('[data-confirm]');
+assert.match(activeDialog.innerHTML,/所持 300個/);confirm.onclick();assert.equal(context.G.halloweenCandy,300-exchange[0].cost);
+confirm.onclick();assert.equal(context.G.halloweenCandy,300-exchange[0].cost,'repeated confirmation cannot pay twice');
+assert.equal(context.halloweenPrizeOwned(exchange[0]),true);
+console.log('PASS: exclusive catalogs, consumption after confirmation only, cancel, single payment, ticket/gold draws, duplicates, drops and stage progression');
