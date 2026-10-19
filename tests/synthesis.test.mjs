@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {eventEquipmentAbility} from '../event_equipment.js';
 const source = fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');
 const elements = new Map();
 const el = id => { if(!elements.has(id)) elements.set(id,{innerHTML:'',textContent:'',focus(){}}); return elements.get(id); };
 let callback, saves=0, screen;
-const context = vm.createContext({
+const context = vm.createContext({eventEquipmentAbility,
  G:null,RARITY_MAX:5,EQUIP_SLOTS:['weapon','armor'],
  getEquipTemplate:id=>({id,name:id,emoji:'icon.png',opTier:'add1'}),getAbility:()=>null,
  rollAbility:()=> 'bonus',save(){saves++;},showScreen:id=>screen=id,

@@ -1,0 +1,18 @@
+{
+  "generator": "built-in image_gen",
+  "assets": [
+    {
+      "file": "assets/raid/raid_observatory.png",
+      "prompt": "Use case: stylized-concept. Asset type: new exclusive JRPG raid reward background, landscape game illustration. Draw a magnificent star-lit celestial sky temple and observatory floating above clouds, ancient blue-white stone arches, gold astronomical rings, radiant cyan crystal, distant silver mountains and deep indigo starry sky. Rich detailed 16-bit inspired pixel art, crisp textured pixels, beautiful blue, violet and gold palette, magical and triumphant. Wide landscape composition with clear center suitable behind a character. No people, no UI, no text, no logos, no lava or magma."
+    },
+    {
+      "file": "assets/raid/raid_star_guardian.png",
+      "prompt": "Use case: stylized-concept. Asset type: transparent JRPG character skin sprite. A young celestial guardian knight, handsome cheerful silver-haired boy, full body, ornate navy and white armor with gold star details, blue cape flowing sideways, elegant luminous star sword pointing diagonally downward, small round constellation shield. Polished detailed chibi Japanese RPG pixel art, approximately 3-head-tall proportions, crisp textured pixels, brilliant blue-gold highlights. One character centered, entire sword and feet and cape within frame, readable at small size. Truly transparent background. No scenery, no text, no UI, no border, no floor, no watermark."
+    },
+    {
+      "file": "assets/raid/raid_ticket_pixel.png",
+      "reference": "assets/halloween/ticket_icon.png",
+      "prompt": "Use case: stylized-concept. New game inventory icon, one ornate RAID BOSS admission ticket. Reference image is style and quality only: match the gorgeous richly shaded pixel-art collectible ticket aesthetic, with luxurious gold frame, deep sapphire blue and violet ticket face, bright silver dragon head crest with cyan eyes in the center, small crossed swords and star motifs, a royal blue ribbon tied at the upper left with golden gem clasp. Landscape ticket rotated slightly upward, scalloped cutouts on both short edges, strong dark pixel outline and golden sparkles. Crisp detailed JRPG pixel art, recognisable at 40px, object fills frame with small margin. Truly transparent background, no text, no letters, no numbers, no scenery, no pumpkin. Create a distinct raid ticket, not a Halloween ticket."
+    }
+  ]
+}

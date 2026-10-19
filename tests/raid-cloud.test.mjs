@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {raidRankCoins} from '../economy.js';
 
 // Run the production API with serialized, in-memory Firestore transactions.
 const documents = new Map();
@@ -8,7 +9,7 @@ let queue = Promise.resolve();
 let now = Date.now();
 const copy = value => structuredClone(value);
 const context = {
-  window: {}, db: {}, console,
+  window: {}, db: {}, console, raidRankCoins,
   Date: class extends Date { static now() { return now; } }, JSON,
   RAID_SETTLEMENT_MS: 10 * 60 * 1000,
   slotKeyToDocId: encodeURIComponent,
@@ -104,3 +105,13 @@ const archivedReward = await api.settleReward('b', 'boss_50', state);
 assert.equal(archivedReward.eligible, true, 'Archived rankings remain payable after the next boss starts');
 assert.equal(archivedReward.rank, 2);
 console.log('PASS: participation, legacy migration, concurrent damage, ten-minute finalization, instant next boss, archived results and reward claim-once');
+
+assert.equal(JSON.parse(documents.get('saves/a').gameData).raidCoins,50,'first place coin reward is paid once');
+assert.equal(JSON.parse(documents.get('saves/b').gameData).raidCoins,30,'second place archived coin reward');
+const old=documents.get('raidClaims/a_boss_50');documents.delete('raidCoinRankClaims/a_boss_50');const oldState=JSON.parse(documents.get('saves/a').gameData);oldState.raidCoins=0;documents.set('saves/a',{gameData:JSON.stringify(oldState)});await api.settleReward('a','boss_50',state);await api.settleReward('a','boss_50',state);assert.equal(JSON.parse(documents.get('saves/a').gameData).raidCoins,50,'legacy rank payouts receive coins exactly once');
+
+// Removed legacy scores never return through an old browser cache; a new fight may score again.
+const activeBoss=global().bossId;documents.set('raidRankings_'+activeBoss+'/removed',{slotKey:'removed',playerName:'Removed',totalDamage:0,legacyDamage:1023,excludedFromRanking:true,participated:false});
+await api.syncPlayer('removed',profile,{bossId:activeBoss,participated:true,legacyDamage:1023});assert.equal(documents.get('raidRankings_'+activeBoss+'/removed').totalDamage,0);assert.ok(!(await api.getRankings(activeBoss)).some(row=>row.slotKey==='removed'));
+await api.syncPlayer('removed',profile,{bossId:activeBoss,participated:true,legacyDamage:1023,events:[{id:'new-valid-fight',bossId:activeBoss,damage:4}]});assert.equal(documents.get('raidRankings_'+activeBoss+'/removed').totalDamage,4);assert.ok((await api.getRankings(activeBoss)).some(row=>row.slotKey==='removed'));
+const totalBefore=global().totalDamageDealt;await api.syncPlayer('wrong-boss',profile,{legacyDamage:9999,participated:true});assert.equal(global().totalDamageDealt,totalBefore,'unscoped old scores cannot migrate to a newer boss');

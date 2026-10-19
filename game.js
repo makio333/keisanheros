@@ -1,5 +1,7 @@
+import { eventEquipmentAbility, ensureEventEquipmentAbilities } from './event_equipment.js';
+import { applyGiftPayload, recallGiftPayload, raidResumeStage, raidParticipationCoins } from './economy.js';
 
-import { EVENT_RAID_RULES, EVENT_RAID_BONUSES, EventRaidRun, eventRaidTargetCount, rankEventRaidRecords, eventRaidRewardEntitlements, eventRaidBonusEntitlements, eventRaidGaugeRatio, formatEventRaidTime } from './event_raid.js';
+import { EVENT_RAID_RULES, EVENT_RAID_BONUSES, EventRaidRun, eventRaidTargetCount, rankEventRaidRecords, eventRaidRewardEntitlements, eventRaidBonusEntitlements, eventRaidGaugeRatio, formatEventRaidTime, EVENT_RAID_FINAL_AT } from './event_raid.js';
 window.addEventListener('online',()=>{ if(G) for(const mode of ['math','kanji']) if(eventRaidState(mode).pendingBest) syncEventRaidRecord(mode).catch(()=>{}); });
 
 function skillPower(s){
@@ -201,27 +203,29 @@ class SoundManager {
     }
   }
   
-  play(key) {
+  playCorrectAnswer() { this.play('se_type',4); }
+
+  play(key, volumeScale = 1) {
     if (this.muted || this.globalVolume === 0) return;
     const base = this.audios[key];
     if (!base) {
-      if (key === 'se_type' || key === 'se_decide') this.playBeep('type');
-      if (key === 'se_slash') this.playBeep('hit');
-      if (key === 'se_crit') this.playBeep('hit');
-      if (key === 'se_heal') this.playBeep('heal');
+      if (key === 'se_type' || key === 'se_decide') this.playBeep('type',volumeScale);
+      if (key === 'se_slash') this.playBeep('hit',volumeScale);
+      if (key === 'se_crit') this.playBeep('hit',volumeScale);
+      if (key === 'se_heal') this.playBeep('heal',volumeScale);
       return;
     }
     const node = base.cloneNode(true);
-    node.effectBaseVolume = this.getSeBaseVolume(key);
+    node.effectBaseVolume = Math.min(1,this.getSeBaseVolume(key)*Math.max(0,volumeScale));
     node.volume = node.effectBaseVolume * this.globalVolume;
     this.activeSE.add(node);
     node.addEventListener('ended', () => this.activeSE.delete(node), { once:true });
     node.play().catch(() => {
       this.activeSE.delete(node);
-      if (key === 'se_type' || key === 'se_decide') this.playBeep('type');
-      if (key === 'se_slash') this.playBeep('hit');
-      if (key === 'se_crit') this.playBeep('hit');
-      if (key === 'se_heal') this.playBeep('heal');
+      if (key === 'se_type' || key === 'se_decide') this.playBeep('type',volumeScale);
+      if (key === 'se_slash') this.playBeep('hit',volumeScale);
+      if (key === 'se_crit') this.playBeep('hit',volumeScale);
+      if (key === 'se_heal') this.playBeep('heal',volumeScale);
     });
   }
 
@@ -297,7 +301,7 @@ class SoundManager {
     this.bgmKey = null;
   }
   
-  playBeep(type = 'type') {
+  playBeep(type = 'type', volumeScale = 1) {
     if (this.muted || this.globalVolume === 0) return;
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!this.beepCtx && AudioContext) this.beepCtx = new AudioContext();
@@ -311,7 +315,7 @@ class SoundManager {
     gain.connect(this.getEffectGain());
 
     const now = this.beepCtx.currentTime;
-    const volBase = type === 'type' ? 0.13 : 0.25; // マスター音量は共通のeffectGainで適用する
+    const volBase = (type === 'type' ? 0.13 : 0.25)*Math.max(0,volumeScale); // マスター音量は共通のeffectGainで適用する
     
     if (type === 'type') {
       osc.type = 'sine';
@@ -2493,6 +2497,7 @@ function generateEnemy(zone, floor){
    ========================================================== */
 const HERO_AVATARS = [
   { id: 'hero_female_1', name: '少女の冒険者', gender: 'female', job: '剣士・戦士', desc: '活発なポニーテールと剣技が自慢の少女', image: 'assets/characters/hero_female_1_hd.png' },
+ {id:'raid_star_guardian',name:'星界の守護者',gender:'male',image:'assets/raid/raid_star_guardian.png',desc:'レイドの勇者に贈られる星界の騎士',rewardSource:'raid'},
   { id: 'hero_male_1', name: '青年の騎士', gender: 'male', job: '騎士・勇者', desc: '聖剣をたずさえた誇り高き青年騎士', image: 'assets/characters/hero_male_1_hd.png' },
   { id: 'hero_male_2', name: '少年の冒険者', gender: 'male', job: '冒険者・シーフ', desc: 'ゴーグルと身軽な動きで挑む元気な少年', image: 'assets/characters/hero_male_2_hd.png' },
   { id: 'hero_female_2', name: '星詠みの少女', gender: 'female', job: '魔法使い', desc: '星空のローブと水晶の杖を持つ神秘的な少女', image: 'assets/characters/hero_female_2_hd.png' },
@@ -2534,8 +2539,52 @@ function getInitialSelectableAvatars() {
   return HERO_AVATARS.filter(avatar => INITIAL_AVATAR_IDS.includes(avatar.id));
 }
 
+const AVATAR_DECORATIONS = [
+ {id:'raid_starlight',name:'マグマ竜の翼飾り',image:'assets/frames-thin/raid_starlight.png',source:'raid'},
+ {id:'rank_gold',name:'ハロウィン覇者の黄金冠',image:'assets/frames-thin/rank_gold.png',source:'rank'},
+ {id:'rank_silver',name:'月夜の銀冠',image:'assets/frames-thin/rank_silver.png',source:'rank'},
+ {id:'rank_bronze',name:'おばけの銅冠',image:'assets/frames-thin/rank_bronze.png',source:'rank'},
+ {id:'candy_spark',name:'キャンディのきらめき',image:'assets/frames-thin/candy_spark.png',source:'gacha'},
+ {id:'moon_ribbon',name:'ちいさな月のリボン',image:'assets/frames-thin/moon_ribbon.png',source:'gacha'},
+];
+function applyAvatarDecoration(element,id=G?.avatarDecoration) {
+ if(!element)return;
+ element.querySelector(':scope > .avatar-decoration')?.remove();
+ const decoration=AVATAR_DECORATIONS.find(entry=>entry.id===id);
+ if(!decoration)return;
+ const image=document.createElement('img');image.className='avatar-decoration';image.src=av(decoration.image);image.alt=decoration.name;element.appendChild(image);
+}
+// The same portrait geometry and layer order are used in every avatar surface.
+function applyAvatarComposition(frame, image, appearance = G) {
+  if(!frame || !image)return;
+  const look=appearance || {};
+  const hero=getHeroAvatar(look.avatar);
+  frame.classList.add('avatar-composite-stage');
+  image.classList.add('avatar-composite-character');
+  let background=frame.querySelector(':scope > .avatar-bg, :scope > .avatar-composite-bg, :scope > .save-slot-avatar-bg, :scope > .avatar-composite-background');
+  if(!background){background=document.createElement('div');frame.insertBefore(background,frame.firstChild);}
+  background.classList.add('avatar-composite-background');
+  background.classList.remove('hidden');
+  frame.classList.remove('holo-surface','holo-character-stage');
+  applyAvatarBackground(background,look.avatarBackground || 'default',!!look.avatarBackgroundHolographic);
+  const characterLayer=image.parentElement===frame?null:image.parentElement;
+  if(characterLayer)characterLayer.classList.add('avatar-composite-character-layer');
+  const foilLayer=characterLayer || frame;
+  foilLayer.classList.toggle('holo-character-prism',!!look.avatarHolographic);
+  if(hero?.image){image.src=av(hero.image);image.alt=hero.name;image.style.display='block';foilLayer.style.setProperty('--character-foil-mask',`url("${av(hero.image)}")`);}
+  image.classList.toggle('avatar-holographic',!!look.avatarHolographic);
+  applyAvatarDecoration(frame,look.avatarDecoration || '');
+}
+
+function cosmeticPreviewAppearance(kind,id) {
+  if(!['skin','background','decoration'].includes(kind))return null;
+  return {avatar:G?.avatar || HERO_AVATARS[0].id,avatarBackground:G?.avatarBackground || 'default',avatarDecoration:G?.avatarDecoration || '',avatarHolographic:!!G?.avatarHolographic,avatarBackgroundHolographic:!!G?.avatarBackgroundHolographic,
+    ...(kind==='skin'?{avatar:id,avatarHolographic:false}:kind==='background'?{avatarBackground:id,avatarBackgroundHolographic:false}:{avatarDecoration:id})};
+}
+
 const AVATAR_BACKGROUNDS = [
   { id: 'default', name: 'いつもの背景', image: null, color: '#35274f' },
+ {id:'raid_observatory',name:'星界の天空神殿',image:'assets/raid/raid_observatory.png',color:'#152748',rewardSource:'raid'},
   { id: 'starlight', name: '星明かり', image: 'assets/characters/bg_skin_starlight.png', color: '#19152f' },
   { id: 'forest', name: '新緑の木もれ日', image: 'assets/characters/bg_skin_forest.png', color: '#173b31' },
   { id: 'sakura', name: '桜の庭園', image: 'assets/characters/bg_skin_sakura.png', color: '#f1b6cf' },
@@ -2571,6 +2620,7 @@ function applyAvatarBackground(element, backgroundId, holographic) {
 
 let pendingAvatarId = null;
 let pendingAvatarBackgroundId = null;
+let pendingAvatarFrameId = null;
 let pendingAvatarHolographic = false;
 let pendingBackgroundHolographic = false;
 let avatarSelectorTab = 'characters';
@@ -2596,14 +2646,17 @@ try {
    装備データ（ベース）
    ========================================================== */
 const EQUIP_DB = [
+  {id:'shop_light_sword',name:'旅人の軽い剣',slot:'weapon',opTier:'add2',stat:{atk:5},price:45,cost:3,emoji:'assets/event-pixel/traveler_sword.png'},
+  {id:'shop_guard_vest',name:'旅人のベスト',slot:'armor',opTier:'add2',stat:{def:4,hp:6},price:65,cost:3,emoji:'assets/items/a2.png'},
+  {id:'shop_mana_charm',name:'小さな魔力のお守り',slot:'accessory',opTier:'add1',stat:{mp:8,spd:1},price:75,cost:4,emoji:'assets/halloween/equip_moon_charm.png'},
   // 武器
-  { id:'w1', name:'木の剣', slot:'weapon', opTier:'add1', stat:{atk:2}, price:20, cost:1, emoji:'assets/items/w1.png' },
-  { id:'w2', name:'どうの剣', slot:'weapon', opTier:'add2', stat:{atk:4}, price:35, cost:2, emoji:'assets/items/w2.png' },
+  { id:'w1', name:'木の剣', slot:'weapon', opTier:'add1', stat:{atk:2}, price:20, cost:1, emoji:'assets/event-pixel/wood_sword.png' },
+  { id:'w2', name:'どうの剣', slot:'weapon', opTier:'add2', stat:{atk:4}, price:35, cost:2, emoji:'assets/event-pixel/copper_sword.png' },
   { id:'w3', name:'はがねの剣', slot:'weapon', opTier:'add3', stat:{atk:7}, price:60, cost:3, emoji:'assets/items/w3.png' },
   { id:'w4', name:'ほのおの斧', slot:'weapon', opTier:'add4', stat:{atk:9}, price:80, cost:4, emoji:'assets/items/w4.png' },
-  { id:'w5', name:'いなずまの太刀', slot:'weapon', opTier:'sub3', stat:{atk:13}, price:120, cost:6, emoji:'assets/items/w5.png' },
-  { id:'w6', name:'まけんグラム', slot:'weapon', opTier:'sub4', stat:{atk:15}, price:140, cost:7, emoji:'assets/items/w6.png' },
-  { id:'w7', name:'せいけんエクスカリバー', slot:'weapon', opTier:'mul3', stat:{atk:22}, price:200, cost:10, emoji:'assets/items/w7.png' },
+  { id:'w5', name:'いなずまの太刀', slot:'weapon', opTier:'sub3', stat:{atk:13}, price:120, cost:6, emoji:'assets/event-pixel/thunder_katana.png' },
+  { id:'w6', name:'まけんグラム', slot:'weapon', opTier:'sub4', stat:{atk:15}, price:140, cost:7, emoji:'assets/items/w6_right.png' },
+  { id:'w7', name:'せいけんエクスカリバー', slot:'weapon', opTier:'mul3', stat:{atk:22}, price:200, cost:10, emoji:'assets/event-pixel/excalibur.png' },
   { id:'w8', name:'りゅうごろしの槍', slot:'weapon', opTier:'div3', stat:{atk:25}, price:230, cost:12, emoji:'assets/items/w8.png' },
   // 防具
   { id:'a1', name:'布の服', slot:'armor', opTier:'add1', stat:{def:2}, price:20, cost:1, emoji:'assets/items/a1.png' },
@@ -2631,7 +2684,7 @@ const ANCIENT_EQUIP_DB = [
   { id:'anc_c1', name:'古代の指輪', slot:'accessory', opTier:'div5', stat:{spd:12}, cost:8, emoji:'assets/items/ancient_ring_v2.png' },
   { id:'anc_w2', name:'古代の槍', slot:'weapon', opTier:'div5', stat:{atk:8.5, spd:8}, cost:7, emoji:'assets/items/ancient_spear_v2.png' },
   { id:'anc_a2', name:'古代の盾', slot:'armor', opTier:'div5', stat:{def:29, hp:20}, cost:7, emoji:'assets/items/ancient_shield_v2.png' },
-  { id:'demon_sword', name:'魔王の覇剣', slot:'weapon', opTier:'elem6', stat:{atk:50}, cost:20, emoji:'assets/items/w6.png' },
+  { id:'demon_sword', name:'魔王の覇剣', slot:'weapon', opTier:'elem6', stat:{atk:50}, cost:20, emoji:'assets/items/w6_right.png' },
 ];
 
 /* そうびスロットは この3つだけ（ぶき・よろい・アクセサリー） */
@@ -2639,12 +2692,21 @@ const EQUIP_SLOTS = ['weapon', 'armor', 'accessory'];
 
 // Separate pool keeps gacha-exclusive equipment out of shops and adventure drops.
 const LIMITED_EQUIP_DB = [
-  { id:'limited_star_sword', name:'星晶の剣', slot:'weapon', opTier:'add3', stat:{atk:8}, cost:3, emoji:'assets/items/limited_star_sword.png' },
+  { id:'limited_star_sword', name:'星晶の剣', slot:'weapon', opTier:'add3', stat:{atk:8}, cost:3, emoji:'assets/items/limited_star_sword_right.png' },
   { id:'limited_phoenix_armor', name:'鳳凰の鎧', slot:'armor', opTier:'add3', stat:{def:7, hp:5}, cost:3, emoji:'assets/items/limited_phoenix_armor.png' },
   { id:'limited_moon_charm', name:'月光のお守り', slot:'accessory', opTier:'add3', stat:{spd:3, mp:6}, cost:3, emoji:'assets/items/limited_moon_charm.png' },
 ];
 
 const HALLOWEEN_EQUIP_DB = [
+  {id:'halloween_bat_buckler',name:'コウモリの小盾',slot:'armor',opTier:'add1',stat:{def:2},cost:3,fixedCost:true,emoji:'assets/event-pixel/bat_buckler.png'},
+  {id:'halloween_pumpkin_bell',name:'かぼちゃの小鈴',slot:'accessory',opTier:'add1',stat:{hp:2,mp:2},cost:3,fixedCost:true,emoji:'assets/event-pixel/pumpkin_bell.png'},
+  {id:'halloween_rank_blade',name:'月影の短剣',slot:'weapon',opTier:'add2',stat:{atk:8,spd:2},cost:5,fixedCost:true,emoji:'assets/event-pixel/rank_blade.png'},
+  {id:'halloween_candy_saber',name:'お菓子のサーベル',slot:'weapon',opTier:'add1',stat:{atk:3},cost:3,fixedCost:true,emoji:'assets/event-pixel/candy_saber.png'},
+  {id:'halloween_light_cape',name:'こあくまの軽いケープ',slot:'armor',opTier:'add1',stat:{def:3,hp:4},cost:4,fixedCost:true,emoji:'assets/event-pixel/light_cape.png'},
+  {id:'halloween_moon_pin',name:'小さな月のピン',slot:'accessory',opTier:'add1',stat:{mp:3,spd:1},cost:3,fixedCost:true,emoji:'assets/event-pixel/moon_pin.png'},
+  {id:'raid_star_blade',name:'マグマの剣',slot:'weapon',opTier:'add3',stat:{atk:5,spd:1},cost:5,fixedCost:true,emoji:'assets/event-pixel/magma_blade.png'},
+  {id:'raid_ward_armor',name:'マグマの鎧',slot:'armor',opTier:'add3',stat:{def:5,hp:8},cost:5,fixedCost:true,emoji:'assets/event-pixel/magma_armor.png'},
+  {id:'raid_focus_charm',name:'マグマの護符',slot:'accessory',opTier:'add2',stat:{mp:6,spd:2},cost:4,fixedCost:true,emoji:'assets/event-pixel/magma_charm.png'},
   { id:'halloween_lantern_staff', name:'月灯りのランタン杖', slot:'weapon', opTier:'add3', stat:{atk:7}, cost:4, emoji:'assets/halloween/exchange_equip_lantern_staff.png' },
   { id:'halloween_pumpkin_blade', name:'かぼちゃの魔剣', slot:'weapon', opTier:'add3', stat:{atk:6}, cost:3, emoji:'assets/halloween/equip_pumpkin_blade.png' },
   { id:'halloween_witch_mantle', name:'魔女のマント', slot:'armor', opTier:'add3', stat:{def:5,hp:8}, cost:3, emoji:'assets/halloween/equip_witch_mantle.png' },
@@ -2654,16 +2716,19 @@ const HALLOWEEN_EQUIP_DB = [
 function getEquipTemplate(id) {
   const base = EQUIP_DB.find(d => d.id === id) || ANCIENT_EQUIP_DB.find(d => d.id === id) || LIMITED_EQUIP_DB.find(d => d.id === id) || HALLOWEEN_EQUIP_DB.find(d => d.id === id);
   const custom = customEquips[id];
-  return custom ? { ...base, ...custom, stat: { ...base.stat, ...(custom.stat||{}) } } : base;
+  const definition=custom ? { ...base, ...custom, stat: { ...base.stat, ...(custom.stat||{}) } } : base;
+  return definition ? {...definition,ability:definition.ability || eventEquipmentAbility(id)} : definition;
 }
 
 const ITEM_DB = [
+  {id:'small_tonic',name:'旅人の回復薬',opTier:'add',effect:'heal',value:35,price:25,desc:'手ごろな値段でHPを35回復',emoji:'assets/items/potion.png',tags:['戦闘用']},
+  {id:'mana_tonic',name:'月色の魔力薬',opTier:'add',effect:'mana',value:20,price:28,desc:'MPを20回復する青い薬',emoji:'assets/items/ether.png',tags:['戦闘用']},
   { id:'potion', name:'傷薬', opTier:'add', effect:'heal', value:20, price:15, desc:'HPを回復', emoji:'assets/items/potion.png', tags:['戦闘用'] },
   { id:'hipotion', name:'秘薬', opTier:'sub', effect:'heal', value:60, price:50, desc:'HPを大きく回復', emoji:'assets/items/hipotion.png', tags:['戦闘用'] },
   { id:'herb', name:'魔力の草', opTier:'add', effect:'mana', value:10, price:12, desc:'MPを回復', emoji:'assets/items/herb.png', tags:['戦闘用'] },
   { id:'ether', name:'エーテル', opTier:'addCarry', effect:'mana', value:30, price:40, desc:'MPを大きく回復', emoji:'assets/items/ether.png', tags:['戦闘用'] },
-  { id:'cost_seed', name:'コストプラスのたね', opTier:'mul1', effect:'cost', value:1, price:1000, desc:'使うとそうびコストの上限が 1 あがる 不思議なたね。', emoji:'🌱', tags:['部屋用'] },
-  { id:'respec_seed', name:'ふりなおしのたね', opTier:'mul1', effect:'respec', value:0, price:500, desc:'使うと わりふったスキルポイントを 全てリセットして 振り直せる 不思議なたね。', emoji:'🌰', tags:['部屋用'] }
+  { id:'cost_seed', name:'コストプラスのたね', opTier:'mul1', effect:'cost', value:1, price:1000, desc:'使うとそうびコストの上限が 1 あがる 不思議なたね。', emoji:'assets/items/cost_seed_pixel.png', tags:['部屋用'] },
+  { id:'respec_seed', name:'ふりなおしのたね', opTier:'mul1', effect:'respec', value:0, price:500, desc:'使うと わりふったスキルポイントを 全てリセットして 振り直せる 不思議なたね。', emoji:'assets/items/respec_seed_pixel.png', tags:['部屋用'] }
 ];
 
 /* 古代装備の共通設計図。旧IDはセーブ移行だけに使用 */
@@ -2708,7 +2773,7 @@ function rarityLabelHtml(rarity){
 const SPECIAL_ABILITIES = [
   { id:'crit_up', name:'会心のちから', desc:'会心率+10%' },
   { id:'lifesteal', name:'きゅうけつ', desc:'あたえたダメージの15%をHP吸収' },
-  { id:'guard', name:'てっぺき', desc:'うけるダメージ-15%' },
+  { id:'guard', name:'てっぺき', desc:'うけるダメージ-5%（重ねがけなし）' },
   { id:'power', name:'ちからのかご', desc:'こうげき力+15%' },
   { id:'mp_save', name:'せつやくの心得', desc:'とくぎのMPしょうひ-1' },
 ];
@@ -2725,7 +2790,7 @@ function equippedAbilities(){
     const eq = G.equipment[slot];
     if (!eq) continue;
     const owned = G.ownedEquips.find(o => o.uid === eq.uid);
-    if (owned && owned.ability) set.add(owned.ability);
+    if (owned) { const ability=owned.ability || eventEquipmentAbility(owned.id);if(ability)set.add(ability); }
   }
   return set;
 }
@@ -3152,6 +3217,7 @@ function listSaveSlots(options = {}){
         avatarBackground: data.avatarBackground || 'default',
         avatarHolographic: !!data.avatarHolographic,
         avatarBackgroundHolographic: !!data.avatarBackgroundHolographic,
+        avatarDecoration:data.avatarDecoration || '',
         lvl: p.lvl || 1,
         gold: p.gold || 0,
         baseStats: {
@@ -3415,6 +3481,7 @@ function equipBonus(){
    そうびコスト（レベル＝そうびできる合計コスト上限）
    ========================================================== */
 function equipCost(db, rarity){
+  if(db?.fixedCost)return Math.max(1,db.cost || 1);
   if (db && db.id && db.id.startsWith('anc_')) return Math.max(1, db.cost || 1);
   return Math.max(1, Math.ceil((db.cost || 1) * (RARITY_MULTI[rarity] || 1)));
 }
@@ -3531,20 +3598,8 @@ function updateHud(){
     const avatarEl = $(`${prefix}-player-avatar`);
 
     if (avatarEl) {
-      if (prefix === 'home') applyAvatarBackground($('home-avatar-window')?.querySelector('.avatar-bg'), G.avatarBackground, G.avatarBackgroundHolographic);
-      if (prefix === 'room') applyAvatarBackground(avatarEl, G.avatarBackground);
-      const avDef = getHeroAvatar(G.avatar);
-      const avatarStage = prefix === 'home' ? $('home-avatar-character-stage') : prefix === 'room' ? avatarEl.parentElement : null;
-      if (prefix === 'home' && avatarStage && avDef?.image) avatarStage.style.setProperty('--character-foil-mask', `url("${av(avDef.image)}")`);
-      avatarStage?.classList.toggle(prefix === 'home' ? 'holo-character-prism' : 'holo-character-stage', !!G.avatarHolographic);
-      
-      avatarEl.classList.toggle('avatar-holographic', !!G.avatarHolographic);
-      if (avDef && avDef.image) {
-        avatarEl.src = av(avDef.image);
-        avatarEl.style.display = 'block';
-      } else {
-        avatarEl.style.display = 'none';
-      }
+      const frame=prefix==='home'?$('home-avatar-window'):avatarEl.parentElement;
+      applyAvatarComposition(frame,avatarEl,G);
     }
 
     if (nameEl) nameEl.textContent = (G.playerName || 'ゆうしゃ') + (G.isTestMode ? ' [テスト]' : '');
@@ -3916,7 +3971,7 @@ function getChallengePrompt(problem, isAttack = false) {
     if (tierStr.startsWith('kana')) {
       return isAttack ? 'こうげき！ ただしい かきかたを えらぼう！' : 'ただしい かきかたを えらぼう！';
     }
-    return isAttack ? 'こうげき！ かんじの よみかたを にゅうりょく！' : 'かんじの よみかたを にゅうりょく！';
+    return isAttack ? 'こうげき！ よみかたを ひとつ にゅうりょく！' : 'かんじの よみかたを ひとつ にゅうりょく！';
   }
   return isAttack ? 'こうげき！ けいさんの こたえを にゅうりょく！' : 'けいさんの こたえを にゅうりょく！';
 }
@@ -4085,7 +4140,7 @@ function startChallenge(container, opts, cb){
         recordRaidLearningAnswer(problem, isCorrect);
         const timeFrac = Math.max(0, 1 - elapsed / timeLimit);
         if (isCorrect) {
-          SM.play('se_type');
+          SM.playCorrectAnswer();
         } else {
           SM.playBeep('error');
         }
@@ -4270,7 +4325,7 @@ function startChallenge(container, opts, cb){
         resultEl.textContent = '';
         resultEl.className = 'result-text';
       }
-      SM.play('se_type');
+      SM.playCorrectAnswer();
     } else {
       if (wordEl) wordEl.className = 'challenge-word wrong';
       if (resultEl) {
@@ -5089,6 +5144,34 @@ function openItemMenu(){
   sub.classList.remove('hidden');
 }
 
+function showSeedUseEffect(db, change) {
+  hideTooltip();
+  const previousFocus=document.activeElement;
+  const reset=change.kind==='respec';
+  const overlay=document.createElement('div');
+  overlay.className=`confirm-overlay seed-use-effect ${reset?'seed-use-respec':'seed-use-cost'}`;
+  overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-labelledby','seed-use-title');
+  overlay.innerHTML=`<section class="panel seed-use-card">
+    <div class="seed-use-stage" aria-hidden="true"><div class="seed-use-halo"></div>${iconHtml(db.emoji,112)}${Array.from({length:12},(_,i)=>`<i class="seed-use-particle" style="--angle:${i*30}deg;--delay:${i*35}ms"></i>`).join('')}</div>
+    <h2 id="seed-use-title">${reset?'スキルポイント回収！':'コスト上限アップ！'}</h2>
+    <p>${escapeHtml(db.name)}をつかった</p>
+    ${reset?'<div class="seed-return-stats" aria-hidden="true"><span>❤️</span><span>💧</span><span>⚔️</span><span>🛡️</span><span>⚡</span></div>':''}
+    <div class="seed-use-values"><span>${change.before}</span><span aria-hidden="true">→</span><strong data-value>${change.before}</strong><small>${reset?'pt':'コスト'}</small></div>
+    <b class="seed-use-gain">＋${change.amount}${reset?'pt を回収':' アップ'}</b>
+    <p class="seed-use-description">${reset?'ステータスを元に戻したよ。スキルポイントをもう一度わりふろう！':'もっと強い装備を組み合わせられるようになったよ！'}</p>
+    <span class="sr-only" role="status">${reset?'スキルポイント':'そうびコストの上限'}が${change.before}から${change.after}へ。${change.amount}増えました。</span>
+    <button type="button" class="btn btn-primary" data-close>つづける</button>
+  </section>`;
+  let animation=0,closed=false;
+  const start=performance.now(),value=overlay.querySelector('[data-value]');
+  const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const tick=now=>{if(closed)return;const progress=reduced?1:Math.min(1,(now-start)/1000);value.textContent=String(Math.round(change.before+(change.after-change.before)*(1-Math.pow(1-progress,3))));if(progress<1)animation=requestAnimationFrame(tick);else overlay.classList.add('is-complete');};
+  const close=()=>{closed=true;cancelAnimationFrame(animation);overlay.remove();const target=$(reset?'status-points':'equip-cost-bar');if(target){target.classList.remove('seed-stat-pulse');void target.offsetWidth;target.classList.add('seed-stat-pulse');}if(previousFocus?.isConnected)previousFocus.focus({preventScroll:true});};
+  overlay.querySelector('[data-close]').onclick=close;
+  overlay.onkeydown=event=>{event.stopPropagation();if(event.key==='Escape')close();if(event.key==='Tab'){event.preventDefault();overlay.querySelector('[data-close]').focus();}};
+  document.body.appendChild(overlay);overlay.querySelector('[data-close]').focus();animation=requestAnimationFrame(tick);
+}
+
 function useItem(uid, db, inBattle = false){
   if (!db) return { success: false, message: 'アイテムの データが ありません。' };
 
@@ -5124,7 +5207,13 @@ function useItem(uid, db, inBattle = false){
     return { success: true, amount: healed, message: `MPが ${healed} かいふく！` };
   }
 
+  if (db.effect === 'cost' || db.effect === 'respec') {
+    const owned=G.items.find(item=>item.uid===uid && item.id===db.id && item.count>0);
+    if(!owned || document.querySelector('.seed-use-effect'))return {success:false,message:'このたねは今つかえません。'};
+  }
+
   if (db.effect === 'cost') {
+    const before=costCap();
     G.player.costPlus = (G.player.costPlus || 0) + (db.value || 1);
     removeItem(uid, 1);
     const msg = `${db.name}を つかった！ そうびコストの じょうげんが ${db.value || 1} あがった！（現在: ${costCap()}）`;
@@ -5132,7 +5221,7 @@ function useItem(uid, db, inBattle = false){
       if (typeof renderEquipmentSlots === 'function') renderEquipmentSlots();
       if (typeof renderRoomInventory === 'function') renderRoomInventory();
       SM.playBeep('heal');
-      alert(msg);
+      showSeedUseEffect(db,{kind:'cost',before,after:costCap(),amount:db.value || 1});
     }
     return { success: true, amount: db.value || 1, message: msg };
   }
@@ -5157,11 +5246,12 @@ function useItem(uid, db, inBattle = false){
       const msg = '割り振られているスキルポイントがありません。（消費されませんでした）';
       if (!inBattle) {
         SM.playBeep('error');
-        alert(msg);
+        showConfirmModal('スキルポイントはそのままだよ',msg,null);
       }
       return { success: false, message: msg };
     }
 
+    const beforePoints=G.player.points || 0;
     // ステータスを基礎値にリセット
     G.player.maxHp = baseMaxHp;
     G.player.maxMp = baseMaxMp;
@@ -5170,7 +5260,7 @@ function useItem(uid, db, inBattle = false){
     G.player.spd = baseSpd;
     G.player.hp = totalMaxHp();
     G.player.mp = totalMaxMp();
-    G.player.points += totalAllocated;
+    G.player.points = beforePoints + totalAllocated;
 
     removeItem(uid, 1);
     statusPending = {}; // 保留中の割り振りもクリア
@@ -5178,7 +5268,7 @@ function useItem(uid, db, inBattle = false){
     const msg = `✨「${db.name}」を つかった！\nわりふったスキルポイント ${totalAllocated}pt が 全て戻ってきたよ！`;
     if (!inBattle) {
       SM.playBeep('heal');
-      alert(msg);
+      showSeedUseEffect(db,{kind:'respec',before:beforePoints,after:G.player.points,amount:totalAllocated});
       if (typeof renderStatus === 'function') renderStatus();
       if (typeof renderRoomInventory === 'function') renderRoomInventory();
       if (typeof updateHud === 'function') updateHud();
@@ -5522,8 +5612,8 @@ function turnBasedEnemyAct(callback, attacker = null){
   }
 
   playEnemyAttackAnim();
-  let dmg = Math.max(1, Math.round(e.atk * 1.5) - totalStat('def'));
-  if (equippedAbilities().has('guard')) dmg = Math.max(1, Math.round(dmg * 0.85));
+  let dmg = Math.max(1, Math.round(e.atk * 2.25) - totalStat('def'));
+  if (equippedAbilities().has('guard')) dmg = Math.max(1, Math.round(dmg * 0.95));
   dmg = ancientDamageReduction(dmg);
   G.player.hp -= dmg;
   SM.playBeep('damage');
@@ -5608,9 +5698,9 @@ function enemyAct(){
   }
 
   playEnemyAttackAnim();
-  let dmg = Math.max(1, Math.round(e.atk * 1.5) - totalStat('def'));
-  // そうびの特殊能力「てっぺき」：うけるダメージ-15%
-  if (equippedAbilities().has('guard')) dmg = Math.max(1, Math.round(dmg * 0.85));
+  let dmg = Math.max(1, Math.round(e.atk * 2.25) - totalStat('def'));
+  // そうびの特殊能力「てっぺき」：うけるダメージ-5%（同じ能力は重複しない）
+  if (equippedAbilities().has('guard')) dmg = Math.max(1, Math.round(dmg * 0.95));
   dmg = ancientDamageReduction(dmg);
   G.player.hp -= dmg;
   SM.playBeep('damage');
@@ -5679,7 +5769,7 @@ function rollBattleDrops(e, rewards){
   }
   if (explore && Math.random() < dropChance(e.isBoss ? 0.03 : 0.01, rewardSettings.dropMultRaidTicket)) {
     G.raidTickets = (G.raidTickets || 0) + 1;
-    drops.push({ kind:'raid-ticket', name:'レイドチケット ×1', icon:'🎟️', count:1 });
+    drops.push({ kind:'raid-ticket', name:'レイドチケット ×1', icon:'assets/raid/raid_ticket_pixel.png', count:1 });
     rewards.push('レイドチケットを 1枚ひろった！');
   }
   const candyDrop = rollHalloweenCandyDrop(e);
@@ -6687,7 +6777,7 @@ function renderLoadSaveSlots(onSelectCb){
           </div>
 
           <div class="save-equip-icon-btn ${accessory ? 'has-equip' : 'no-equip'}" title="${accessoryTooltip}">
-            <span class="equip-tag">装飾</span>
+            <span class="equip-tag">アクセ</span>
             <div class="save-equip-icon-wrap rarity-${accessory ? accessory.rarity : 1}">
               ${accessory ? iconHtml(accessory.emoji, 22) : '<span class="empty-dash">ー</span>'}
             </div>
@@ -6704,7 +6794,7 @@ function renderLoadSaveSlots(onSelectCb){
       </div>
     `;
 
-    applyAvatarBackground(card.querySelector('.save-slot-avatar-bg'), slot.avatarBackground, slot.avatarBackgroundHolographic);
+    applyAvatarComposition(card.querySelector('.save-slot-avatar-frame'),card.querySelector('.save-slot-avatar-img'),slot);
     const btn = card.querySelector('.btn-save-select');
     if (btn) {
       btn.onclick = () => {
@@ -6781,6 +6871,8 @@ function renderHomeTickets(){
 }
 
 function showHome(){
+  ensureEventEquipmentAbilities(G);
+  setTimeout(()=>{checkAdminGifts(true);checkEventRaidFinalReward();},0);
   showScreen('screen-home');
   const hr = $('home-rescued');
   if (hr) hr.classList.add('hidden'); // クリア後の上部表示を常に消す
@@ -6952,20 +7044,22 @@ function stageFirstSuppliesReward(areaId, stageIndex){
 function rewardIconInfo(kind, id){
   if (id === 'halloween-ticket' || kind === 'halloween-ticket') return {name:'ハロウィンチケット',icon:'assets/halloween/ticket_icon.png'};
   if (kind === 'halloween-candy') return { name:'ハロウィンのお菓子', icon:'assets/halloween/candy_token.png' };
+  if(kind==='decoration'){const item=AVATAR_DECORATIONS.find(entry=>entry.id===id);return {name:item?.name || 'フレーム',icon:item?.image || '✨'};}
   if (kind === 'skin') { const hero = getHeroAvatar(id); return { name:hero.name, icon:hero.image }; }
   if (kind === 'equip') { const db = getEquipTemplate(id); return { name: db.name, icon: db.emoji }; }
   if (kind === 'item') { const db = getItemTemplate(id); return { name: db.name, icon: db.emoji }; }
   if (kind === 'medal') return { name: 'クエストメダル', icon: '🏅' };
   if (kind === 'background') { const bg = getAvatarBackground(id); return { name: `背景「${bg.name}」`, icon: bg.image }; }
   if (id === 'equip-ten-ticket') return { name: '装備ガチャ10連チケット', icon: '🎫' };
-  if (id === 'raid-ticket') return { name: 'レイドチケット', icon: '🎟️' };
+  if (id === 'raid-ticket') return { name: 'レイドチケット', icon: 'assets/raid/raid_ticket_pixel.png' };
   return { name: '背景スキンガチャチケット', icon: SKIN_GACHA_TICKET_ICON };
 }
 
 /* ごほうびの 詳細（ホバーで 出す ウィンドウの 中身）。ごほうびの アイコンは かならず これを つかう */
 function rewardTooltipHtml(kind, id, rarity = 1, count = 1){
-  if (id === 'halloween-ticket' || kind === 'halloween-ticket') return '<b>ハロウィンチケット</b><p>ハロウィンガチャを1回引くチケット。イベントステージの通常敵10%・ボス50%で1枚ドロップ。</p>';
+  if (id === 'halloween-ticket' || kind === 'halloween-ticket') return '<b>ハロウィンチケット</b><p>ハロウィンガチャを1回引くチケット。イベントステージの通常敵5%・ボス25%で1枚ドロップ。</p>';
   if (kind === 'halloween-candy') return '<b>ハロウィンのお菓子</b><p>交換限定品と交換するためのお菓子。交換時に消費します。</p>';
+  if(kind==='decoration')return '<b>フレーム</b><p>背景・キャラを囲むフレームです。見た目の変更の「フレーム」タブから選べます。</p>';
   if (kind === 'skin') { const hero = getHeroAvatar(id); return `<b>${escapeHtml(hero.name)}</b><p>${escapeHtml(hero.desc)}</p>`; }
   if (kind === 'equip') return generateEquipDetailHtml(getEquipTemplate(id), { rarity: Number(rarity) });
   if (kind === 'item') return generateItemDetailHtml(getItemTemplate(id), { count: count || (id === 'hipotion' ? 3 : 1) });
@@ -6977,7 +7071,7 @@ function rewardTooltipHtml(kind, id, rarity = 1, count = 1){
     return `<b>背景「${bg.name}」</b><p>プレイヤーの 背景スキン。${bg.rewardSource === 'quest' ? 'サブクエストでしか 手に入らないよ！' : ''}</p>`;
   }
   if (id === 'equip-ten-ticket') return '<b>装備ガチャ10連チケット</b><p>装備ガチャを 10回まとめて 引けるチケット。</p>';
-  if (id === 'raid-ticket') return '<b>🎟️ レイドチケット</b><p>レイドボスに 1回 挑戦できるチケット。<br>ボスの レベルが あがると 1まい もらえるよ。</p>';
+  if (id === 'raid-ticket') return '<b>レイドチケット</b><p>レイドボスに 1回 挑戦できるチケット。<br>ボスの レベルが あがると 1まい もらえるよ。</p>';
   return '<b>背景スキンガチャチケット</b><p>背景スキンガチャを 1回 引けるチケット。</p>';
 }
 
@@ -7018,6 +7112,7 @@ function showRewardArtworkPreview(info, detail = '') {
 function bindStageRewardTooltips(container){
   container.querySelectorAll('.stage-reward-icon').forEach(button => {
     const { rewardKind: kind, rewardId: id, rewardRarity: rarity } = button.dataset;
+
     const detail = rewardTooltipHtml(kind, id, rarity);
     button.onmouseover = event => showTooltip(event, detail);
     button.onmousemove = updateTooltipPos;
@@ -8072,7 +8167,7 @@ function confirmStatusAllocation(){
 /* はい／いいえの かくにんダイアログ（きょうつう部品）。とりけしできない
    そうさの まえに つかう（例：スキルポイントの わりふり かくてい） */
 function showConfirmModal(title, message, onYes){
-  document.querySelector('.confirm-overlay')?.remove();
+  document.querySelector('.confirm-overlay:not(.raid-exchange-overlay)')?.remove();
   const overlay = document.createElement('div');
   overlay.className = 'confirm-overlay';
   overlay.innerHTML = `
@@ -8087,7 +8182,7 @@ function showConfirmModal(title, message, onYes){
   `;
   document.body.appendChild(overlay);
   $('btn-confirm-no').onclick = () => overlay.remove();
-  $('btn-confirm-yes').onclick = () => { overlay.remove(); onYes(); };
+  $('btn-confirm-yes').onclick = () => { overlay.remove(); if(onYes) onYes(); };
 }
 
 /* ==========================================================
@@ -8495,13 +8590,14 @@ function renderWeaponShopTabs(){
 function renderWeaponShopList(){
   $('weapon-shop-gold').textContent = G.player.gold;
   const list = $('weapon-shop-list');
-  list.className = 'icon-grid';
+  list.className = 'shop-icon-grid';
   list.innerHTML = '';
   const items = weaponShopFilter === 'all' ? EQUIP_DB : EQUIP_DB.filter(db => db.slot === weaponShopFilter);
   
-  for (let i = 0; i < Math.max(64, items.length); i++) {
-    const cell = document.createElement('div');
-    cell.className = 'inv-grid-cell';
+  for (let i = 0; i < items.length; i++) {
+    const cell = document.createElement('button');
+    cell.type='button';
+    cell.className = 'shop-icon equip-icon rarity-1';
     
     if (i < items.length) {
       const db = items[i];
@@ -8510,7 +8606,8 @@ function renderWeaponShopList(){
       const isOverCost = db.cost > costCap();
       const canBuy = !owned && !isOverCost && G.player.gold >= db.price;
       
-      cell.innerHTML = `<div class="equip-icon rarity-1">${iconHtml(db.emoji, 32)}</div>`;
+      cell.innerHTML = iconHtml(db.emoji,48);
+      cell.setAttribute('aria-label',`${db.name}・${db.price}G${owned?'・所持済み':''}`);
       if (owned) cell.style.opacity = '0.3';
 
       // 統一装備詳細カードをお店モードでホバー表示
@@ -9050,54 +9147,24 @@ function startCodeEntry(s){
 /* ==========================================================
    古代装備の せっけいず プリント＆あんごう
    ========================================================== */
-/* 古代の設計図の プリントは、いまの「チャレンジステージ」（ピックアップステージ）の もんだいで つくる。
-   あんごうは こたえの 一の位を つかうので、数字で おわる こたえの 算数ステージだけ 使える（漢字ステージ等は 従来の もんだい） */
-function blueprintChallengeSource(bp){
-  try {
-    const pk = G && typeof getActivePickup === 'function' ? getActivePickup() : null;
-    const area = pk && AREA_STAGES[pk.areaId];
-    const stage = area && area.stages[pk.stageIndex];
-    if (!stage) return null;
-    for (let i = 0; i < 5; i++) {
-      const sample = stage.generateProblem();
-      if (!sample || typeof sample.text !== 'string' || !/\d$/.test(String(sample.answer))) return null;
-    }
-    return { gen: () => stage.generateProblem(), label: `${area.name} ${stage.name}`, bg: area.bgImage };
-  } catch (e) { return null; }
+/* 古代の設計図には、そのプレイヤーがクリア済みの最も難しいステージを使う。 */
+function blueprintChallengeSource(bp) {
+  const cleared=[];
+  for(const [areaId,area] of Object.entries(AREA_STAGES)) for(let stageIndex=0;stageIndex<area.stages.length;stageIndex++) {
+    const stars=Number(G?.stageClearCounts?.[areaId]?.[stageIndex]) || 0;
+    const total=Number(G?.stageTotalClears?.[areaId]?.[stageIndex]) || 0;
+    if(stars>0 || total>0)cleared.push({areaId,stageIndex,difficulty:stageDropDifficulty(areaId,stageIndex)});
+  }
+  cleared.sort((a,b)=>b.difficulty-a.difficulty || b.stageIndex-a.stageIndex || a.areaId.localeCompare(b.areaId));
+  const source=cleared[0];if(!source)return null;
+  const area=AREA_STAGES[source.areaId],stage=area.stages[source.stageIndex];
+  return {...source,gen:()=>stage.generateProblem(),label:`${area.name} ${stage.name}`,bg:area.bgImage};
 }
 
-function printBlueprintSheet(bp, uid){
-  const count = 20;
-  const challenge = blueprintChallengeSource(bp);
-  const sourceLabel = challenge ? `チャレンジステージ：${challenge.label}` : `えんざん：${OP_LABELS[bp.tier]}`;
-
-  const variants = ['🅰 Aセット', '🅱 Bセット', '🅲 Cセット'].map((label, vi) => {
-    const problems = [];
-    for (let i = 0; i < count; i++) problems.push(challenge ? challenge.gen() : generateProblem(bp.tier));
-    return {
-      problems,
-      opLabel: challenge ? challenge.label : OP_LABELS[bp.tier],
-      onSelect: () => {
-        const p1 = problems.slice(0, 10).map((p, i) =>
-          `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
-        ).join('');
-        const p2 = problems.slice(10, 20).map((p, i) =>
-          `<div class="p-row"><span class="p-num">${i + 11}.</span><span class="p-expr">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
-        ).join('');
-        const code = problems.map(p => String(p.answer).slice(-1)).join('');
-        const printId = addPrintCode(bp.id, code, { type: 'blueprint', uid, problems, name: bp.name });
-        save();
-        openPrintWindow(`
-          <h1>古代の設計図</h1>
-          <div class="p-sub">${sourceLabel}／${label}／${count}もん／暗号を入力して古代装備を手に入れよう！</div>
-          <div class="p-sub" style="font-size:20px; font-weight:bold;">【プリント番号: ${printId}】</div>
-          <div class="p-sheet">${p1}${p2}</div>
-        `, av('画像/ステージ/沼地.jpg'));
-      }
-    };
-  });
-
-  showPrintChoiceModal(variants);
+function printBlueprintSheet(bp,uid) {
+  const source=blueprintChallengeSource(bp);
+  if(!source){showConfirmModal('古代の設計図','ステージを1つクリアすると、その中で最も難しい問題を印刷できます。',null);return;}
+  printAreaStage(source.areaId,source.stageIndex,false,{bp,uid});
 }
 
 function startBlueprintCodeEntry(uid, bp){
@@ -9417,27 +9484,14 @@ function showItemShop(){
   showScreen('screen-item-shop');
   $('item-shop-gold').textContent = G.player.gold;
   const list = $('item-shop-list');
-  list.innerHTML = '';
+  list.className='shop-icon-grid';list.innerHTML = '';
   for (const db of ITEM_DB){
-    const card = document.createElement('div');
-    card.className = 'item-card shop-card';
-    const tagBadge = isBattleItem(db)
-      ? '<span class="tag" style="background:rgba(231,76,60,0.2); border-color:#e74c3c; color:#ff7675; font-size:11px; margin-left:4px; padding:1px 5px; border-radius:3px;">⚔️ 戦闘用</span>'
-      : (db.effect === 'cost' ? '<span class="tag" style="background:rgba(46,204,113,0.2); border-color:#2ecc71; color:#2ecc71; font-size:11px; margin-left:4px; padding:1px 5px; border-radius:3px;">🌱 部屋用</span>' : '');
-    card.innerHTML = `
-      <div class="item-card-icon">${iconHtml(db.emoji, 48)}</div>
-      <div class="item-card-name">${db.name} ${tagBadge}</div>
-      <div class="shop-card-desc">${db.desc}(効果:${db.value})</div>
-      <div class="shop-card-price">${db.price}G</div>
-      <button class="btn shop-card-buy" ${G.player.gold < db.price ? 'disabled' : ''}>かう</button>
-    `;
-    card.onmouseover = (e) => showTooltip(e, generateItemDetailHtml(db, { isShop: true }));
-    card.onmouseout = () => hideTooltip();
-    card.querySelector('.shop-card-buy').onclick = () => {
-      hideTooltip();
-      buyItem(db);
-    };
-    list.appendChild(card);
+    const button=document.createElement('button');button.type='button';button.className='shop-icon item-icon';
+    button.innerHTML=iconHtml(db.emoji,48);button.setAttribute('aria-label',`${db.name}・${db.price}G`);
+    const detail=()=>generateItemDetailHtml(db,{isShop:true});
+    button.onmouseover=event=>showTooltip(event,detail());button.onmouseout=hideTooltip;
+    button.onclick=()=>{hideTooltip();const canBuy=G.player.gold>=db.price;showConfirmModal(db.name,`${detail()}<p>所持ゴールド：${G.player.gold}G ／ 価格：${db.price}G</p><p>${canBuy?'購入しますか？':'ゴールドが足りません。'}</p>`,canBuy?()=>buyItem(db):null);};
+    list.appendChild(button);
   }
 }
 
@@ -9625,6 +9679,10 @@ function openEquipmentGachaPreview(id) {
   $('skin-gacha-preview-title').textContent = db.name;
   $('equipment-preview-rarities').classList.remove('hidden');
   renderEquipmentGachaPreviewRarity();
+  const frame=$('skin-gacha-preview-image').closest('.skin-gacha-preview-art');
+  frame?.classList.remove('avatar-composite-stage');
+  frame?.querySelector('.avatar-decoration')?.remove();
+  $('skin-gacha-preview-image').classList.remove('avatar-composite-character');
   $('skin-gacha-preview-image').classList.remove('hidden', 'avatar-holographic');
   $('skin-gacha-preview-image').closest('.skin-gacha-preview-art')?.classList.remove('holo-character-prism');
   $('skin-gacha-preview-image').src = av(db.emoji);
@@ -9711,7 +9769,8 @@ function openSkinGachaPreview(kind, id) {
   
   if (characterPreview) characterPreview.style.setProperty('--character-foil-mask', `url("${av(hero.image)}")`);
   applyAvatarBackground($('skin-gacha-preview-bg'), background.id, isBackground && holographic);
-  $('skin-gacha-preview-image').classList.toggle('hidden', isBackground);
+  $('skin-gacha-preview-image').classList.remove('hidden');
+  applyAvatarComposition(characterPreview,$('skin-gacha-preview-image'),{avatar:hero.id,avatarBackground:background.id,avatarDecoration:G?.avatarDecoration,avatarHolographic:!isBackground && holographic,avatarBackgroundHolographic:isBackground && holographic});
   presentGachaArtworkPreview();
 }
 
@@ -9790,6 +9849,12 @@ function showSkinGachaTenResults(prizes){
   }).join('')}</div><p>${prizes.length < 10 ? `未所持の景品が残り${prizes.length}種のため、${prizes.length}回分を獲得しました。` : '重複なしで10種を獲得しました。'}</p><button class="btn btn-primary" type="button" data-action="close">ガチャへ戻る</button></section>`;
   document.body.appendChild(overlay);
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  overlay.querySelectorAll('.skin-gacha-ten-card').forEach((card,index)=>{
+    const prize=prizes[index], frame=card.querySelector('.skin-gacha-ten-art');
+    let image=frame.querySelector('img');if(!image){image=document.createElement('img');frame.appendChild(image);}
+    const background=prize.kind.includes('background');
+    applyAvatarComposition(frame,image,{...cosmeticPreviewAppearance(background?'background':'skin',prize.id),avatarHolographic:!background && !!prize.holographic,avatarBackgroundHolographic:background && !!prize.holographic});
+  });
   const stopMagic = startSkinGachaMagic(overlay.querySelector('canvas'), reducedMotion);
   let timer;
   const reveal = () => {
@@ -9915,6 +9980,8 @@ function showSkinGachaSummon(prize, hero) {
       </div>
     </div>`;
   document.body.appendChild(overlay);
+  const art=overlay.querySelector('.skin-gacha-result-art');
+  applyAvatarComposition(art,art.querySelector('img'),{...cosmeticPreviewAppearance(isBackground?'background':'skin',prize.id),avatarHolographic:!isBackground && isHolographic,avatarBackgroundHolographic:isBackground && isHolographic});
   const backdrop = overlay.querySelector('.avatar-composite-bg');
   backdrop.classList.toggle('holo-artwork', isBackground && isHolographic);
   const stopMagic = startSkinGachaMagic(overlay.querySelector('canvas'), reducedMotion);
@@ -10049,7 +10116,7 @@ function synthesisPairValid(baseUid, materialUid, game = G) {
 function commitSynthesis(baseUid, materialUid) {
   if (!synthesisPairValid(baseUid, materialUid)) return null;
   const base = G.ownedEquips.find(eq => eq.uid === baseUid);
-  const result = { uid:G.nextUid++, id:base.id, rarity:base.rarity + 1, ability:rollAbility(base.rarity + 1) };
+  const result = { uid:G.nextUid++, id:base.id, rarity:base.rarity + 1, ability:eventEquipmentAbility(base.id) || rollAbility(base.rarity + 1) };
   G.ownedEquips = G.ownedEquips.filter(eq => eq.uid !== baseUid && eq.uid !== materialUid);
   for (const slot of EQUIP_SLOTS) {
     if ([baseUid, materialUid].includes(G.equipment[slot]?.uid)) G.equipment[slot] = null;
@@ -10258,7 +10325,8 @@ function bindEvents(){
   on('hotspot-raid-boss', showRaidBossMenu);
   on('hotspot-halloween', showHalloweenMenu);
   
-on('btn-raid-history', showRaidHistory);
+  on('btn-raid-exchange', () => showRaidExchange());
+  on('btn-raid-history', showRaidHistory);
   on('btn-raid-history-older', () => changeRaidHistory(1));
   on('btn-raid-history-newer', () => changeRaidHistory(-1));
   on('btn-raid-history-retry', () => raidHistoryEntries.length ? renderRaidHistory() : showRaidHistory());
@@ -10361,21 +10429,38 @@ on('btn-raid-history', showRaidHistory);
     
     if (characterPreview) characterPreview.style.setProperty('--character-foil-mask', `url("${av(avatar.image)}")`);
 	    applyAvatarBackground($('avatar-selector-preview-bg'), background.id, pendingBackgroundHolographic);
+      applyAvatarComposition(characterPreview,$('avatar-selector-preview-image'),{avatar:avatar.id,avatarBackground:background.id,avatarDecoration:pendingAvatarFrameId ?? G.avatarDecoration,avatarHolographic:pendingAvatarHolographic,avatarBackgroundHolographic:pendingBackgroundHolographic});
 	    $('avatar-selector-character-name').textContent = `${pendingAvatarHolographic ? 'ホログラム・' : ''}${avatar.name}`;
 	    $('avatar-selector-background-name').textContent = `${pendingBackgroundHolographic ? 'ホログラム・' : ''}${background.name}`;
+      $('avatar-selector-frame-name').textContent = AVATAR_DECORATIONS.find(frame=>frame.id===(pendingAvatarFrameId ?? G.avatarDecoration))?.name || 'フレームなし';
 	  };
 	  const renderAvatarSelectorOptions = () => {
 	    const characterList = $('avatar-change-list');
 	    const backgroundList = $('avatar-background-list');
-	    const showCharacters = avatarSelectorTab === 'characters';
-	    characterList.classList.toggle('hidden', !showCharacters);
-	    backgroundList.classList.toggle('hidden', showCharacters);
-	    $('btn-avatar-tab-characters').classList.toggle('is-active', showCharacters);
-	    $('btn-avatar-tab-characters').setAttribute('aria-selected', String(showCharacters));
-	    $('btn-avatar-tab-backgrounds').classList.toggle('is-active', !showCharacters);
-	    $('btn-avatar-tab-backgrounds').setAttribute('aria-selected', String(!showCharacters));
-	    characterList.innerHTML = '';
-	    backgroundList.innerHTML = '';
+      const frameList = $('avatar-frame-list');
+      [['characters',characterList],['backgrounds',backgroundList],['frames',frameList]].forEach(([tab,list])=>{
+        const active=avatarSelectorTab===tab;
+        list.classList.toggle('hidden',!active);
+        const button=$('btn-avatar-tab-'+tab);
+        button.classList.toggle('is-active',active);
+        button.setAttribute('aria-selected',String(active));
+        button.setAttribute('aria-controls',list.id);
+        list.setAttribute('aria-labelledby',button.id);
+        list.innerHTML='';
+      });
+      $('avatar-background-locked-note').classList.toggle('hidden',avatarSelectorTab!=='backgrounds');
+      const frameGroup=document.createElement('section');frameGroup.className='avatar-selector-group';
+      const frameHeading=document.createElement('h4');frameHeading.textContent='持っているフレーム';frameGroup.appendChild(frameHeading);
+      [{id:'',name:'フレームなし'},...AVATAR_DECORATIONS.filter(frame=>(G.unlockedDecorations || []).includes(frame.id) || G.avatarDecoration===frame.id)].forEach(frame=>{
+        const option=document.createElement('button');option.type='button';option.dataset.frameId=frame.id;
+        const selected=(pendingAvatarFrameId ?? G.avatarDecoration ?? '')===frame.id;
+        option.className='avatar-selector-option avatar-frame-option'+(selected?' is-active':'');
+        option.setAttribute('aria-pressed',String(selected));
+        if(frame.image){const image=document.createElement('img');image.src=av(frame.image);image.alt='';option.appendChild(image);}
+        else {const empty=document.createElement('span');empty.className='avatar-frame-empty';empty.textContent='なし';option.appendChild(empty);}
+        const name=document.createElement('span');name.textContent=frame.name;option.appendChild(name);
+        option.onclick=()=>{pendingAvatarFrameId=frame.id;renderAvatarSelectorOptions();};frameGroup.appendChild(option);
+      });frameList.appendChild(frameGroup);
 
 	    [['female', '女性キャラクター'], ['male', '男性キャラクター']].forEach(([gender, title]) => {
 	      const avatars = getSelectableAvatars().filter(avatar => avatar.gender === gender);
@@ -10468,24 +10553,28 @@ on('btn-raid-history', showRaidHistory);
 	  const closeAvatarSelector = () => {
 	    pendingAvatarId = null;
 	    pendingAvatarBackgroundId = null;
+    pendingAvatarFrameId = null;
 	    $('avatar-confirm-popover').classList.add('hidden');
 	    $('avatar-change-modal').classList.add('hidden');
 	  };
 	  on('btn-avatar-change-close', closeAvatarSelector);
 	  on('btn-avatar-tab-characters', () => { avatarSelectorTab = 'characters'; renderAvatarSelectorOptions(); });
 	  on('btn-avatar-tab-backgrounds', () => { avatarSelectorTab = 'backgrounds'; renderAvatarSelectorOptions(); });
+      on('btn-avatar-tab-frames', () => { avatarSelectorTab = 'frames'; renderAvatarSelectorOptions(); });
 	  on('btn-avatar-preview-apply', () => $('avatar-confirm-popover').classList.remove('hidden'));
 	  on('btn-avatar-confirm-cancel', () => $('avatar-confirm-popover').classList.add('hidden'));
 	  on('btn-avatar-confirm-apply', () => {
 	    if (!pendingAvatarId || !pendingAvatarBackgroundId) return;
 	    G.avatar = pendingAvatarId;
 	    G.avatarBackground = pendingAvatarBackgroundId;
+      G.avatarDecoration = pendingAvatarFrameId ?? G.avatarDecoration ?? '';
 	    G.avatarHolographic = pendingAvatarHolographic;
 	    G.avatarBackgroundHolographic = pendingBackgroundHolographic;
 	    G.unlockedSkins = [...new Set([...(G.unlockedSkins || []), G.avatar])];
 	    G.unlockedAvatarBackgrounds = [...new Set([...(G.unlockedAvatarBackgrounds || ['default']), G.avatarBackground])];
 	    pendingAvatarId = null;
 	    pendingAvatarBackgroundId = null;
+    pendingAvatarFrameId = null;
 	    pendingAvatarHolographic = false;
 	    pendingBackgroundHolographic = false;
 	    $('avatar-change-modal').classList.add('hidden');
@@ -10497,6 +10586,7 @@ on('btn-raid-history', showRaidHistory);
 	    if (!G) return;
 	    pendingAvatarId = G.avatar;
 	    pendingAvatarBackgroundId = G.avatarBackground || 'default';
+      pendingAvatarFrameId = G.avatarDecoration || '';
 	    pendingAvatarHolographic = !!G.avatarHolographic;
 	    pendingBackgroundHolographic = !!G.avatarBackgroundHolographic;
 	    avatarSelectorTab = 'characters';
@@ -10863,7 +10953,7 @@ const HALLOWEEN_EVENT = {
   season2StartsAt: Date.parse('2026-10-21T00:00:00+09:00'), firstClearRaidTickets: 2,
   gachaGoldCost:2000, gachaTicketCost:1, ticketIcon:'assets/halloween/ticket_icon.png',
   candyIcon:'assets/halloween/candy_token.png', battleBackground:'assets/halloween/battle_background.png',
-  ticketDropRates:{normal:0.1,boss:0.5}
+  ticketDropRates:{normal:0.05,boss:0.25}
 };
 const HALLOWEEN_MONSTERS = [
   { id:'pumpkin_imp', name:'かぼちゃの こあくま' },
@@ -10998,6 +11088,13 @@ function renderHalloweenEntry() {
 }
 
 const HALLOWEEN_GACHA_PRIZES = [
+  {id:'candy_spark',kind:'decoration',name:'キャンディのきらめき'},
+  {id:'moon_ribbon',kind:'decoration',name:'ちいさな月のリボン'},
+  {id:'halloween_candy_saber',kind:'equip',name:'お菓子のサーベル',rarity:2},
+  {id:'halloween_light_cape',kind:'equip',name:'こあくまの軽いケープ',rarity:2},
+  {id:'halloween_moon_pin',kind:'equip',name:'小さな月のピン',rarity:2},
+  {id:'halloween_bat_buckler',kind:'equip',name:'コウモリの小盾',rarity:2},
+  {id:'halloween_pumpkin_bell',kind:'equip',name:'かぼちゃの小鈴',rarity:2},
   { id:'halloween_pumpkin_knight', kind:'skin', name:'かぼちゃの騎士', cost:40 },
   { id:'halloween_moon_witch', kind:'skin', name:'月夜の魔女', cost:40 },
   { id:'halloween_vampire_prince', kind:'skin', name:'吸血鬼の王子', cost:40 },
@@ -11050,6 +11147,7 @@ function rollHalloweenTicketDrop(enemy) {
 }
 
 function halloweenPrizeOwned(prize) {
+  if(prize.kind==='decoration')return (G?.unlockedDecorations || []).includes(prize.id);
   if (G?.halloweenEvent?.[HALLOWEEN_EVENT.id]?.collectedPrizes?.includes(prize.id)) return true;
   if (prize.kind === 'skin') return (G?.unlockedSkins || []).includes(prize.id);
   if (prize.kind === 'background') return (G?.unlockedAvatarBackgrounds || []).includes(prize.id);
@@ -11057,11 +11155,12 @@ function halloweenPrizeOwned(prize) {
 }
 
 function grantHalloweenPrize(prize) {
-  if (prize.kind === 'skin') G.unlockedSkins = [...new Set([...(G.unlockedSkins || []), prize.id])];
+  if(prize.kind==='decoration')G.unlockedDecorations=[...new Set([...(G.unlockedDecorations || []),prize.id])];
+  else if (prize.kind === 'skin') G.unlockedSkins = [...new Set([...(G.unlockedSkins || []), prize.id])];
   else if (prize.kind === 'background') G.unlockedAvatarBackgrounds = [...new Set([...(G.unlockedAvatarBackgrounds || ['default']), prize.id])];
   else {
     G.ownedEquips ||= [];
-    G.ownedEquips.push({ uid:G.nextUid++, id:prize.id, rarity:prize.rarity, ability:null });
+    G.ownedEquips.push({ uid:G.nextUid++, id:prize.id, rarity:prize.rarity, ability:eventEquipmentAbility(prize.id) });
   }
   const state = halloweenEventState();
   state.collectedPrizes = [...new Set([...(state.collectedPrizes || []), prize.id])];
@@ -11103,7 +11202,7 @@ function showHalloweenGachaSummon(result) {
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
   overlay.setAttribute('aria-label', 'ハロウィン限定品の召喚');
-  const type = result.prize.kind === 'skin' ? '限定スキン' : result.prize.kind === 'background' ? '限定背景' : '★4 限定装備';
+  const type = result.prize.kind === 'decoration' ? '限定フレーム' : result.prize.kind === 'skin' ? '限定スキン' : result.prize.kind === 'background' ? '限定背景' : '★4 限定装備';
   overlay.innerHTML = `<div class="halloween-summon-stars" aria-hidden="true">${Array.from({length:18}, (_, i) => `<i style="--angle:${i * 20}deg;--delay:${i % 5 * .12}s"></i>`).join('')}</div>
     <section class="halloween-summon-stage">
       <p class="halloween-summon-eyebrow">HALLOWEEN SUMMON</p>
@@ -11156,11 +11255,11 @@ function renderHalloweenGacha(result = null) {
   const available = isHalloweenActive() && remaining.length > 0;
   panel.innerHTML = `<div class="halloween-gacha-showcase"><img class="halloween-gacha-logo" src="${av('assets/halloween/gacha_logo.png')}" alt="ハロウィンガチャ"><p>ハロウィン限定のスキン・背景・装備が集まったガチャ！</p></div>
     <div class="halloween-gacha-controls"><div class="skin-gacha-balance">${stageRewardIcon('ticket','halloween-ticket',1,40)} ハロウィンチケット：<b>${halloweenTicketBalance()}</b>枚</div>
-    <p>イベントステージでチケットがドロップ！ 通常敵10%・ボス50%で1枚。</p>
+    <p>イベントステージでチケットがドロップ！ 通常敵5%・ボス25%で1枚。</p>
     <div class="menu-grid"><button type="button" class="btn btn-primary" data-payment="ticket" ${!available || halloweenTicketBalance() < 1 ? 'disabled' : ''}>チケット1枚で引く</button><button type="button" class="btn" data-payment="gold" ${!available || G.player.gold < 2000 ? 'disabled' : ''}>2,000Gで引く</button></div>
     <p class="halloween-panel-note">${!isHalloweenActive() ? '今年のイベントは終了しました。' : !remaining.length ? '限定品コンプリート！' : '未所持の' + remaining.length + '種から均等に抽選（各' + (100 / remaining.length).toFixed(2) + '%）。重複なし。'} お菓子交換限定の品は出ません。</p>
     ${result ? `<div class="halloween-gacha-result" role="status">${result.ok ? stageRewardIcon(result.prize.kind,result.prize.id,result.prize.rarity || 1,110) : ''}<b>${escapeHtml(result.message)}</b></div>` : ''}
-    <div class="halloween-prize-grid">${HALLOWEEN_GACHA_PRIZES.map(prize => `<article class="halloween-prize-card${halloweenPrizeOwned(prize) ? ' is-owned' : ''}"><div class="halloween-prize-art">${stageRewardIcon(prize.kind,prize.id,prize.rarity || 1,88)}</div><b>${escapeHtml(prize.name)}</b><span>${halloweenPrizeOwned(prize) ? '✓ 獲得済み' : prize.kind === 'skin' ? 'スキン' : prize.kind === 'background' ? '背景' : '★4 装備'}</span></article>`).join('')}</div></div>`;
+    <div class="halloween-prize-grid">${HALLOWEEN_GACHA_PRIZES.map(prize => `<article class="halloween-prize-card${halloweenPrizeOwned(prize) ? ' is-owned' : ''}"><div class="halloween-prize-art">${stageRewardIcon(prize.kind,prize.id,prize.rarity || 1,88)}</div><b>${escapeHtml(prize.name)}</b><span>${halloweenPrizeOwned(prize) ? '✓ 獲得済み' : prize.kind === 'skin' ? 'スキン' : prize.kind === 'background' ? '背景' : prize.kind==='decoration'?'フレーム':`★${prize.rarity || 4} 装備`}</span></article>`).join('')}</div></div>`;
   bindStageRewardTooltips(panel);
   panel.querySelectorAll('[data-payment]').forEach(button => {
     button.onclick = () => {
@@ -11317,9 +11416,9 @@ function eventRaidProfile(kills) {
     const eq=G.ownedEquips?.find(item=>item.uid===G.equipment?.[type]?.uid);
     if(eq) { equipment[type+'Id']=eq.id; equipment[type+'Rarity']=eq.rarity || 1; }
   }
-  return {slotKey:currentSlotKey,bestKills:kills,playerName:G.playerName || '勇者',avatar:G.avatar || 'hero',
+  return {slotKey:currentSlotKey,bestKills:kills,totalKills:eventRaidState().totalKills ?? kills,playerName:G.playerName || '勇者',avatar:G.avatar || 'hero',
     avatarBackground:G.avatarBackground || 'default',avatarHolographic:!!G.avatarHolographic,
-    avatarBackgroundHolographic:!!G.avatarBackgroundHolographic,level:G.player.lvl,equipment};
+    avatarBackgroundHolographic:!!G.avatarBackgroundHolographic,avatarDecoration:G.avatarDecoration || '',level:G.player.lvl,equipment};
 }
 
 function applyEventRaidRewards(state, rewards, game = G) {
@@ -11361,6 +11460,7 @@ async function syncEventRaidRecord(mode = eventRaidMenuMode) {
   if(!window.EventRaidAPI) throw new Error('イベントの通信を準備中です');
   const remote=await window.EventRaidAPI.recordBest(eventRaidId(mode),slot,pending);
   state.bestKills=Math.max(state.bestKills || 0,remote.bestKills || 0);
+  state.totalKills=Math.max(state.totalKills || 0,remote.totalKills || 0);
   applyEventRaidRewards(state,remote.rewards || {},game);
   applyEventRaidBonuses(state,remote.bonuses || {},game);
   if(state.pendingBest===pending) state.pendingBest=null;
@@ -11387,6 +11487,7 @@ async function showEventRaidMenu(message = '', mode = eventRaidMenuMode) {
     modal.setAttribute('aria-labelledby','event-raid-title');
     modal.querySelector('#event-raid-rules').setAttribute('aria-labelledby','event-raid-how-to-play-title');
     modal.querySelector('#btn-event-raid-history').remove();
+    modal.querySelector('#btn-event-raid-exchange')?.remove();
     modal.querySelector('#event-raid-learning-recommendation').remove();
     modal.querySelector('#event-raid-final-result').remove();
     modal.querySelector('#event-raid-challenge-rewards').remove();
@@ -11411,26 +11512,34 @@ async function showEventRaidMenu(message = '', mode = eventRaidMenuMode) {
   modal.classList.remove('hidden');
   let rewardPanel=modal.querySelector('.event-raid-rewards');
   if(!rewardPanel) {
-    modal.querySelector('.raid-ranking-section').insertAdjacentHTML('beforeend','<section class="event-raid-rewards"><h3>🎁 討伐数突破ボーナス</h3><div></div></section>');
+    modal.querySelector('.raid-boss-overview').insertAdjacentHTML('beforeend','<section class="event-raid-rewards"><h3>討伐数突破ボーナス</h3><div></div></section>');
     rewardPanel=modal.querySelector('.event-raid-rewards');
   }
-  const renderRewards=()=>{rewardPanel.querySelector('div').innerHTML='<p>1日1回の参加で 🍬 お菓子2個。突破ボーナスは各1回、挑戦終了時に自動で獲得します。</p>'+EVENT_RAID_BONUSES.map(row=>{
+  // Keep rewards beside the challenge controls, leaving the entire right column to ranks.
+  modal.querySelector('.raid-boss-overview').appendChild(rewardPanel);
+  const rewardCell=(kind,id,count)=>`<span class="event-raid-reward-item">${stageRewardIcon(kind,id,1,28)}<b>×${count}</b></span>`;
+  const renderRewards=()=>{rewardPanel.querySelector('div').innerHTML=`<div class="event-raid-candy-rates"><span>1体撃破 ${rewardCell('halloween-candy','halloween-candy',2)}</span><span>1日1回の参加 ${rewardCell('halloween-candy','halloween-candy',2)}</span></div><p class="event-raid-reward-note">突破ボーナスは各1回。挑戦終了時に自動で獲得。</p><div class="event-raid-bonus-list">`+EVENT_RAID_BONUSES.map(row=>{
     const received=state.bonusClaims?.['breakthrough:'+row.kills] && Number(state.rewardClaims?.['kills:'+row.kills])>=row.candy;
-    const extra=[row.halloweenTickets?`🎃 チケット${row.halloweenTickets}枚`:'',row.skinGachaTickets?'🎟 背景スキンガチャ1枚':'',row.equipGachaTenPullTickets?'🎟 装備ガチャ10連1枚':'',row.costSeeds?`🌱 コストプラスのたね${row.costSeeds}個`:''].filter(Boolean).join(' ／ ');
-    return `<p class="event-raid-reward-row"><b>${row.kills}体突破！</b><span>🍬 お菓子${row.candy}個${extra?' ／ '+extra:''}</span><strong>${received?'✅ 受取済み':state.bestKills>=row.kills?'達成・次の挑戦終了時に獲得':`あと${row.kills-(state.bestKills || 0)}体`}</strong></p>`;
-  }).join('');};
+    const rewards=rewardCell('halloween-candy','halloween-candy',row.candy)
+      +(row.halloweenTickets?rewardCell('ticket','halloween-ticket',row.halloweenTickets):'')
+      +(row.skinGachaTickets?rewardCell('ticket','skin-ticket',row.skinGachaTickets):'')
+      +(row.equipGachaTenPullTickets?rewardCell('ticket','equip-ten-ticket',row.equipGachaTenPullTickets):'')
+      +(row.costSeeds?rewardCell('item','cost_seed',row.costSeeds):'');
+    return `<article class="event-raid-reward-row${received?' is-received':''}"><div class="event-raid-reward-goal"><b>${row.kills}体突破</b><strong>${received?'✓ 受取済み':state.bestKills>=row.kills?'達成・獲得待ち':`あと${row.kills-(state.bestKills || 0)}体`}</strong></div><div class="event-raid-reward-items">${rewards}</div></article>`;
+  }).join('')+'</div>';bindStageRewardTooltips(rewardPanel);};
   renderRewards();
-  modal._eventRaidSource=eventRaidKanjiSource();
-  modal.querySelector('.raid-ranking-section h3').textContent='🏆 漢字・討伐数ランキング';
-  $('event-raid-rules').innerHTML=`<h3 id="event-raid-how-to-play-title">討伐数チャレンジのルール</h3><ol><li><b>町を守ろう</b><span>2分経過か自分のHPが0で終了。実際に倒したおばけの数を記録。種類はランダムで補充され、ボスは出ません。</span></li><li><b>速く答えるほどたくさん攻撃</b><span>10秒以内で4体、20秒以内で3体、それ以降は2体。攻撃する敵はランダムです。</span></li><li><b>自動でとくぎ発動</b><span>5問正解でチャージ完了！ 次の正解でランダムな7体へ「かぼちゃの波」。まちがえてもチャージは残り、おばけ1体が反撃します。</span></li><li><b>最高記録に挑戦</b><span>1回の最高討伐数を記録。同数は同順位。敵の初期HPは10。ダメージは通常の攻撃力・装備・回答速度・会心を反映します。参加費はありません。</span></li><li><b>お菓子を集めよう</b><span>1日1回の参加報酬2個。最高討伐数5・10・20・30・50体で突破ボーナス。お菓子5・10・20・30・50個に、ガチャチケットやコストプラスのたねを各1回もらえます。敵ごとのドロップ抽選はありません。</span></li></ol>`;
+  modal._eventRaidSource=eventRaidKanjiSource(raidResumeStage(state.lastKanjiStage || 0)*5);
+  modal.querySelector('.raid-ranking-section h3').textContent='🏆 漢字・累計討伐数ランキング';
+  $('event-raid-rules').innerHTML=`<h3 id="event-raid-how-to-play-title">討伐数チャレンジのルール</h3><ol><li><b>町を守ろう</b><span>2分経過か自分のHPが0で終了。実際に倒したおばけの数を記録。種類はランダムで補充され、ボスは出ません。</span></li><li><b>速く答えるほどたくさん攻撃</b><span>10秒以内で4体、20秒以内で3体、それ以降は2体。攻撃する敵はランダムです。</span></li><li><b>自動でとくぎ発動</b><span>5問正解でチャージ完了！ 次の正解でランダムな7体へ「かぼちゃの波」。まちがえてもチャージは残り、おばけ1体が反撃します。</span></li><li><b>最高記録に挑戦</b><span>1回の最高討伐数を記録。同数は同順位。敵の初期HPは10。ダメージは通常の攻撃力・装備・回答速度・会心を反映します。参加費はありません。</span></li><li><b>お菓子を集めよう</b><span>1日1回の参加報酬2個。最高討伐数5・10・20・30・50体で突破ボーナス。お菓子5・10・20・30・50個に、ガチャチケットやコストプラスのたねを各1回もらえます。倒すたびにお菓子を2個獲得します。次回は前回の2ステージ前から再開します。</span></li></ol>`;
   $('event-raid-boss-damage').textContent=`${state.bestKills || 0}体`;
   const sourceArea=AREA_STAGES[modal._eventRaidSource.areaId];
   $('event-raid-ticket-count').textContent='参加費なし';
   $('event-raid-source').textContent=`${message?message+' ／ ':''}出題：${sourceArea.name}・${sourceArea.stages[modal._eventRaidSource.stageIndex].name}（1年生の最初から、5問回答で次のステージへ）`;
   $('event-raid-rules').insertAdjacentHTML('beforeend','<p>漢字の読みをひらがなで入力します。おばけ7体は横一列に並び、攻撃は1体ずつテンポよく順番に当たります。1体倒すごとに、補充される敵のHPが5、攻撃力・守備力が1ずつ上がります。敵のレベルは初期Lv.1、補充時点の討伐数＋1です。</p>');
+  $('event-raid-rules').insertAdjacentHTML('beforeend','<p>11月1日0時の累計討伐数ランキングで1〜3位に専用フレーム。参加者全員に低コストの限定武器を配布します。同順位は同じ報酬。従来の最高討伐数を累計の初期値として引き継ぎます。</p>');
   const button=$('btn-event-raid-challenge');
   button.textContent='⚔ 漢字レイドに参加';
-  $('event-raid-rules').insertAdjacentHTML('beforeend','<p>毎回1年生の最初から開始。正解・誤答を含め5問回答すると次のステージへ進み、1年生から6年生まで順に難しくなります。最終ステージ到達後はその問題を続けます。</p>');
+  $('event-raid-rules').insertAdjacentHTML('beforeend','<p>前回終了時の2ステージ前から再開します。初回は1年生の最初から。正解・誤答を含め5問回答すると次のステージへ進み、1年生から6年生まで順に難しくなります。最終ステージ到達後はその問題を続けます。</p>');
   button.disabled=!isHalloweenActive();
   const request=++eventRaidMenuRequest, slot=currentSlotKey;
   const status=$('event-raid-sync-status'), list=$('event-raid-ranking-list');
@@ -11459,10 +11568,23 @@ async function showEventRaidMenu(message = '', mode = eventRaidMenuMode) {
   } finally { if(request===eventRaidMenuRequest) list.setAttribute('aria-busy','false'); }
 }
 
+let finalEventRewardChecking=false;
+async function checkEventRaidFinalReward() {
+  if(Date.now()<EVENT_RAID_FINAL_AT || !G || !currentSlotKey || G.isTestMode || finalEventRewardChecking || G.claimedAdminGiftIds?.includes('halloween_2026_final') || !window.EventRaidAPI?.claimFinalReward)return;
+  const game=G,slot=currentSlotKey;finalEventRewardChecking=true;
+  try {
+    const gift=await window.EventRaidAPI.claimFinalReward(eventRaidId('kanji'),slot,game);
+    if(!gift)return;
+    applyGiftPayload(game,gift);game.updatedAt=Date.now();storageSet(slot,JSON.stringify(game));
+    if(G===game && currentSlotKey===slot){save(true);updateHud();showAdminGiftNotice([gift]);document.querySelector('#admin-gift-notice-title').textContent='🏆 ハロウィン最終報酬';document.querySelector('.admin-gift-notice-sub').textContent=`累計討伐数ランキング ${gift.rank}位の報酬です。`;}
+    else window.CloudSave?.saveSlot(slot,game,true).catch(()=>{});
+  }catch(error){console.warn('Halloween final reward:',error);}finally{finalEventRewardChecking=false;}
+}
+
 function renderEventRaidRankings(list,records) {
-  const rows=rankEventRaidRecords(records);
+  const rows=rankEventRaidRecords(records,'totalKills');
   if(!rows.length) { list.innerHTML='<div class="raid-empty-ranking">討伐数の記録はまだありません。</div>'; return; }
-  renderRaidRankingList(list,rows,true,'kills');
+  renderRaidRankingList(list,rows,true,'totalKills');
 }
 
 function playEventRaidUltimate(owner) {
@@ -11481,11 +11603,13 @@ function playEventRaidUltimate(owner) {
 function startEventRaidBattle(source = null, mode = eventRaidMenuMode) {
   if(!G || !isHalloweenActive()) return;
   mode='kanji';
-  source=eventRaidKanjiSource();
+  const raidState=eventRaidState(mode);
+  const startStage=raidResumeStage(raidState.lastKanjiStage || 0);
+  source=eventRaidKanjiSource(startStage*5);
   ++eventRaidMenuRequest;
   $('screen-event-raid')?.classList.add('hidden');
   const run=new EventRaidRun(Date.now()+1000);
-  run.mode=mode;
+  run.runId=newSlotId();run.mode=mode;run.startAnswerCount=startStage*5;run.candyEarned=0;
   run.enemies.forEach(eventRaidEnemy);
   explore={stageMode:true,isHalloween:true,isEventRaid:true,halloweenSeason:2,areaId:source.areaId,stageIndex:source.stageIndex,
     halloweenIndex:0,halloweenOperation:'add',eventRaid:run,sessionDrops:[],sessionGold:0,stageDrops:[],stageGold:0,stageExp:0,usedProblems:new Set()};
@@ -11523,7 +11647,7 @@ function startEventRaidQuestion() {
   destroyChallenge(); hideBattleMenus();
   run.beginQuestion(Date.now());
   if(run.mode==='kanji') {
-    const source=eventRaidKanjiSource(run.answers);
+    const source=eventRaidKanjiSource((run.startAnswerCount || 0)+run.answers);
     if(explore.areaId!==source.areaId || explore.stageIndex!==source.stageIndex) {
       explore.usedProblems.clear(); owner.currentTurnProblem=null;
       blog(`<span class="heal">${source.grade}年生・${AREA_STAGES[source.areaId].stages[source.stageIndex].name}の問題へ！</span>`);
@@ -11537,7 +11661,7 @@ function startEventRaidQuestion() {
   const active=()=>battle===owner && !owner.over && owner.eventRaidQuestion===question;
   document.querySelector('.event-raid-learning-stage')?.remove();
   clearEventRaidSidePanel();
-  startChallenge(container,{problem,timeLimit,prompt:getChallengePrompt(problem,true),showBattleCommands:false,isActive:active,onAnswered:(elapsed,correct)=>{question.elapsedMs=elapsed;if(correct)SM.playBeep('correct');}},finish);
+  startChallenge(container,{problem,timeLimit,prompt:getChallengePrompt(problem,true),showBattleCommands:false,isActive:active,onAnswered:(elapsed)=>{question.elapsedMs=elapsed;}},finish);
   const host=isKanjiProblem(problem)?$('kanji-problem-center'):container.querySelector('.challenge-main');
   const side=document.createElement('aside'); side.className='event-raid-status event-raid-side';
   side.setAttribute('aria-label','攻撃対象数と特技の状況');
@@ -11545,7 +11669,7 @@ function startEventRaidQuestion() {
   $('screen-battle').appendChild(side);
   $('event-raid-end').onclick=()=>endEventRaidBattle();
   if(run.mode==='kanji') {
-    const source=eventRaidKanjiSource(run.answers);
+    const source=eventRaidKanjiSource((run.startAnswerCount || 0)+run.answers);
     host.insertAdjacentHTML('afterbegin',`<p class="event-raid-learning-stage">${source.grade}年生・${escapeHtml(AREA_STAGES[source.areaId].stages[source.stageIndex].name)} ／ ${source.isLast?'最終ステージ':`${run.answers%5+1}問目・5問で次のステージ`}</p>`);
   }
   const gauge=$('event-raid-gauge');
@@ -11610,9 +11734,9 @@ function strikeEventRaidTargets(owner,outcome,done) {
       let damage=Math.round(base*(1+(outcome.timeFrac || 0)*BALANCE.timeBonus));
       if(crit) damage=Math.floor(damage*BALANCE.critMult);
       const dealt=Math.min(enemy.hp,damage);
-      run.hit(enemy,Date.now(),damage);
+      if(run.hit(enemy,Date.now(),damage)){G.halloweenCandy=halloweenCandyBalance()+2;run.candyEarned=(run.candyEarned || 0)+2;save();}
       if(equippedAbilities().has('lifesteal')) G.player.hp=Math.min(totalMaxHp(),G.player.hp+Math.max(1,Math.round(dealt*.15)));
-      SM.play(crit || (outcome.special && index===0 && hitIndex===0)?'se_crit':'se_slash');
+      SM.play(crit || (outcome.special && index===0 && hitIndex===0)?'se_crit':'se_slash',1.8);
       playPlayerAttackAnim();
       if(frame) {
         frame.classList.remove('enemy-damage-hit','event-raid-special-hit'); void frame.offsetWidth;
@@ -11642,16 +11766,24 @@ function endEventRaidBattle(showMenu = true) {
   hideBattleMenus();
   document.querySelector('.event-raid-learning-stage')?.remove();
   const mode=run.mode || 'math', state=eventRaidState(mode);
+  state.totalKills=(Number(state.totalKills) || Number(state.bestKills) || 0)+run.kills;
+  state.lastKanjiStage=Math.min(['area5','area6','area7','area8','area9','area10'].reduce((n,id)=>n+AREA_STAGES[id].stages.length,0)-1,Math.floor(((run.startAnswerCount || 0)+run.answers)/5));
   state.participated=true; state.bestKills=Math.max(state.bestKills || 0,run.kills);
   const day=new Date(run.startedAt+9*60*60*1000).toISOString().slice(0,10);
   const candy=applyEventRaidRewards(state,eventRaidRewardEntitlements(state.bestKills,day));
   const bonuses=applyEventRaidBonuses(state,eventRaidBonusEntitlements(state.bestKills));
-  state.pendingBest={...eventRaidProfile(state.bestKills),participationDay:day,
+  state.pendingBest={...eventRaidProfile(state.bestKills),runs:[...(state.pendingBest?.runs || []),{id:run.runId,kills:run.kills,finishedAt:Math.min(Date.now(),EVENT_RAID_FINAL_AT-1)}],participationDay:day,
     participationDays:Object.keys(state.rewardClaims || {}).filter(id=>id.startsWith('participation:')).map(id=>id.slice(14))};
   const reason=G.player.hp<=0?'HPが0になりました。':Date.now()>=run.endsAt?'2分間終了！':'挑戦終了。';
   save(true); CM.stop(); explore=null; battle=null;
   showHome();
-  if(showMenu) showEventRaidMenu(`${reason} 今回 ${run.kills}体 ／ 最高 ${state.bestKills}体${candy?`・お菓子 +${candy}個`:''}${bonuses.length?`・${bonuses.join('／')}体突破ボーナス獲得！`:''}`,mode);
+  if(showMenu) showEventRaidFinish({reason,kills:run.kills,bestKills:state.bestKills,candy:(run.candyEarned || 0)+candy,bonuses},()=>showEventRaidMenu(`${reason} 今回 ${run.kills}体 ／ 最高 ${state.bestKills}体${candy?`・お菓子 +${candy}個`:''}${bonuses.length?`・${bonuses.join('／')}体突破ボーナス獲得！`:''}`,mode));
+}
+
+function showEventRaidFinish(result,onDone) {
+  const overlay=document.createElement('div');overlay.className='confirm-overlay event-raid-finish';
+  overlay.innerHTML=`<section class="panel event-raid-finish-card" role="dialog" aria-modal="true" aria-label="ハロウィンレイド終了"><p class="event-raid-finish-signal">TIME UP / FINISH</p><h2>${escapeHtml(result.reason)}</h2><p>今回の討伐数</p><strong class="event-raid-finish-count">${result.kills}<small>体</small></strong><p>最高記録 ${result.bestKills}体</p><p>${iconHtml(HALLOWEEN_EVENT.candyIcon,32)} お菓子 ＋${result.candy}個</p><button type="button" class="btn btn-primary">結果・ランキングへ</button></section>`;
+  document.body.appendChild(overlay);SM.play('se_clear');const button=overlay.querySelector('button');button.onclick=()=>{overlay.remove();onDone();};button.focus();
 }
 
 function eventRaidCounterattack(owner) {
@@ -11660,8 +11792,8 @@ function eventRaidCounterattack(owner) {
   if(!living.length) return;
   owner.attackingEnemy=living[Math.floor(Math.random()*living.length)];
   playEnemyAttackAnim();
-  let damage=Math.max(1,Math.round(owner.attackingEnemy.atk*1.5)-totalStat('def'));
-  if(equippedAbilities().has('guard')) damage=Math.max(1,Math.round(damage*.85));
+  let damage=Math.max(1,Math.round(owner.attackingEnemy.atk*2.25)-totalStat('def'));
+  if(equippedAbilities().has('guard')) damage=Math.max(1,Math.round(damage*.95));
   damage=ancientDamageReduction(damage);
   G.player.hp=Math.max(0,G.player.hp-damage);
   SM.playBeep('damage'); flashScreenRed();
@@ -13560,7 +13692,7 @@ function init(){
     }
   };
 
-  $('btn-menu-save-title').onclick = () => {
+  $('btn-menu-save-title').onclick = () => suggestChallengePrintBeforeSave(() => {
     menuDropdown.classList.add('hidden');
     if (battle && !battle.over) endBattleLoop();
     if (trainingSkill) { destroyChallenge(); trainingSkill = null; }
@@ -13577,7 +13709,7 @@ function init(){
     save(true);
     if (listSaveSlots().length > 0) $('btn-continue').classList.remove('hidden');
     showScreen('screen-title');
-  };
+  });
 }
 
 /* ==========================================================
@@ -13877,6 +14009,8 @@ function gradeUnifiedPrint() {
 
 function grantPrintRewards(cur, correct, total, rate) {
   const meta = cur.meta;
+  if(meta.challengePrint && G?.claimedChallengePrintIds?.includes(cur.printId))return;
+  if(meta.challengePrint && G){G.claimedChallengePrintIds ||= [];G.claimedChallengePrintIds.push(cur.printId);}
   removeResolvedPrint({ printId: cur.printId });
   $('modal-unified-code').classList.add('hidden');
   
@@ -13892,8 +14026,9 @@ function grantPrintRewards(cur, correct, total, rate) {
   let rewards = [];
   
   // Base rewards
-  const baseExp = correct * 20;
-  const baseGold = correct * 10;
+  const rewardMult = meta.challengePrint ? 3 : 1;
+  const baseExp = correct * 20 * rewardMult;
+  const baseGold = correct * 10 * rewardMult;
   G.player.gold += baseGold;
   if (baseExp > 0) rewards.push({ kind:'item', name:`経験値 ${baseExp} EXP`, icon:'✨' });
   if (baseGold > 0) rewards.push({ kind:'item', name:`ゴールド ${baseGold} G`, icon:'💰' });
@@ -13902,28 +14037,29 @@ function grantPrintRewards(cur, correct, total, rate) {
   if (rate >= 0.5) {
     // 50%+: random basic item
     const pot = ITEM_DB.find(x => x.id === 'potion');
-    addItem('potion', 1);
-    rewards.push({ kind:'item', name:`${pot.name} x1`, icon:pot.emoji });
+    addItem('potion', rewardMult);
+    rewards.push({ kind:'item', name:`${pot.name} x${rewardMult}`, icon:pot.emoji });
   }
   if (rate >= 0.8) {
     // 80%+: hipotion or ether
     const pool = ['hipotion', 'ether'];
     const itId = pick(pool);
     const db = ITEM_DB.find(x => x.id === itId);
-    const count = itId === 'hipotion' ? 3 : 1;
+    const count = (itId === 'hipotion' ? 3 : 1)*rewardMult;
     addItem(itId, count);
     rewards.push({ kind:'item', name:`${db.name} x${count}`, icon:db.emoji });
   }
   if (rate >= 1.0) {
     // 100%: Cost Seed!
     const seed = ITEM_DB.find(x => x.id === 'cost_seed');
-    addItem('cost_seed', 1);
-    rewards.push({ kind:'item', name:`${seed.name} x1`, icon:seed.emoji });
+    addItem('cost_seed', rewardMult);
+    rewards.push({ kind:'item', name:`${seed.name} x${rewardMult}`, icon:seed.emoji });
     
-    G.player.gold += 500;
-    rewards.push({ kind:'item', name:`全問正解ボーナス 500 G`, icon:'💰' });
+    G.player.gold += 500*rewardMult;
+    rewards.push({ kind:'item', name:`全問正解ボーナス ${500*rewardMult} G`, icon:'💰' });
   }
   
+  if(meta.challengePrint && rate>=0.8){G.equipGachaTenPullTickets=(G.equipGachaTenPullTickets || 0)+1;rewards.push({kind:'equip-ticket',name:'チャレンジ達成！ 装備ガチャ10連チケット',icon:'🎫',count:1});}
   // Target rewards
   let title = '修行の成果！';
   if (meta.targetId === 'demon_castle' && rate >= 0.5) {
@@ -14244,12 +14380,29 @@ window.submitAdminGrade = submitAdminGrade;
 
 
 
-function printAreaStage(areaId, idx) {
+function suggestChallengePrintBeforeSave(onSave) {
+  if(!G || G.isTestMode){onSave();return;}
+  const source=choosePickupStage() || raidReviewCandidates()[0] || {areaId:'area1',stageIndex:0};
+  const stage=AREA_STAGES[source.areaId]?.stages[source.stageIndex];
+  if(!stage){onSave();return;}
+  const overlay=document.createElement('div');overlay.className='confirm-overlay';
+  overlay.innerHTML=`<section class="panel challenge-print-suggestion" role="dialog" aria-modal="true" aria-label="おすすめチャレンジプリント"><h2>🖨 おすすめプリント</h2><p>${escapeHtml(AREA_STAGES[source.areaId].name)} · ${escapeHtml(stage.name)}</p><div class="challenge-print-rewards" aria-label="チャレンジプリントの報酬">
+    <div class="challenge-print-reward"><span class="challenge-print-reward-art" aria-hidden="true">${iconHtml('✨',40)}</span><span>経験値</span><b>3倍</b></div>
+    <div class="challenge-print-reward"><span class="challenge-print-reward-art" aria-hidden="true">${iconHtml('💰',40)}</span><span>ゴールド</span><b>3倍</b></div>
+    <div class="challenge-print-reward"><span class="challenge-print-reward-art" aria-hidden="true">${iconHtml(getItemTemplate('potion').emoji,40)}</span><span>消耗品</span><b>3倍</b></div>
+    <div class="challenge-print-reward challenge-print-ticket"><span class="challenge-print-reward-art">${stageRewardIcon('ticket','equip-ten-ticket',1,48)}</span><span>装備ガチャ10連チケット</span><b>×1枚</b><small>80%以上の正解で確定！</small></div>
+    </div><p class="challenge-print-reward-note">経験値・ゴールド・消耗品は通常の3倍。正解数・正答率に応じて獲得できます。</p><button type="button" class="btn btn-primary" data-print>印刷してセーブする</button><button type="button" class="btn" data-save>印刷せずセーブする</button><button type="button" class="btn" data-cancel>もどる</button></section>`;
+  overlay.querySelector('[data-print]').onclick=()=>{overlay.remove();printAreaStage(source.areaId,source.stageIndex,true,null,onSave);};
+  overlay.querySelector('[data-save]').onclick=()=>{overlay.remove();onSave();};
+  overlay.querySelector('[data-cancel]').onclick=()=>overlay.remove();document.body.appendChild(overlay);bindStageRewardTooltips(overlay);overlay.querySelector('[data-print]').focus();
+}
+
+function printAreaStage(areaId, idx, challengePrint = false, blueprint = null, onPrinted = null) {
   const area = AREA_STAGES[areaId];
   const stage = area.stages[idx];
   const count = 10;
   const numPrefix = area.displayNum || areaId.replace('area', '');
-  const printName = `${area.name} ${stage.name}`;
+  const printName = `${blueprint ? '古代の設計図 · ' : ''}${challengePrint ? 'チャレンジプリント（経験値・G・消耗品3倍／80%以上で装備10連券） ' : ''}${area.name} ${stage.name}`;
 
   const sampleP = stage.generateProblem();
   const isKanji = isKanjiProblem(sampleP) || ['area5','area6','area7','area8','area9','area10','area14','area15'].includes(areaId);
@@ -14295,7 +14448,7 @@ function printAreaStage(areaId, idx) {
           
           const playerName = (typeof G !== "undefined" && G) ? (G.playerName || "") : "";
           const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
-          const printId = addPrintCode(areaId + '_' + idx, pCode, { type: 'stage', problems, name: printName, areaId, stageIndex: idx, kanjiMode: variant.type });
+          const printId = addPrintCode(blueprint ? blueprint.bp.id : areaId + '_' + idx, pCode, { type: blueprint ? 'blueprint' : 'stage', ...(blueprint ? {uid:blueprint.uid} : {}), challengePrint, problems, name: printName, areaId, stageIndex: idx, kanjiMode: variant.type });
           save();
           const instrText = variant.type === 'yomi' ? 'つぎのことばをひらがなで　かきましょう' : variant.type === 'kaki' ? 'つぎのことばを　かんじで　かきましょう' : 'つぎのことば　よみ・かきに　こたえましょう';
           openPrintWindow(`<style>
@@ -14333,6 +14486,7 @@ function printAreaStage(areaId, idx) {
                 <div class="p-print-id">No.${printId}</div>
               </div>
             </div>`, null, true);
+          onPrinted?.();
         }
       };
     });
@@ -14353,7 +14507,7 @@ function printAreaStage(areaId, idx) {
             `<div class="p-row"><span class="p-num">${i + 6}.</span><span class="p-expr">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
           ).join('');
           const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
-          const printId = addPrintCode(areaId + '_' + idx, pCode, { type: 'stage', problems, name: printName, areaId, stageIndex: idx });
+          const printId = addPrintCode(blueprint ? blueprint.bp.id : areaId + '_' + idx, pCode, { type: blueprint ? 'blueprint' : 'stage', ...(blueprint ? {uid:blueprint.uid} : {}), challengePrint, problems, name: printName, areaId, stageIndex: idx });
           save();
           openPrintWindow(`
             <div class="p-title">【エリア${numPrefix}-${idx+1}】 ${printName} ${label}</div>
@@ -14364,6 +14518,7 @@ function printAreaStage(areaId, idx) {
               <div class="p-col">${p1}</div>
               <div class="p-col">${p2}</div>
             </div>`, area.bgImage ? (typeof av === 'function' ? av(area.bgImage) : area.bgImage) : null);
+          onPrinted?.();
         }
       };
     });
@@ -14523,7 +14678,7 @@ function raidPlayerProfile() {
     equipment[`${slot}Id`] = owned?.id || null;
     equipment[`${slot}Rarity`] = owned?.rarity || 1;
   }
-  return { playerName: G.playerName || '勇者', avatar: G.avatar, avatarBackground: G.avatarBackground || 'default', avatarHolographic: !!G.avatarHolographic, avatarBackgroundHolographic: !!G.avatarBackgroundHolographic, level: G.player?.lvl || 1, equipment };
+  return { playerName: G.playerName || '勇者', avatar: G.avatar, avatarDecoration: G.avatarDecoration || '', avatarBackground: G.avatarBackground || 'default', avatarHolographic: !!G.avatarHolographic, avatarBackgroundHolographic: !!G.avatarBackgroundHolographic, level: G.player?.lvl || 1, equipment };
 }
 
 function raidPlayerProgress(bossId = getRaidData().bossId || RAID_BOSS_ID) {
@@ -14581,7 +14736,7 @@ async function syncRaidState() {
   const profile = raidPlayerProfile();
   const local = getRaidData();
   if (!local.cloudSynced && !local.legacyImports) {
-    local.legacyImports = Object.fromEntries(Object.entries(local.rankings || {}).map(([key, entry]) => [key, { profile: entry, legacyDamage: key === slotKey ? progress.legacyDamage || 0 : entry.totalDamage || 0 }]));
+    local.legacyImports = Object.fromEntries(Object.entries(local.rankings || {}).filter(([key])=>key!==TEST_SLOT_KEY).map(([key, entry]) => [key, { profile: entry, legacyDamage: key === slotKey ? progress.legacyDamage || 0 : entry.totalDamage || 0 }]));
     saveRaidData(local);
   }
   raidSyncStatus = 'loading';
@@ -14593,7 +14748,7 @@ async function syncRaidState() {
     try {
       if (!window.RaidBossAPI?.syncPlayer) throw new Error('Raid cloud API unavailable');
       for (const [key, entry] of Object.entries(local.legacyImports || {})) {
-        await window.RaidBossAPI.syncPlayer(key, entry.profile, { participated: true, legacyDamage: entry.legacyDamage, claimed: local.claimed?.[key]?.applied ? local.claimed[key] : null });
+        await window.RaidBossAPI.syncPlayer(key, entry.profile, { bossId:local.bossId || 'boss_50', participated: true, legacyDamage: entry.legacyDamage, claimed: local.claimed?.[key]?.applied ? local.claimed[key] : null });
         delete local.legacyImports[key];
         const latest = getRaidData();
         latest.legacyImports = local.legacyImports;
@@ -14603,6 +14758,8 @@ async function syncRaidState() {
       const localClaim = local.claimed?.[`${progress.bossId}:${slotKey}`] || (local.bossId === progress.bossId ? local.claimed?.[slotKey] : null);
       const result = await window.RaidBossAPI.syncPlayer(slotKey, profile, { bossId: progress.bossId, participated: progress.participated, participationAt: progress.participationAt, legacyDamage: progress.legacyDamage || 0, events, claimed: localClaim?.applied ? localClaim : null, state: game });
       progress.pendingEvents = (progress.pendingEvents || []).filter(event => !result.acknowledged.includes(event.id));
+      progress.excludedFromRanking=!!result.excludedFromRanking;
+      if(progress.excludedFromRanking)progress.totalDamage=0;
       progress.challengeCount = Math.max(Number(progress.challengeCount) || 0, Number(result.challengeCount) || 0);
       // 2回目＝装備ガチャ10連チケット／3回目＝背景スキンガチャチケット1枚（1回目の参加特典はマグマの背景）
       if (Number.isFinite(result.challenge2EquipTenCount)) {
@@ -14637,6 +14794,7 @@ async function syncRaidState() {
         if (payout.eligible) {
           Object.assign(game, payout.state);
           if (game.raidProgress?.bossId === rewardBossId) game.raidProgress.pendingEvents = [];
+          if(payout.coinAwarded){showConfirmModal('レイドコインを獲得！',`${payout.rank}位の追加報酬：${payout.coinAwarded}コイン`,null);}
           if (!payout.alreadyClaimed) {
             game.raidPayoutNotice = { ...payout.reward, rank: payout.rank, at: Date.now() };
             payoutNotice = game.raidPayoutNotice;
@@ -14686,7 +14844,7 @@ async function syncRaidState() {
       const raidMenuOpen = G === game && !$('screen-raid-boss').classList.contains('hidden');
       if (raidMenuOpen) {
         renderRaidBossMenu();
-        if (payoutNotice) showConfirmModal('レイド報酬を獲得！', `${payoutNotice.rank}位の報酬<br>💰 ${payoutNotice.gold.toLocaleString()}G<br>🌱 コストプラスのたね ×${payoutNotice.seeds}${payoutNotice.tickets ? `<br>🎟 背景スキンガチャチケット ×${payoutNotice.tickets}${payoutNotice.finisherBonus ? '（撃破ボーナスを含む）' : ''}` : ''}`, () => { save(true); showRaidBossMenu(); });
+        if (payoutNotice) showConfirmModal('レイド報酬を獲得！', `${payoutNotice.rank}位の報酬<br>🪙 ${payoutNotice.coins || 0}レイドコイン<br>💰 ${payoutNotice.gold.toLocaleString()}G<br>🌱 コストプラスのたね ×${payoutNotice.seeds}${payoutNotice.tickets ? `<br>🎟 背景スキンガチャチケット ×${payoutNotice.tickets}${payoutNotice.finisherBonus ? '（撃破ボーナスを含む）' : ''}` : ''}`, () => { save(true); showRaidBossMenu(); });
       }
       if (refreshAgain && raidMenuOpen) setTimeout(() => syncRaidState(), 0);
     }
@@ -14712,6 +14870,35 @@ function grantRaidParticipationBackground() {
   return true;
 }
 
+const RAID_EXCHANGE_PRIZES = [
+ {id:'raid_star_blade',kind:'equip',name:'マグマの剣',cost:120,rarity:4,ability:'power'},
+ {id:'raid_ward_armor',kind:'equip',name:'マグマの鎧',cost:100,rarity:4,ability:'guard'},
+ {id:'raid_focus_charm',kind:'equip',name:'マグマの護符',cost:80,rarity:4,ability:'mp_save'},
+ {id:'raid_star_guardian',kind:'skin',name:'星界の守護者',cost:200},
+ {id:'raid_observatory',kind:'background',name:'星界の天空神殿',cost:160},
+ {id:'raid_starlight',kind:'decoration',name:'マグマ竜の翼飾り',cost:90},
+];
+function raidPrizeOwned(prize,game=G){return (game.raidExchangeClaims || []).includes(prize.id);}
+function exchangeRaidPrize(id) {
+ const prize=RAID_EXCHANGE_PRIZES.find(entry=>entry.id===id);
+ if(!G || !prize || raidPrizeOwned(prize) || (Number(G.raidCoins)||0)<prize.cost)return false;
+ G.raidCoins-=prize.cost;
+ if(prize.kind==='equip')G.ownedEquips.push({uid:G.nextUid++,id:prize.id,rarity:prize.rarity,ability:prize.ability});
+ else if(prize.kind==='skin')G.unlockedSkins=[...new Set([...(G.unlockedSkins || []),prize.id])];
+ else if(prize.kind==='background')G.unlockedAvatarBackgrounds=[...new Set([...(G.unlockedAvatarBackgrounds || []),prize.id])];
+ else G.unlockedDecorations=[...new Set([...(G.unlockedDecorations || []),prize.id])];
+ G.raidExchangeClaims=[...(G.raidExchangeClaims || []),prize.id];save(true);updateHud();return true;
+}
+function showRaidExchange(message='') {
+ if(!G)return;
+ document.querySelector('.raid-exchange-overlay')?.remove();hideTooltip();
+ const overlay=document.createElement('div');overlay.className='confirm-overlay raid-exchange-overlay';
+ overlay.innerHTML=`<section class="panel raid-exchange-panel" role="dialog" aria-modal="true" aria-labelledby="raid-exchange-title"><header><h2 id="raid-exchange-title">🪙 レイドコイン交換所</h2><b>${Number(G.raidCoins)||0} コイン</b></header><p>参加するたびダメージ÷4（切り上げ）を獲得。討伐順位で1位50・2位30・3位15・以降5枚追加！</p>${message?`<p role="status">${escapeHtml(message)}</p>`:''}<div class="raid-exchange-grid">${RAID_EXCHANGE_PRIZES.map(prize=>{const owned=raidPrizeOwned(prize);return `<article class="halloween-prize-card"><div class="halloween-prize-art">${stageRewardIcon(prize.kind,prize.id,prize.rarity || 1,88)}</div><b>${escapeHtml(prize.name)}</b><small>${prize.ability?`✨ ${getAbility(prize.ability)?.name || prize.ability}`:prize.kind==='skin'?'キャラスキン':prize.kind==='background'?'背景スキン':'フレーム'}</small><span>🪙 ×${prize.cost}</span><button type="button" class="btn" data-raid-prize="${prize.id}" ${owned || (G.raidCoins || 0)<prize.cost?'disabled':''}>${owned?'獲得済み':'交換する'}</button></article>`;}).join('')}</div><button type="button" class="btn" data-close>レイドへもどる</button></section>`;
+ bindStageRewardTooltips(overlay);
+ overlay.querySelectorAll('[data-raid-prize]').forEach(button=>button.onclick=()=>{const prize=RAID_EXCHANGE_PRIZES.find(entry=>entry.id===button.dataset.raidPrize);showConfirmModal('交換しますか？',`${escapeHtml(prize.name)}を${prize.cost}コインで交換します。`,()=>{if(exchangeRaidPrize(prize.id)){SM.play('se_gacha_result2');showRaidExchange(`${prize.name}を獲得！`);}});});
+ overlay.querySelector('[data-close]').onclick=()=>overlay.remove();document.body.appendChild(overlay);
+}
+
 function showRaidBattleResult(damage, defeated) {
   document.querySelector('.raid-result-overlay')?.remove();
   const showBackground = (G?.unlockedAvatarBackgrounds || []).includes('raid_magma') && !G.raidMagmaNoticeSeen;
@@ -14729,6 +14916,7 @@ function showRaidBattleResult(damage, defeated) {
       <h2 id="raid-result-title">${showBackground ? '背景スキンを ゲット！' : defeated ? 'みんなで ボスを たおした！' : 'ナイスチャレンジ！'}</h2>
       ${showBackground ? `<img class="raid-result-background" src="${av(background.image)}" alt="獲得したマグマの火山の背景"><h3>${background.name}</h3><p>きみのキャラクターの背景に えらべるよ！</p>` : ''}
       <p class="raid-result-summary">今回のダメージ <b>${Math.max(0, Math.round(damage)).toLocaleString()}</b></p>
+      <p class="raid-coin-payout">🪙 参加報酬 ＋${Math.ceil(Math.max(0,Number(damage)||0)/4)}レイドコイン</p>
       <p class="raid-gold-payout">💰 ダメージ報酬 +${Math.max(0, Math.round(damage)).toLocaleString()}G</p>
       ${G.raidChallenge2Notice || G.raidChallenge3Notice ? `<p class="raid-challenge-milestone">${raidChallengeNoticeHtml(G)}</p>` : ''}
       <div class="raid-result-rank"><span>${defeated ? '暫定ランキング' : '現在のランキング'}</span><strong>${rankLabel}</strong></div>
@@ -14768,6 +14956,8 @@ function saveRaidData(data) {
 
 // 自分のダメージを記録し、総ダメージも更新する
 function recordRaidDamage(slotKey, playerName, dmg, avatar, level, equipment, avatarBackground) {
+  if(G?.isTestMode || slotKey===TEST_SLOT_KEY)return;
+  if(battle?.raidResultRecorded && slotKey===currentSlotKey)return;
   dmg = Math.max(0, Math.round(Number(dmg) || 0));
   if (G && slotKey === currentSlotKey) {
     const progress = raidPlayerProgress();
@@ -14775,6 +14965,8 @@ function recordRaidDamage(slotKey, playerName, dmg, avatar, level, equipment, av
     const id = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint32Array(4)), n => n.toString(16)).join('-');
     progress.pendingEvents.push({ id, bossId: battle?.raidBossId || progress.bossId, damage: dmg, fightStartedAt: battle?.raidStartedAt || Date.now(), createdAt: Date.now() });
     progress.totalDamage += dmg;
+    G.raidCoins=(Number(G.raidCoins)||0)+raidParticipationCoins(dmg);
+    if(battle)battle.raidResultRecorded=true;
     progress.challengeCount = (Number(progress.challengeCount) || 0) + 1;
     if (!battle?.raidGoldPaid) {
       G.player.gold = (Number(G.player.gold) || 0) + dmg;
@@ -14802,8 +14994,8 @@ function recordRaidDamage(slotKey, playerName, dmg, avatar, level, equipment, av
 // ランキング配列を取得（ダメージ降順）
 function getRaidRankings() {
   const data = getRaidData();
-  const rankings = Object.values(data.rankings || {});
-  if (G && currentSlotKey && G.raidProgress?.participated && G.raidProgress.bossId === (data.bossId || RAID_BOSS_ID) && !rankings.some(entry => entry.slotKey === currentSlotKey)) {
+  const rankings = Object.values(data.rankings || {}).filter(row=>!row.excludedFromRanking);
+  if (G && currentSlotKey && G.raidProgress?.participated && !G.raidProgress.excludedFromRanking && G.raidProgress.bossId === (data.bossId || RAID_BOSS_ID) && !rankings.some(entry => entry.slotKey === currentSlotKey)) {
     rankings.push({ ...raidPlayerProfile(), slotKey: currentSlotKey, totalDamage: G.raidProgress?.totalDamage || 0, participated: true });
   }
   if (Array.isArray(data.finalRankings)) {
@@ -15038,6 +15230,7 @@ function renderRaidRankingList(listEl, rankings, historical = false, metric = 'd
         // プレイヤー情報補完
         let avatarId = r.avatar;
         let avatarBackgroundId = r.avatarBackground;
+        let avatarFrameId = r.avatarDecoration || '';
         let avatarHolographic = !!r.avatarHolographic;
         let avatarBackgroundHolographic = !!r.avatarBackgroundHolographic;
         let level = r.level;
@@ -15065,6 +15258,7 @@ function renderRaidRankingList(listEl, rankings, historical = false, metric = 'd
           if (matchedSlot) {
             avatarId = avatarId || matchedSlot.avatar;
             avatarBackgroundId = avatarBackgroundId || matchedSlot.avatarBackground;
+            avatarFrameId = avatarFrameId || matchedSlot.avatarDecoration;
             level = level ?? matchedSlot.lvl;
             if (matchedSlot.equippedWeapon) { weaponId = matchedSlot.equippedWeapon.id; weaponRarity = matchedSlot.equippedWeapon.rarity || 1; }
             if (matchedSlot.equippedArmor) { armorId = matchedSlot.equippedArmor.id; armorRarity = matchedSlot.equippedArmor.rarity || 1; }
@@ -15104,8 +15298,8 @@ function renderRaidRankingList(listEl, rankings, historical = false, metric = 'd
         const cheerCount = r.cheerCount || 0;
 
         let cheerActionHtml = '';
-        if (metric === 'kills') {
-          cheerActionHtml = '<span class="raid-history-cheers">最高記録</span>';
+        if (metric === 'kills' || metric === 'totalKills') {
+          cheerActionHtml = `<span class="raid-history-cheers">${metric==='totalKills'?'累計討伐数':'最高記録'}</span>`;
         } else if (historical) {
           cheerActionHtml = `<span class="raid-history-cheers">👏 ${cheerCount} エール獲得</span>`;
         } else if (isMe) {
@@ -15149,7 +15343,7 @@ function renderRaidRankingList(listEl, rankings, historical = false, metric = 'd
               </div>
               <div style="flex-shrink: 0;">
                 <span class="raid-ranking-damage">
-                  ${(metric === 'kills' ? r.bestKills || 0 : r.totalDamage || 0).toLocaleString()}<span class="raid-ranking-damage-unit">${metric === 'kills' ? '体討伐' : 'ダメージ'}</span>
+                  ${(metric === 'totalKills' ? r.totalKills ?? r.bestKills ?? 0 : metric === 'kills' ? r.bestKills || 0 : r.totalDamage || 0).toLocaleString()}<span class="raid-ranking-damage-unit">${metric === 'totalKills' ? '体（累計）' : metric === 'kills' ? '体討伐' : 'ダメージ'}</span>
                 </span>
               </div>
             </div>
@@ -15169,6 +15363,7 @@ function renderRaidRankingList(listEl, rankings, historical = false, metric = 'd
             </div>
           </div>
         `;
+        applyAvatarComposition(row.querySelector('.raid-ranking-avatar'),row.querySelector('.raid-ranking-avatar > img'),{avatar:heroDef.id,avatarBackground:avatarBackgroundId,avatarHolographic,avatarBackgroundHolographic,avatarDecoration:!historical && isMe?G.avatarDecoration:avatarFrameId});
         row.querySelector('.raid-ranking-name').textContent = `${rankMedal} ${r.playerName || '勇者'}`;
         row.querySelectorAll('.raid-ranking-equip[data-equip-id]').forEach(element => {
           bindEquipDetailTooltip(element, getEquipTemplate(element.dataset.equipId), { rarity: Number(element.dataset.equipRarity) });
@@ -15302,6 +15497,7 @@ async function claimRaidReward() {
 
 /* レイドチケットの数を、レイド画面の ボタンの上に 見せる */
 function renderRaidTicketCount(){
+  if($('btn-raid-exchange'))$('btn-raid-exchange').textContent=`🪙 コイン交換所（${Number(G?.raidCoins)||0}枚）`;
   const el = $('raid-ticket-count');
   if (!el || !G) return;
   el.innerHTML = `${stageRewardIcon('ticket', 'raid-ticket', 1, 28)}<span>レイドチケット <b>×${G.isTestMode ? '∞' : (G.raidTickets || 0)}</b></span>`;
@@ -15472,6 +15668,7 @@ async function startRaidBattle() {
 
 
 let adminGiftCheckSlotKey = null;
+let adminGiftLastCheck = 0;
 let adminGiftChecking = false;
 
 function getGiftableItemDefs() {
@@ -15490,6 +15687,7 @@ function giftEntryName(e) {
   if (kind === 'equip') { const db = getEquipTemplate(e.id); return `${db?.name || e.id}（${RARITY_NAME[e.rarity] || '★' + e.rarity}）`; }
   if (kind === 'ticket') return GIFT_TICKETS.find(t => t.id === e.id)?.name || e.id;
   if (kind === 'medal') return 'クエストメダル';
+  if (kind === 'decoration') return AVATAR_DECORATIONS.find(item=>item.id===e.id)?.name || e.id;
   return getItemTemplate(e.id)?.name || e.id;
 }
 function giftEntryIconHtml(e, size = 32) {
@@ -15498,6 +15696,7 @@ function giftEntryIconHtml(e, size = 32) {
     if (kind === 'equip') return stageRewardIcon('equip', e.id, Number(e.rarity) || 1, size);
     if (kind === 'ticket') return stageRewardIcon('ticket', e.id, 1, size);
     if (kind === 'medal') return stageRewardIcon('medal', 'quest-medal', 1, size);
+    if (kind === 'decoration') return stageRewardIcon('decoration',e.id,1,size);
     return stageRewardIcon('item', e.id, 1, size);
   } catch (_) { return '📦'; }
 }
@@ -15638,6 +15837,7 @@ async function sendAdminGiftFromUI() {
     addAdminGiftItemRow();
     $('admin-gift-message').value = '';
     renderAdminGiftHistory();
+    adminGiftLastCheck=0;checkAdminGifts();
   } catch (err) {
     console.error('AdminGift send error:', err);
     setStatus(`エラーが おきました。（${err && err.message ? err.message : err}）`, 'error');
@@ -15646,7 +15846,7 @@ async function sendAdminGiftFromUI() {
   }
 }
 
-function showAdminGiftNotice(gifts) {
+function showAdminGiftNotice(gifts, onReceive = null) {
   document.querySelector('.admin-gift-notice-overlay')?.remove();
   const totalGold = gifts.reduce((sum, gift) => sum + (Number(gift.gold) || 0), 0);
   const itemTotals = new Map();
@@ -15656,19 +15856,21 @@ function showAdminGiftNotice(gifts) {
     cur.count += Number(item.count) || 0;
     itemTotals.set(key, cur);
   }));
+  const recallDebt=gifts.reduce((sum,gift)=>sum+(Number(G?.giftRecallDebts?.[gift.replacesGiftId])||0),0);
   const messages = gifts.map(gift => String(gift.message || '').trim()).filter(Boolean);
   const rows = [
     totalGold ? `<li><span class="admin-gift-item-icon">💰</span><span>ゴールド</span><b>${totalGold.toLocaleString()} G</b></li>` : '',
-    ...[...itemTotals.values()].map(e => `<li>${giftEntryIconHtml(e, 32)}<span>${escapeHtml(giftEntryName(e))}</span><b>x ${e.count}</b></li>`)
+    ...[...itemTotals.values()].map(e => `<li>${giftEntryIconHtml(e, 48)}<span>${escapeHtml(giftEntryName(e))}</span><b>x ${e.count}</b></li>`)
   ].join('');
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay admin-gift-notice-overlay active';
   overlay.innerHTML = `
     <section class="modal-panel admin-gift-notice" role="dialog" aria-modal="true" aria-labelledby="admin-gift-notice-title" style="max-width: 400px; text-align: center;">
       <div class="admin-gift-notice-badge" aria-hidden="true" style="font-size: 3rem; margin-bottom: 10px;">🎁</div>
-      <h2 id="admin-gift-notice-title">プレゼントが とどいたよ！</h2>
-      <p class="admin-gift-notice-sub">管理者から プレゼントを うけとりました。</p>
+      <h2 id="admin-gift-notice-title">プレゼントが届いた！</h2>
+      <p class="admin-gift-notice-sub">${onReceive ? 'アイテムを確認して「受け取る」を押してね。' : 'プレゼントを受け取りました。'}</p>
       <ul class="admin-gift-notice-list" style="text-align: left; list-style: none; padding: 0; margin: 15px 0;">${rows}</ul>
+      ${recallDebt?`<p class="admin-gift-recall-note">再配布の精算：${recallDebt.toLocaleString()}G（回収前に使った分）を差し引いて受け取ります。</p>`:''}
       ${messages.length ? `<div class="admin-gift-notice-message" style="margin-bottom: 15px;">${messages.map(text => `<p>💌 ${escapeHtml(text)}</p>`).join('')}</div>` : ''}
       <button type="button" class="btn btn-primary" id="btn-admin-gift-notice-ok">受け取る</button>
     </section>`;
@@ -15679,45 +15881,44 @@ function showAdminGiftNotice(gifts) {
   
   if (typeof SM !== 'undefined' && SM.playBeep) SM.playBeep('heal');
   const ok = overlay.querySelector('#btn-admin-gift-notice-ok');
-  ok.onclick = () => overlay.remove();
+  ok.onclick = async () => {
+    if(!onReceive){overlay.remove();return;}
+    ok.disabled=true;ok.textContent='受け取り中…';
+    try {await onReceive();overlay.remove();}
+    catch(error){overlay.querySelector('.admin-gift-notice-sub').textContent='受け取れませんでした。通信を確認してもう一度押してください。';ok.disabled=false;ok.textContent='受け取る';console.warn('[AdminGift] claim failed:',error);}
+  };
   ok.focus();
 }
 
-async function checkAdminGifts() {
-  if (!G || !currentSlotKey || adminGiftChecking || !window.AdminGiftAPI) return;
-  if (adminGiftCheckSlotKey === currentSlotKey) return;
-  
-  const game = G;
-  const slotKey = currentSlotKey;
-  adminGiftChecking = true;
+async function checkAdminGifts(force = false) {
+  if (!G || !currentSlotKey || adminGiftChecking || !window.AdminGiftAPI || document.querySelector('.admin-gift-notice-overlay')) return;
+  if (!force && adminGiftCheckSlotKey === currentSlotKey && Date.now()-adminGiftLastCheck<15000) return;
+  const game=G, slotKey=currentSlotKey;adminGiftChecking=true;
   try {
-    const pending = await window.AdminGiftAPI.fetchPending(slotKey);
-    const received = [];
-    for (const gift of pending) {
-      if (G !== game || currentSlotKey !== slotKey) break;
-      if (!await window.AdminGiftAPI.claim(gift.id)) continue;
-      game.player.gold = (game.player.gold || 0) + (Number(gift.gold) || 0);
-      (gift.items || []).forEach(item => applyGiftEntry(game, item));
-      received.push(gift);
-    }
-    
-    if (G === game && currentSlotKey === slotKey) {
-      adminGiftCheckSlotKey = slotKey;
-    }
-    
-    if (!received.length) return;
-    save(true);
-    updateHud();
-    showAdminGiftNotice(received);
-  } catch (error) {
-    console.warn('[AdminGift] check failed:', error);
-  } finally {
-    adminGiftChecking = false;
-  }
+    const pending=await window.AdminGiftAPI.fetchPending(slotKey);
+    if(G!==game || currentSlotKey!==slotKey)return;
+    adminGiftCheckSlotKey=slotKey;adminGiftLastCheck=Date.now();
+    if(!pending.length)return;
+    let recalled=false;for(const gift of pending)recalled=recallGiftPayload(game,gift)||recalled;
+    if(recalled){save(true);updateHud();}
+    showAdminGiftNotice(pending,async()=>{
+      if(G!==game || currentSlotKey!==slotKey)throw new Error('セーブデータが変わりました');
+      if(!window.AdminGiftAPI.claimToSave)throw new Error('再読み込みしてください');
+      for(const gift of pending){
+        const delivered=await window.AdminGiftAPI.claimToSave(gift.id,slotKey,game);
+        if(!delivered)continue;
+        applyGiftPayload(game,delivered);game.updatedAt=Date.now();storageSet(slotKey,JSON.stringify(game));
+        save(true);
+      }
+      updateHud();SM.playBeep('heal');
+    });
+  }catch(error){console.warn('[AdminGift] check failed:',error);}
+  finally{adminGiftChecking=false;}
 }
 
 /* 開発サーバー（npm run dev）のときだけ、ブラウザのコンソールから テストできるようにする */
 if (import.meta.env && import.meta.env.DEV) {
+  window.render_game_to_text = () => JSON.stringify({screen:document.querySelector('.screen:not(.hidden)')?.id,raidCoins:Number(G?.raidCoins)||0,raidTickets:G?.raidTickets||0,decoration:G?.avatarDecoration||'',eventRaid:explore?.isEventRaid?{kills:explore.eventRaid.kills,remainingMs:Math.max(0,explore.eventRaid.endsAt-Date.now())}:null});
   window.__dbg = {
     get G(){ return G; }, get explore(){ return explore; }, set explore(v){ explore = v; },
     get rewardSettings(){ return rewardSettings; },
@@ -15725,3 +15926,5 @@ if (import.meta.env && import.meta.env.DEV) {
     stageTotalClearCount, stageRepeatDropMult, AREA_STAGES, stageAreaCleared, showBossClearOverlay, grantQuestExtras, QUEST_MEDAL_MILESTONES, showQuestRewardToast, generateStoryQuest, questRewardFor, questAllowedTiers, QUEST_STEP_ITEMS, getActivePickup, choosePickupStage, openAdventure, showStageClearOverlay, recordStageClear2:recordStageClear, startChallenge, enterAreaStage, enterAreaBoss, applyGiftEntry, giftEntryName, giftEntryOptionsHtml, showAdminGiftNotice,
   };
 }
+
+setInterval(()=>{if(G && document.querySelector('#screen-home.active'))checkAdminGifts();},20000);

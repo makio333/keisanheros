@@ -1,0 +1,66 @@
+{
+  "generator": "built-in image_gen",
+  "status": "native square redraws, 2026-10-17",
+  "assets": [
+    {
+      "id": "raid_starlight",
+      "path": "assets/frames-square/raid_starlight.png",
+      "nativeGrid": [
+        128,
+        128
+      ],
+      "reference": "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/event-pixel/raid_starlight.png",
+      "prompt": "Edit target: the attached existing RPG cosmetic frame. Preserve its exact design identity, palette, motifs, material and coarse pixel style, but RECOMPOSE it for a native SQUARE 1:1 canvas. This is a newly drawn square version, not a portrait artwork stretched horizontally. All pumpkins, jewels, moons, stars, ribbons and crown retain undistorted natural proportions. Reposition side ornaments and shorten vertical stems as needed for square geometry. Keep the same level of grandeur and the same placement concept as the source (full perimeter vs upper-only vs lower-only). Frame follows outer edges of the square, with 2% transparent outer margin; keep the central 70% square completely transparent, no intrusion into face/body area. Coarse 128x128 logical pixel grid, visibly chunky square pixels, roughly 24-32 colors, dark outline, 3-4 flat shades, no smooth painted gradient or micro-detail. Genuine transparent alpha everywhere else, including open center. No character, scene, background, text, checkerboard or opaque glow. Output a single standalone SQUARE transparent PNG game frame, carefully preserving recognizable design of attached target."
+    },
+    {
+      "id": "rank_bronze",
+      "path": "assets/frames-square/rank_bronze.png",
+      "nativeGrid": [
+        128,
+        128
+      ],
+      "reference": "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/event-pixel/rank_bronze.png",
+      "prompt": "Edit target: the attached existing RPG cosmetic frame. Preserve its exact design identity, palette, motifs, material and coarse pixel style, but RECOMPOSE it for a native SQUARE 1:1 canvas. This is a newly drawn square version, not a portrait artwork stretched horizontally. All pumpkins, jewels, moons, stars, ribbons and crown retain undistorted natural proportions. Reposition side ornaments and shorten vertical stems as needed for square geometry. Keep the same level of grandeur and the same placement concept as the source (full perimeter vs upper-only vs lower-only). Frame follows outer edges of the square, with 2% transparent outer margin; keep the central 70% square completely transparent, no intrusion into face/body area. Coarse 128x128 logical pixel grid, visibly chunky square pixels, roughly 24-32 colors, dark outline, 3-4 flat shades, no smooth painted gradient or micro-detail. Genuine transparent alpha everywhere else, including open center. No character, scene, background, text, checkerboard or opaque glow. Output a single standalone SQUARE transparent PNG game frame, carefully preserving recognizable design of attached target."
+    },
+    {
+      "id": "moon_ribbon",
+      "path": "assets/frames-square/moon_ribbon.png",
+      "nativeGrid": [
+        128,
+        128
+      ],
+      "reference": "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/event-pixel/moon_ribbon.png",
+      "prompt": "Edit target: the attached existing RPG cosmetic frame. Preserve its exact design identity, palette, motifs, material and coarse pixel style, but RECOMPOSE it for a native SQUARE 1:1 canvas. This is a newly drawn square version, not a portrait artwork stretched horizontally. All pumpkins, jewels, moons, stars, ribbons and crown retain undistorted natural proportions. Reposition side ornaments and shorten vertical stems as needed for square geometry. Keep the same level of grandeur and the same placement concept as the source (full perimeter vs upper-only vs lower-only). Frame follows outer edges of the square, with 2% transparent outer margin; keep the central 70% square completely transparent, no intrusion into face/body area. Coarse 128x128 logical pixel grid, visibly chunky square pixels, roughly 24-32 colors, dark outline, 3-4 flat shades, no smooth painted gradient or micro-detail. Genuine transparent alpha everywhere else, including open center. No character, scene, background, text, checkerboard or opaque glow. Output a single standalone SQUARE transparent PNG game frame, carefully preserving recognizable design of attached target."
+    },
+    {
+      "id": "rank_gold",
+      "path": "assets/frames-square/rank_gold.png",
+      "nativeGrid": [
+        128,
+        128
+      ],
+      "reference": "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/event-pixel/rank_gold.png",
+      "prompt": "Edit target: the attached existing RPG cosmetic frame. Preserve its exact design identity, palette, motifs, material and coarse pixel style, but RECOMPOSE it for a native SQUARE 1:1 canvas. This is a newly drawn square version, not a portrait artwork stretched horizontally. All pumpkins, jewels, moons, stars, ribbons and crown retain undistorted natural proportions. Reposition side ornaments and shorten vertical stems as needed for square geometry. Keep the same level of grandeur and the same placement concept as the source (full perimeter vs upper-only vs lower-only). Frame follows outer edges of the square, with 2% transparent outer margin; keep the central 70% square completely transparent, no intrusion into face/body area. Coarse 128x128 logical pixel grid, visibly chunky square pixels, roughly 24-32 colors, dark outline, 3-4 flat shades, no smooth painted gradient or micro-detail. Genuine transparent alpha everywhere else, including open center. No character, scene, background, text, checkerboard or opaque glow. Output a single standalone SQUARE transparent PNG game frame, carefully preserving recognizable design of attached target."
+    },
+    {
+      "id": "candy_spark",
+      "path": "assets/frames-square/candy_spark.png",
+      "nativeGrid": [
+        128,
+        128
+      ],
+      "reference": "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/event-pixel/candy_spark.png",
+      "prompt": "Edit target: the attached existing RPG cosmetic frame. Preserve its exact design identity, palette, motifs, material and coarse pixel style, but RECOMPOSE it for a native SQUARE 1:1 canvas. This is a newly drawn square version, not a portrait artwork stretched horizontally. All pumpkins, jewels, moons, stars, ribbons and crown retain undistorted natural proportions. Reposition side ornaments and shorten vertical stems as needed for square geometry. Keep the same level of grandeur and the same placement concept as the source (full perimeter vs upper-only vs lower-only). Frame follows outer edges of the square, with 2% transparent outer margin; keep the central 70% square completely transparent, no intrusion into face/body area. Coarse 128x128 logical pixel grid, visibly chunky square pixels, roughly 24-32 colors, dark outline, 3-4 flat shades, no smooth painted gradient or micro-detail. Genuine transparent alpha everywhere else, including open center. No character, scene, background, text, checkerboard or opaque glow. Output a single standalone SQUARE transparent PNG game frame, carefully preserving recognizable design of attached target."
+    },
+    {
+      "id": "rank_silver",
+      "path": "assets/frames-square/rank_silver.png",
+      "nativeGrid": [
+        128,
+        128
+      ],
+      "reference": "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/event-pixel/rank_silver.png",
+      "prompt": "Edit target: the attached existing RPG cosmetic frame. Preserve its exact design identity, palette, motifs, material and coarse pixel style, but RECOMPOSE it for a native SQUARE 1:1 canvas. This is a newly drawn square version, not a portrait artwork stretched horizontally. All pumpkins, jewels, moons, stars, ribbons and crown retain undistorted natural proportions. Reposition side ornaments and shorten vertical stems as needed for square geometry. Keep the same level of grandeur and the same placement concept as the source (full perimeter vs upper-only vs lower-only). Frame follows outer edges of the square, with 2% transparent outer margin; keep the central 70% square completely transparent, no intrusion into face/body area. Coarse 128x128 logical pixel grid, visibly chunky square pixels, roughly 24-32 colors, dark outline, 3-4 flat shades, no smooth painted gradient or micro-detail. Genuine transparent alpha everywhere else, including open center. No character, scene, background, text, checkerboard or opaque glow. Output a single standalone SQUARE transparent PNG game frame, carefully preserving recognizable design of attached target."
+    }
+  ]
+}

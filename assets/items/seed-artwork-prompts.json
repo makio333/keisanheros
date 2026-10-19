@@ -1,0 +1,29 @@
+{
+  "generator": "built-in image_gen",
+  "styleRule": "assets/AGENTS.md",
+  "references": [
+    "assets/halloween/equip_pumpkin_blade.png",
+    "assets/halloween/equip_witch_mantle.png",
+    "assets/halloween/equip_moon_charm.png"
+  ],
+  "assets": [
+    {
+      "id": "cost_seed",
+      "path": "assets/items/cost_seed_pixel.png",
+      "nativeGrid": [
+        128,
+        128
+      ],
+      "prompt": "Asset type: a single standalone RPG inventory item sprite, square 1:1 transparent PNG. One magical equipment-cost capacity seed: a golden amber seed with one clear seam, two chunky emerald green sprout leaves, a small gold diamond-shaped rune on the shell and three crisp gold pixel sparks. Looks like a precious plant seed, not a potion or coin. Warm golden body and green leaves, easily recognizable at 48 pixels. STRICT PIXEL STYLE: match the provided three original Halloween equipment sprites. Native 128x128 logical pixels enlarged with nearest-neighbor, visibly chunky square clusters, roughly 24-32 colors, dark one-logical-pixel outline, 3-4 flat shades per material. No smooth painted gradients, no micro detail, no fine texture or thin filigree. Item centered, fills 80% of square with clear transparent margin. Actual alpha transparency all around, no background, no scene, no floor, no card, no letters, no text, no numerals, no checkerboard. Keep the amount of detail identical to the original Halloween equipment references."
+    },
+    {
+      "id": "respec_seed",
+      "path": "assets/items/respec_seed_pixel.png",
+      "nativeGrid": [
+        128,
+        128
+      ],
+      "prompt": "Asset type: a single standalone RPG inventory item sprite, square 1:1 transparent PNG. One magical skill-reset seed: a violet and turquoise round seed with a clear shell seam, two small pale silver leaves, a simple broad cyan curved return-arrow rune wrapping around its violet shell and three crisp blue pixel sparks. Looks like a magical plant seed, not a potion or chestnut emoji. Distinct cool blue/violet palette and round silhouette, recognizable at 48 pixels. STRICT PIXEL STYLE: match the provided three original Halloween equipment sprites. Native 128x128 logical pixels enlarged with nearest-neighbor, visibly chunky square clusters, roughly 24-32 colors, dark one-logical-pixel outline, 3-4 flat shades per material. No smooth painted gradients, no micro detail, no fine texture or thin filigree. Item centered, fills 80% of square with clear transparent margin. Actual alpha transparency all around, no background, no scene, no floor, no card, no letters, no text, no numerals, no checkerboard. Keep the amount of detail identical to the original Halloween equipment references."
+    }
+  ]
+}

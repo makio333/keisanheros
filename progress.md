@@ -272,3 +272,122 @@ TODO:
 - ハロウィンチケットは10・30・50体で各1枚、計3枚。20体で背景スキンガチャ1枚、50体で装備ガチャ10連1枚。コストプラスのたねは10・30・50体で1・2・3個。
 - 旧受取分のお菓子は差額のみ加算。チケットと種は専用の受取IDで二重配布を防ぎ、クラウド台帳・再同期にも対応。
 - 詳細画面に突破ボーナス一覧と達成状況を表示。全19テスト・構文確認・ビルド成功。
+
+## 2026-10-16 — レイドコイン・装飾・イベント報酬・プリント
+- 通常レイド：各挑戦でceil(damage/4)コイン、討伐順位50/30/15/5コイン。順位コインはFirestore取引と専用台帳で1ボス1回、既存の受取済み順位にもコインのみ追加可能。
+- コイン交換所に能力付き低コスト装備3種・星界の守護者・新背景「星界の天空神殿」・前景装飾を追加。交換は各景品1回。新チケットSVG。新PNGは内蔵画像生成、プロンプトはassets/raid/artwork-prompts.json。
+- 背景とキャラに独立した前景装飾の選択・保存・HUD/ランキング反映。ハロウィン累計討伐数11/1確定、上位3位の専用装飾と全参加者武器。ガチャに小さな装飾2種と低コスト装備3種。
+- ハロウィンレイド撃破ごとお菓子2、前回2ステージ前から漢字再開、終了合図と討伐数表示。通常敵5%/ボス25%チケット。敵攻撃1.5倍。
+- 管理者プレゼントは受取確認をホーム/送信後/定期で起動し、正しいスロットのクラウド保存と受取印を原子的に更新。
+- セーブ前チャレンジプリント提案：経験値/G/消耗品3倍、80%合格で装備10連券。古代の設計図はクリア済みの最高難易度、漢字も共通印刷に対応。
+- 武器/道具店の品揃えと装飾を追加。計算での支払いはユーザーが保留を指定したため実装しない。
+- 全22テスト成功、Viteビルド成功。Firestoreインメモリ取引で重複/同時受取/正しい宛先/最新進行保持を確認。実ブラウザでコイン・取消/全景品交換・前景装飾・終了表示・印刷提案・PC/390px表示確認。標準スキルクライアントも実行。
+- 公開・Git pushは今回まだ実行していない。
+
+## 2026-10-16 — 交換所ボタン・ランキング訂正・プレゼント受取・店のアイコン一覧
+- コイン交換所ボタンのイベント接続漏れを修正。実際のボタンをクリックする回帰ブラウザテストをtests/shop-gift-browser.mjsに追加（全クラウド通信はfixtureに差し替え）。
+- ユーザー依頼でboss_80のブラック1023点だけを除外。実戦イベントのないlegacyDamage=1023だった。共有ダメージ1302→279。他4人のドキュメントに変更がないことを確認。raidModerationBackupsへ原本を保存。スコアは0・除外フラグ・旧基準1023を保持し、古い端末からの再送で復活させず、新しい実戦イベントから再参加可能。
+- 旧集計の移行にボスIDを必須とし、ボス指定のない旧記録はLv50だけ対象。テストモードの戦闘は共有用ローカルキャッシュも変更しない。
+- 管理者プレゼントは拠点で内容/アイコン/個数を表示し、受取ボタンを押して初めて原子的に保存・受取印を更新。拠点へ戻るたび確認。受取失敗時はボタンで再試行可能。
+- 明示指定の3件（ブラック100万G、himariとまなみ各3000G+装備10連3+背景券1+種5）を20261016_owner_requestとして原配布回収/同内容再配布。未受取だった2件は差替えのみ。受取済み100万Gは回収台帳と使用済み分の精算を用い、再受取しても二重加算しない。adminGiftRecallBackupsに原本保存。
+- レイド券をハロウィン券の絵柄を参照した金枠・青地・銀竜のPNGへ描き直し。assets/raid/raid_ticket_pixel.png、内蔵画像生成、プロンプトはartwork-prompts.json。
+- 武器屋・道具屋を64pxアイコン一覧に変更。選択時に詳細/価格と購入確認。背景はユーザー指示どおり元のassets/bg/weapon_shop.jpgとitem_shop.jpgに復元。ハロウィン背景への上書きを削除。
+- 全22テスト成功。ブラウザで交換所ボタン/アイコン寸法/購入取消/受取前ゼロ加算/受取後1回加算/新券表示を確認。公開・pushは未実施。
+
+## 2026-10-16 — ピクセル制作基準・今回20点の再生成・装飾表示の統一
+- ユーザー指定の元ハロウィン装備3点（かぼちゃ剣/魔女マント/月のお守り）を参照画像として内蔵画像生成で今回の20点を全て再生成。細かすぎた最初の生成案はランタイム参照から削除。
+- assets/AGENTS.mdへ制作ルール：装備128x128相当・前景96x128相当の粗いピクセル、24〜32色目安、暗い輪郭と少ない陰影、48/88pxで比較確認、透明余白・右上向き武器。新PNGはassets/event-pixel/、各実プロンプト/参照はassets/equipment-art-prompts.json。
+- 6種の前景装飾、ハロウィンの低コスト装備と報酬剣、マグマ装備3種、木/銅/旅人剣、稲妻の太刀/エクスカリバーを固有絵へ。コウモリの小盾・かぼちゃの小鈴をガチャへ追加。向きが逆だった既存2剣は認可済みの反転で合わせた。
+- event_equipment.jsでイベント装備13種に固有能力を保証。所有済み/ギフト/合成にも適用し、既存能力・基礎ステータス・コストは保持。
+- 共通3:4の背景→キャラ→前景装飾レイアウトを拠点/部屋/ランキング/セーブ枠/スキン選択/ガチャ結果/景品プレビューへ適用。背景と装飾のプレビューにも現在のキャラを合わせて表示。他プレイヤーには自分の装飾を流用しない。
+- 全23単体テストとViteビルド成功。tests/avatar-equipment-browser.mjsで全20画像のdecode、拠点/部屋/選択/ランキング/背景と装飾プレビューの3:4寸法、剣拡大とマグマ交換所を確認。クラウド通信をfixtureに差し替えた検証で本番のセーブ/ランキングは変更していない。
+- 生成20点の透過を確認し48/88px比較画像と実画面スクリーンショットを目視確認。標準develop-web-gameクライアントも起動/スクリーンショット/状態出力を確認。ローカル5174へ反映、公開とpushは未実施。
+
+## 2026-10-17 — 交換商品の単体表示
+- ユーザーの指摘に合わせ、商品/報酬のアイコンとクリック拡大から現在装備中の背景・キャラ・装飾の合成を削除。交換対象のキャラスキン/背景/装飾そのものだけを表示。プレイヤーの拠点/部屋/ランキング等の装着表示は維持。
+- assets/AGENTS.mdにも商品表示と装着プレビューの区別を追記。
+- Halloween交換4品とレイド交換所で各商品が単体画像になるブラウザ回帰を追加し成功。クリック拡大も単一画像を確認。関連2単体テスト成功、実画面を目視確認。
+
+## 2026-10-17 — フレーム名称と3タブのカスタマイズ
+- 前景の装飾をユーザー表示で「フレーム」に統一。独立した即時変更ダイアログを廃止し、キャラ/背景/フレームの3タブへ統合。所持フレームと「フレームなし」を選び、組み合わせをプレビューしてまとめて決定。閉じると保留中の変更は破棄。
+- フレームに対するキャラと背景の共通3:4配置を拠点/部屋/セーブ一覧/ランキング/組み合わせプレビューで使用。旧セーブのavatarDecoration等は維持して互換性を保持。ランキングのプロフィール不足時にも保存済みのフレームを補完。商品一覧と拡大は前回指示の単体表示を維持。
+- 全23単体テスト・ビルド成功。隔離ブラウザで3タブ、フレーム変更の取消/決定、なしのプレビュー、拠点と実際に保存したセーブカードへの反映、390px幅の操作と画像を確認。本番のセーブやランキングには書き込まずに実施。
+
+## 2026-10-17 — フレームを正方形へ
+- ユーザーの「四角で」の指定を優先し、共通のキャラ/背景/フレーム表示を1:1の正方形へ変更。縦長のフレームに合わせて表示枠を作らず、フレームを表示枠の外周へ合わせる。キャラは縦横比を保ったcontain・4%余白で表示。
+- 拠点130px/小画面104px、部屋96px、ランキング112px/小画面80pxへサイズ感を戻し、セーブカードはカード幅に合わせた正方形。選択プレビューも正方形へ。商品単体表示は維持。
+- 隔離ブラウザで拠点/部屋/ランキング/セーブカード/プレビューの1:1寸法、フレーム保存と取消を確認。PCと390px画面を目視確認。制作ルールも今後のフレームを正方形とするよう更新。
+
+## 2026-10-17 — 正方形フレーム再生成・プレビュー拡大・道具屋のクリック修正
+- 既存6フレームを編集参照として内蔵画像生成で正方形用に再描画。assets/frames-square/へ全6PNGと実プロンプトのartwork-prompts.jsonを保存し、カタログ参照を切替。全6点1254x1254・RGBA・中央透明を確認。旧画像は参照原本として維持。
+- プレビュー幅を固定値からコンテナの幅/高さと3行のキャプションの余白で算出する形へ変更。PC・390px画面とも余白を使い、収まる最大の正方形で表示。
+- 道具屋の不具合は1024x768/1280x720/900x600でステータス欄の透明な余白がクリックを遮っていた。外側コンテナのpointer-eventsをnoneにし、アバター/ステータス/装備/券だけautoへ。実ボタンで道具屋へ出入りする回帰を追加し4サイズ成功。購入取消・プレゼント受取・交換所も既存回帰成功。
+- 全23単体テスト・Viteビルド・diffチェック成功。新6フレームの正方形寸法とdecode、保存/取消、拠点/部屋/ランキング/セーブ一覧、PC/スマートフォンの拡大プレビューを隔離ブラウザで確認・目視確認。本番データへの書込みなし。
+
+## 2026-10-17 — プリント報酬アイコン・たねの画像と使用演出・追加装備コスト
+- セーブ前チャレンジプリントの提案に、経験値/ゴールド/消耗品の3倍アイコンと、80%以上で確定の装備10連券×1を表示。券はクリック拡大可能。正答率条件と正解数による報酬であることを明示。印刷/そのまま保存/取消の流れは維持。
+- cost_seedとrespec_seedを元ハロウィン装備3点参照・128px相当のピクセルルールで内蔵画像生成。assets/items/cost_seed_pixel.png、respec_seed_pixel.pngへ保存。全プロンプトと参照はseed-artwork-prompts.json。透過と正方形を確認し、道具屋/所持品/報酬のアイコンを差替え。
+- たね使用時のブラウザalertをゲーム内の金色/青色の発光・粒子・数値カウントアップへ置換。スキル振り直しは各ステータスのポイントが戻る演出。増加前後と回収量を表示し、閉じたあとコスト欄/ポイント欄を強調。戻すポイントなしはゲーム内確認にして消費なし。使用中の連打と使用済みUIDによる再加算を防止。
+- 今回の追加装備12点を基本コスト3〜5へ調整。店：旅人の軽い剣3/ベスト3/魔力のお守り4。イベント：小盾3/小鈴3/サーベル3/月のピン3/ケープ4/月影の短剣5/マグマ剣5/鎧5/護符4。イベント固定コストの仕組みは維持。旅人の剣は同コストの鋼の剣より弱いため55→45Gへ。攻撃力等の既存数値・固有能力・初期装備のコストは維持。
+- 全24単体テスト成功、Viteビルド成功、diffチェック成功。実ブラウザで所持品からの両たね使用、数値/消費1個/取消/ポイント未配分時の非消費/ブラウザ通知ゼロ、プリント報酬と拡大・保存・取消を検証。PCと390pxスクリーンショットを目視確認。標準ゲームクライアントの起動/状態出力も確認。クラウド通信はfixtureに置換して本番セーブは変更していない。
+
+## 2026-10-17 — イベント報酬を左下へ・共通正解音・漢字の複数読み
+- 討伐突破ボーナスをランキング列から左側の参加ボタンの下へ移動。5段階を小さい行へまとめ、バナー/概要を詰めて全段階が見えるように調整。右ランキングのスクロール領域はPCで約681pxへ。報酬はstageRewardIconで実際のお菓子/イベント券/背景券/10連券/コストのたねPNG＋×個数を表示し、クリック拡大も維持。取得済み/あと何体も継続。
+- 漢字・計算の正解音をSoundManager.playCorrectAnswer（通常のse_type素材・専用0.24音量）へ統一。イベントだけ追加されていた別の合成correct音を削除し二重鳴りを解消。イベントの攻撃SEは1.8倍（基本0.36）。全体音量/ミュートと再生中SEの音量追従は維持。
+- EDRDGのKANJIDIC2とJMdictを公式配布元から取得し、出題データに含まれる漢字1022字/表記1012語の読みをローカルへ抽出。単漢字には音訓/名乗り、熟語にはその表記に対応する読みのみを追加（漢字読みの総当たり拼接はしない）。日=ひ/にち/じつ/か、文=ぶん/もん/ふみ/あや等を受け付ける。送りがな省略は維持、漢字回答のみNFKC・カタカナ→ひらがな正規化。かな表記問題は小文字/長音/ひらカタの区別を維持。
+- 新規kanji_readings.js/kanji_readings_data.js、取得記録data/kanji-readings-source.json、更新スクリプトscripts/update_kanji_readings.py。読みデータはCC BY-SA 4.0、出典/ライセンスをpublic/kanji-reading-sources.htmlとedrdg-licence.txtへ同梱しメニューから参照可能。辞書更新・出題語追加時の再生成手順を記載。
+- 全25単体テスト、ビルド、diffチェック成功。隔離ブラウザで日/文/入るの別読みとカタカナ入力、誤読拒否、通常とイベントの同一正解音1回/攻撃倍率を確認。報酬配置/本物のアイコン/取得状態/拡大、PCと390px画面を確認。標準スキルクライアントのスクリーンショット/状態出力も確認。本番ランキング・セーブへの書込みなし。
+
+## 2026-10-17 — Thin corner frame rule and guard balance
+- Established a general frame rule in assets/AGENTS.md: square coarse pixel art, thin outer connectors, corner-hugging motifs, empty face area, no top-center hanging ornaments, unchanged character scale.
+- Redrew all six frames with built-in image_gen edits, preserving their themes. Runtime now uses assets/frames-thin; prompts and original references are recorded in artwork-prompts.json. Old IDs/save fields remain compatible.
+- Checked both Halloween ranger and witch compositions at 48px, 88px and larger preview sizes; verified home, room, selector, save cards, ranking, standalone products and mobile behavior in isolated browser fixtures.
+- Reduced guard damage reduction from 15% to 5% in normal, turn-based and Halloween raid counterattacks; duplicate guard abilities still do not stack. New guard balance tests exercise all three paths, minimum damage and ancient shield combination.
+- Validation: all 26 unit test files passed; Vite build passed; browser fixture passed without page errors; game skill client screenshot/state inspected; git diff --check clean. No shared ranking/save writes, deployment or push.
+
+## 2026-10-18 — Native Unity migration started
+- User requested a native Unity port into their new レジェンドヒーローズUnity project while retaining the Web game, and asked to reorganize accumulated code during migration.
+- Added a separate unity-port package: Content / Domain / Persistence / Presentation / Editor, with per-screen UI files and explicit migration status documentation.
+- Added read-only Web export and non-deleting Unity sync scripts. Export: 15 areas, 95 stages, 46 equipment, 25 avatars, 6 frames, 52 kana/kanji pools, 162 images. No Firebase or browser saves used.
+- Native C# implementation begins with create player, home, stage selection, question combat, equipment/shop, appearance, local saves and backup recovery. Remaining parity gaps are documented in unity-port/Docs/MIGRATION.md.
+- Detected pre-existing invalid Web enemy references bandit_19 in area7 and area11; exporter reports and excludes them, leaving Web unchanged.
+- Unity 6000.6.3f1 compiled the native port successfully. Native C# validation passed: 8,153 exported stage questions accept their canonical answers and reject unrelated input; kanji alternate readings and strict kana; owned/cost-limited equipment; purchase/no duplicate charge/insufficient funds; wrong-answer damage; five-kill rewards exactly once; defeat; local save roundtrip and corrupt-save recovery.
+- Fixed fraction answers and textual ratio answers, and normalized Japanese resource paths (macOS decomposed filenames). Checked native title, create-character, home and shop rendering. Pointer raycast diagnostics correctly resolve shop item buttons. Native GUI automation became unreliable with multiple Unity windows; no claim that every mouse/IME interaction or mobile device has been verified.
+- Native scene: Assets/LegendHeroes/Scenes/LegendHeroes.unity. Tools > Legend Heroes > Open Game / Validate Migration. Web runtime files were not changed by the migration.
+
+## 2026-10-19 — Unity移植の継続（容量不足から復帰）
+- 一時ファイル書込みが容量不足で中断。再開時8.8GiBの空きを確認、ユーザーファイルの削除なしで継続。
+- 独立したDomainへ無限問題生成、装備個体UID/レアリティ/合成、特技・MP、道具と種、ガチャ/交換、通常・シーズン2・2分イベント・世界レイド、プリントの採点/報酬を追加。画面ごとのPresentationへ接続中。
+- Persistenceへ複数ローカルスロット、Web JSON変換、独自JSON/Firestore値変換を追加。ServicesへFirestore REST、競合検知、プレゼント受領、レイド同期・順位報酬・プリントHTML印刷を分離。クラウド機能は本番を書き換えず、隔離試験で検証する方針。
+- レイドFinishの二重コイン防止、原子的なファイル置換とバックアップ、装備の小数能力値保持、ポイント配分HP+6/MP+4とWeb読込時の二重加算防止、未知装備IDを捨てない変換、アイテムUID衝突防止、イベント日次/突破報酬の算数・漢字共有と受領履歴のWeb互換、プレゼント回収再配布の債務処理を修正。
+- 算数の平均生成を正しい対称な数へ修正（Web由来の平均問題関数には元から誤答生成がある。Webソースは本移植で変更していない）。合成・修行のmul1..5/div1..5難易度を元仕様へ。かなの2択/4択と解説を出力しネイティブ戦闘へ接続。
+- 装備ガチャはWeb同様1回150G/6回750G/13回1400G、10連券は10回、限定15%とコスト制限。BGM・音量保存、特技/回復の戦闘メニュー、同名装備の各UIDを選ぶ画面を追加。
+- エクスポーターの問題抽出を固定乱数で再現可能にした。現時点15エリア/95ステージ/46装備/25キャラ/6フレーム/182画像。bandit_19の元データ不整合は警告として保持。
+- scripts/test-unity-rules.pyはネットワーク禁止の独立C#試験。最新30,732件成功。実Unity参照のRuntime/Editor/Playerコンパイル3種成功。Unity内検証も8165問・戦闘・保存等成功（固定乱数再出力前の件数）。実Unity拠点の画像を目視確認。
+- 開発用Editor APIでrefresh/validate/play/stopを操作可能。実シーンUI試験をscripts/test-unity-ui.pyへ追加。背面でゲーム更新が止まったためApplication.runInBackgroundとQA時QueuePlayerLoopUpdateで切り分け中。現行UI試験の結果は未確定。
+- まだ全機能移植完了ではない。残件はDocs/MIGRATION.mdとunity-port/Docs/WORKLOG.mdで更新する。Webの継続、本番セーブ/ランキングへの非書込みは維持。
+
+## 2026-10-19 — Unity版の主要機能移植とMacビルド
+- Content / Domain / Persistence / Services / Presentation / Editorへ整理してネイティブC#・uGUIへ実装。15エリア95ステージ、46装備、25キャラ、6フレーム、193画像。Webのゲーム本体は変更せず保持。
+- かな・漢字の複数読み/選択/五十音入力、戦闘/特技/能力/MP、個体UID装備・合成、種、両店舗・ガチャ・交換、共通正方形のキャラ/背景/フレーム・ホログラムを接続。
+- 通常/シーズン2/2分のイベント、世界レイド、参加/順位コイン、クエスト・メダル・復習・学習記録、プリント/採点/チャレンジ・古代の設計図、保存前提案、管理設定を実装。
+- Web JSON互換で未知フィールド・UID・未採点プリントを保持。Webで採点済みのプリントを再度有効にしない。バックアップ、クラウド競合防止、プレゼントと順位報酬の原子的受領、レイド再送の二重付与防止を確認。本番への書込み試験なし。
+- 検証：独立C#32,221項目・クラウド代替試験成功。Runtime/Editor/Playerコンパイル成功。Unity内8,224問等成功。実シーン56操作成功。拠点・店・クエスト・かな入力の描画確認。Web26テスト・Viteビルドは成功済みで、game.jsの元ハッシュを維持。git diff --check成功。
+- 最新Mac開発ビルド成功（607,923,955 bytes、エラー0）・単独タイトル表示確認。出力：移植先Temp/LegendHeroesQA/Build/LegendHeroes.app。CUAのクリックがnoWindowsAvailableとなるため単独アプリの開始後操作は未確認（実シーン操作試験とは別）。未使用URPポストエフェクトのシェーダー除外警告あり、ゲームUIの描画確認済み。
+- 移植先Docs/MIGRATION.mdに機能対応と残る検証範囲を記載。スマホ実機/OS印刷/署名/ストア購入・月額課金は未対応または未検証で、販売可能な状態とは扱わない。
+
+## 2026-10-19 — Web版とのUI・ルール一致を優先する標準版
+- ユーザーからC#版のルール・拠点・冒険等の差を指摘され、「UIも全て同じに」と追加指示。標準をWeb共通コードのUnity/WebKitホストへ変更した。C#へ全部書換えたという説明はしない。先行C#版は比較用として保持。
+- 現行HTML/CSS/JS・画像・音声をそのままアプリへ同梱。16個の元ソースのハッシュ一致を検証。Web本体・ブラウザ保存は変更しない。
+- ネイティブホストはmacOS WebKit、読取専用localhost配信（Host/パス制限、音声Range）、印刷/ファイル/ダウンロード。PWAキャッシュ登録を外し、Chart.jsとライセンスを同梱、旧部屋URLのalias、Chrome/WebKitの文字組み補正、空の印刷ポップアップURL正規化を追加。
+- QAはFirebaseを除いた別ビルド、非永続ストア、別ポート。製品への検証フック混入を検査。終了時の保存flushとバックグラウンド起動を設定。
+- 確認：元Web26ルールテスト、16ソースハッシュ、Runtime/Editor/Playerの3コンパイル、配信27項目、実Unity/WebKit23画面34項目、Webとの10画面72コントロール配置比較（2CSSpx以内）、素材404なし、実印刷ホストへ10問と名前の伝達、既存Webゲームクライアントのスクリーンショット。
+- Macアプリ最終ビルド成功857,931,835bytes、エラー0。保存先は移植先Builds/macOS/LegendHeroes.app。Tempへ置くとUnity再起動で消えるため、恒久の保存先へ変更。
+- 単独アプリも実行し、HTTP200、素材100%、screen-title、JavaScriptエラーなしを今回固有の起動IDで確認。起動画像をアプリ自身のWebKitから取得。
+- Macの画面ロックによりCUAの起動確認が長時間戻らず、単独アプリの物理クリックは未確認。解除を非同期で依頼。認証を回避しない。GUI操作以外の検証と保管を完了する。
+- 全ての結果・代表画面は移植先Documentation/LegendHeroes/Verificationへ保管。標準シーンはLegendHeroesIdentical.unity。旧C#版の記録をNATIVE_COMPARISON.mdへ分離。
+- 本番ランキング/共有セーブへの試験書込み、git push、公開なし。他のUnityゲームへの変更なし。
+
+## 2026-10-19 — ロック解除後のMac版操作確認
+- ユーザーの解除連絡後、確認用の二重起動を解消し単独Mac版を再起動。キーボードでSTART、新規登録フォームへの移動、日本語の入力値表示、消去、タイトル復帰を確認。新規セーブ確定や本番ランキング書込は実施していない。
+- 座標クリックはCUAのnoWindowsAvailableが残るため、ボタンはアクセシビリティ操作で確認。日本語IME入力・音の聴感は検証範囲外。標準版は引き続きWebコード共通利用のUnity＋WebKit方式。

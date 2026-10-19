@@ -1,3 +1,4 @@
+import {getAcceptedKanjiReadings,normalizeReading} from '../kanji_readings.js';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
@@ -15,7 +16,7 @@ class Element {
 }
 const elements = new Map();
 const context = vm.createContext({
-  window: {}, Math: Object.create(Math), setTimeout() {},
+  window: {}, getAcceptedKanjiReadings,normalizeReading, Math: Object.create(Math), setTimeout() {},
   document: { getElementById(id) {
     if (!elements.has(id)) elements.set(id, new Element());
     return elements.get(id);
@@ -24,7 +25,7 @@ const context = vm.createContext({
 vm.runInContext(fs.readFileSync(new URL('../kanji_data.js', import.meta.url), 'utf8'), context);
 const source = fs.readFileSync(new URL('../game.js', import.meta.url), 'utf8');
 vm.runInContext(source.slice(source.indexOf('function createSokuonChoiceProblem('), source.indexOf('function startChallenge(')), context);
-vm.runInContext(fs.readFileSync(new URL('../kanji_input_ui.js', import.meta.url), 'utf8'), context);
+vm.runInContext(fs.readFileSync(new URL('../kanji_input_ui.js', import.meta.url), 'utf8').replace(/^import .*;$/gm,''), context);
 context.spawnInputEffect=()=>{};
 context.window.initKanjiInputUI(()=>{});
 const keyboard=elements.get('software-keyboard');

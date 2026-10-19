@@ -8229,3 +8229,149 @@ body:has(#screen-synthesis-calc.active) :is(#analog-clock-widget,#btn-menu,#menu
   #screen-battle.event-raid-kanji:has(#software-keyboard.hidden) #kanji-problem-center { position:static; bottom:auto; left:auto; transform:none; margin:8px; width:calc(100% - 16px); }
   #screen-battle.event-raid-battle #battle-challenge { position:static; bottom:auto; left:auto; transform:none; width:calc(100% - 16px); margin:8px; max-height:none; }
 }
+/* 前景装飾はキャラクター・背景より上に重ねる */
+.avatar-decoration { position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; max-width:none !important; object-fit:fill !important; pointer-events:none; z-index:30 !important; }
+.raid-ranking-avatar, .avatar-selector-preview { position:relative; }
+.decoration-wardrobe { z-index:16000; }
+.decoration-wardrobe > .panel { width:min(660px,94vw); max-height:90dvh; overflow:auto; }
+.decoration-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; }
+.decoration-option { display:flex; flex-direction:column; align-items:center; padding:12px; color:#ffe0a2; background:#32213d; border:1px solid #c69a6a; border-radius:12px; font:inherit; cursor:pointer; }
+.event-raid-finish-card { width:min(480px,92vw); text-align:center; background:radial-gradient(ellipse at top,#633774,#201329 80%); border:2px solid #ffd185; }
+.event-raid-finish-signal { letter-spacing:.2em; color:#ffd580; font-weight:bold; }
+.event-raid-finish-count { display:block; font-size:76px; color:#ffe19a; text-shadow:0 0 24px #f6a34266; }
+.event-raid-finish-count small { font-size:24px; }
+.challenge-print-suggestion { width:min(500px,92vw); text-align:center; }
+#screen-weapon-shop > .panel, #screen-item-shop > .panel { background:linear-gradient(145deg,#3c2449ed,#21172ce8); border:2px solid #d2a16c; border-radius:18px; }
+.raid-exchange-overlay { z-index:10800; }
+.raid-exchange-panel { width:min(860px,94vw); max-height:90dvh; overflow-y:auto; box-sizing:border-box; background:linear-gradient(#15274ce8,#11182eed),url('assets/raid/raid_observatory.png') center/cover; border:2px solid #d8b975; }
+.raid-exchange-panel > header { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; color:#ffe5a3; }
+.raid-exchange-panel > p { font-size:13px; line-height:1.6; }
+.raid-exchange-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:14px 0; }
+.raid-exchange-grid .halloween-prize-card { background:#19243fdd; border-color:#9dadd0; }
+.raid-exchange-grid .halloween-prize-card small { font-size:12px; color:#a5def2; }
+.raid-coin-payout { color:#ffe09a; font-size:20px; }
+@media(max-width:600px) { .raid-exchange-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+body:has(.raid-exchange-overlay,.event-raid-finish,.challenge-print-suggestion,.decoration-wardrobe) :is(#analog-clock-widget,#menu-container,#volume-control-container) { visibility:hidden; pointer-events:none; }
+
+/* Shops show compact selectable icons; names, prices and stats open on selection. */
+#weapon-shop-list.shop-icon-grid,#item-shop-list.shop-icon-grid { display:grid; grid-template-columns:repeat(auto-fill,64px); grid-auto-rows:64px; align-content:start; justify-content:start; gap:10px; padding:12px; max-height:48dvh; overflow-y:auto; }
+.shop-icon { display:flex; align-items:center; justify-content:center; width:64px; height:64px; min-width:0; min-height:0; padding:6px; margin:0; border-radius:10px; cursor:pointer; background:#211a32; border:2px solid #8c739d; box-sizing:border-box; }
+.shop-icon img { width:48px; height:48px; max-width:100%; object-fit:contain; }
+.shop-icon:hover,.shop-icon:focus-visible { border-color:#ffe6a1; box-shadow:0 0 10px #f6bb4855; }
+.admin-gift-notice { max-height:88dvh; overflow-y:auto; }
+.admin-gift-notice-list li { display:flex; align-items:center; gap:10px; padding:8px 0; }
+.admin-gift-notice-list li > span:not(.admin-gift-item-icon) { flex:1; }
+.admin-gift-notice-list li b { white-space:nowrap; color:#ffe19a; }
+
+.admin-gift-notice-list .stage-reward-icon { width:56px; height:56px; flex:0 0 56px; padding:4px; }
+.admin-gift-notice-list .admin-gift-item-icon { width:56px; text-align:center; font-size:32px; }
+.admin-gift-recall-note { font-size:12px; color:#d7c7a7; }
+
+/* One cosmetic stage: background → contained whole character → foreground ornament. */
+.avatar-composite-stage {
+  --avatar-stage-width:112px;
+  position:relative !important; isolation:isolate; display:block !important;
+  width:var(--avatar-stage-width) !important; max-width:100%; height:auto !important;
+  aspect-ratio:1 / 1 !important; padding:0 !important; overflow:hidden;
+  flex:0 0 auto !important; box-sizing:border-box; border-radius:8px;
+}
+.avatar-composite-stage > .avatar-composite-background { position:absolute !important; inset:0 !important; width:100%; height:100%; margin:0; border:0; border-radius:inherit; background-size:cover !important; background-position:center !important; opacity:1; z-index:1; }
+.avatar-composite-stage > .avatar-composite-character-layer { position:absolute !important; inset:0 !important; width:100%; height:100%; padding:0; margin:0; z-index:2; pointer-events:none; }
+.avatar-composite-stage .avatar-composite-character { position:absolute !important; inset:4% !important; width:92% !important; height:92% !important; max-width:none !important; max-height:none !important; margin:0 !important; border:0 !important; border-radius:0 !important; background:none !important; object-fit:contain !important; object-position:center bottom !important; z-index:2; }
+.avatar-composite-stage > .avatar-decoration { inset:0 !important; width:100% !important; height:100% !important; object-fit:fill !important; z-index:30 !important; }
+#home-avatar-window.avatar-composite-stage { --avatar-stage-width:130px; }
+.room-avatar-preview.avatar-composite-stage { --avatar-stage-width:96px; margin:20px auto 0 !important; border:2px solid var(--accent); cursor:pointer; }
+.raid-ranking-avatar.avatar-composite-stage { --avatar-stage-width:112px; }
+.save-slot-avatar-frame.avatar-composite-stage { --avatar-stage-width:100%; margin:0 auto; }
+.avatar-selector-preview-column { align-items:center; justify-content:center; }
+.avatar-selector-caption { width:100%; }
+.skin-gacha-preview-art.avatar-composite-stage,.reward-artwork-preview-art.avatar-composite-stage { --avatar-stage-width:min(280px,50dvh); margin:0 auto; }
+@media(max-width:680px) {
+  #town-map #home-avatar-window.avatar-composite-stage { --avatar-stage-width:104px; width:104px !important; height:auto !important; }
+  .raid-ranking-avatar.avatar-composite-stage { --avatar-stage-width:80px; }
+}
+.reward-artwork-image.avatar-composite-stage,.skin-gacha-result-art.avatar-composite-stage { --avatar-stage-width:min(280px,50dvh); margin:0 auto; }
+.skin-gacha-ten-art.avatar-composite-stage { --avatar-stage-width:100%; }
+.stage-reward-icon.avatar-composite-stage { --avatar-stage-width:42px; }
+#town-map #home-avatar-window.avatar-composite-stage { width:var(--avatar-stage-width) !important; height:auto !important; }
+
+/* Choose one saved appearance from three independent cosmetic tabs. */
+.avatar-selector-tabs { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.avatar-selector-tabs button { min-width:0; padding:8px 4px; white-space:nowrap; }
+.avatar-frame-option img,.avatar-frame-empty { width:72px; height:72px; object-fit:fill; }
+.avatar-frame-empty { display:grid; place-items:center; border:1px dashed #928199; border-radius:6px; color:#c8bbd0; box-sizing:border-box; }
+#avatar-selector-frame-name { color:#ead4a2; font-size:13px; }
+.avatar-selector-preview-label { z-index:35; }
+body:has(#avatar-change-modal:not(.hidden)) :is(#menu-container,#volume-control-container,#analog-clock-widget) { display:none !important; }
+@media(max-width:680px) {
+  .avatar-selector-caption { display:flex; flex-direction:column; gap:4px; }
+}
+
+/* Empty space beside the status and ticket rows must not cover town buttons. */
+.town-status-cluster,.town-status-cluster .player-status-group { pointer-events:none; }
+.town-status-cluster :is(#home-avatar-window,.town-status-overlay,.town-equip-icon-slot,.home-ticket-cell) { pointer-events:auto; }
+/* Use the available preview column, reserving space for the three captions. */
+.avatar-selector-preview-column { container-type:size; }
+.avatar-selector-preview.avatar-composite-stage { --avatar-stage-width:min(100cqw,calc(100cqh - 84px)); }
+.challenge-print-suggestion { box-sizing:border-box; max-height:92dvh; overflow-y:auto; }
+.challenge-print-rewards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:16px 0 10px; }
+.challenge-print-reward { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:12px 6px; border:1px solid #8b7198; border-radius:10px; background:#21172f; font-size:13px; }
+.challenge-print-reward-art { display:flex; align-items:center; justify-content:center; height:48px; font-size:36px; }
+.challenge-print-reward b { color:#ffdc82; font-size:19px; }
+.challenge-print-ticket { grid-column:1/-1; display:grid; grid-template-columns:56px 1fr auto; text-align:left; border-color:#e5bd62; background:linear-gradient(120deg,#40304d,#282037); padding:12px; }
+.challenge-print-ticket .challenge-print-reward-art { grid-row:1/3; }
+.challenge-print-ticket small { grid-column:2/-1; color:#ffe39b; }
+.challenge-print-reward-note { font-size:12px; line-height:1.6; color:#cfc2dc; }
+.seed-use-effect { z-index:18000; background:rgba(10,8,22,.8); }
+.seed-use-card { --seed-glow:#ffd35c; width:min(460px,92vw); box-sizing:border-box; max-height:92dvh; overflow:auto; text-align:center; border:2px solid var(--seed-glow); background:radial-gradient(ellipse at top,#4b3a38,#21172f 70%); }
+.seed-use-respec .seed-use-card { --seed-glow:#9de6ff; background:radial-gradient(ellipse at top,#334c68,#21172f 70%); }
+.seed-use-card h2 { margin:12px 0; font-size:clamp(19px,4vw,26px); color:var(--seed-glow); }
+.seed-use-stage { position:relative; display:grid; place-items:center; height:160px; }
+.seed-use-stage > img { position:relative; z-index:2; width:112px; height:112px; object-fit:contain; image-rendering:pixelated; animation:seed-awaken 1.2s ease-out both; }
+.seed-use-halo { position:absolute; width:150px; height:150px; border-radius:50%; background:radial-gradient(circle,var(--seed-glow),transparent 70%); opacity:.35; animation:seed-halo 1.2s ease-out both; }
+.seed-use-particle { position:absolute; left:50%; top:50%; width:6px; height:6px; background:var(--seed-glow); box-shadow:0 0 8px var(--seed-glow); animation:seed-particle 1.1s var(--delay) ease-out both; }
+.seed-use-values { display:flex; align-items:baseline; justify-content:center; gap:15px; margin:8px 0; font-size:30px; }
+.seed-use-values > span:first-child { opacity:.6; }
+.seed-use-values strong { font-size:64px; color:var(--seed-glow); text-shadow:0 0 18px #f7c94a66; }
+.seed-use-values small { font-size:15px; }
+.seed-use-gain { display:block; color:var(--seed-glow); font-size:22px; animation:seed-gain .7s .3s both; }
+.seed-use-description { line-height:1.7; font-size:14px; }
+.seed-return-stats { display:flex; justify-content:center; gap:20px; font-size:24px; }
+.seed-return-stats span { animation:seed-point-return 1s ease-in-out both; }
+.seed-return-stats span:nth-child(2n) { animation-delay:.15s; }
+.seed-stat-pulse { animation:seed-stat-pulse 1.2s ease-out; }
+@keyframes seed-awaken { 0%{transform:translateY(15px) scale(.6);opacity:0} 35%{transform:translateY(-10px) scale(1.12);opacity:1} 100%{transform:translateY(0) scale(1)} }
+@keyframes seed-halo { 0%{transform:scale(.1);opacity:0} 40%{opacity:.65} 100%{transform:scale(1.3);opacity:.25} }
+@keyframes seed-particle { 0%{transform:rotate(var(--angle)) translateX(18px) scale(0);opacity:0} 25%{opacity:1} 100%{transform:rotate(var(--angle)) translateX(100px) scale(.3);opacity:0} }
+@keyframes seed-gain { from{opacity:0;transform:translateY(12px) scale(.8)} to{opacity:1;transform:translateY(0) scale(1)} }
+@keyframes seed-point-return { 0%{transform:translateY(-6px);opacity:1} 70%{transform:translateY(28px) scale(.4);opacity:0} 100%{transform:translateY(0);opacity:1} }
+@keyframes seed-stat-pulse { 0%,40%{box-shadow:0 0 24px #ffdf83;color:#ffe8ac} 100%{box-shadow:none} }
+body:has(.seed-use-effect) :is(#analog-clock-widget,#menu-container,#volume-control-container) { display:none !important; }
+@media(prefers-reduced-motion:reduce) { .seed-use-effect *, .seed-stat-pulse { animation:none !important; } }
+.seed-use-card .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+/* Event milestones belong below the challenge, not inside the ranking column. */
+#screen-event-raid .raid-boss-overview { display:flex; flex-direction:column; }
+#screen-event-raid .raid-boss-portrait { flex-shrink:0; }
+#screen-event-raid .event-raid-rewards { margin-top:auto; padding-top:10px; text-align:left; }
+#screen-event-raid .event-raid-rewards h3 { margin:0 0 6px; font-size:15px; color:#ffd977; }
+.event-raid-candy-rates { display:flex; flex-wrap:wrap; gap:4px 14px; font-size:11px; }
+.event-raid-candy-rates > span { display:flex; align-items:center; gap:4px; }
+.event-raid-reward-note { margin:4px 0 6px; font-size:10px; line-height:1.5; color:#c6bbcf; }
+.event-raid-bonus-list { display:grid; gap:4px; }
+#screen-event-raid .event-raid-reward-row { grid-template-columns:76px minmax(0,1fr); align-items:center; gap:6px; padding:5px 7px; margin:0; }
+.event-raid-reward-goal { display:flex; flex-direction:column; gap:3px; }
+.event-raid-reward-goal > b { font-size:12px; }
+#screen-event-raid .event-raid-reward-goal > strong { font-size:10px; line-height:1.3; }
+.event-raid-reward-items { display:flex; flex-wrap:wrap; align-items:center; gap:3px 8px; }
+#screen-event-raid .event-raid-reward-item { display:inline-flex; align-items:center; gap:2px; white-space:nowrap; font-size:12px; }
+.event-raid-reward-item .stage-reward-icon { width:28px; height:28px; min-width:28px; padding:0; margin:0; background:none; border:0; flex:0 0 28px; }
+.event-raid-reward-item .stage-reward-icon img { width:28px; height:28px; object-fit:contain; }
+#screen-event-raid .raid-ranking-section { overflow:hidden; }
+@media(max-width:780px) {
+  #screen-event-raid .event-raid-rewards { margin-top:12px; }
+  #screen-event-raid .raid-ranking-section { margin-top:14px; overflow:visible; }
+}
+#screen-event-raid .raid-boss-portrait { height:clamp(140px,22dvh,210px); aspect-ratio:auto; }
+#screen-event-raid .raid-boss-summary { width:100%; gap:8px; margin:8px 0 0; }
+.menu-source-link { display:block; padding:8px; font-size:11px; color:#c7bdd4; text-align:center; }

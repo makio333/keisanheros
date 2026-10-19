@@ -86,8 +86,18 @@ export function eventRaidRewardEntitlements(bestKills, participationDay) {
   return rewards;
 }
 
-export function rankEventRaidRecords(records) {
-  const rows=records.filter(row=>Number.isSafeInteger(row.bestKills)&&row.bestKills>=0)
-    .sort((a,b)=>b.bestKills-a.bestKills || String(a.slotKey).localeCompare(String(b.slotKey)));
-  return rows.map((row,index)=>({...row,rank:index&&row.bestKills===rows[index-1].bestKills?rows.findIndex(r=>r.bestKills===row.bestKills)+1:index+1}));
+export function rankEventRaidRecords(records, metric='bestKills') {
+  const score=row=>metric==='totalKills'?(row.totalKills ?? row.bestKills):row.bestKills;
+  const rows=records.filter(row=>Number.isSafeInteger(score(row))&&score(row)>=0)
+    .sort((a,b)=>score(b)-score(a) || String(a.slotKey).localeCompare(String(b.slotKey)));
+  return rows.map((row,index)=>({...row,rank:index&&score(row)===score(rows[index-1])?rows.findIndex(r=>score(r)===score(row))+1:index+1}));
+}
+export const EVENT_RAID_FINAL_AT=Date.parse('2026-11-01T00:00:00+09:00');
+export function eventRaidFinalGift(records,slotKey) {
+  const row=rankEventRaidRecords(records,'totalKills').find(entry=>entry.slotKey===slotKey);
+  if(!row)return null;
+  const items=[{kind:'equip',id:'halloween_rank_blade',rarity:3,count:1}];
+  const decoration={1:'rank_gold',2:'rank_silver',3:'rank_bronze'}[row.rank];
+  if(decoration)items.push({kind:'decoration',id:decoration,count:1});
+  return {id:'halloween_2026_final',gold:0,items,rank:row.rank,message:`ハロウィン最終ランキング ${row.rank}位！ 参加ありがとう！`};
 }

@@ -33,7 +33,7 @@ const context = vm.createContext({
   G: { playerName: '今の勇者', avatar: 'new', player: { lvl: 99 } }, currentSlotKey: 'me',
   getHeroAvatar: id => ({ image: `${id}.png` }), HERO_AVATARS: [{ image: 'default.png' }],
   getAvatarBackground: () => ({ color: '#000' }), getEquipTemplate: id => ({ name: id, emoji: '⚔' }),
-  av: path => path,
+  applyAvatarDecoration(){},applyAvatarComposition(){}, av: path => path,
 });
 const source = fs.readFileSync(new URL('../game.js', import.meta.url), 'utf8');
 vm.runInContext(source.slice(source.indexOf('let raidHistoryEntries ='), source.indexOf('function renderRaidBossMenu()')), context);

@@ -1,3 +1,4 @@
+import { getAcceptedKanjiReadings, normalizeReading } from './kanji_readings.js';
 // ==========================================
 // 漢字入力・判定UI & エフェクト (kanji_input_ui.js)
 // ==========================================
@@ -26,25 +27,11 @@ let onAnswerCallback = null;
 /* ひらがな・カタカナ（おくりがな）かどうか */
 function isKanaChar(ch){ return /[\u3041-\u309F\u30A0-\u30FF\u30FCー]/.test(ch); }
 
-/* お題の 漢字に くっついている おくりがなを のぞいた 「漢字の ぶんの よみ」も せいかいに する。
-   例）小さい → こたえ「ちいさい」／「ちい」 どちらでも OK
-       お金   → こたえ「おかね」  ／「かね」 どちらでも OK
-   ぜんぶ 漢字の ことば（会社など）は これまでどおり 1つだけ。 */
-function kanjiAcceptedAnswers(text, answer){
-  const set = new Set([answer]);
-  if (!text || !answer) return set;
-  let lead = 0;
-  while (lead < text.length && isKanaChar(text[lead])) lead++;
-  let tail = 0;
-  while (tail < text.length - lead && isKanaChar(text[text.length - 1 - tail])) tail++;
-  const leadKana = text.slice(0, lead);
-  const tailKana = tail ? text.slice(text.length - tail) : '';
-  let core = answer;
-  if (leadKana && core.startsWith(leadKana)) core = core.slice(leadKana.length);
-  if (tailKana && core.endsWith(tailKana)) core = core.slice(0, core.length - tailKana.length);
-  if (core && core !== answer) set.add(core);
-  return set;
+/* 文脈のない単漢字は辞書の音訓・名乗り、熟語はその語の読みを受け付ける。 */
+function kanjiAcceptedAnswers(text, answer, alternatives = []) {
+  return getAcceptedKanjiReadings(text, answer, alternatives);
 }
+let currentKanjiAnswerMode = false;
 
 /**
  * 入力UIの初期化
@@ -177,7 +164,8 @@ function toggleInputMode() {
  */
 function setupKanjiChallenge(problemData) {
   currentChallengeAnswer = problemData.answer;
-  currentAcceptedAnswers = kanjiAcceptedAnswers(problemData.text, problemData.answer);
+  currentAcceptedAnswers = kanjiAcceptedAnswers(problemData.text, problemData.answer, problemData.acceptedAnswers || []);
+  currentKanjiAnswerMode=/[\p{Script=Han}]/u.test(problemData.text || '');
   
   const tierStr = String(problemData.tier || '');
   
@@ -285,7 +273,7 @@ function submitKanjiAnswer(forceResult) {
   const inputEl = document.getElementById('challenge-input');
   if (!inputEl) return;
   
-  const userAnswer = inputEl.value.trim();
+  const userAnswer = currentKanjiAnswerMode ? normalizeReading(inputEl.value) : inputEl.value.trim();
   const isCorrect = currentAcceptedAnswers
     ? currentAcceptedAnswers.has(userAnswer)
     : (userAnswer === currentChallengeAnswer);

@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {eventEquipmentAbility} from '../event_equipment.js';
 const source = fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');
 let now = Date.parse('2026-10-13T12:00:00+09:00'), clearCount=100, review={areaId:'area1',stageIndex:0};
-const context=vm.createContext({
+const context=vm.createContext({eventEquipmentAbility,
  G:{halloweenCandy:300,halloweenTickets:2,player:{gold:4000},nextUid:1},explore:null,
  Date:class extends Date {static now(){return now;}},
  Math:Object.create(Math),rnd:(min)=>min,save(){},updateHud(){},
@@ -14,10 +15,10 @@ const context=vm.createContext({
 });
 vm.runInContext(source.slice(source.indexOf('const HALLOWEEN_EVENT ='),source.indexOf('const PICKUP_STAGE_MAP =')),context);
 const exchange=vm.runInContext('HALLOWEEN_EXCHANGE_PRIZES',context), pool=vm.runInContext('HALLOWEEN_GACHA_PRIZES',context);
-assert.equal(pool.length,9);
+assert.equal(pool.length,16);
 assert.equal(exchange.length,4);
 assert.equal(exchange.filter(p=>p.kind==='skin').length,2);
-assert.equal(new Set([...exchange,...pool].map(p=>p.id)).size,13,'exchange and gacha catalogs are disjoint');
+assert.equal(new Set([...exchange,...pool].map(p=>p.id)).size,20,'exchange and gacha catalogs are disjoint');
 const heroesBlock=source.slice(source.indexOf('const HERO_AVATARS'),source.indexOf('const INITIAL_AVATAR_IDS'));
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 for(const id of ['btn-gacha-tab-halloween','halloween-gacha-section']) assert.ok(html.includes('id="'+id+'"'),'Halloween tab has its real DOM control: '+id);
@@ -50,10 +51,10 @@ assert.equal(context.drawHalloweenGacha('gold').ok,false);
 assert.equal(context.drawHalloweenGacha('ticket').ok,false);
 assert.equal(context.G.player.gold,1999);
 context.G.halloweenTickets=20;
-for(let i=0;i<7;i++)assert.equal(context.drawHalloweenGacha('ticket',()=>0).ok,true);
+for(let i=0;i<14;i++)assert.equal(context.drawHalloweenGacha('ticket',()=>0).ok,true);
 assert.equal(context.drawHalloweenGacha('ticket').ok,false,'complete collection does not charge');
-assert.equal(context.G.halloweenTickets,13);
-assert.equal(context.G.ownedEquips.length,3);
+assert.equal(context.G.halloweenTickets,6);
+assert.equal(context.G.ownedEquips.length,8);
 assert.equal(context.G.unlockedAvatarBackgrounds.length,3);
 context.G.halloweenCandy=80;
 assert.equal(context.exchangeHalloweenPrize('halloween_lantern_staff').ok,true);
@@ -66,13 +67,13 @@ assert.equal(context.rollHalloweenCandyDrop({isBoss:false}),null);
 context.Math.random=()=>0.999;
 assert.equal(context.rollHalloweenCandyDrop({isBoss:true}).count,3);
 assert.equal(context.rollHalloweenTicketDrop({isBoss:true}),null,'boss ticket is no longer guaranteed');
-context.Math.random=()=>0.49;
+context.Math.random=()=>0.24;
 assert.equal(context.rollHalloweenTicketDrop({isBoss:true}).count,1);
-context.Math.random=()=>0.5;
+context.Math.random=()=>0.25;
 assert.equal(context.rollHalloweenTicketDrop({isBoss:true}),null);
-context.Math.random=()=>0.09;
+context.Math.random=()=>0.04;
 assert.equal(context.rollHalloweenTicketDrop({isBoss:false}).count,1);
-context.Math.random=()=>0.1;assert.equal(context.rollHalloweenTicketDrop({isBoss:false}),null);
+context.Math.random=()=>0.05;assert.equal(context.rollHalloweenTicketDrop({isBoss:false}),null);
 context.Math.random=()=>0;
 context.rnd=(_min,max)=>max;
 assert.equal(context.rollHalloweenCandyDrop({isBoss:false}).count,2);

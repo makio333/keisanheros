@@ -1,0 +1,9 @@
+/* Match the existing macOS Chrome edition's form-control and CJK line metrics.
+   Safari/WebKit otherwise uses 11px native buttons and SF-only "normal" struts.
+   Game selectors, responsive layouts, art, animations, and rules remain shared. */
+:root {
+  --pixel-font: 'DotGothic16', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'M PLUS Rounded 1c', Meiryo, sans-serif !important;
+}
+button { font-family: Arial; font-size: 13.333333px; }
+.hotspot-tag { font-family: Arial, 'Hiragino Sans', sans-serif; line-height: 20px; }
+#hotspot-quest-board .hotspot-tag { line-height: 18px; }

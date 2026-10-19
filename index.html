@@ -113,6 +113,7 @@
 <div id="menu-container" class="menu-container">
   <button id="btn-menu" class="menu-button" title="メニュー">☰</button>
   <div id="menu-dropdown" class="menu-dropdown hidden">
+    <a class="menu-source-link" href="./kanji-reading-sources.html" target="_blank" rel="noopener">漢字の読みデータの出典</a>
     <button id="btn-menu-home" class="btn">きょてんに もどる</button>
     <button id="btn-menu-save-title" class="btn">💾 セーブして タイトルへ</button>
   </div>
@@ -582,6 +583,7 @@
           <button class="window-nav-btn window-close-btn" onclick="document.getElementById('screen-raid-boss').classList.add('hidden')">✕ とじる</button>
           <h2 class="raid-menu-title">ワールド・レイドボス</h2>
           <button id="btn-raid-rules" class="btn" aria-expanded="false" aria-controls="raid-rules">レイドのルールは？</button>
+          <button id="btn-raid-exchange" class="btn">🪙 コイン交換所</button>
           <button id="btn-raid-history" class="btn" style="margin-left:8px;">討伐履歴</button>
         </header>
         <section id="raid-rules" class="raid-how-to-play hidden" aria-labelledby="raid-how-to-play-title">
@@ -589,6 +591,7 @@
           <ol>
             <li><b>ちょうせんする</b><span>問題に答えると、ボスに攻撃！</span></li>
             <li><b>力を出しきろう</b><span>1問ごとに次のステージの問題へ。まちがえると反撃されるよ。自分のHPが0になっても、あたえたダメージは記録されるよ。</span></li>
+            <li><b>レイドコイン</b><span>挑戦ごとに、その回のダメージ÷4（端数切り上げ）を獲得。討伐時の順位報酬は1位50枚・2位30枚・3位15枚・4位以降5枚。コイン交換所で限定装備・スキン・背景・フレームと交換できるよ。</span></li>
             <li><b>レイドチケット</b><span>挑戦には 🎟️レイドチケットが 1まい いるよ。ボスの レベルが あがるたびに 1まい もらえて、ピックアップステージの ボーナスでも もらえるよ。戦闘中に「わからない」を おすと、負けずに おわれるよ（ダメージは きろくされる）。</span></li>
             <li><b>ランキングに挑戦</b><span>開催中は何回でも挑戦して、合計ダメージをのばそう！ ボス討伐後1分で最終順位を集計し、集計が終わると次のレベルがすぐ始まるよ。最後の一撃を与えた人（同時なら複数）には、撃破ボーナスチケットもプレゼント！参加するだけでマグマの背景ももらえるよ。</span></li>
           </ol>
@@ -1351,17 +1354,19 @@
     <div id="avatar-change-modal" class="modal-overlay hidden" style="z-index: 15000;">
       <div class="modal-panel avatar-selector-panel">
         <header class="avatar-selector-header">
-          <div><span>プレイヤーカスタマイズ</span><h3>スキンと背景をえらぶ</h3></div>
+          <div><span>プレイヤーカスタマイズ</span><h3>キャラ・背景・フレームをえらぶ</h3></div>
           <button id="btn-avatar-change-close" class="window-nav-btn">✕ とじる</button>
         </header>
         <div class="avatar-selector-layout">
           <aside class="avatar-selector-sidebar">
             <div class="avatar-selector-tabs" role="tablist" aria-label="表示するグループ">
-              <button id="btn-avatar-tab-characters" class="is-active" type="button" role="tab" aria-selected="true">キャラクター</button>
+              <button id="btn-avatar-tab-characters" class="is-active" type="button" role="tab" aria-selected="true">キャラ</button>
               <button id="btn-avatar-tab-backgrounds" type="button" role="tab" aria-selected="false">背景</button>
+              <button id="btn-avatar-tab-frames" type="button" role="tab" aria-selected="false">フレーム</button>
             </div>
             <div id="avatar-change-list" class="avatar-selector-options" role="tabpanel"></div>
             <div id="avatar-background-list" class="avatar-selector-options hidden" role="tabpanel"></div>
+            <div id="avatar-frame-list" class="avatar-selector-options hidden" role="tabpanel"></div>
             <p id="avatar-background-locked-note" class="avatar-background-locked-note"></p>
           </aside>
           <section class="avatar-selector-preview-column" aria-label="組み合わせプレビュー">
@@ -1373,6 +1378,7 @@
             <div class="avatar-selector-caption">
               <strong id="avatar-selector-character-name"></strong>
               <span id="avatar-selector-background-name"></span>
+              <span id="avatar-selector-frame-name"></span>
             </div>
           </section>
         </div>

@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+const source=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');
+const context=vm.createContext({G:null,statusPending:{atk:2},LEVEL_UP_HP_GAIN:6,LEVEL_UP_MP_GAIN:4,isBattleItem:()=>false,document:{querySelector:()=>context.activeEffect?{}:null},SM:{playBeep(){}},alert(){throw new Error('seed use must never open browser alert');},renderEquipmentSlots(){},renderRoomInventory(){},renderStatus(){},updateHud(){},costCap:()=>context.G.player.lvl+(context.G.player.costPlus||0),totalMaxHp:()=>context.G.player.maxHp,totalMaxMp:()=>context.G.player.maxMp,removeItem(uid,count){const item=context.G.items.find(x=>x.uid===uid);item.count-=count;if(item.count<=0)context.G.items=context.G.items.filter(x=>x!==item);},showSeedUseEffect(db,change){context.effects.push(change);context.activeEffect=true;},showConfirmModal(title,message){context.notice={title,message};},effects:[],activeEffect:false});
+vm.runInContext(source.slice(source.indexOf('function useItem('),source.indexOf('/* --- ダメージ・ミス表示処理 --- */')),context);
+context.G={player:{lvl:1,costPlus:0,maxHp:42,maxMp:14,atk:8,def:5,spd:7,points:4},items:[{uid:1,id:'cost_seed',count:2},{uid:2,id:'respec_seed',count:2}]};
+const cost={id:'cost_seed',effect:'cost',value:1,name:'cost'},reset={id:'respec_seed',effect:'respec',name:'reset'};
+assert.equal(context.useItem(1,cost).success,true);assert.equal(context.G.player.costPlus,1);assert.equal(context.G.items[0].count,1);assert.equal(context.effects[0].before,1);assert.equal(context.effects[0].after,2);
+assert.equal(context.useItem(1,cost).success,false,'effect blocks repeated activation');assert.equal(context.G.items[0].count,1);
+context.activeEffect=false;assert.equal(context.useItem(2,reset).amount,9);assert.equal(context.G.player.points,13);assert.equal(context.G.player.maxHp,30);assert.equal(context.G.player.maxMp,10);assert.equal(context.G.player.atk,5);assert.equal(context.G.player.def,3);assert.equal(context.G.player.spd,6);assert.equal(context.G.items.find(x=>x.uid===2).count,1);assert.equal(context.effects[1].before,4);assert.equal(context.effects[1].after,13);assert.equal(Object.keys(context.statusPending).length,0);
+context.activeEffect=false;assert.equal(context.useItem(2,reset).success,false);assert.equal(context.G.items.find(x=>x.uid===2).count,1,'no allocated points does not consume seed');assert.ok(context.notice);
+assert.equal(context.useItem(99,cost).success,false,'stale uid cannot grant free cost');
+console.log('PASS: seed use has no browser alerts, exact cost/point changes, single consumption, repeat/stale protection and no-allocation refund');

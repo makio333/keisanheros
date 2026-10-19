@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import {EVENT_RAID_RULES,EVENT_RAID_BONUSES,EventRaidRun,eventRaidTargetCount,sampleEventRaidTargets,rankEventRaidRecords,eventRaidRewardEntitlements,eventRaidBonusEntitlements,eventRaidGaugeRatio,formatEventRaidTime} from '../event_raid.js';
+import {raidResumeStage} from '../economy.js';
+import {EVENT_RAID_FINAL_AT,EVENT_RAID_RULES,EVENT_RAID_BONUSES,EventRaidRun,eventRaidTargetCount,sampleEventRaidTargets,rankEventRaidRecords,eventRaidRewardEntitlements,eventRaidBonusEntitlements,eventRaidGaugeRatio,formatEventRaidTime} from '../event_raid.js';
 
 for(const [ms,count] of [[0,4],[10000,4],[10001,3],[20000,3],[20001,2],[30000,2],[90000,2]]) assert.equal(eventRaidTargetCount(ms),count);
 const run=new EventRaidRun(1000,EVENT_RAID_RULES,()=>0.99);
@@ -53,9 +54,9 @@ const uiStart=Date.parse('2026-10-14T12:00:00+09:00');
 let now=uiStart, delayed=[], pendingTimeouts=[], saved=0, menuMessage='';
 function flushAttacks(){while(pendingTimeouts.length)pendingTimeouts.shift().fn();}
 const uiRun=new EventRaidRun(now,EVENT_RAID_RULES,()=>0);
-const context=vm.createContext({EVENT_RAID_RULES,EventRaidRun,eventRaidTargetCount,eventRaidRewardEntitlements,eventRaidBonusEntitlements,eventRaidGaugeRatio,formatEventRaidTime,Math,
+const context=vm.createContext({EVENT_RAID_FINAL_AT,EVENT_RAID_RULES,EventRaidRun,eventRaidTargetCount,eventRaidRewardEntitlements,eventRaidBonusEntitlements,eventRaidGaugeRatio,formatEventRaidTime,Math,raidResumeStage,
  Date:class extends Date{static now(){return now;}},currentChallenge:null,eventRaidMenuMode:'math',
- G:{player:{hp:10,lvl:1},halloweenCandy:0,ownedEquips:[],equipment:{}},currentSlotKey:'qa',
+ G:{player:{hp:10,lvl:1},halloweenCandy:0,ownedEquips:[],equipment:{}},currentSlotKey:'qa',newSlotId:()=>String(++saved),
  explore:{isEventRaid:true,eventRaid:uiRun},battle:{enemies:uiRun.enemies,enemy:uiRun.enemies[0],over:false},
  $:element,document:{createElement:()=>new Element(),querySelector(selector){return selector==='.event-raid-status'?element('screen-battle').nodes.find(node=>node.className==='event-raid-status event-raid-side') || null:null;}},setInterval(fn){delayed.push(fn);return fn;},clearInterval(){},setTimeout(fn,ms){pendingTimeouts.push({fn,ms});},
  destroyChallenge(){context.currentChallenge?.destroy();context.currentChallenge=null;},hideBattleMenus(){},renderHalloweenParty(){},updateBattleBars(){},blog(){},playPlayerAttackAnim(){},playEnemyAttackAnim(){},flashScreenRed(){},spawnFloatingDamage(){},
@@ -83,6 +84,8 @@ assert.equal(context.eventRaidChallengeSource().stageIndex,1,'uses attempted mat
 context.G.studyStats={};
 vm.runInContext(source.slice(source.indexOf('function startEventRaidQuestion('),source.indexOf('function showHalloweenSeason2Stages(')),context);
 vm.runInContext(source.slice(source.indexOf('function clearEventRaidSidePanel('),source.indexOf('function startEventRaidQuestion(')),context);
+context.showEventRaidFinish=(_result,done)=>done();
+context.halloweenCandyBalance=()=>Number(context.G.halloweenCandy)||0;
 context.startEventRaidQuestion();
 let gauge=element('event-raid-gauge');
 assert.equal(context.challengeOptions.problem.text,'既存チャレンジの問題');assert.equal(context.challengeOptions.showBattleCommands,false);
@@ -92,13 +95,13 @@ assert.equal(gauge.querySelector('i').style.width,'100%');
 now=uiStart+5000;delayed[0]();assert.equal(gauge.querySelector('i').style.width,'87.5%','blue gauge animates before the target count changes');
 now=uiStart+20001;delayed[0]();assert.equal(gauge.attrs['aria-valuenow'],'2');
 const beeps=[];context.SM.playBeep=type=>beeps.push(type);
-context.challengeOptions.onAnswered(20001,true);assert.deepEqual(beeps,['correct'],'successful answer plays a clear success chime');
+context.challengeOptions.onAnswered(20001,true);assert.deepEqual(beeps,[],'raid does not overlay a second chime on the normal challenge success sound');
 let oldQuestion=context.questionCallback;
 oldQuestion({success:true,elapsedMs:20001});assert.equal(uiRun.enemies.filter(e=>e.hp===5).length,1,'only the first target is hit immediately');
 assert.equal(pendingTimeouts[0].ms,120,'subsequent hits are paced');
 flushAttacks();assert.equal(uiRun.enemies.filter(e=>e.hp===5).length,2,'gauge and actual targets agree');
 assert.ok(context.battle.eventRaidQuestion);oldQuestion({success:true});assert.equal(uiRun.charge,1,'stale question callbacks are ignored');
-context.questionCallback({success:false,elapsedMs:1000});assert.equal(uiRun.charge,1);assert.equal(context.G.player.hp,7);
+context.questionCallback({success:false,elapsedMs:1000});assert.equal(uiRun.charge,1);assert.equal(context.G.player.hp,5);
 flushAttacks();uiRun.charge=5;
 delayed.at(-1)();
 gauge=element('event-raid-gauge');
@@ -107,7 +110,7 @@ context.questionCallback({success:true,elapsedMs:1000});assert.equal(uiRun.charg
 flushAttacks();assert.equal(uiRun.kills*10+uiRun.enemies.reduce((n,e)=>n+e.maxHp-e.hp,0),45,'special deals seven separate hits');
 context.G.player.hp=1;context.questionCallback({success:false,elapsedMs:1000});
 assert.equal(uiRun.over,true);assert.equal(context.battle,null);assert.equal(context.explore,null);assert.ok(saved);assert.match(menuMessage,/HPが0/);
-assert.equal(context.G.halloweenCandy,2,'one daily participation reward');
+assert.equal(context.G.halloweenCandy,uiRun.kills*2+2,'two candies per kill plus one daily participation reward');
 assert.equal(context.applyEventRaidRewards(context.state,eventRaidRewardEntitlements(50,'2026-10-01')),117);
 assert.equal(context.applyEventRaidRewards(context.state,eventRaidRewardEntitlements(50,'2026-10-01')),0);
 const legacyRewardState={rewardClaims:{'kills:10':true,'kills:25':true,'kills:50':true,'participation:2026-10-14':true}};
@@ -155,8 +158,8 @@ for(const enemy of gearedRun.enemies){enemy.hp=100;enemy.def=4;}
 context.questionCallback({success:true,elapsedMs:1000,timeFrac:0});flushAttacks();
 assert.equal(gearedRun.enemies.reduce((sum,e)=>sum+100-e.hp,0),8,'increased enemy defense reduces actual outgoing damage');
 for(const enemy of gearedRun.enemies)enemy.atk=12;
-context.G.player.hp=100;context.eventRaidCounterattack(context.battle);assert.equal(context.G.player.hp,82,'higher attack power increases retaliation damage');
-context.totalStat=()=>5;context.eventRaidCounterattack(context.battle);assert.equal(context.G.player.hp,69,'player defense mitigates retaliation');
+context.G.player.hp=100;context.eventRaidCounterattack(context.battle);assert.equal(context.G.player.hp,73,'higher attack power increases retaliation damage');
+context.totalStat=()=>5;context.eventRaidCounterattack(context.battle);assert.equal(context.G.player.hp,51,'player defense mitigates retaliation');
 context.HALLOWEEN_MONSTERS=Array.from({length:7},(_,i)=>({name:'enemy'+i,id:'enemy'+i}));
 vm.runInContext(source.slice(source.indexOf('function eventRaidEnemy('),source.indexOf('function eventRaidProfile(')),context);
 const decorated=growth.spawn(0);context.eventRaidEnemy(decorated);assert.equal(decorated.atk,52);assert.equal(decorated.def,50,'sprite decoration preserves scaled combat stats');
@@ -185,3 +188,5 @@ assert.equal(modeContext.eventRaidState('kanji').rewardClaims['kills:10'],true,'
 assert.equal(formatEventRaidTime(0),'00:00');assert.equal(formatEventRaidTime(59999),'01:00');
 assert.equal(eventRaidGaugeRatio(20000),.5);assert.equal(eventRaidGaugeRatio(30000),.5,'two-target minimum remains visible');
 console.log('PASS: 120 seconds, 4/3/2 targets, unique random targets, five-charge/seventh-target special, wrong-answer retention, kills only, refill, gauge, stale callbacks, HP end, tied ranks and bounded rewards');
+
+context.state.lastKanjiStage=12;context.startEventRaidBattle(null,'kanji');assert.equal(context.explore.eventRaid.startAnswerCount,50,'restart two stages before the last reached stage');assert.equal(context.explore.areaId,'area7');assert.equal(context.explore.stageIndex,0);

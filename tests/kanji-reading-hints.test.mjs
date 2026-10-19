@@ -1,3 +1,4 @@
+import {getAcceptedKanjiReadings,normalizeReading} from '../kanji_readings.js';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
@@ -18,7 +19,7 @@ class Element {
 }
 const elements = new Map();
 const context = vm.createContext({
-  window: {},
+  window: {}, getAcceptedKanjiReadings,normalizeReading,
   document: { getElementById(id) {
     if (!elements.has(id)) elements.set(id, new Element());
     return elements.get(id);
@@ -30,7 +31,7 @@ const renderHints = context.window.renderReadingHints;
 assert.match(renderHints('勇者'), /reading-hint/, 'ordinary text still has reading hints');
 context.window.renderReadingHints = () => { throw new Error('Reading questions must not invoke hint rendering'); };
 context.window.createKanaLocationProblem = () => null;
-vm.runInContext(fs.readFileSync(new URL('../kanji_input_ui.js', import.meta.url), 'utf8'), context);
+vm.runInContext(fs.readFileSync(new URL('../kanji_input_ui.js', import.meta.url), 'utf8').replace(/^import .*;$/gm,''), context);
 const problem = context.document.getElementById('challenge-problem-text');
 for (const [text, answer, tier] of [
   ['牛', 'うし', 'kanji_g1'],

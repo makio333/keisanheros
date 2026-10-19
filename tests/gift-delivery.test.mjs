@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import {applyGiftPayload} from '../economy.js';
+const docs=new Map(),copy=structuredClone;let queue=Promise.resolve();
+const ctx=vm.createContext({window:{},db:{},Date,applyGiftPayload,slotKeyToDocId:encodeURIComponent,doc:(_db,c,id)=>c+'/'+id,runTransaction:(_db,fn)=>{const task=queue.then(async()=>{const writes=[];const result=await fn({get:async key=>{assert.equal(writes.length,0);return {exists:()=>docs.has(key),data:()=>copy(docs.get(key))};},set:(key,value,options)=>writes.push([key,value,options]),update:(key,value)=>writes.push([key,value,{merge:true}])});for(const [key,value,options]of writes)docs.set(key,copy(options?.merge?{...docs.get(key),...value}:value));return result;});queue=task.catch(()=>{});return task;}});
+const source=fs.readFileSync(new URL('../firebase_init.js',import.meta.url),'utf8');vm.runInContext(source.slice(source.indexOf('window.AdminGiftAPI =')),ctx);
+const state={playerName:'recipient',player:{gold:20,lvl:2},updatedAt:10};docs.set('saves/recipient',{gameData:JSON.stringify({...state,player:{gold:100,lvl:3},updatedAt:20})});docs.set('admin_gifts/present',{targetSlotKey:'recipient',gold:50,items:[{kind:'ticket',id:'raid-ticket',count:2}],claimed:false});
+const api=ctx.window.AdminGiftAPI;
+assert.equal(await api.claimToSave('present','wrong',state),null);
+const claims=await Promise.all([api.claimToSave('present','recipient',state),api.claimToSave('present','recipient',state)]);assert.equal(claims.filter(Boolean).length,1);
+const delivered=JSON.parse(docs.get('saves/recipient').gameData);assert.equal(delivered.player.gold,150,'gift persists into latest save');assert.equal(delivered.player.lvl,3,'newer progress is preserved');assert.equal(delivered.raidTickets,2);assert.equal(docs.get('admin_gifts/present').appliedToSave,true);assert.deepEqual(delivered.claimedAdminGiftIds,['present']);
+console.log('PASS: correct-slot gift delivery, atomic save and receipt, latest progress, concurrency and repeat protection');

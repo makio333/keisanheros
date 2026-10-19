@@ -73,3 +73,7 @@ sm.playBeep('type');
 sm.playRumble();
 assert.equal(oscillators.length, previousCount, 'zero volume is silent and avoids zero exponential ramps');
 console.log('PASS: shared BGM/SE volume, decision balance, live updates, mute and zero-volume synthesis');
+sm.audios.se_type=new FakeAudio();sm.audios.se_slash=new FakeAudio();sm.setGlobalVolume(1);
+sm.playCorrectAnswer();const success=[...sm.activeSE].at(-1);assert.equal(success.effectBaseVolume,.24,'shared correct answer uses the normal sample audibly');
+sm.play('se_slash',1.8);const attack=[...sm.activeSE].at(-1);assert.ok(Math.abs(attack.effectBaseVolume-.36)<1e-9,'raid attack is louder');
+sm.setGlobalVolume(.5);assert.equal(success.volume,.12);assert.ok(Math.abs(attack.volume-.18)<1e-9);sm.setMuted(true);assert.equal(success.volume,0);assert.equal(attack.volume,0);

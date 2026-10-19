@@ -1,0 +1,199 @@
+{
+  "generator": "built-in image_gen",
+  "status": "final coarse style requested by user",
+  "styleRule": "assets/AGENTS.md",
+  "references": [
+    "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+    "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+    "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+  ],
+  "direction": "blade upper right / grip lower left",
+  "assets": [
+    {
+      "id": "rank_gold",
+      "path": "assets/event-pixel/rank_gold.png",
+      "subject": "CHAMPION HALLOWEEN foreground ornament: a magnificent ornate gold royal crown centered above the top edge, a tiny amethyst jewel, cascading golden laurel leaves along the outer left and right edges, two intricately carved glowing jack-o-lanterns nestled at the bottom corners, a velvet plum ribbon along the bottom, tiny gold stars. The grandest and most luxurious of three ranking prizes.",
+      "prompt": "Use case: stylized-concept. Asset type: COARSE low-resolution pixel sprite foreground cosmetic for an RPG, portrait 3:4 aspect ratio. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold simple blocks of color, 1 logical pixel dark outline and 3-4 flat shades per material. Think native 96x128 pixels enlarged by nearest-neighbor. NOT high-resolution illustration, NOT fine detailed painted pixels. Use at most about 32 colors. Simplify all tiny textures and filigree into a few big readable clusters. CHAMPION HALLOWEEN foreground ornament: a magnificent stylized gold royal crown centered above the top edge, a tiny amethyst jewel, cascading golden laurel leaves along the outer left and right edges, two simply carved glowing jack-o-lanterns nestled at the bottom corners, a velvet plum ribbon along the bottom, tiny gold stars. The grandest and most luxurious of three ranking prizes. Confine decoration to outer 15 percent on left/right and top/bottom, keeping the central 70 percent entirely empty with actual transparent alpha for an existing character. No character, no scene, no background, no frame rectangle, no text, no digits, no smooth gradients, no fine hairline detail, no blur, no checkerboard. Must look like the provided original chunky Halloween equipment pixel art, not like the much more detailed rejected new artwork.",
+      "nativeGrid": [
+        96,
+        128
+      ]
+    },
+    {
+      "id": "rank_silver",
+      "path": "assets/event-pixel/rank_silver.png",
+      "subject": "SECOND PLACE HALLOWEEN foreground ornament: a beautiful polished silver crescent crown with moonstone at the top edge, ornate silver leaf flourishes along the outer sides, elegant violet bat wings spread along the lower corners, indigo velvet ribbon and delicate moon sparkles. Refined, celebratory and visibly silver.",
+      "prompt": "Use case: stylized-concept. Asset type: COARSE low-resolution pixel sprite foreground cosmetic for an RPG, portrait 3:4 aspect ratio. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold simple blocks of color, 1 logical pixel dark outline and 3-4 flat shades per material. Think native 96x128 pixels enlarged by nearest-neighbor. NOT high-resolution illustration, NOT fine detailed painted pixels. Use at most about 32 colors. Simplify all tiny textures and filigree into a few big readable clusters. SECOND PLACE HALLOWEEN foreground ornament: a beautiful polished silver crescent crown with moonstone at the top edge, stylized silver leaf flourishes along the outer sides, elegant violet bat wings spread along the lower corners, indigo velvet ribbon and delicate moon sparkles. Refined, celebratory and visibly silver. Confine decoration to outer 15 percent on left/right and top/bottom, keeping the central 70 percent entirely empty with actual transparent alpha for an existing character. No character, no scene, no background, no frame rectangle, no text, no digits, no smooth gradients, no fine hairline detail, no blur, no checkerboard. Must look like the provided original chunky Halloween equipment pixel art, not like the much more detailed rejected new artwork.",
+      "nativeGrid": [
+        96,
+        128
+      ]
+    },
+    {
+      "id": "rank_bronze",
+      "path": "assets/event-pixel/rank_bronze.png",
+      "subject": "THIRD PLACE HALLOWEEN foreground ornament: a finely carved copper-bronze coronet with orange gem centered on the top edge, bronze autumn leaves along the sides, two ornate little pumpkin lanterns at the lower corners with warm amber light, russet ribbon along the bottom. Distinctly bronze with rich crafted detail.",
+      "prompt": "Use case: stylized-concept. Asset type: COARSE low-resolution pixel sprite foreground cosmetic for an RPG, portrait 3:4 aspect ratio. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold simple blocks of color, 1 logical pixel dark outline and 3-4 flat shades per material. Think native 96x128 pixels enlarged by nearest-neighbor. NOT high-resolution illustration, NOT fine detailed painted pixels. Use at most about 32 colors. Simplify all tiny textures and filigree into a few big readable clusters. THIRD PLACE HALLOWEEN foreground ornament: a finely carved copper-bronze coronet with orange gem centered on the top edge, bronze autumn leaves along the sides, two stylized little pumpkin lanterns at the lower corners with warm amber light, russet ribbon along the bottom. Distinctly bronze with rich crafted detail. Confine decoration to outer 15 percent on left/right and top/bottom, keeping the central 70 percent entirely empty with actual transparent alpha for an existing character. No character, no scene, no background, no frame rectangle, no text, no digits, no smooth gradients, no fine hairline detail, no blur, no checkerboard. Must look like the provided original chunky Halloween equipment pixel art, not like the much more detailed rejected new artwork.",
+      "nativeGrid": [
+        96,
+        128
+      ]
+    },
+    {
+      "id": "candy_spark",
+      "path": "assets/event-pixel/candy_spark.png",
+      "subject": "SMALL HALLOWEEN GACHA foreground ornament: charming cluster of glossy purple-orange wrapped bonbons, candy corn, one candy cane and small star sparkles decorating just the bottom left and bottom right corners, joined by a thin curved satin ribbon along the bottom edge. Modest collectible decoration, whimsical, ornate, inviting. No crown and no border on top.",
+      "prompt": "Use case: stylized-concept. Asset type: COARSE low-resolution pixel sprite foreground cosmetic for an RPG, portrait 3:4 aspect ratio. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold simple blocks of color, 1 logical pixel dark outline and 3-4 flat shades per material. Think native 96x128 pixels enlarged by nearest-neighbor. NOT high-resolution illustration, NOT fine detailed painted pixels. Use at most about 32 colors. Simplify all tiny textures and filigree into a few big readable clusters. SMALL HALLOWEEN GACHA foreground ornament: charming cluster of glossy purple-orange wrapped bonbons, candy corn, one candy cane and small star sparkles decorating just the bottom left and bottom right corners, joined by a thin curved satin ribbon along the bottom edge. Modest collectible decoration, whimsical, stylized, inviting. No crown and no border on top. Confine decoration to outer 15 percent on left/right and top/bottom, keeping the central 70 percent entirely empty with actual transparent alpha for an existing character. No character, no scene, no background, no frame rectangle, no text, no digits, no smooth gradients, no fine hairline detail, no blur, no checkerboard. Must look like the provided original chunky Halloween equipment pixel art, not like the much more detailed rejected new artwork.",
+      "nativeGrid": [
+        96,
+        128
+      ]
+    },
+    {
+      "id": "moon_ribbon",
+      "path": "assets/event-pixel/moon_ribbon.png",
+      "subject": "SMALL HALLOWEEN GACHA foreground ornament: ornate violet velvet ribbon bows at the bottom corners, a small silver crescent moon charm dangling in the lower center, tiny teal stars and small purple bat wing flourishes. Delicate modest decoration primarily around the lower edge. No crown and no top border.",
+      "prompt": "Use case: stylized-concept. Asset type: COARSE low-resolution pixel sprite foreground cosmetic for an RPG, portrait 3:4 aspect ratio. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold simple blocks of color, 1 logical pixel dark outline and 3-4 flat shades per material. Think native 96x128 pixels enlarged by nearest-neighbor. NOT high-resolution illustration, NOT fine detailed painted pixels. Use at most about 32 colors. Simplify all tiny textures and filigree into a few big readable clusters. SMALL HALLOWEEN GACHA foreground ornament: stylized violet velvet ribbon bows at the bottom corners, a small silver crescent moon charm dangling in the lower center, tiny teal stars and small purple bat wing flourishes. Delicate modest decoration primarily around the lower edge. No crown and no top border. Confine decoration to outer 15 percent on left/right and top/bottom, keeping the central 70 percent entirely empty with actual transparent alpha for an existing character. No character, no scene, no background, no frame rectangle, no text, no digits, no smooth gradients, no fine hairline detail, no blur, no checkerboard. Must look like the provided original chunky Halloween equipment pixel art, not like the much more detailed rejected new artwork.",
+      "nativeGrid": [
+        96,
+        128
+      ]
+    },
+    {
+      "id": "raid_starlight",
+      "path": "assets/event-pixel/raid_starlight.png",
+      "subject": "RAID EXCLUSIVE foreground ornament: two sweeping obsidian dragon wings hug the outer left and right edges, dark polished volcanic metal with molten golden-orange veins and ruby gems, glowing ember flourishes curl around the lower corners, a tiny fiery dragon crest centered along the bottom. Regal, gorgeous and dramatic without covering the center. No scenery.",
+      "prompt": "Use case: stylized-concept. Asset type: COARSE low-resolution pixel sprite foreground cosmetic for an RPG, portrait 3:4 aspect ratio. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold simple blocks of color, 1 logical pixel dark outline and 3-4 flat shades per material. Think native 96x128 pixels enlarged by nearest-neighbor. NOT high-resolution illustration, NOT fine detailed painted pixels. Use at most about 32 colors. Simplify all tiny textures and filigree into a few big readable clusters. RAID EXCLUSIVE foreground ornament: two sweeping obsidian dragon wings hug the outer left and right edges, dark polished volcanic metal with molten golden-orange veins and ruby gems, glowing ember flourishes curl around the lower corners, a tiny fiery dragon crest centered along the bottom. Regal, gorgeous and dramatic without covering the center. No scenery. Confine decoration to outer 15 percent on left/right and top/bottom, keeping the central 70 percent entirely empty with actual transparent alpha for an existing character. No character, no scene, no background, no frame rectangle, no text, no digits, no smooth gradients, no fine hairline detail, no blur, no checkerboard. Must look like the provided original chunky Halloween equipment pixel art, not like the much more detailed rejected new artwork.",
+      "nativeGrid": [
+        96,
+        128
+      ]
+    },
+    {
+      "id": "candy_saber",
+      "path": "assets/event-pixel/candy_saber.png",
+      "prompt": "Use case: stylized-concept. Asset type: ONE COARSE low-resolution RPG inventory equipment sprite on actual transparent alpha. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold readable dark outline, limited flat color blocks, simple 3-4 tone shading per material and clear silhouette. Draw as a native 128x128 pixel sprite enlarged by nearest-neighbor, each pixel a visibly large square. Use about 24-32 colors, no smooth gradients, no fine painted texture, no micro-detail, no hairline filigree, no subpixel detail. A small playful curved candy saber, bright purple hard-candy blade with swirling orange sugar stripes and sharp candy facets, tiny pumpkin-shaped gold guard, wrapped bonbon pommel, short striped grip. A real fantasy weapon rather than an ordinary sword. Blade tip points UPPER RIGHT, grip LOWER LEFT.  Simplify small embellishments into big legible pixel clusters. Center entire object with 8 percent transparent margin. Weapon tip MUST point upper right, grip lower left. No background, no scene, no card, no border, no floor, no shadow underneath, no UI, no text, no letters, no numbers, no checkerboard. Genuine transparent alpha around object and inside cutouts. The required pixel density is exactly like the three original coarse Halloween sprites, not the rejected high-resolution newly generated artwork.",
+      "nativeGrid": [
+        128,
+        128
+      ]
+    },
+    {
+      "id": "light_cape",
+      "path": "assets/event-pixel/light_cape.png",
+      "prompt": "Use case: stylized-concept. Asset type: ONE COARSE low-resolution RPG inventory equipment sprite on actual transparent alpha. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold readable dark outline, limited flat color blocks, simple 3-4 tone shading per material and clear silhouette. Draw as a native 128x128 pixel sprite enlarged by nearest-neighbor, each pixel a visibly large square. Use about 24-32 colors, no smooth gradients, no fine painted texture, no micro-detail, no hairline filigree, no subpixel detail. One small lightweight imp cape, deep midnight-plum velvet with orange scalloped bat-wing hem, little red bat-wing shoulder clasps and tiny amber pumpkin clasp, orange lining, hanging as an empty wearable cloak in a three-quarter front view. Clearly different from a wizard robe. No wearer.  Simplify small embellishments into big legible pixel clusters. Center entire object with 8 percent transparent margin. Weapon tip MUST point upper right, grip lower left. No background, no scene, no card, no border, no floor, no shadow underneath, no UI, no text, no letters, no numbers, no checkerboard. Genuine transparent alpha around object and inside cutouts. The required pixel density is exactly like the three original coarse Halloween sprites, not the rejected high-resolution newly generated artwork.",
+      "nativeGrid": [
+        128,
+        128
+      ]
+    },
+    {
+      "id": "moon_pin",
+      "path": "assets/event-pixel/moon_pin.png",
+      "prompt": "Use case: stylized-concept. Asset type: ONE COARSE low-resolution RPG inventory equipment sprite on actual transparent alpha. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold readable dark outline, limited flat color blocks, simple 3-4 tone shading per material and clear silhouette. Draw as a native 128x128 pixel sprite enlarged by nearest-neighbor, each pixel a visibly large square. Use about 24-32 colors, no smooth gradients, no fine painted texture, no micro-detail, no hairline filigree, no subpixel detail. One small exquisite crescent-moon lapel pin, brushed warm silver crescent embraces a violet gemstone, tiny teal hanging star and short indigo ribbon. A small wearable enamel accessory, visually distinct from a necklace. Front view.  Simplify small embellishments into big legible pixel clusters. Center entire object with 8 percent transparent margin. Weapon tip MUST point upper right, grip lower left. No background, no scene, no card, no border, no floor, no shadow underneath, no UI, no text, no letters, no numbers, no checkerboard. Genuine transparent alpha around object and inside cutouts. The required pixel density is exactly like the three original coarse Halloween sprites, not the rejected high-resolution newly generated artwork.",
+      "nativeGrid": [
+        128,
+        128
+      ]
+    },
+    {
+      "id": "rank_blade",
+      "path": "assets/event-pixel/rank_blade.png",
+      "prompt": "Use case: stylized-concept. Asset type: ONE COARSE low-resolution RPG inventory equipment sprite on actual transparent alpha. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold readable dark outline, limited flat color blocks, simple 3-4 tone shading per material and clear silhouette. Draw as a native 128x128 pixel sprite enlarged by nearest-neighbor, each pixel a visibly large square. Use about 24-32 colors, no smooth gradients, no fine painted texture, no micro-detail, no hairline filigree, no subpixel detail. An exclusive moon-shadow short dagger, curved midnight black blade with luminous violet crescent engraved, ornate silver bat-wing crossguard and purple gemstone, short black leather grip. Compact elegant high quality Halloween champion reward. Tip UPPER RIGHT, grip LOWER LEFT.  Simplify small embellishments into big legible pixel clusters. Center entire object with 8 percent transparent margin. Weapon tip MUST point upper right, grip lower left. No background, no scene, no card, no border, no floor, no shadow underneath, no UI, no text, no letters, no numbers, no checkerboard. Genuine transparent alpha around object and inside cutouts. The required pixel density is exactly like the three original coarse Halloween sprites, not the rejected high-resolution newly generated artwork.",
+      "nativeGrid": [
+        128,
+        128
+      ]
+    },
+    {
+      "id": "bat_buckler",
+      "path": "assets/event-pixel/bat_buckler.png",
+      "prompt": "Use case: stylized-concept. Asset type: ONE COARSE low-resolution RPG inventory equipment sprite on actual transparent alpha. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold readable dark outline, limited flat color blocks, simple 3-4 tone shading per material and clear silhouette. Draw as a native 128x128 pixel sprite enlarged by nearest-neighbor, each pixel a visibly large square. Use about 24-32 colors, no smooth gradients, no fine painted texture, no micro-detail, no hairline filigree, no subpixel detail. One small cute but sturdy round bat buckler shield, charcoal iron rim, plum enamel face, raised little silver bat silhouette, glowing amber studs and tiny pumpkin rivet. A modest beginner Halloween armor, not a giant legendary shield. Three quarter front view. No wearer.  Simplify small embellishments into big legible pixel clusters. Center entire object with 8 percent transparent margin. Weapon tip MUST point upper right, grip lower left. No background, no scene, no card, no border, no floor, no shadow underneath, no UI, no text, no letters, no numbers, no checkerboard. Genuine transparent alpha around object and inside cutouts. The required pixel density is exactly like the three original coarse Halloween sprites, not the rejected high-resolution newly generated artwork.",
+      "nativeGrid": [
+        128,
+        128
+      ]
+    },
+    {
+      "id": "pumpkin_bell",
+      "path": "assets/event-pixel/pumpkin_bell.png",
+      "prompt": "Use case: stylized-concept. Asset type: ONE COARSE low-resolution RPG inventory equipment sprite on actual transparent alpha. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold readable dark outline, limited flat color blocks, simple 3-4 tone shading per material and clear silhouette. Draw as a native 128x128 pixel sprite enlarged by nearest-neighbor, each pixel a visibly large square. Use about 24-32 colors, no smooth gradients, no fine painted texture, no micro-detail, no hairline filigree, no subpixel detail. One small pumpkin bell accessory, polished orange-gold bell shaped like a cheerful jack-o-lantern, short violet ribbon bow and silver chain loop, two tiny teal star charms. A modest charming Halloween collectible equipment, not a crown. Front view.  Simplify small embellishments into big legible pixel clusters. Center entire object with 8 percent transparent margin. Weapon tip MUST point upper right, grip lower left. No background, no scene, no card, no border, no floor, no shadow underneath, no UI, no text, no letters, no numbers, no checkerboard. Genuine transparent alpha around object and inside cutouts. The required pixel density is exactly like the three original coarse Halloween sprites, not the rejected high-resolution newly generated artwork.",
+      "nativeGrid": [
+        128,
+        128
+      ]
+    },
+    {
+      "id": "magma_blade",
+      "path": "assets/event-pixel/magma_blade.png",
+      "prompt": "Use case: stylized-concept. Asset type: ONE COARSE low-resolution RPG inventory equipment sprite on actual transparent alpha. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold readable dark outline, limited flat color blocks, simple 3-4 tone shading per material and clear silhouette. Draw as a native 128x128 pixel sprite enlarged by nearest-neighbor, each pixel a visibly large square. Use about 24-32 colors, no smooth gradients, no fine painted texture, no micro-detail, no hairline filigree, no subpixel detail. A magnificent single magma sword, jagged obsidian blade with branching molten orange and golden lava veins, black volcanic-steel dragon-head guard, ruby magma gem, dark leather grip and glowing amber pommel. Unique raid-exclusive equipment. Blade tip UPPER RIGHT, grip LOWER LEFT.  Simplify small embellishments into big legible pixel clusters. Center entire object with 8 percent transparent margin. Weapon tip MUST point upper right, grip lower left. No background, no scene, no card, no border, no floor, no shadow underneath, no UI, no text, no letters, no numbers, no checkerboard. Genuine transparent alpha around object and inside cutouts. The required pixel density is exactly like the three original coarse Halloween sprites, not the rejected high-resolution newly generated artwork.",
+      "nativeGrid": [
+        128,
+        128
+      ]
+    },
+    {
+      "id": "magma_armor",
+      "path": "assets/event-pixel/magma_armor.png",
+      "prompt": "Use case: stylized-concept. Asset type: ONE COARSE low-resolution RPG inventory equipment sprite on actual transparent alpha. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold readable dark outline, limited flat color blocks, simple 3-4 tone shading per material and clear silhouette. Draw as a native 128x128 pixel sprite enlarged by nearest-neighbor, each pixel a visibly large square. Use about 24-32 colors, no smooth gradients, no fine painted texture, no micro-detail, no hairline filigree, no subpixel detail. An ornate wearable magma breastplate armor without wearer, black obsidian and scorched volcanic steel, vivid molten orange fissures, dragon-scale shoulder plates, glowing red crystal in breastplate, golden heat-worn trims. Broad powerful chest armor, three quarter front view. Not phoenix feathers.  Simplify small embellishments into big legible pixel clusters. Center entire object with 8 percent transparent margin. Weapon tip MUST point upper right, grip lower left. No background, no scene, no card, no border, no floor, no shadow underneath, no UI, no text, no letters, no numbers, no checkerboard. Genuine transparent alpha around object and inside cutouts. The required pixel density is exactly like the three original coarse Halloween sprites, not the rejected high-resolution newly generated artwork.",
+      "nativeGrid": [
+        128,
+        128
+      ]
+    },
+    {
+      "id": "magma_charm",
+      "path": "assets/event-pixel/magma_charm.png",
+      "prompt": "Use case: stylized-concept. Asset type: ONE COARSE low-resolution RPG inventory equipment sprite on actual transparent alpha. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold readable dark outline, limited flat color blocks, simple 3-4 tone shading per material and clear silhouette. Draw as a native 128x128 pixel sprite enlarged by nearest-neighbor, each pixel a visibly large square. Use about 24-32 colors, no smooth gradients, no fine painted texture, no micro-detail, no hairline filigree, no subpixel detail. One magma core amulet pendant: cracked black obsidian dragon-claw setting enclosing a radiant orange-red molten crystal core, gold heat-worn metal prongs and short dark chain, small ember sparks confined near the jewelry. Raid exclusive accessory, front view. Not a crescent moon necklace.  Simplify small embellishments into big legible pixel clusters. Center entire object with 8 percent transparent margin. Weapon tip MUST point upper right, grip lower left. No background, no scene, no card, no border, no floor, no shadow underneath, no UI, no text, no letters, no numbers, no checkerboard. Genuine transparent alpha around object and inside cutouts. The required pixel density is exactly like the three original coarse Halloween sprites, not the rejected high-resolution newly generated artwork.",
+      "nativeGrid": [
+        128,
+        128
+      ]
+    },
+    {
+      "id": "wood_sword",
+      "path": "assets/event-pixel/wood_sword.png",
+      "prompt": "Use case: stylized-concept. Asset type: ONE COARSE low-resolution RPG inventory equipment sprite on actual transparent alpha. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold readable dark outline, limited flat color blocks, simple 3-4 tone shading per material and clear silhouette. Draw as a native 128x128 pixel sprite enlarged by nearest-neighbor, each pixel a visibly large square. Use about 24-32 colors, no smooth gradients, no fine painted texture, no micro-detail, no hairline filigree, no subpixel detail. A very simple handmade wooden practice sword, pale tan oak with obvious wood grain, blunt rounded broad tip, straight chunky flat wooden blade, plain rectangular wooden crossguard, cloth-wrapped brown grip. No metal or gold, no gems, no magic. Clearly a cheap starter wooden sword. Tip UPPER RIGHT, grip LOWER LEFT.  Simplify small embellishments into big legible pixel clusters. Center entire object with 8 percent transparent margin. Weapon tip MUST point upper right, grip lower left. No background, no scene, no card, no border, no floor, no shadow underneath, no UI, no text, no letters, no numbers, no checkerboard. Genuine transparent alpha around object and inside cutouts. The required pixel density is exactly like the three original coarse Halloween sprites, not the rejected high-resolution newly generated artwork.",
+      "nativeGrid": [
+        128,
+        128
+      ]
+    },
+    {
+      "id": "copper_sword",
+      "path": "assets/event-pixel/copper_sword.png",
+      "prompt": "Use case: stylized-concept. Asset type: ONE COARSE low-resolution RPG inventory equipment sprite on actual transparent alpha. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold readable dark outline, limited flat color blocks, simple 3-4 tone shading per material and clear silhouette. Draw as a native 128x128 pixel sprite enlarged by nearest-neighbor, each pixel a visibly large square. Use about 24-32 colors, no smooth gradients, no fine painted texture, no micro-detail, no hairline filigree, no subpixel detail. A sturdy copper short sword, warm reddish copper broad leaf-shaped pointed blade with visible hammered copper patina, simple dark bronze curved crossguard, dark green leather grip and small bronze round pommel. No wood blade, no silver, no magic, no gems. Clearly different from a wooden training sword or a thin traveler's blade. Tip UPPER RIGHT, grip LOWER LEFT.  Simplify small embellishments into big legible pixel clusters. Center entire object with 8 percent transparent margin. Weapon tip MUST point upper right, grip lower left. No background, no scene, no card, no border, no floor, no shadow underneath, no UI, no text, no letters, no numbers, no checkerboard. Genuine transparent alpha around object and inside cutouts. The required pixel density is exactly like the three original coarse Halloween sprites, not the rejected high-resolution newly generated artwork.",
+      "nativeGrid": [
+        128,
+        128
+      ]
+    },
+    {
+      "id": "traveler_sword",
+      "path": "assets/event-pixel/traveler_sword.png",
+      "prompt": "Use case: stylized-concept. Asset type: ONE COARSE low-resolution RPG inventory equipment sprite on actual transparent alpha. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold readable dark outline, limited flat color blocks, simple 3-4 tone shading per material and clear silhouette. Draw as a native 128x128 pixel sprite enlarged by nearest-neighbor, each pixel a visibly large square. Use about 24-32 colors, no smooth gradients, no fine painted texture, no micro-detail, no hairline filigree, no subpixel detail. A lightweight practical traveler's silver steel sword, slender straight narrow silver blade with distinct fuller, small asymmetrical brass swept knuckle guard, weathered teal fabric-wrapped grip and little leather tassel at the pommel. Simple adventurous utility design, not a copper sword, not wooden. Tip UPPER RIGHT, grip LOWER LEFT.  Simplify small embellishments into big legible pixel clusters. Center entire object with 8 percent transparent margin. Weapon tip MUST point upper right, grip lower left. No background, no scene, no card, no border, no floor, no shadow underneath, no UI, no text, no letters, no numbers, no checkerboard. Genuine transparent alpha around object and inside cutouts. The required pixel density is exactly like the three original coarse Halloween sprites, not the rejected high-resolution newly generated artwork.",
+      "nativeGrid": [
+        128,
+        128
+      ]
+    },
+    {
+      "id": "thunder_katana",
+      "path": "assets/event-pixel/thunder_katana.png",
+      "prompt": "Use case: stylized-concept. Asset type: ONE COARSE low-resolution RPG inventory equipment sprite on actual transparent alpha. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold readable dark outline, limited flat color blocks, simple 3-4 tone shading per material and clear silhouette. Draw as a native 128x128 pixel sprite enlarged by nearest-neighbor, each pixel a visibly large square. Use about 24-32 colors, no smooth gradients, no fine painted texture, no micro-detail, no hairline filigree, no subpixel detail. A beautiful lightning katana, elegant curved silver-blue Japanese single-edged blade with subtle cyan lightning vein engraved inside the blade, gold circular tsuba with thunder emblem, navy wrapped katana handle, blue tassel. A few crisp tiny gold electric sparks just alongside blade. No large foggy aura. Tip UPPER RIGHT, grip LOWER LEFT.  Simplify small embellishments into big legible pixel clusters. Center entire object with 8 percent transparent margin. Weapon tip MUST point upper right, grip lower left. No background, no scene, no card, no border, no floor, no shadow underneath, no UI, no text, no letters, no numbers, no checkerboard. Genuine transparent alpha around object and inside cutouts. The required pixel density is exactly like the three original coarse Halloween sprites, not the rejected high-resolution newly generated artwork.",
+      "nativeGrid": [
+        128,
+        128
+      ]
+    },
+    {
+      "id": "excalibur",
+      "path": "assets/event-pixel/excalibur.png",
+      "prompt": "Use case: stylized-concept. Asset type: ONE COARSE low-resolution RPG inventory equipment sprite on actual transparent alpha. STRICT STYLE REFERENCES: the three provided original Halloween equipment images. Match their visibly chunky square pixel size, bold readable dark outline, limited flat color blocks, simple 3-4 tone shading per material and clear silhouette. Draw as a native 128x128 pixel sprite enlarged by nearest-neighbor, each pixel a visibly large square. Use about 24-32 colors, no smooth gradients, no fine painted texture, no micro-detail, no hairline filigree, no subpixel detail. The holy sword Excalibur, regal long straight gleaming silver blade with a sapphire-blue central fuller, exquisite gold winged crossguard, radiant blue gemstone at center, royal blue leather hilt and golden star pommel. Noble legendary but clean elegant silhouette. Tiny crisp gold highlights, no oversized misty halo. Blade tip UPPER RIGHT, grip LOWER LEFT.  Simplify small embellishments into big legible pixel clusters. Center entire object with 8 percent transparent margin. Weapon tip MUST point upper right, grip lower left. No background, no scene, no card, no border, no floor, no shadow underneath, no UI, no text, no letters, no numbers, no checkerboard. Genuine transparent alpha around object and inside cutouts. The required pixel density is exactly like the three original coarse Halloween sprites, not the rejected high-resolution newly generated artwork.",
+      "nativeGrid": [
+        128,
+        128
+      ]
+    }
+  ]
+}

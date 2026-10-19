@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import {eventRaidRewardEntitlements,eventRaidBonusEntitlements} from '../event_raid.js';
+import {applyGiftPayload} from '../economy.js';
+import {eventRaidRewardEntitlements,eventRaidBonusEntitlements,EVENT_RAID_FINAL_AT,eventRaidFinalGift} from '../event_raid.js';
 const docs=new Map();let queue=Promise.resolve();
-const context=vm.createContext({window:{},db:{},Date,eventRaidRewardEntitlements,eventRaidBonusEntitlements,slotKeyToDocId:encodeURIComponent,
+const context=vm.createContext({window:{},db:{},Date,applyGiftPayload,EVENT_RAID_FINAL_AT,eventRaidFinalGift,eventRaidRewardEntitlements,eventRaidBonusEntitlements,slotKeyToDocId:encodeURIComponent,
  doc:(_db,collection,id)=>collection+'/'+id,
  collection:(_db,name)=>name,query:name=>name,orderBy(){},limit(){},
+ getDoc:async key=>({exists:()=>docs.has(key),data:()=>structuredClone(docs.get(key))}),
  getDocs:async name=>({docs:[...docs.entries()].filter(([key])=>key.startsWith(name+'/')).map(([,row])=>({data:()=>structuredClone(row)}))}),
  runTransaction:(_db,fn)=>{
   const task=queue.then(async()=>{
@@ -26,3 +28,12 @@ const rows=await api.getRankings('event');assert.equal(rows.length,1);assert.equ
 assert.equal([...docs.keys()].some(key=>key.startsWith('raidGlobal/')),false);
 await assert.rejects(api.recordBest('event','me',record(-1)));
 console.log('PASS: isolated event collections, maximum record under concurrent/repeated submissions, daily and milestone reward ledger, offline-day retry and no world-raid damage writes');
+
+const runRecord={...record(7),runs:[{id:'run1',kills:7,finishedAt:Date.now()}]};
+await api.recordBest('cumulative','runner',runRecord);await api.recordBest('cumulative','runner',runRecord);
+result=await api.recordBest('cumulative','runner',{...record(7),runs:[{id:'run2',kills:5,finishedAt:Date.now()}]});assert.equal(result.totalKills,12,'unique runs accumulate, repeated sync does not');
+context.Date=class extends Date{static now(){return EVENT_RAID_FINAL_AT+1;}};
+const finalState={player:{gold:0,lvl:1}};
+const final=await api.claimFinalReward('cumulative','runner',finalState);assert.equal(final.rank,1);assert.equal(await api.claimFinalReward('cumulative','runner',finalState),null);
+const awarded=JSON.parse(docs.get('saves/runner').gameData);assert.equal(awarded.ownedEquips[0].id,'halloween_rank_blade');assert.equal(awarded.unlockedDecorations[0],'rank_gold');
+await assert.rejects(api.recordBest('cumulative','runner',record(999)),/締め切/);
