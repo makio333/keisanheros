@@ -3,6 +3,9 @@
 __pycache__/
 *.pyc
 .firebase/
+.env
+.env.*
+!.env.example
 firebase-debug.log
 node_modules/
 dist/

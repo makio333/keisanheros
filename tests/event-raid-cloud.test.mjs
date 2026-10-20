@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import {applyGiftPayload} from '../economy.js';
 import {eventRaidRewardEntitlements,eventRaidBonusEntitlements,EVENT_RAID_FINAL_AT,eventRaidFinalGift} from '../event_raid.js';
+import {createGameCloudAPIs} from '../game_cloud_apis.js';
 const docs=new Map();let queue=Promise.resolve();
 const context=vm.createContext({window:{},db:{},Date,applyGiftPayload,EVENT_RAID_FINAL_AT,eventRaidFinalGift,eventRaidRewardEntitlements,eventRaidBonusEntitlements,slotKeyToDocId:encodeURIComponent,
  doc:(_db,collection,id)=>collection+'/'+id,
@@ -16,8 +17,7 @@ const context=vm.createContext({window:{},db:{},Date,applyGiftPayload,EVENT_RAID
   });queue=task.catch(()=>{});return task;
  }
 });
-const source=fs.readFileSync(new URL('../firebase_init.js',import.meta.url),'utf8');
-vm.runInContext(source.slice(source.indexOf('window.EventRaidAPI ='),source.indexOf('window.RaidBossAPI =')),context);
+Object.assign(context.window,createGameCloudAPIs({...context,now:()=>context.Date.now()}));
 const api=context.window.EventRaidAPI;
 const record=(bestKills,day='2026-10-14')=>({bestKills,playerName:'勇者',participationDay:day});
 await Promise.all([api.recordBest('event','me',record(25)),api.recordBest('event','me',record(10)),api.recordBest('event','me',record(50))]);

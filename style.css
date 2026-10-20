@@ -149,6 +149,19 @@
   opacity: 0.85;
 }
 
+.modal-overlay.account-login-gate { z-index: 10000001; }
+.account-login-gate .account-login-panel { width: min(420px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; text-align: center; }
+.account-login-panel h2 { font-size: 22px; letter-spacing: 0; }
+.account-login-panel [data-actions] { display: grid; gap: 12px; }
+.account-title-controls { display: grid; gap: 8px; font-size: 14px; }
+.account-purchase-controls { display: grid; gap: 8px; min-width: 0; }
+.account-purchase-controls label { display: grid; gap: 6px; min-width: 0; }
+.account-purchase-controls select { width: 100%; min-width: 0; padding: 10px 8px; font: inherit; color: #fff; background: #252034; border: 1px solid #81758d; border-radius: 4px; }
+.account-purchase-controls p { margin: 0; font-size: 13px; overflow-wrap: anywhere; }
+.account-purchase-controls [hidden] { display: none; }
+.account-title-controls .account-purchase-controls { padding: 12px; background: rgba(20, 16, 30, 0.94); border-radius: 4px; }
+.account-mock-notice { position: fixed; top: 0; left: 0; width: 100%; padding: 3px 8px; box-sizing: border-box; z-index: 10000002; text-align: center; font-size: 12px; line-height: 18px; color: #111; background: #ffdf64; pointer-events: none; }
+
 * { margin:0; padding:0; box-sizing:border-box; }
 
 :root {
@@ -1665,6 +1678,7 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 }
 .challenge-input {
   flex: 1;
+  min-width: 0;
   width: auto;
   max-width: 280px;
   height: 48px;
@@ -7689,7 +7703,17 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
 #screen-event-raid .raid-ticket-count { font-size:14px; white-space:nowrap; }
 #screen-event-raid .raid-menu-panel { grid-template-rows:auto auto auto minmax(0,1fr); grid-template-areas:"head head" "modes modes" "rules rules" "boss rank"; }
 .event-raid-modes { grid-area:modes; display:flex; gap:8px; margin-bottom:10px; }
-.halloween-exchange-confirm { z-index:2100; }
+#modal-print-choice { position:fixed; }
+#modal-print-choice .print-choice-panel { width:96vw; max-width:1060px; margin:16px auto; max-height:94vh; overflow:auto; position:relative; padding:20px; }
+.print-choice-scroll { overflow-x:auto; margin-top:16px; }
+#print-choice-cards { display:grid; grid-template-columns:repeat(3,minmax(180px,1fr)); gap:12px; min-width:564px; }
+.print-choice-card { background:rgba(255,255,255,.08); border:2px solid #4b6584; border-radius:8px; padding:12px; min-width:0; height:min(64vh,740px); display:flex; flex-direction:column; transition:border-color .2s; }
+.print-choice-problems { flex:1; min-height:0; overflow:auto; margin-bottom:12px; }
+.print-choice-card > .btn { flex-shrink:0; white-space:normal; }
+.kanji-print-preview-row { padding:8px 0; border-bottom:1px dotted rgba(255,255,255,.2); font-size:15px; line-height:1.7; overflow-wrap:anywhere; }
+.kanji-print-preview-row small { display:block; font-size:11px; color:#bbb; }
+.kanji-print-preview-blanks { display:inline-block; color:#f9ca24; }
+.halloween-exchange-confirm { z-index:11000; }
 .halloween-exchange-confirm .panel { width:min(440px,92vw); text-align:center; padding:22px; }
 .halloween-exchange-confirm strong { color:#ffdb85; }
 .halloween-exchange-confirm-art { display:flex; justify-content:center; margin:12px 0; }
@@ -8375,3 +8399,101 @@ body:has(.seed-use-effect) :is(#analog-clock-widget,#menu-container,#volume-cont
 #screen-event-raid .raid-boss-portrait { height:clamp(140px,22dvh,210px); aspect-ratio:auto; }
 #screen-event-raid .raid-boss-summary { width:100%; gap:8px; margin:8px 0 0; }
 .menu-source-link { display:block; padding:8px; font-size:11px; color:#c7bdd4; text-align:center; }
+
+.print-score-overlay { position:fixed; inset:0; z-index:18000; display:grid; place-items:center; padding:12px; background:rgba(8,6,16,.82); }
+.print-score-panel { position:relative; isolation:isolate; width:min(100%,460px); padding:28px; overflow:hidden; border:2px solid #e6c573; border-radius:8px; background:#211b30; text-align:center; color:#fff5da; box-shadow:0 12px 60px #0008; animation:print-score-enter .3s ease-out; }
+.print-score-kicker { margin:0 0 8px; color:#c9bed8; font-size:13px; }
+.print-score-panel h2 { margin:0; font-size:27px; color:#ffe18a; }
+.print-score-value { display:flex; align-items:baseline; justify-content:center; gap:8px; margin:14px 0 4px; font-variant-numeric:tabular-nums; }
+.print-score-value strong { min-width:3ch; font-size:92px; line-height:1; color:#ffdc70; }
+.print-score-value > span { font-size:26px; }
+.print-score-summary { margin:12px 0; font-size:18px; }
+.print-score-summary b { color:#a5f2cf; font-size:24px; }
+.print-score-marks { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; max-width:340px; margin:0 auto; }
+.print-score-marks span { display:grid; place-items:center; width:24px; height:24px; font-size:22px; line-height:1; color:#a5f2cf; animation:print-score-mark .25s ease-out both; animation-delay:calc(var(--i)*35ms); }
+.print-score-stamp { display:inline-block; margin:12px 0 0; padding:2px 12px; border:3px double #ff9b90; border-radius:4px; color:#ff9b90; font-size:22px; font-weight:bold; opacity:0; transform:scale(1.5) rotate(-8deg); }
+.is-revealed .print-score-stamp { opacity:1; transform:scale(1) rotate(-8deg); transition:transform .2s,opacity .2s; }
+.print-score-clear { margin:14px 0; font-size:17px; color:#dfd0ea; }
+.print-score-continue { position:relative; z-index:1; width:100%; min-height:44px; margin:0; font-size:17px; border-radius:6px; }
+.print-score-confetti { position:absolute; inset:0; z-index:-1; pointer-events:none; }
+.print-score-confetti i { position:absolute; top:-16px; left:var(--x); width:6px; height:12px; background:var(--color); animation:print-score-fall 2s ease-in both; animation-delay:calc(var(--i)*40ms); }
+@keyframes print-score-enter { from { opacity:0; transform:translateY(16px) scale(.96); } to { opacity:1; transform:none; } }
+@keyframes print-score-mark { from { opacity:0; transform:scale(.4); } to { opacity:1; transform:scale(1); } }
+@keyframes print-score-fall { to { transform:translateY(520px) rotate(270deg); opacity:0; } }
+@media(max-height:540px) {
+  .print-score-panel { padding:12px 24px; }
+  .print-score-panel h2 { font-size:22px; }
+  .print-score-kicker { margin-bottom:2px; }
+  .print-score-value { margin:6px 0 0; }
+  .print-score-value strong { font-size:64px; }
+  .print-score-summary { margin:4px 0; font-size:16px; }
+  .print-score-summary b { font-size:20px; }
+  .print-score-stamp { margin-top:4px; padding:0 8px; font-size:18px; }
+  .print-score-clear { margin:6px 0; font-size:14px; }
+  .print-score-continue { min-height:36px; font-size:15px; padding:6px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .print-score-panel,.print-score-marks span,.print-score-confetti i { animation:none; }
+  .print-score-confetti { display:none; }
+  .is-revealed .print-score-stamp { transition:none; }
+}
+
+#modal-unified-code { z-index:15000; padding:12px; overflow:hidden; }
+body:has(#modal-unified-code:not(.hidden)) :is(#analog-clock-widget,#menu-container,#volume-control-container) { display:none !important; }
+#modal-unified-code .unified-code-panel { width:min(100%,1040px); height:min(720px,calc(100dvh - 24px)); max-height:none; margin:0 auto; padding:18px; overflow:hidden; display:flex; flex-direction:column; gap:10px; border-radius:8px; }
+.unified-code-header { display:flex; align-items:center; gap:12px; flex-shrink:0; border-bottom:1px solid #6b617b; padding-bottom:10px; }
+#modal-unified-code .unified-code-header h2 { margin:0; padding:0; font-size:20px; border:0; }
+#modal-unified-code #btn-unified-close { position:static; margin:0; flex-shrink:0; font-size:14px; padding:6px 10px; }
+#unified-code-section { flex:1; min-height:0; }
+#modal-unified-code #unified-prints-list { max-height:calc(100dvh - 300px) !important; }
+#unified-problems-section { flex:1; min-height:0; flex-direction:column; gap:10px; }
+#unified-problems-title { margin:0; font-size:15px; line-height:1.5; flex-shrink:0; overflow-wrap:anywhere; }
+#unified-problems-list { flex:1; min-height:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(var(--unified-rows,5),minmax(0,1fr)); grid-auto-flow:column; gap:6px 18px; }
+.unified-prob-row { display:grid; grid-template-columns:22px minmax(0,1fr) 110px 22px; align-items:center; gap:6px; min-height:0; padding:4px 0; border-bottom:1px solid #655b70; font-size:20px; }
+.unified-prob-number { color:#c5b5d4; font-size:14px; line-height:1.2; }
+.unified-prob-expression { min-width:0; overflow-wrap:anywhere; line-height:1.3; }
+#unified-problems-list .challenge-input { width:100%; min-width:0; height:40px; margin:0; padding:4px 6px; font-size:22px; border-radius:4px; }
+.unified-prob-mark { font-size:18px; font-weight:bold; text-align:center; }
+.unified-rem-inputs { display:flex; align-items:center; gap:4px; min-width:0; }
+.unified-rem-inputs > span { flex-shrink:0; font-size:12px; }
+#unified-problems-list .unified-rem-inputs .challenge-input { flex:1 1 0; width:0; }
+#unified-grade-btn-area,#admin-grade-btn-area { display:grid; grid-template-columns:1fr 1fr; gap:10px; flex-shrink:0; }
+#modal-unified-code #unified-grade-btn-area .btn,#modal-unified-code #admin-grade-btn-area .btn { margin:0; min-height:42px; padding:8px; font-size:16px; border-radius:6px; }
+#modal-unified-code #unified-result { flex-shrink:0; margin:0; min-height:22px; font-size:15px; line-height:1.4; text-align:center; }
+.unified-admin-answer { grid-column:3 / 5; display:flex; align-items:center; justify-content:space-between; gap:6px; min-width:0; font-size:16px; line-height:1.15; }
+.unified-admin-answer b { color:#ff9c9c; overflow-wrap:anywhere; }
+.unified-admin-answer label { display:flex; align-items:center; gap:4px; font-size:13px; white-space:nowrap; }
+.unified-admin-answer input { width:24px; height:24px; margin:0; accent-color:#f9ca24; }
+@media(max-width:640px) {
+  #modal-unified-code { padding:6px; }
+  #modal-unified-code .unified-code-panel { height:calc(100dvh - 12px); padding:12px; gap:6px; }
+  #modal-unified-code .unified-code-header h2 { font-size:16px; }
+  .unified-code-header { gap:8px; padding-bottom:6px; }
+  #unified-problems-section { gap:6px; }
+  #unified-problems-title { font-size:12px; }
+  #unified-problems-list { grid-template-columns:minmax(0,1fr); grid-template-rows:repeat(var(--unified-count,10),minmax(0,1fr)); gap:2px; }
+  .unified-prob-row { grid-template-columns:22px minmax(0,1fr) 106px 20px; font-size:18px; gap:4px; padding:1px 0; }
+  #unified-problems-list .challenge-input { height:32px; font-size:18px; }
+  .unified-admin-answer { font-size:14px; }
+  #unified-grade-btn-area,#admin-grade-btn-area { gap:6px; }
+  #modal-unified-code #unified-grade-btn-area .btn,#modal-unified-code #admin-grade-btn-area .btn { font-size:12px; padding:6px; min-height:38px; }
+  #unified-problems-list.unified-many-problems { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(var(--unified-rows),minmax(0,1fr)); gap:3px 8px; }
+  .unified-many-problems .unified-prob-row { grid-template-columns:16px minmax(0,1fr) 18px; grid-template-rows:auto auto; font-size:13px; gap:1px 3px; }
+  .unified-many-problems .unified-prob-expression { grid-column:2 / 4; }
+  #unified-problems-list.unified-many-problems .challenge-input { grid-column:2; height:26px; font-size:16px; }
+  .unified-many-problems .unified-admin-answer { grid-column:2 / 4; font-size:13px; }
+}
+@media(max-height:540px) and (min-width:641px) {
+  #modal-unified-code .unified-code-panel { padding:10px 14px; gap:5px; }
+  .unified-code-header { padding-bottom:4px; }
+  #unified-problems-section { gap:4px; }
+  .unified-prob-row { font-size:17px; padding:0; }
+  #unified-problems-list .challenge-input { height:30px; font-size:18px; }
+  #modal-unified-code #unified-grade-btn-area .btn,#modal-unified-code #admin-grade-btn-area .btn { min-height:32px; padding:4px; font-size:14px; }
+}
+@media(max-width:640px) and (max-height:740px) {
+  .unified-many-problems .unified-prob-row { font-size:12px; }
+  .unified-many-problems .unified-prob-number { font-size:12px; }
+  .unified-many-problems .unified-prob-expression { line-height:1.15; }
+  #unified-problems-list.unified-many-problems .challenge-input { height:22px; font-size:15px; }
+}

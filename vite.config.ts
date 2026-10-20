@@ -23,8 +23,11 @@ function pwaCopyPlugin(): Plugin {
 }
 
 const isSingleFile = process.env.BUILD_SINGLEFILE === 'true';
+const accountApi = process.env.LEGEND_ACCOUNT_API;
+if (accountApi && !/^http:\/\/(?:127\.0\.0\.1|localhost):\d+$/.test(accountApi)) throw new Error('LEGEND_ACCOUNT_API must be a local test server');
 
 export default defineConfig({
+  server: accountApi ? { proxy: { '/api': { target: accountApi } } } : undefined,
   plugins: [
     ...(isSingleFile ? [
       viteSingleFile({

@@ -1,4 +1,3 @@
-import './firebase_init.js';
 import './storage_polyfill.js';
 import './style.css';
 import './kanji_input_style.css';
@@ -10,4 +9,10 @@ import { initEventSystem, playEventScene } from './event_system.js';
 initEventSystem();
 window.playEventScene = playEventScene;
 
-import './game.js';
+if (import.meta.env.VITE_ACCOUNT_BACKEND === '1') {
+  const {initializeAccountClient}=await import('./account_client.js');
+  await initializeAccountClient();
+} else {
+  await import('./firebase_init.js');
+}
+await import('./game.js');

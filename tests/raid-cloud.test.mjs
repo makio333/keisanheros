@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import {raidRankCoins} from '../economy.js';
+import {createGameCloudAPIs} from '../game_cloud_apis.js';
 
 // Run the production API with serialized, in-memory Firestore transactions.
 const documents = new Map();
@@ -42,8 +43,7 @@ const context = {
   }
 };
 vm.createContext(context);
-const source = fs.readFileSync(new URL('../firebase_init.js', import.meta.url), 'utf8');
-vm.runInContext(source.slice(source.indexOf('window.RaidBossAPI =')), context);
+Object.assign(context.window,createGameCloudAPIs({...context,now:()=>now,settlementMs:context.RAID_SETTLEMENT_MS}));
 const api = context.window.RaidBossAPI;
 const profile = { playerName: 'Test Hero', avatar: 'spellblade', level: 7 };
 const rank = (key, boss = 'boss_50') => documents.get(`raidRankings_${boss}/${encodeURIComponent(key)}`);

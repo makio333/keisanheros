@@ -1,5 +1,7 @@
 import { eventEquipmentAbility, ensureEventEquipmentAbilities } from './event_equipment.js';
 import { applyGiftPayload, recallGiftPayload, raidResumeStage, raidParticipationCoins } from './economy.js';
+import { kanjiPrintContext } from './kanji_print_context.js';
+import { isPrintAnswerCorrect, formatPrintAnswer } from './print_answers.js';
 
 import { EVENT_RAID_RULES, EVENT_RAID_BONUSES, EventRaidRun, eventRaidTargetCount, rankEventRaidRecords, eventRaidRewardEntitlements, eventRaidBonusEntitlements, eventRaidGaugeRatio, formatEventRaidTime, EVENT_RAID_FINAL_AT } from './event_raid.js';
 window.addEventListener('online',()=>{ if(G) for(const mode of ['math','kanji']) if(eventRaidState(mode).pendingBest) syncEventRaidRecord(mode).catch(()=>{}); });
@@ -50,25 +52,47 @@ document.addEventListener('mousemove', updateTooltipPos);
    安全なローカルストレージラッパー (iPad file:// 環境対応)
    ========================================================== */
 const _fallbackMemStore = new Map();
+const _fallbackRemovedKeys = new Set();
 function storageGet(k) {
+  if (_fallbackRemovedKeys.has(k)) return null;
+  if (_fallbackMemStore.has(k)) return _fallbackMemStore.get(k);
   try { if (typeof localStorage !== 'undefined') return localStorage.getItem(k); } catch (e) {}
-  return _fallbackMemStore.get(k) || null;
+  return null;
 }
 function storageSet(k, v) {
-  try { if (typeof localStorage !== 'undefined') { localStorage.setItem(k, v); return; } } catch (e) {}
+  try { if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(k, v);
+    _fallbackMemStore.delete(k); _fallbackRemovedKeys.delete(k);
+    return true;
+  } } catch (e) {}
   _fallbackMemStore.set(k, String(v));
+  _fallbackRemovedKeys.delete(k);
+  if (typeof document !== 'undefined') {
+    const banner = document.getElementById('debug-error-banner');
+    if(banner){
+      banner.style.display = 'block';
+      banner.textContent = '端末への保存に失敗しました。変更はこの画面内に一時保持しています。画面を閉じずに、保存先の空き容量と共有セーブへの保存状況を確認してください。';
+    }
+  }
+  return false;
 }
 function storageRemove(k) {
-  try { if (typeof localStorage !== 'undefined') { localStorage.removeItem(k); return; } } catch (e) {}
   _fallbackMemStore.delete(k);
+  try { if (typeof localStorage !== 'undefined') { localStorage.removeItem(k); _fallbackRemovedKeys.delete(k); return; } } catch (e) {}
+  _fallbackRemovedKeys.add(k);
 }
-function storageLen() {
-  try { if (typeof localStorage !== 'undefined') return localStorage.length; } catch (e) {}
-  return _fallbackMemStore.size;
+function storageKeys() {
+  const keys = new Set();
+  try { if (typeof localStorage !== 'undefined') for(let i=0;i<localStorage.length;i++) {
+    const key = localStorage.key(i);
+    if(key !== null && !_fallbackRemovedKeys.has(key))keys.add(key);
+  } } catch (e) {}
+  for(const key of _fallbackMemStore.keys())keys.add(key);
+  return [...keys];
 }
+function storageLen() { return storageKeys().length; }
 function storageK(i) {
-  try { if (typeof localStorage !== 'undefined') return localStorage.key(i); } catch (e) {}
-  return Array.from(_fallbackMemStore.keys())[i] || null;
+  return storageKeys()[i] ?? null;
 }
 
 /* ==========================================================
@@ -1650,7 +1674,7 @@ const AREA_STAGES = {
       { name: '小数の割り算', timeLimit: 7500, generateProblem: () => { const b = rnd(2,6), ans = (rnd(11,39)/10).toFixed(1), a = (Math.round(ans*b*10)/10).toFixed(1); return stageProblem(a, b, '÷', parseFloat(ans)); } },
       { name: '分数＋分数（同分母）', timeLimit: 7000, generateProblem: () => { const d = rnd(3,9), a = rnd(1,d-2), b = rnd(1,d-1-a); return { a:`${a}/${d}`, b:`${b}/${d}`, op:'+', answer:`${a+b}/${d}`, text:`${a}/${d} + ${b}/${d}` }; } },
       { name: '分数－分数（同分母）', timeLimit: 7000, generateProblem: () => { const d = rnd(3,9), b = rnd(1,d-2), a = rnd(b+1,d-1); return { a:`${a}/${d}`, b:`${b}/${d}`, op:'-', answer:`${a-b}/${d}`, text:`${a}/${d} - ${b}/${d}` }; } },
-      { name: '平均の計算', timeLimit: 8000, generateProblem: () => { const ans = rnd(5,15), a = ans - rnd(1,3), b = ans + rnd(1,3); return { a, b, op:'平均', answer:ans, text:`${a} と ${b} の平均` }; } },
+      { name: '平均の計算', timeLimit: 8000, generateProblem: () => { const center = rnd(5,15), a = center - rnd(1,3), b = center + rnd(1,3); return { a, b, op:'平均', answer:(a+b)/2, text:`${a} と ${b} の平均` }; } },
       { name: '割合（%）', timeLimit: 8000, generateProblem: () => { const base = rnd(1,9)*100, pct = pick([10,20,30,50]); return { a:base, b:`${pct}%`, op:'の', answer:base*(pct/100), text:`${base} の ${pct}%` }; } },
       { name: '5年まとめ', timeLimit: 8000, generateProblem: generateArea4MixedProblem },
     ],
@@ -1670,9 +1694,9 @@ const AREA_STAGES = {
     bossName: 'さんすうの まおう',
     stages: [
       { name: '分数の掛け算', timeLimit: 8000, generateProblem: () => { const a = rnd(1,3), b = rnd(4,5), c = rnd(1,2), d = rnd(3,5); return { a:`${a}/${b}`, b:`${c}/${d}`, op:'×', answer:`${a*c}/${b*d}`, text:`${a}/${b} × ${c}/${d}` }; } },
-      { name: '比の値', timeLimit: 7500, generateProblem: () => { const m = rnd(2,5), a = rnd(1,4)*m, b = rnd(1,4)*m; return { a:`${a}:${b}`, op:'かんたん', answer:`${a/m}:${b/m}`, text:`${a} : ${b} をかんたんに` }; } },
-      { name: '速さ・道のり', timeLimit: 8500, generateProblem: () => { const spd = rnd(3,8)*10, t = rnd(2,4); return { a:`時速${spd}km`, b:`${t}時間`, op:'道のり', answer:spd*t, text:`時速${spd}km で ${t}時間` }; } },
-      { name: '円の面積（π=3.14）', timeLimit: 9000, generateProblem: () => { const r = pick([1,2,10]); return { a:`半径${r}cm`, op:'面積', answer:Math.round(r*r*3.14*100)/100, text:`半径${r}cmの円の面積` }; } },
+      { name: '比の値', timeLimit: 7500, generateProblem: () => { const m = rnd(2,5), a = rnd(1,4)*m, b = rnd(1,4)*m; let x=a,y=b; while(y)[x,y]=[y,x%y]; return { a:`${a}:${b}`, op:'かんたん', answer:`${a/x}:${b/x}`, text:`${a} : ${b} をかんたんに` }; } },
+      { name: '速さ・道のり', timeLimit: 8500, generateProblem: () => { const spd = rnd(3,8)*10, t = rnd(2,4); return { a:`時速${spd}km`, b:`${t}時間`, op:'道のり', answer:spd*t, text:`時速${spd}km で ${t}時間の道のり（km）` }; } },
+      { name: '円の面積（π=3.14）', timeLimit: 9000, generateProblem: () => { const r = pick([1,2,10]); return { a:`半径${r}cm`, op:'面積', answer:Math.round(r*r*3.14*100)/100, text:`半径${r}cmの円の面積（cm²、円周率3.14）` }; } },
       { name: '比例と反比例', timeLimit: 8000, generateProblem: () => { const k = rnd(2,5), x = rnd(2,6); return { a:`y=${k}x`, b:`x=${x}`, op:'yの値', answer:k*x, text:`y=${k}x で x=${x} のとき y` }; } },
       { name: '場合の数', timeLimit: 8000, generateProblem: () => { const n = rnd(3,4); return { a:`${n}人`, op:'並び方', answer: n===3?6:24, text:`${n}人が1列に並ぶ並び方` }; } },
       { name: '6年総まとめ', timeLimit: 8500, generateProblem: generateArea4MixedProblem },
@@ -3072,6 +3096,7 @@ function normalizeRarityData(data){
 }
 
 function loadSlot(key, options = {}){
+  if (window.AccountSession && !window.AccountSession.owns(key)) return false;
   const raw = storageGet(key);
   if (!raw) return false;
   try {
@@ -3157,6 +3182,7 @@ function listSaveSlots(options = {}){
   for (let i = 0; i < storageLen(); i++){
     const key = storageK(i);
     if (!key || !key.startsWith(SAVE_PREFIX)) continue;
+    if (window.AccountSession && !window.AccountSession.owns(key)) continue;
     try {
       const data = JSON.parse(storageGet(key));
       if (!data) continue;
@@ -3302,6 +3328,15 @@ function applyCloudSlots(cloudSlots) {
 
   for (const cs of cloudSlots) {
     if (!cs.slotKey) continue;
+    if (window.AccountSession) {
+      if (!window.AccountSession.owns(cs.slotKey) || !cs.gameState) continue;
+      const previous=storageGet(cs.slotKey),next=JSON.stringify(cs.gameState);
+      if (previous && previous!==next) storageSet(`legend-account-backup::${window.AccountSession.accountId}::${cs.slotKey}::${Date.now()}`,previous);
+      storageSet(cs.slotKey,next);
+      if (currentSlotKey===cs.slotKey && G) loadSlot(cs.slotKey);
+      cloudMap[cs.slotKey]=cs;hasChanges=true;
+      continue;
+    }
     // テストモードのアカウントがクラウドに届いた場合は保存せず即座に削除
     if (cs.gameState && (cs.gameState.isTestMode || cs.gameState.playerName === 'テスト勇者' || (cs.gameState.playerName && cs.gameState.playerName.includes('[テスト]')))) {
       if (storageGet(cs.slotKey)) storageRemove(cs.slotKey);
@@ -3365,6 +3400,7 @@ function applyCloudSlots(cloudSlots) {
   for (let i = 0; i < storageLen(); i++) {
     const key = storageK(i);
     if (!key || !key.startsWith(SAVE_PREFIX)) continue;
+    if (window.AccountSession) continue;
     if (!cloudMap[key]) {
       try {
         const localData = JSON.parse(storageGet(key));
@@ -3956,6 +3992,7 @@ if (typeof window !== 'undefined') window.renderReadingHints = renderReadingHint
 
 /* プリントの こたえ らん。分数の こたえは たて書き（うえ ぶんし／した ぶんぼ）の 2つの らんに する */
 function printBlankHtml(p){
+  if (p?.remainder != null) return '<span class="p-remainder-blank"><span class="p-blank"></span><span>あまり</span><span class="p-blank"></span></span>';
   if (p && /^\d+\/\d+$/.test(String(p.answer))) return '<span class="p-frac-blank"><i></i><i class="p-frac-bar"></i><i></i></span>';
   return '<span class="p-blank"></span>';
 }
@@ -4296,6 +4333,7 @@ function startChallenge(container, opts, cb){
 
   const start = Date.now();
   let done = false;
+  let cancelled = false;
   let lastLen = 0;
 
   function finish(success){
@@ -4335,8 +4373,8 @@ function startChallenge(container, opts, cb){
       SM.playBeep('error');
     }
     if (typeof window.showResultOverlay === 'function') window.showResultOverlay(success);
-    currentChallenge = null;
     setTimeout(() => {
+      if (cancelled) return;
       if (opts.isActive && !opts.isActive()) return;
       if (calcCenter) calcCenter.classList.add('hidden');
       cb({ success, timeFrac, elapsedMs: elapsed });
@@ -4355,16 +4393,12 @@ function startChallenge(container, opts, cb){
       if (slotStage === 0 && !slotVals[1]) { SM.playBeep('type'); switchSlot(1); return; }
       const empty = slotVals[0] ? (slotVals[1] ? -1 : 1) : 0;
       if (empty >= 0) { switchSlot(empty); input.classList.remove('flash-ng'); void input.offsetWidth; input.classList.add('flash-ng'); return; }
-      const [v0, v1] = slotVals.map(v => String(Number(v)));
-      // 分数は 約分した ものも 同じ かずとして OK（4/12 でも 1/3 でも 正解）
-      const same = isFrac ? (v1 !== '0' && Number(v0) * Number(slotExpect[1]) === Number(v1) * Number(slotExpect[0])) : (v0 === slotExpect[0] && v1 === slotExpect[1]);
-      finish(same);
+      const values = slotVals.map(v => toHalfWidth(v).trim());
+      const joined = hasRem ? `${values[0]}あまり${values[1]}` : values.join(isFrac ? '/' : ':');
+      finish(values.every(v => /^\d+$/.test(v)) && isPrintAnswerCorrect(problem, joined));
       return;
     }
-    const typed = input.value.trim();
-    // 小数は 「3」と「3.0」のように 数として 同じなら OK
-    const decimalOk = /^\d+\.\d+$/.test(answerStr) || /^\d+$/.test(answerStr) ? (/^\d+(\.\d+)?$/.test(typed) && Number(typed) === Number(answerStr)) : false;
-    finish(typed === answerStr.trim() || decimalOk);
+    finish(isPrintAnswerCorrect(problem, input.value));
   }
 
   function remBack(){ if (slotted && slotStage === 1) switchSlot(0); }
@@ -4373,7 +4407,7 @@ function startChallenge(container, opts, cb){
     input.addEventListener('input', () => {
       if (done) return;
       const before = input.value;
-      let v = toHalfWidth(before).replace(slotted ? /[^0-9]/g : /[^0-9./:%-]/g, '');
+      const v = toHalfWidth(before);
       if (v !== before){
         input.value = v;
       }
@@ -4404,6 +4438,7 @@ function startChallenge(container, opts, cb){
   currentChallenge = {
     destroy(){
       done = true;
+      cancelled = true;
       if (calcCenter) calcCenter.classList.add('hidden');
       container.innerHTML = '';
       container.classList.add('hidden');
@@ -8175,14 +8210,14 @@ function showConfirmModal(title, message, onYes){
       <h3>${title}</h3>
       <div class="confirm-message">${message}</div>
       <div class="confirm-actions">
-        <button class="btn" id="btn-confirm-no">いいえ</button>
-        <button class="btn btn-primary" id="btn-confirm-yes">はい</button>
+        <button class="btn" id="btn-confirm-no">${onYes ? 'いいえ' : 'とじる'}</button>
+        ${onYes ? '<button class="btn btn-primary" id="btn-confirm-yes">はい</button>' : ''}
       </div>
     </div>
   `;
   document.body.appendChild(overlay);
   $('btn-confirm-no').onclick = () => overlay.remove();
-  $('btn-confirm-yes').onclick = () => { overlay.remove(); if(onYes) onYes(); };
+  if(onYes)$('btn-confirm-yes').onclick = () => { overlay.remove(); onYes(); };
 }
 
 /* ==========================================================
@@ -8617,7 +8652,7 @@ function renderWeaponShopList(){
       cell.onclick = () => {
         hideTooltip();
         if (owned) {
-          showNotification('すでに もっているよ！');
+          showConfirmModal('所持済みの装備','すでに もっているよ！',null);
           return;
         }
         
@@ -8978,6 +9013,8 @@ function openPrintWindow(htmlContent, bgUrl, isLandscape) {
       .p-num { width: auto; min-width: 34px; color: #888; font-size: 16px; white-space: nowrap; }
       .p-expr { white-space: nowrap; }
       .p-blank { flex: 1; border-bottom: 1px solid #222; min-width: 70px; height: 1.1em; }
+      .p-remainder-blank { display:inline-flex; align-items:baseline; gap:5px; flex:1; font-size:16px; }
+      .p-remainder-blank .p-blank { min-width:26px; }
       .frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 6px; line-height: 1.15; }
       .frac-n { padding: 0 6px 1px; border-bottom: 2px solid #222; }
       .frac-d { padding: 1px 6px 0; }
@@ -9014,19 +9051,19 @@ function showPrintChoiceModal(variants) {
 
   variants.forEach((v, i) => {
     const card = document.createElement('div');
-    card.style.cssText = 'background:rgba(255,255,255,0.08); border:2px solid #4b6584; border-radius:12px; padding:16px; width:230px; cursor:pointer; transition: border-color 0.2s; max-height:70vh; overflow-y:auto;';
+    card.className = 'print-choice-card';
     card.onmouseover = () => card.style.borderColor = '#f9ca24';
     card.onmouseout = () => card.style.borderColor = '#4b6584';
 
     // プレビュー（全問表示）
-    const previewHtml = v.problems.map((p, pi) =>
+    const previewHtml = v.previewHtml ?? v.problems.map((p, pi) =>
       `<div style="font-size:14px; padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.2);">${pi+1}. ${fractionTextHtml(p.text)} = ？</div>`
     ).join('');
 
     card.innerHTML = `
-      <div style="font-size:18px; font-weight:bold; margin-bottom:10px; color:#f9ca24;">${labels[i]}</div>
+      <div style="font-size:18px; font-weight:bold; margin-bottom:10px; color:#f9ca24;">${escapeHtml(v.choiceLabel || labels[i])}</div>
       <div style="font-size:13px; color:#aaa; margin-bottom:10px;">${v.problems.length}問 (${v.opLabel || ''})</div>
-      <div style="margin-bottom:12px;">${previewHtml}</div>
+      <div class="print-choice-problems">${previewHtml}</div>
       <button class="btn btn-primary" style="width:100%; font-size:16px;">🖨️ これを印刷する</button>
     `;
     card.querySelector('button').onclick = () => {
@@ -10279,9 +10316,21 @@ function bindEvents(){
     }
   });
   on('btn-new-save-back', () => showScreen('screen-title'));
-  on('btn-new-save-start', () => {
+  on('btn-new-save-start', async () => {
     const nameInput = $('new-save-name');
-    const key = createSaveSlot(nameInput ? nameInput.value : '', selectedNewSaveAvatar);
+    let key;
+    if (window.AccountSession) {
+      const button=$('btn-new-save-start');if(button.disabled)return;button.disabled=true;
+      try {
+        const game=newGameState(nameInput?.value,selectedNewSaveAvatar);
+        const created=await window.AccountSession.createSave(game.playerName,game);
+        key=currentSlotKey=created.key;G=created.gameState;storageSet(key,JSON.stringify(G));
+        if($('account-save-count'))$('account-save-count').textContent=`プレイヤー ${window.AccountSession.summary.used} / ${window.AccountSession.summary.saveLimit}`;
+      }catch(error){
+        showConfirmModal('プレイヤーを作成できません',error.message==='save_limit_reached'?'プレイヤーの枠がいっぱいです。':'接続とログインを確認して、もう一度お試しください。',null);
+        return;
+      }finally{button.disabled=false;}
+    } else key = createSaveSlot(nameInput ? nameInput.value : '', selectedNewSaveAvatar);
     startTimeLimitSession(key);
     showScreen('screen-intro'); // チュートリアル画面へ
   });
@@ -11169,7 +11218,7 @@ function grantHalloweenPrize(prize) {
 function exchangeHalloweenPrize(id) {
   const prize = HALLOWEEN_EXCHANGE_PRIZES.find(entry => entry.id === id);
   if (!G || !isHalloweenActive() || !prize) return { ok:false, message:'今は交換できません。' };
-  if (halloweenPrizeOwned(prize)) return { ok:false, message:'この限定品は獲得済みです。' };
+  if (prize.kind !== 'equip' && halloweenPrizeOwned(prize)) return { ok:false, message:'この限定品は獲得済みです。' };
   if (halloweenCandyBalance() < prize.cost) return { ok:false, message:'お菓子が足りません。' };
   G.halloweenCandy = halloweenCandyBalance() - prize.cost;
   grantHalloweenPrize(prize);
@@ -11315,7 +11364,7 @@ function showHalloweenMenu(tab = 'stage', message = '') {
     <button type="button" class="btn btn-primary halloween-start-button" data-action="start">⚔️ 従来ステージに挑戦</button>`;
   const body = `<h3 id="halloween-exchange-title" class="halloween-panel-lead">🎁 景品を交換</h3>
       <div class="halloween-prize-grid">${HALLOWEEN_EXCHANGE_PRIZES.map(prize => {
-        const owned = halloweenPrizeOwned(prize);
+        const owned = prize.kind !== 'equip' && halloweenPrizeOwned(prize);
         return `<article class="halloween-prize-card halloween-exchange-card${owned ? ' is-owned' : ''}"><div class="halloween-prize-art">${stageRewardIcon(prize.kind,prize.id,prize.rarity || 1,88)}</div><b>${escapeHtml(prize.name)}</b><div class="halloween-exchange-actions"><span class="halloween-prize-price" aria-label="必要なお菓子 ${prize.cost}個">${iconHtml(HALLOWEEN_EVENT.candyIcon,22)}<b>×${prize.cost}</b></span><button type="button" class="btn" data-exchange="${prize.id}" ${owned || candy < prize.cost ? 'disabled' : ''}>${owned ? '✓ 獲得済み' : candy < prize.cost ? '足りない' : '交換する'}</button></div></article>`;
       }).join('')}</div>`;
   const overlay = document.createElement('div');
@@ -12658,6 +12707,8 @@ function setAdminTab(tabKey){
   } else if (currentAdminTab === 'tools') {
     const goldBtn = $('btn-admin-get-gold');
     if (goldBtn) goldBtn.classList.toggle('hidden', !(currentSlotKey && G));
+    renderAdminGiftPanel();
+    renderAdminGiftHistory();
   }
 }
 
@@ -13490,7 +13541,7 @@ function init(){
 
   try {
     bindEvents();
-    migrateLegacySaveIfNeeded();
+    if (!window.AccountSession) migrateLegacySaveIfNeeded();
     if (listSaveSlots().length > 0) {
       const continueBtn = $('btn-continue');
       if (continueBtn) continueBtn.classList.remove('hidden');
@@ -13944,23 +13995,38 @@ function fetchUnifiedPrint() {
   
   $('unified-code-section').style.display = 'none';
   const probSec = $('unified-problems-section');
-  probSec.style.display = 'block';
+  probSec.style.display = 'flex';
   
-  $('unified-problems-title').textContent = meta.name + ' の 答えあわせ';
+  const area = AREA_STAGES[meta.areaId];
+  const title = area ? `${area.name} ${area.stages[meta.stageIndex]?.name || 'ボス戦'}` : meta.name;
+  $('unified-problems-title').textContent = `${title} ／ No.${pId} ／ ${meta.problems.length}問`;
   
   const listEl = $('unified-problems-list');
   listEl.innerHTML = '';
+  listEl.style.setProperty('--unified-count',meta.problems.length);
+  listEl.style.setProperty('--unified-rows',Math.ceil(meta.problems.length/2));
+  listEl.classList.toggle('unified-many-problems',meta.problems.length>10);
   meta.problems.forEach((p, i) => {
     const isKanji = typeof p.answer === 'string' && isNaN(parseInt(p.answer, 10)); // crude check for kanji string vs number
-    listEl.innerHTML += `<div class="unified-prob-row" style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:32px;">
-      <span style="width:40px; text-align:right;">${i+1}.</span>
-      <span style="flex:1; text-align:right;">${fractionTextHtml(p.text)} = </span>
-      <input type="text" id="unified-ans-${i}" class="challenge-input" style="width:160px; font-size:36px; height: 50px; padding:4px;" ${!isKanji ? (/^-?\d+$/.test(String(p.answer)) ? 'inputmode="numeric"' : 'inputmode="text"') : ''}>
-      <span id="unified-mark-${i}" style="width:30px; font-weight:bold;"></span>
+    const remainderInput=p.remainder != null;
+    const answerInput=remainderInput ? `<div class="unified-rem-inputs"><input type="text" id="unified-ans-${i}" class="challenge-input" data-math-parts="remainder" aria-label="${i+1}問目の商" inputmode="numeric" autocomplete="off"><span>あまり</span><input type="text" id="unified-rem-${i}" class="challenge-input" aria-label="${i+1}問目の余り" inputmode="numeric" autocomplete="off"></div>` : `<input type="text" id="unified-ans-${i}" class="challenge-input" aria-label="${i+1}問目の答え" autocomplete="off" ${!isKanji ? (/^-?\d+$/.test(String(p.answer)) ? 'inputmode="numeric"' : 'inputmode="text"') : ''}>`;
+    listEl.innerHTML += `<div class="unified-prob-row${remainderInput ? ' unified-prob-remainder' : ''}">
+      <label class="unified-prob-number" for="unified-ans-${i}">${i+1}.</label>
+      <label class="unified-prob-expression" for="unified-ans-${i}">${fractionTextHtml(p.text)}${isKanji ? '' : ' ='}</label>
+      ${answerInput}
+      <span id="unified-mark-${i}" class="unified-prob-mark"></span>
     </div>`;
   });
+
+  listEl.onkeydown = event => {
+    if(event.key !== 'Enter' || event.isComposing || !event.target.matches('input.challenge-input'))return;
+    event.preventDefault();
+    const inputs = [...listEl.querySelectorAll('input.challenge-input')];
+    const next = inputs[inputs.indexOf(event.target)+1];
+    (next || $('unified-grade-btn-area').querySelector('button')).focus();
+  };
   
-  if ($('unified-grade-btn-area')) $('unified-grade-btn-area').style.display = 'block';
+    if ($('unified-grade-btn-area')) $('unified-grade-btn-area').style.display = 'grid';
   if ($('admin-grade-btn-area')) $('admin-grade-btn-area').style.display = 'none';
 
   resEl.innerHTML = '';
@@ -13968,25 +14034,15 @@ function fetchUnifiedPrint() {
 
 function gradeUnifiedPrint() {
   const cur = window.unifiedCurrentPrint;
-  if (!cur) return;
+  if (!cur || cur.scoreShowing || cur.rewardsGranted) return;
   const meta = cur.meta;
   const probs = meta.problems;
   let correct = 0;
   
   probs.forEach((p, i) => {
-    const inp = $(`unified-ans-${i}`).value.trim();
-    const expected = String(p.answer);
-    
-    // allow half-width conversion for math, exact for kanji
-    const isKanji = typeof p.answer === 'string' && isNaN(parseInt(p.answer, 10));
-    const processedInp = isKanji ? inp : toHalfWidth(inp).replace(/[：]/g, ':').replace(/[^0-9\/\-.:]/g, '');
-    let ok = processedInp === expected;
-    if (!ok && !isKanji && processedInp) {
-      const fr = /^(\d+)\/(\d+)$/, nu = /^\d+(\.\d+)?$/;
-      const ma = processedInp.match(fr), me = expected.match(fr);
-      if (ma && me) ok = Number(ma[2]) !== 0 && Number(ma[1]) * Number(me[2]) === Number(ma[2]) * Number(me[1]); // 約分した 分数も OK
-      else if (nu.test(processedInp) && nu.test(expected)) ok = Number(processedInp) === Number(expected);   // 3 と 3.0
-    }
+    const field=$(`unified-ans-${i}`);
+    const inp = field.dataset?.mathParts==='remainder' ? `${field.value.trim()}あまり${$(`unified-rem-${i}`).value.trim()}` : field.value.trim();
+    const ok = isPrintAnswerCorrect(p,inp);
     
     if (ok) {
       correct++;
@@ -13998,18 +14054,65 @@ function gradeUnifiedPrint() {
   
   const rate = correct / probs.length;
   
-  const resEl = $('unified-result');
-  resEl.innerHTML = `${probs.length}問中 <b>${correct}問</b> 正解！（正答率: ${Math.floor(rate*100)}％）`;
-  
-  // Reward logic
-  setTimeout(() => {
-    grantPrintRewards(cur, correct, probs.length, rate);
-  }, 1000);
+  showPrintScoreResult(cur, correct, probs.length);
+}
+
+function showPrintScoreResult(cur, correct, total) {
+  if(cur.scoreShowing || cur.rewardsGranted || !total)return;
+  cur.scoreShowing = true;
+  const rate = correct/total, score = Math.round(rate*100);
+  const perfect = correct === total;
+  const title = perfect ? '全問正解！' : rate>=0.8 ? 'よくできました！' : rate>=0.5 ? 'がんばったね！' : '挑戦おつかれさま！';
+  const cleared = ['stage','boss','stage_boss'].includes(cur.meta.type) && rate>=0.8;
+  const game = G, slot = currentSlotKey;
+  const overlay = document.createElement('div');
+  overlay.className = `print-score-overlay${perfect ? ' is-perfect' : ''}`;
+  overlay.innerHTML = `<section class="print-score-panel" role="dialog" aria-modal="true" aria-labelledby="print-score-title" aria-describedby="print-score-summary">
+    <p class="print-score-kicker">プリント No.${escapeHtml(cur.printId)}</p>
+    <h2 id="print-score-title">${title}</h2>
+    <div class="print-score-value" aria-hidden="true"><strong>0</strong><span>点</span></div>
+    <p id="print-score-summary" class="print-score-summary">${score}点 ／ ${total}問中 <b>${correct}問</b>正解</p>
+    <div class="print-score-marks" aria-hidden="true">${Array.from({length:total},(_,i)=>`<span style="--i:${i}">${i<correct ? '○' : '−'}</span>`).join('')}</div>
+    ${perfect ? '<div class="print-score-stamp">満点</div>' : ''}
+    <p class="print-score-clear">${cleared ? 'ステージクリア 1回分！' : '答え合わせ 完了！'}</p>
+    <button type="button" class="btn btn-primary print-score-continue">報酬を見る</button>
+    ${rate>=0.8 ? `<div class="print-score-confetti" aria-hidden="true">${Array.from({length:20},(_,i)=>`<i style="--i:${i};--x:${(i*37)%100}%;--color:${['#ffda67','#7de6b9','#fa8b9b','#86d4ff'][i%4]}"></i>`).join('')}</div>` : ''}
+  </section>`;
+  $('unified-result').textContent = `${score}点 ／ ${total}問中 ${correct}問正解`;
+  document.body.appendChild(overlay);
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const number = overlay.querySelector('.print-score-value strong');
+  const button = overlay.querySelector('button');
+  let frame = 0, finished = false;
+  const start = performance.now();
+  const animate = now => {
+    if(!overlay.isConnected)return;
+    const progress = reduced ? 1 : Math.min(1,(now-start)/1000);
+    number.textContent = Math.round(score*(1-Math.pow(1-progress,3)));
+    if(progress<1) frame = requestAnimationFrame(animate);
+    else overlay.classList.add('is-revealed');
+  };
+  frame = requestAnimationFrame(animate);
+  if(SM.initialized && rate>=0.8)SM.play('se_clear');
+  button.onclick = () => {
+    if(finished)return;
+    finished = true;
+    cancelAnimationFrame(frame);
+    overlay.remove();
+    cur.scoreShowing = false;
+    if(G===game && currentSlotKey===slot)grantPrintRewards(cur,correct,total,rate);
+  };
+  overlay.onkeydown = event => {
+    if(event.key === 'Tab'){event.preventDefault();button.focus();}
+  };
+  button.focus();
 }
 
 function grantPrintRewards(cur, correct, total, rate) {
   const meta = cur.meta;
+  if(cur.rewardsGranted)return;
   if(meta.challengePrint && G?.claimedChallengePrintIds?.includes(cur.printId))return;
+  cur.rewardsGranted = true;
   if(meta.challengePrint && G){G.claimedChallengePrintIds ||= [];G.claimedChallengePrintIds.push(cur.printId);}
   removeResolvedPrint({ printId: cur.printId });
   $('modal-unified-code').classList.add('hidden');
@@ -14336,17 +14439,15 @@ function openAdminGrade() {
     // Change inputs to checkboxes for admin and show the answer
     const inputs = listEl.querySelectorAll('input.challenge-input');
     inputs.forEach((input, i) => {
-      const ans = problems[i].answer;
-      input.outerHTML = `<span style="font-size:32px; color:#e74c3c; font-weight:bold; min-width: 60px;">${ans}</span> <label style="display:flex; align-items:center; gap:8px; margin-left: auto;"><input type="checkbox" class="admin-grade-chk" data-idx="${i}" style="width:36px; height:36px;"> <span style="font-size:24px;">正解</span></label>`;
+      const ans = formatPrintAnswer(problems[i]);
+      input.outerHTML = `<div class="unified-admin-answer"><b>${escapeHtml(ans)}</b><label><input type="checkbox" class="admin-grade-chk" data-idx="${i}">正解</label></div>`;
     });
 
     const markSpans = listEl.querySelectorAll('span[id^="unified-mark-"]');
     markSpans.forEach(span => span.style.display = 'none');
 
     $('unified-grade-btn-area').style.display = 'none';
-    $('admin-grade-btn-area').style.display = 'flex';
-    $('admin-grade-btn-area').style.flexDirection = 'column';
-    $('admin-grade-btn-area').style.gap = '12px';
+    $('admin-grade-btn-area').style.display = 'grid';
   });
 }
 
@@ -14357,7 +14458,7 @@ function adminGradeAllCorrect() {
 
 function submitAdminGrade() {
   const cur = window.unifiedCurrentPrint;
-  if (!cur || !cur.meta || !cur.meta.problems) return;
+  if (!cur || !cur.meta || !cur.meta.problems || cur.scoreShowing || cur.rewardsGranted) return;
   const meta = cur.meta;
   const chks = document.querySelectorAll('.admin-grade-chk');
   let correctCount = 0;
@@ -14367,10 +14468,7 @@ function submitAdminGrade() {
     if (chk.checked) correctCount++;
   });
   
-  const rate = correctCount / count;
-  $('unified-result').innerHTML = `<span style="color:#2ecc71;">採点を完了しました！ (正答率: ${Math.floor(rate*100)}%)</span>`;
-  
-  grantPrintRewards(cur, correctCount, count, rate);
+  showPrintScoreResult(cur, correctCount, count);
 }
 
 window.openAdminGrade = openAdminGrade;
@@ -14380,9 +14478,171 @@ window.submitAdminGrade = submitAdminGrade;
 
 
 
+function showKanjiPrintVariants({generateProblem, printName, sheetTitle = printName, targetId, meta, onPrinted}) {
+  const variants = [
+    {label:'A 漢字の読み', type:'yomi'},
+    {label:'B 書き取り', type:'kaki'},
+    {label:'C ミックス', type:'mix'},
+  ].map(variant => {
+    const problems = uniqueKanjiPrintProblems(generateProblem);
+    const previewHtml = problems.map((problem,index) => {
+      const part = kanjiPrintQuestionParts(problem,index,variant.type);
+      const blanks = part.mode === 'yomi' ? '（　　　　）' : part.runs.map(run => run.kind === 'kanji' ? '□'.repeat(run.text.length) : run.kind === 'kana' ? '（　）' : escapeHtml(run.text)).join('');
+      return `<div class="kanji-print-preview-row"><small>${index+1}. ${part.mode === 'yomi' ? '読み' : '書き取り'}</small><div>${escapeHtml(part.before)}<u>${escapeHtml(part.prompt)}</u>${escapeHtml(part.after)}<br><span class="kanji-print-preview-blanks">${blanks}</span></div></div>`;
+    }).join('');
+    return {problems, opLabel:sheetTitle, choiceLabel:variant.label, previewHtml, onSelect() {
+      const code = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
+      const printId = addPrintCode(targetId, code, {...meta, problems, name:printName, kanjiMode:variant.type});
+      save();
+      const area = AREA_STAGES[meta.areaId];
+      const areaNumber = area?.displayNum || meta.areaId.replace('area','');
+      const stageLabel = `エリア${areaNumber}${Number.isInteger(meta.stageIndex) ? '-'+(meta.stageIndex+1) : ' ボス戦'}`;
+      openPrintWindow(kanjiPrintSheetHtml(problems, variant.type, sheetTitle, G?.playerName || '', printId,
+        {stageLabel, challengePrint:meta.challengePrint, blueprint:meta.type === 'blueprint'}), null, true);
+      onPrinted?.();
+    }};
+  });
+  showPrintChoiceModal(variants);
+}
+
+function printRewardStripHtml({challengePrint = false, blueprint = false, questionCount = 10} = {}) {
+  const mult = challengePrint ? 3 : 1;
+  const half = `${Math.ceil(questionCount*0.5)}問以上正解`;
+  const pass = `${Math.ceil(questionCount*0.8)}問以上正解`;
+  const perfect = `${questionCount}問正解`;
+  const entries = [
+    {icon:'✨',name:'経験値',amount:`1問 ${20*mult} EXP`,condition:'正解した分'},
+    {icon:'💰',name:'ゴールド',amount:`1問 ${10*mult} G`,condition:'正解した分'},
+    {image:'assets/items/potion.png',name:'傷薬',amount:`×${mult}`,condition:half},
+    {image:'assets/items/hipotion.png',name:'秘薬',amount:`×${3*mult}`,condition:`${pass}：またはエーテル×${mult}`},
+    {image:'assets/items/cost_seed_pixel.png',name:'コストプラスのたね',amount:`×${mult}`,condition:perfect},
+    {icon:'💰',name:'全問正解ボーナス',amount:`${500*mult} G`,condition:perfect},
+  ];
+  if (challengePrint) entries.push({icon:'🎫',name:'装備ガチャ10連チケット',amount:'×1',condition:pass});
+  if (blueprint) entries.push({image:'assets/items/ancient_dual_swords_v1.png',name:'エンシェント装備',amount:'×1',condition:`${pass}：ランダムで1つ`});
+  return `<style>
+    .print-rewards { margin:2mm 0 3mm; padding:2mm 0; border-top:1px solid #777; border-bottom:1px solid #777; color:#111; font:8pt/1.4 sans-serif; break-inside:avoid; }
+    .print-rewards-title { display:block; margin-bottom:1mm; font-size:8pt; }
+    .print-reward-list { display:flex; flex-wrap:wrap; align-items:flex-start; gap:2mm 4mm; }
+    .print-reward { display:flex; align-items:center; gap:1.5mm; max-width:100%; }
+    .print-reward-icon { box-sizing:border-box; display:flex; align-items:center; justify-content:center; width:7mm; height:7mm; aspect-ratio:1; flex:0 0 7mm; padding:0.6mm; border:1px solid #555; border-radius:0; overflow:hidden; font-size:13pt; line-height:1; }
+    .print-reward-icon img { display:block; width:100%; height:100%; object-fit:contain; }
+    .print-reward-text { min-width:0; }
+    .print-reward-text b { font-weight:600; }
+    .print-reward-text small { display:block; font-size:7pt; }
+  </style><section class="print-rewards" aria-label="プリント報酬"><strong class="print-rewards-title">${challengePrint ? 'チャレンジ報酬（経験値・G・消耗品3倍）' : 'プリント報酬'}</strong><div class="print-reward-list">${entries.map(entry => {
+    const path = entry.image && (typeof av === 'function' ? av(entry.image) : entry.image);
+    const src = path && (typeof location !== 'undefined' ? new URL(path,location.href).href : path);
+    const icon = src ? `<img src="${escapeHtml(src)}" alt="">` : entry.icon;
+    return `<div class="print-reward"><span class="print-reward-icon" aria-hidden="true">${icon}</span><span class="print-reward-text"><b>${entry.name} ${entry.amount}</b><small>${entry.condition}</small></span></div>`;
+  }).join('')}</div></section>`;
+}
+
+function uniqueKanjiPrintProblems(generateProblem) {
+  const problems = [], words = new Set(), readings = new Set(), tiers = new Set();
+  const key = value => String(value ?? '').normalize('NFKC').replace(/\s/gu,'').replace(/[ァ-ヶ]/gu, c => String.fromCharCode(c.charCodeAt(0)-0x60));
+  const add = problem => {
+    const word = key(problem.text), reading = key(problem.answer);
+    if (!word || !reading || words.has(word) || readings.has(reading)) return;
+    words.add(word); readings.add(reading);
+    problems.push({...problem, printContext:kanjiPrintContext(problem)});
+  };
+  for (let attempt=0; attempt<400 && problems.length<10; attempt++) {
+    const problem = generateProblem(attempt % 10);
+    if (problem.tier) tiers.add(problem.tier);
+    add(problem);
+  }
+  // Finish from the same stage pools if random sampling repeatedly chose duplicates.
+  for (const tier of tiers) {
+    const pool = typeof window !== 'undefined' ? window.KANJI_POOLS?.[tier] || [] : [];
+    for (const problem of pool) {
+      if (problems.length >= 10) break;
+      add({...problem,tier});
+    }
+  }
+  return problems;
+}
+
+function kanjiPrintQuestionParts(problem, index, variant) {
+  const mode = variant === 'mix' ? (index < 5 ? 'yomi' : 'kaki') : variant;
+  const text = String(problem.text ?? '');
+  const runs = (text.match(/[\u3400-\u9fff々]+|[\u3041-\u3096\u30a1-\u30faー]+|./gu) || []).map(text => ({
+    text, kind:/^[\u3400-\u9fff々]+$/u.test(text) ? 'kanji' : /^[\u3041-\u3096\u30a1-\u30faー]+$/u.test(text) ? 'kana' : 'literal',
+  }));
+  return {mode, prompt:String(mode === 'kaki' ? problem.answer : text), runs, ...kanjiPrintContext(problem)};
+}
+
+function kanjiPrintSheetHtml(problems, variant, title, playerName, printId, options = {}) {
+  const makeQuestion = (problem, index) => {
+    const {mode,prompt,runs,before,after} = kanjiPrintQuestionParts(problem,index,variant);
+    const contextLength = Array.from(before+after).length;
+    const contextPt = Math.min(13,Math.max(9,(88-Array.from(prompt).length*6.35)*72/25.4/Math.max(1,contextLength)));
+    const answerOffset = Array.from(before).length*contextPt*25.4/72;
+    const availableHeight = Math.max(32,88-answerOffset);
+    const answerLength = runs.reduce((n,run) => n + run.text.length + (run.kind === 'kana' ? 2 : 0),0);
+    const cellMm = Math.min(18, 96 / Math.max(answerLength, Array.from(prompt).length,1));
+    const readingSpace = Math.min(82,availableHeight-22,Math.max(40,Array.from(String(problem.answer)).length*10));
+    const writingHeight = runs.reduce((height,run) => height + (run.kind === 'kana' ? Math.max(24,run.text.length*cellMm)+24 : run.text.length*cellMm),0);
+    const writingScale = Math.min(1,availableHeight/Math.max(1,writingHeight));
+    const answer = mode === 'yomi' ? `<div class="kp-answer kp-reading-answer" aria-label="読みの解答欄"><span class="kp-reading-space" style="block-size:${readingSpace}mm"></span></div>` : `<div class="kp-answer kp-writing-answer" style="zoom:${writingScale}">${runs.map(run => {
+      if(run.kind === 'kanji')return `<span class="kp-kanji-run">${Array.from(run.text,()=>'<span class="kp-cell"></span>').join('')}</span>`;
+      if(run.kind === 'kana')return `<span class="kp-okurigana">（<span style="inline-size:${Math.max(24,run.text.length*cellMm)}mm"></span>）</span>`;
+      return `<span class="kp-literal">${escapeHtml(run.text)}</span>`;
+    }).join('')}</div>`;
+    return `<section class="kp-question kp-question-${mode}" style="--cell:${cellMm}mm;--context-font:${contextPt}pt"><div class="kp-number">（${index+1}）</div><div class="kp-question-body"><span class="kp-context-before">${escapeHtml(before)}</span><div class="kp-prompt"><span class="kp-target">${escapeHtml(prompt)}</span><span class="kp-context-after">${escapeHtml(after)}</span></div><div class="kp-answer-offset">${answer}</div></div></section>`;
+  };
+  const rows = [problems.slice(0,5), problems.slice(5,10)].map((row, band) => `<div class="kp-band">${row.map((p,i) => makeQuestion(p,band*5+i)).join('')}</div>`).join('');
+  const modeLabel = variant === 'yomi' ? 'A 漢字の読み' : variant === 'kaki' ? 'B 書き取り' : 'C ミックス';
+  const reward = printRewardStripHtml({...options,questionCount:problems.length});
+  return `<style>
+    @page { size:A4 portrait; margin:10mm; }
+    * { box-sizing:border-box; }
+    html,body { margin:0; padding:0; background:#fff; color:#111; }
+    body { font-family:"Yu Mincho","Hiragino Mincho ProN","MS Mincho",serif; }
+    .kp-sheet { width:190mm; height:277mm; display:flex; flex-direction:column; }
+    .kp-header { flex-shrink:0; padding-bottom:4mm; border-bottom:1px solid #333; }
+    .kp-title { margin:0 0 2mm; font-size:14pt; line-height:1.4; }
+    .kp-meta { display:flex; justify-content:space-between; flex-wrap:wrap; gap:2mm 6mm; font-size:10pt; margin-bottom:2mm; }
+    .kp-name { min-width:80mm; border-bottom:1px solid #333; padding-bottom:1mm; }
+    .kp-rewards { margin:0; }
+    .kp-body { flex:1; min-height:0; display:flex; flex-direction:row-reverse; padding-top:3mm; }
+    .kp-main { flex:1; min-width:0; display:grid; grid-template-rows:repeat(2,minmax(0,1fr)); }
+    .kp-band { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); direction:rtl; padding:3mm 0; }
+    .kp-band + .kp-band { border-top:1px solid #333; }
+    .kp-question { direction:ltr; min-width:0; display:flex; flex-direction:column; align-items:center; }
+    .kp-number { font-size:11pt; height:8mm; }
+    .kp-question-body { display:grid; grid-template-columns:auto auto; grid-template-rows:auto auto; align-items:start; column-gap:2mm; }
+    .kp-context-before { grid-area:1 / 2; justify-self:center; writing-mode:vertical-rl; text-orientation:upright; font-size:var(--context-font); line-height:1.25; white-space:nowrap; }
+    .kp-prompt { grid-area:2 / 2; }
+    .kp-prompt { writing-mode:vertical-rl; text-orientation:upright; font-size:var(--context-font); line-height:1.25; letter-spacing:0; max-height:88mm; overflow-wrap:anywhere; }
+    .kp-target { font-size:18pt; text-decoration:underline; text-underline-offset:2px; }
+    .kp-answer-offset { grid-area:2 / 1; }
+    .kp-question-yomi .kp-context-before { grid-column:1; }
+    .kp-question-yomi .kp-prompt { grid-column:1; }
+    .kp-question-yomi .kp-answer-offset { grid-column:2; }
+    .kp-writing-answer,.kp-kanji-run { display:flex; flex-direction:column; align-items:center; }
+    .kp-cell { display:block; width:var(--cell); height:var(--cell); border:1px solid #111; flex-shrink:0; }
+    .kp-cell + .kp-cell { border-top:0; }
+    .kp-okurigana,.kp-literal { writing-mode:vertical-rl; text-orientation:mixed; font-size:30pt; line-height:1; }
+    .kp-reading-answer { display:flex; flex-direction:column; align-items:center; width:14mm; }
+    .kp-reading-answer::before,.kp-reading-answer::after { content:""; display:block; width:12mm; height:4mm; flex-shrink:0; }
+    .kp-reading-answer::before { border-top:0.6mm solid #111; border-radius:50% 50% 0 0; }
+    .kp-reading-answer::after { border-bottom:0.6mm solid #111; border-radius:0 0 50% 50%; }
+    .kp-reading-space,.kp-okurigana > span { display:inline-block; }
+    .kp-okurigana { margin-top:2mm; }
+    .kp-footer { font-size:8pt; color:#555; position:absolute; bottom:0; left:0; }
+    .kp-main { position:relative; padding-bottom:6mm; }
+    @media screen { body { padding:10mm; } }
+  </style><article class="kp-sheet"><header class="kp-header"><h1 class="kp-title">${options.stageLabel ? `【${escapeHtml(options.stageLabel)}】 ` : ''}${escapeHtml(title)}　${modeLabel}</h1><div class="kp-rewards">${reward}</div><div class="kp-meta"><span class="kp-name">なまえ：${escapeHtml(playerName)}　＿＿＿＿＿＿</span><span>プリント番号：${escapeHtml(printId)} ／ ${problems.length}問</span></div></header><div class="kp-body"><main class="kp-main">${rows}<footer class="kp-footer">プリント番号：${escapeHtml(printId)}</footer></main></div></article>`;
+}
+
+function challengePrintSource() {
+  return choosePickupStage() || blueprintChallengeSource() || {areaId:'area1',stageIndex:0};
+}
+
 function suggestChallengePrintBeforeSave(onSave) {
   if(!G || G.isTestMode){onSave();return;}
-  const source=choosePickupStage() || raidReviewCandidates()[0] || {areaId:'area1',stageIndex:0};
+  const source=challengePrintSource();
   const stage=AREA_STAGES[source.areaId]?.stages[source.stageIndex];
   if(!stage){onSave();return;}
   const overlay=document.createElement('div');overlay.className='confirm-overlay';
@@ -14406,6 +14666,13 @@ function printAreaStage(areaId, idx, challengePrint = false, blueprint = null, o
 
   const sampleP = stage.generateProblem();
   const isKanji = isKanjiProblem(sampleP) || ['area5','area6','area7','area8','area9','area10','area14','area15'].includes(areaId);
+
+  if (isKanji && !String(sampleP.tier || '').startsWith('kana')) {
+    showKanjiPrintVariants({generateProblem:() => stage.generateProblem(), printName, sheetTitle:`${area.name} ${stage.name}`,
+      targetId:blueprint ? blueprint.bp.id : areaId+'_'+idx,
+      meta:{type:blueprint ? 'blueprint' : 'stage', ...(blueprint ? {uid:blueprint.uid} : {}), challengePrint, areaId, stageIndex:idx}, onPrinted});
+    return;
+  }
 
   if (isKanji) {
     const variants = [
@@ -14495,7 +14762,15 @@ function printAreaStage(areaId, idx, challengePrint = false, blueprint = null, o
     // 算数の場合
     const variants = ['Aセット', 'Bセット', 'Cセット'].map((label, vi) => {
       const problems = [];
-      for (let i = 0; i < count; i++) problems.push(stage.generateProblem());
+      if (areaId === 'area2' && sampleP.op === '×') {
+        for (let b = 1; b <= count; b++) problems.push(stageProblem(sampleP.a, b, '×', sampleP.a * b));
+        for (let i = problems.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [problems[i], problems[j]] = [problems[j], problems[i]];
+        }
+      } else {
+        for (let i = 0; i < count; i++) problems.push(stage.generateProblem());
+      }
       return {
         problems,
         opLabel: stage.name,
@@ -14510,9 +14785,9 @@ function printAreaStage(areaId, idx, challengePrint = false, blueprint = null, o
           const printId = addPrintCode(blueprint ? blueprint.bp.id : areaId + '_' + idx, pCode, { type: blueprint ? 'blueprint' : 'stage', ...(blueprint ? {uid:blueprint.uid} : {}), challengePrint, problems, name: printName, areaId, stageIndex: idx });
           save();
           openPrintWindow(`
-            <div class="p-title">【エリア${numPrefix}-${idx+1}】 ${printName} ${label}</div>
+            <div class="p-title">【エリア${numPrefix}-${idx+1}】 ${area.name} ${stage.name} ${label}</div>
+            ${printRewardStripHtml({challengePrint,blueprint:!!blueprint})}
             <div class="p-name-box">なまえ：<span class="p-name-line" style="position:relative;"><span style="position:absolute; bottom:2px; left:4px; font-size:18px;">${(typeof G !== "undefined" && G) ? (G.playerName || "") : ""}</span></span></div>
-            <div class="p-bonus-banner">🎉 プリントでクリアすると 通常の<b>3倍以上</b>の報酬が もらえるぞ！</div>
             <div class="p-desc">プリント番号: ${printId}</div>
             <div class="p-cols">
               <div class="p-col">${p1}</div>
@@ -14534,6 +14809,12 @@ function printAreaBoss(areaId) {
 
   const sampleP = area.bossPhase1Problem();
   const isKanji = isKanjiProblem(sampleP) || ['area5','area6','area7','area8','area9','area10','area14','area15'].includes(areaId);
+
+  if (isKanji && !String(sampleP.tier || '').startsWith('kana')) {
+    showKanjiPrintVariants({generateProblem:i => i < 5 ? area.bossPhase1Problem() : area.bossPhase2Problem(),
+      printName, targetId:areaId+'_boss', meta:{type:'boss', areaId}});
+    return;
+  }
 
   if (isKanji) {
     const variants = [
@@ -14639,8 +14920,8 @@ function printAreaBoss(areaId) {
           save();
           openPrintWindow(`
             <div class="p-title">【エリア${numPrefix}】 ${printName} ${label}</div>
+            ${printRewardStripHtml()}
             <div class="p-name-box">なまえ：<span class="p-name-line" style="position:relative;"><span style="position:absolute; bottom:2px; left:4px; font-size:18px;">${(typeof G !== "undefined" && G) ? (G.playerName || "") : ""}</span></span></div>
-            <div class="p-bonus-banner">🎉 プリントでクリアすると 通常の<b>3倍以上</b>の報酬が もらえるぞ！</div>
             <div class="p-desc">プリント番号: ${printId}</div>
             <div class="p-cols">
               <div class="p-col">${p1}</div>
@@ -14748,6 +15029,7 @@ async function syncRaidState() {
     try {
       if (!window.RaidBossAPI?.syncPlayer) throw new Error('Raid cloud API unavailable');
       for (const [key, entry] of Object.entries(local.legacyImports || {})) {
+        if (window.AccountSession && !window.AccountSession.owns(key)) continue;
         await window.RaidBossAPI.syncPlayer(key, entry.profile, { bossId:local.bossId || 'boss_50', participated: true, legacyDamage: entry.legacyDamage, claimed: local.claimed?.[key]?.applied ? local.claimed[key] : null });
         delete local.legacyImports[key];
         const latest = getRaidData();
@@ -15729,12 +16011,14 @@ function giftEntryOptionsHtml() {
     ${equipGroup('⚔ そうび（ぶき）', 'weapon')}${equipGroup('🛡 そうび（よろい）', 'armor')}${equipGroup('💍 そうび（アクセサリ）', 'accessory')}`;
 }
 
+let accountAdminGiftTargets = null;
 function renderAdminGiftTargets() {
   const listEl = $('admin-gift-target-list');
   if (!listEl) return;
   const selected = new Set(Array.from(listEl.querySelectorAll('input:checked'), input => input.value));
   const search = ($('admin-gift-target-search')?.value || '').trim().toLocaleLowerCase('ja');
-  const slots = listSaveSlots().filter(slot => slot.name.toLocaleLowerCase('ja').includes(search));
+  if(window.AccountSession && accountAdminGiftTargets===null){listEl.textContent='管理権限を確認しています…';return;}
+  const slots = (window.AccountSession ? accountAdminGiftTargets : listSaveSlots()).filter(slot => slot.name.toLocaleLowerCase('ja').includes(search));
   if (slots.length === 0) {
     listEl.innerHTML = `<div class="admin-gift-empty">${search ? 'あてはまる セーブデータが ありません。' : 'セーブデータが ありません。'}</div>`;
     return;
@@ -15765,7 +16049,7 @@ async function renderAdminGiftHistory() {
     </div>`).join('');
     bindStageRewardTooltips(el);
   } catch(e) {
-    el.innerHTML = '<div class="admin-gift-empty">エラーが発生しました</div>';
+    el.textContent = e.message==='admin_required' ? 'この操作には管理者の権限が必要です。' : 'エラーが発生しました';
   }
 }
 
@@ -15794,10 +16078,15 @@ function addAdminGiftItemRow() {
 }
 
 function renderAdminGiftPanel() {
+  if(window.AccountSession){accountAdminGiftTargets=null;const button=$('btn-admin-gift-send');if(button)button.disabled=true;}
   renderAdminGiftTargets();
   const rows = $('admin-gift-item-rows');
   if (rows && !rows.children.length) addAdminGiftItemRow();
-  if (typeof syncCloudSaves === 'function') syncCloudSaves(() => renderAdminGiftTargets());
+  if(window.AccountSession){
+    window.AdminGiftAPI.listTargets().then(rows=>{accountAdminGiftTargets=rows;renderAdminGiftTargets();const button=$('btn-admin-gift-send');if(button)button.disabled=false;}).catch(error=>{
+      accountAdminGiftTargets=[];const list=$('admin-gift-target-list');if(list)list.textContent=error.message==='admin_required'?'この操作には管理者の権限が必要です。':'宛先を取得できませんでした。';
+    });
+  } else if (typeof syncCloudSaves === 'function') syncCloudSaves(() => renderAdminGiftTargets());
 }
 
 async function sendAdminGiftFromUI() {
