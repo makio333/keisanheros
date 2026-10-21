@@ -809,9 +809,10 @@ body {
   position: absolute;
   top: 0;
   left: 0;
-  width: 200%;
+  /* Two wide sky tiles keep clouds from stretching on portrait screens. */
+  width: max(200%, 355.37vh);
   height: 100%;
-  background: url('./画像/title_sky.jpg') repeat-x top left;
+  background: url('./画像/title_sky_v2.png') repeat-x top left;
   background-size: 50% 100%;
   animation: titleSkyMove 90s linear infinite;
   z-index: 1;
@@ -830,9 +831,17 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: url('./画像/title_foreground.png') center/cover no-repeat;
+  background: url('./画像/title_foreground_v2.png') center/cover no-repeat;
   z-index: 2;
   pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  #screen-title::after,
+  #screen-load-save::after,
+  #screen-new-save::after {
+    background-position: 35% center;
+  }
 }
 
 /* コンテンツ（ロゴ・メニュー・パネル等）は最前面（z-index: 3） */

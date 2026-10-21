@@ -7,6 +7,7 @@ const assetModules = import.meta.glob([
   './画像/エフェクト/**/*',
   './画像/キャラクター/**/*',
   './画像/title_*.{png,jpg}',
+  './画像/home_town_v2.png',
   './画像/bg_*.jpg',
   './画像/training_dummy*.{png,jpg}',
   './画像/NPC/**/*',
@@ -15,6 +16,7 @@ const assetModules = import.meta.glob([
   '!./画像/装備/**/*',
   '!./画像/UI/**/*',
   '!./画像/ステージ/*.png',
+  '!./assets/monsters_refreshed/*.json',
   '!./assets/monsters/**/*'
 ], { eager: true, query: '?url', import: 'default' });
 
@@ -28,6 +30,14 @@ for (const [rawPath, url] of Object.entries(assetModules)) {
   assetMap[decodeURI(cleanPath)] = url;
   assetMap[encodeURI(rawPath)] = url;
   assetMap[decodeURI(rawPath)] = url;
+}
+
+// Older custom enemy settings may still contain the original sprite paths.
+// Resolve those images to the redraw without rewriting saved stats or names.
+for (const [path, url] of Object.entries(assetMap)) {
+  if (path.includes('/monsters_refreshed/') && path.endsWith('.png')) {
+    assetMap[path.replace('/monsters_refreshed/', '/monsters_new/')] = url;
+  }
 }
 
 window.__ASSET_MAP__ = assetMap;

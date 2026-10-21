@@ -2116,109 +2116,109 @@ function questRewardFor(tier){
    敵データ
    ========================================================== */
 const ENEMIES_TOWER = [
-  { name:'そらとぶスライム', emoji:'assets/monsters_new/monster_1.png', hp:16, atk:3, def:1, spd:4, gold:[4,9], exp:6 },
-  { name:'コウモリ', emoji:'assets/monsters_new/monster_5.png', hp:14, atk:4, def:1, spd:7, gold:[5,10], exp:7 },
-  { name:'おばけ', emoji:'assets/monsters_new/monster_7.png', hp:18, atk:4, def:2, spd:5, gold:[6,12], exp:8 },
-  { name:'キノコ', emoji:'assets/monsters_new/monster_4.png', hp:22, atk:5, def:2, spd:8, gold:[7,13], exp:10 },
-  { name:'ゴブリン', emoji:'assets/monsters_new/monster_3.png', hp:30, atk:6, def:5, spd:3, gold:[9,16], exp:13 },
-  { name:'ミミック', emoji:'assets/monsters_new/monster_6.png', hp:24, atk:7, def:2, spd:9, gold:[10,17], exp:14 },
-  { name:'スケルトン', emoji:'assets/monsters_new/monster_8.png', hp:34, atk:8, def:5, spd:6, gold:[12,20], exp:17 },
-  { name:'しろいウサギ', emoji:'assets/monsters_new/m3_1.png', hp:15, atk:3, def:1, spd:9, gold:[4,8], exp:6 },
-  { name:'キノコやまあらし', emoji:'assets/monsters_new/m3_2.png', hp:20, atk:4, def:2, spd:4, gold:[5,10], exp:8 },
-  { name:'わたぐも', emoji:'assets/monsters_new/m3_3.png', hp:17, atk:4, def:1, spd:6, gold:[5,9], exp:7 },
-  { name:'じょうろのせいれい', emoji:'assets/monsters_new/m3_4.png', hp:19, atk:3, def:2, spd:5, gold:[5,10], exp:8 },
-  { name:'よつばのてんとうむし', emoji:'assets/monsters_new/m3_5.png', hp:16, atk:5, def:1, spd:7, gold:[5,9], exp:8 },
-  { name:'くさむらいわ', emoji:'assets/monsters_new/m3_6.png', hp:26, atk:4, def:6, spd:2, gold:[7,12], exp:10 },
-  { name:'はたけのすずめ', emoji:'assets/monsters_new/m3_7.png', hp:18, atk:5, def:1, spd:8, gold:[6,10], exp:9 },
-  { name:'どろんこモグラ', emoji:'assets/monsters_new/m3_8.png', hp:24, atk:5, def:3, spd:4, gold:[7,13], exp:11 },
-  { name:'たいようのてんし', emoji:'assets/monsters_new/m1_1.png', hp:17, atk:5, def:2, spd:6, gold:[6,10], exp:9 },
-  { name:'みずばのかえる', emoji:'assets/monsters_new/m1_2.png', hp:19, atk:4, def:2, spd:5, gold:[6,10], exp:9 },
-  { name:'きかいのつかいま', emoji:'assets/monsters_new/m1_3.png', hp:20, atk:6, def:2, spd:5, gold:[7,11], exp:10 },
-  { name:'マカロンモンスター', emoji:'assets/monsters_new/m1_4.png', hp:18, atk:5, def:2, spd:5, gold:[6,10], exp:9 },
+  { name:'そらとぶスライム', emoji:'assets/monsters_refreshed/monster_1.png', hp:16, atk:3, def:1, spd:4, gold:[4,9], exp:6 },
+  { name:'コウモリ', emoji:'assets/monsters_refreshed/monster_5.png', hp:14, atk:4, def:1, spd:7, gold:[5,10], exp:7 },
+  { name:'おばけ', emoji:'assets/monsters_refreshed/monster_7.png', hp:18, atk:4, def:2, spd:5, gold:[6,12], exp:8 },
+  { name:'キノコ', emoji:'assets/monsters_refreshed/monster_4.png', hp:22, atk:5, def:2, spd:8, gold:[7,13], exp:10 },
+  { name:'ゴブリン', emoji:'assets/monsters_refreshed/monster_3.png', hp:30, atk:6, def:5, spd:3, gold:[9,16], exp:13 },
+  { name:'ミミック', emoji:'assets/monsters_refreshed/monster_6.png', hp:24, atk:7, def:2, spd:9, gold:[10,17], exp:14 },
+  { name:'スケルトン', emoji:'assets/monsters_refreshed/monster_8.png', hp:34, atk:8, def:5, spd:6, gold:[12,20], exp:17 },
+  { name:'しろいウサギ', emoji:'assets/monsters_refreshed/m3_1.png', hp:15, atk:3, def:1, spd:9, gold:[4,8], exp:6 },
+  { name:'キノコやまあらし', emoji:'assets/monsters_refreshed/m3_2.png', hp:20, atk:4, def:2, spd:4, gold:[5,10], exp:8 },
+  { name:'わたぐも', emoji:'assets/monsters_refreshed/m3_3.png', hp:17, atk:4, def:1, spd:6, gold:[5,9], exp:7 },
+  { name:'じょうろのせいれい', emoji:'assets/monsters_refreshed/m3_4.png', hp:19, atk:3, def:2, spd:5, gold:[5,10], exp:8 },
+  { name:'よつばのてんとうむし', emoji:'assets/monsters_refreshed/m3_5.png', hp:16, atk:5, def:1, spd:7, gold:[5,9], exp:8 },
+  { name:'くさむらいわ', emoji:'assets/monsters_refreshed/m3_6.png', hp:26, atk:4, def:6, spd:2, gold:[7,12], exp:10 },
+  { name:'はたけのすずめ', emoji:'assets/monsters_refreshed/m3_7.png', hp:18, atk:5, def:1, spd:8, gold:[6,10], exp:9 },
+  { name:'どろんこモグラ', emoji:'assets/monsters_refreshed/m3_8.png', hp:24, atk:5, def:3, spd:4, gold:[7,13], exp:11 },
+  { name:'たいようのてんし', emoji:'assets/monsters_refreshed/m1_1.png', hp:17, atk:5, def:2, spd:6, gold:[6,10], exp:9 },
+  { name:'みずばのかえる', emoji:'assets/monsters_refreshed/m1_2.png', hp:19, atk:4, def:2, spd:5, gold:[6,10], exp:9 },
+  { name:'きかいのつかいま', emoji:'assets/monsters_refreshed/m1_3.png', hp:20, atk:6, def:2, spd:5, gold:[7,11], exp:10 },
+  { name:'マカロンモンスター', emoji:'assets/monsters_refreshed/m1_4.png', hp:18, atk:5, def:2, spd:5, gold:[6,10], exp:9 },
 ];
 const ENEMIES_DUNGEON = [
-  { name:'どくスライム', emoji:'assets/monsters_new/monster_1.png', hp:16, atk:3, def:1, spd:4, gold:[4,9], exp:6 },
-  { name:'コウモリ', emoji:'assets/monsters_new/monster_5.png', hp:13, atk:4, def:0, spd:8, gold:[3,8], exp:7 },
-  { name:'ゴブリン', emoji:'assets/monsters_new/monster_3.png', hp:19, atk:4, def:2, spd:5, gold:[6,12], exp:8 },
-  { name:'キノコおばけ', emoji:'assets/monsters_new/monster_4.png', hp:24, atk:6, def:3, spd:5, gold:[8,15], exp:11 },
-  { name:'あくりょう', emoji:'assets/monsters_new/monster_7.png', hp:20, atk:7, def:1, spd:9, gold:[9,16], exp:13 },
-  { name:'ミミック', emoji:'assets/monsters_new/monster_6.png', hp:32, atk:7, def:4, spd:4, gold:[10,18], exp:14 },
-  { name:'スケルトンナイト', emoji:'assets/monsters_new/monster_8.png', hp:36, atk:9, def:6, spd:6, gold:[14,22], exp:18 },
-  { name:'きりかぶモンスター', emoji:'assets/monsters_new/m2_1.png', hp:26, atk:5, def:4, spd:3, gold:[7,13], exp:11 },
-  { name:'すいしょうのようせい', emoji:'assets/monsters_new/m2_2.png', hp:18, atk:6, def:1, spd:8, gold:[7,12], exp:11 },
-  { name:'つるのばけもの', emoji:'assets/monsters_new/m2_3.png', hp:28, atk:6, def:4, spd:4, gold:[8,14], exp:12 },
-  { name:'どくとかげ', emoji:'assets/monsters_new/m2_4.png', hp:20, atk:6, def:2, spd:7, gold:[7,12], exp:10 },
-  { name:'こけのせいれい', emoji:'assets/monsters_new/m2_5.png', hp:30, atk:7, def:5, spd:3, gold:[9,15], exp:13 },
-  { name:'ぬまのハチドリ', emoji:'assets/monsters_new/m2_6.png', hp:16, atk:6, def:1, spd:9, gold:[7,11], exp:10 },
-  { name:'こけいわゴーレム', emoji:'assets/monsters_new/m2_7.png', hp:36, atk:8, def:7, spd:2, gold:[11,18], exp:15 },
-  { name:'まじゅうのバラ', emoji:'assets/monsters_new/m2_8.png', hp:22, atk:8, def:2, spd:6, gold:[9,15], exp:13 },
-  { name:'どせいのようせい', emoji:'assets/monsters_new/m1_5.png', hp:19, atk:5, def:2, spd:6, gold:[6,11], exp:9 },
-  { name:'まほうのつぼ', emoji:'assets/monsters_new/m1_6.png', hp:23, atk:6, def:4, spd:3, gold:[8,13], exp:11 },
-  { name:'おとのてんし', emoji:'assets/monsters_new/m1_7.png', hp:17, atk:5, def:1, spd:8, gold:[6,10], exp:9 },
-  { name:'ひかるさかな', emoji:'assets/monsters_new/m1_8.png', hp:20, atk:5, def:2, spd:6, gold:[7,11], exp:10 },
+  { name:'どくスライム', emoji:'assets/monsters_refreshed/monster_1.png', hp:16, atk:3, def:1, spd:4, gold:[4,9], exp:6 },
+  { name:'コウモリ', emoji:'assets/monsters_refreshed/monster_5.png', hp:13, atk:4, def:0, spd:8, gold:[3,8], exp:7 },
+  { name:'ゴブリン', emoji:'assets/monsters_refreshed/monster_3.png', hp:19, atk:4, def:2, spd:5, gold:[6,12], exp:8 },
+  { name:'キノコおばけ', emoji:'assets/monsters_refreshed/monster_4.png', hp:24, atk:6, def:3, spd:5, gold:[8,15], exp:11 },
+  { name:'あくりょう', emoji:'assets/monsters_refreshed/monster_7.png', hp:20, atk:7, def:1, spd:9, gold:[9,16], exp:13 },
+  { name:'ミミック', emoji:'assets/monsters_refreshed/monster_6.png', hp:32, atk:7, def:4, spd:4, gold:[10,18], exp:14 },
+  { name:'スケルトンナイト', emoji:'assets/monsters_refreshed/monster_8.png', hp:36, atk:9, def:6, spd:6, gold:[14,22], exp:18 },
+  { name:'きりかぶモンスター', emoji:'assets/monsters_refreshed/m2_1.png', hp:26, atk:5, def:4, spd:3, gold:[7,13], exp:11 },
+  { name:'すいしょうのようせい', emoji:'assets/monsters_refreshed/m2_2.png', hp:18, atk:6, def:1, spd:8, gold:[7,12], exp:11 },
+  { name:'つるのばけもの', emoji:'assets/monsters_refreshed/m2_3.png', hp:28, atk:6, def:4, spd:4, gold:[8,14], exp:12 },
+  { name:'どくとかげ', emoji:'assets/monsters_refreshed/m2_4.png', hp:20, atk:6, def:2, spd:7, gold:[7,12], exp:10 },
+  { name:'こけのせいれい', emoji:'assets/monsters_refreshed/m2_5.png', hp:30, atk:7, def:5, spd:3, gold:[9,15], exp:13 },
+  { name:'ぬまのハチドリ', emoji:'assets/monsters_refreshed/m2_6.png', hp:16, atk:6, def:1, spd:9, gold:[7,11], exp:10 },
+  { name:'こけいわゴーレム', emoji:'assets/monsters_refreshed/m2_7.png', hp:36, atk:8, def:7, spd:2, gold:[11,18], exp:15 },
+  { name:'まじゅうのバラ', emoji:'assets/monsters_refreshed/m2_8.png', hp:22, atk:8, def:2, spd:6, gold:[9,15], exp:13 },
+  { name:'どせいのようせい', emoji:'assets/monsters_refreshed/m1_5.png', hp:19, atk:5, def:2, spd:6, gold:[6,11], exp:9 },
+  { name:'まほうのつぼ', emoji:'assets/monsters_refreshed/m1_6.png', hp:23, atk:6, def:4, spd:3, gold:[8,13], exp:11 },
+  { name:'おとのてんし', emoji:'assets/monsters_refreshed/m1_7.png', hp:17, atk:5, def:1, spd:8, gold:[6,10], exp:9 },
+  { name:'ひかるさかな', emoji:'assets/monsters_refreshed/m1_8.png', hp:20, atk:5, def:2, spd:6, gold:[7,11], exp:10 },
 ];
 const ENEMIES_CRYPT = [
-  { name:'どろぬまスライム', emoji:'assets/monsters_new/monster_1.png', hp:18, atk:3, def:2, spd:4, gold:[4,9], exp:6 },
-  { name:'やみコウモリ', emoji:'assets/monsters_new/monster_5.png', hp:15, atk:5, def:1, spd:8, gold:[5,10], exp:7 },
-  { name:'どくキノコ', emoji:'assets/monsters_new/monster_4.png', hp:24, atk:5, def:3, spd:6, gold:[7,13], exp:10 },
-  { name:'ほらあなゴブリン', emoji:'assets/monsters_new/monster_3.png', hp:28, atk:6, def:4, spd:5, gold:[8,14], exp:12 },
-  { name:'のろいのミミック', emoji:'assets/monsters_new/monster_6.png', hp:26, atk:8, def:3, spd:7, gold:[10,17], exp:14 },
-  { name:'さまよえるたましい', emoji:'assets/monsters_new/monster_7.png', hp:22, atk:7, def:2, spd:9, gold:[10,18], exp:15 },
-  { name:'がいこつせんし', emoji:'assets/monsters_new/monster_8.png', hp:38, atk:9, def:6, spd:6, gold:[14,22], exp:19 },
-  { name:'はちうえのぬし', emoji:'assets/monsters_new/m4_1.png', hp:20, atk:5, def:3, spd:4, gold:[7,12], exp:10 },
-  { name:'ほのおのねこ', emoji:'assets/monsters_new/m4_2.png', hp:22, atk:8, def:2, spd:7, gold:[8,14], exp:12 },
-  { name:'あわだこ', emoji:'assets/monsters_new/m4_3.png', hp:19, atk:6, def:2, spd:6, gold:[7,12], exp:10 },
-  { name:'でんきのたま', emoji:'assets/monsters_new/m4_4.png', hp:24, atk:7, def:3, spd:6, gold:[9,14], exp:12 },
-  { name:'すいしょうくらげ', emoji:'assets/monsters_new/m4_5.png', hp:21, atk:6, def:3, spd:5, gold:[8,13], exp:11 },
-  { name:'かぜのわたぼこり', emoji:'assets/monsters_new/m4_6.png', hp:18, atk:5, def:1, spd:9, gold:[7,11], exp:10 },
-  { name:'まがんのひとみ', emoji:'assets/monsters_new/m4_7.png', hp:26, atk:9, def:3, spd:5, gold:[10,16], exp:14 },
-  { name:'ゆきだるまのれいこん', emoji:'assets/monsters_new/m4_8.png', hp:23, atk:6, def:4, spd:4, gold:[8,13], exp:11 },
-  { name:'まもりのてんし', emoji:'assets/monsters_new/m5_1.png', hp:28, atk:7, def:4, spd:5, gold:[9,15], exp:13 },
-  { name:'ほのおのふしちょう', emoji:'assets/monsters_new/m5_2.png', hp:26, atk:9, def:3, spd:7, gold:[10,16], exp:14 },
-  { name:'くものかいじゅう', emoji:'assets/monsters_new/m5_3.png', hp:32, atk:6, def:6, spd:3, gold:[10,16], exp:13 },
-  { name:'たいようのせいれい', emoji:'assets/monsters_new/m5_4.png', hp:24, atk:8, def:3, spd:6, gold:[9,15], exp:13 },
+  { name:'どろぬまスライム', emoji:'assets/monsters_refreshed/monster_1.png', hp:18, atk:3, def:2, spd:4, gold:[4,9], exp:6 },
+  { name:'やみコウモリ', emoji:'assets/monsters_refreshed/monster_5.png', hp:15, atk:5, def:1, spd:8, gold:[5,10], exp:7 },
+  { name:'どくキノコ', emoji:'assets/monsters_refreshed/monster_4.png', hp:24, atk:5, def:3, spd:6, gold:[7,13], exp:10 },
+  { name:'ほらあなゴブリン', emoji:'assets/monsters_refreshed/monster_3.png', hp:28, atk:6, def:4, spd:5, gold:[8,14], exp:12 },
+  { name:'のろいのミミック', emoji:'assets/monsters_refreshed/monster_6.png', hp:26, atk:8, def:3, spd:7, gold:[10,17], exp:14 },
+  { name:'さまよえるたましい', emoji:'assets/monsters_refreshed/monster_7.png', hp:22, atk:7, def:2, spd:9, gold:[10,18], exp:15 },
+  { name:'がいこつせんし', emoji:'assets/monsters_refreshed/monster_8.png', hp:38, atk:9, def:6, spd:6, gold:[14,22], exp:19 },
+  { name:'はちうえのぬし', emoji:'assets/monsters_refreshed/m4_1.png', hp:20, atk:5, def:3, spd:4, gold:[7,12], exp:10 },
+  { name:'ほのおのねこ', emoji:'assets/monsters_refreshed/m4_2.png', hp:22, atk:8, def:2, spd:7, gold:[8,14], exp:12 },
+  { name:'あわだこ', emoji:'assets/monsters_refreshed/m4_3.png', hp:19, atk:6, def:2, spd:6, gold:[7,12], exp:10 },
+  { name:'でんきのたま', emoji:'assets/monsters_refreshed/m4_4.png', hp:24, atk:7, def:3, spd:6, gold:[9,14], exp:12 },
+  { name:'すいしょうくらげ', emoji:'assets/monsters_refreshed/m4_5.png', hp:21, atk:6, def:3, spd:5, gold:[8,13], exp:11 },
+  { name:'かぜのわたぼこり', emoji:'assets/monsters_refreshed/m4_6.png', hp:18, atk:5, def:1, spd:9, gold:[7,11], exp:10 },
+  { name:'まがんのひとみ', emoji:'assets/monsters_refreshed/m4_7.png', hp:26, atk:9, def:3, spd:5, gold:[10,16], exp:14 },
+  { name:'ゆきだるまのれいこん', emoji:'assets/monsters_refreshed/m4_8.png', hp:23, atk:6, def:4, spd:4, gold:[8,13], exp:11 },
+  { name:'まもりのてんし', emoji:'assets/monsters_refreshed/m5_1.png', hp:28, atk:7, def:4, spd:5, gold:[9,15], exp:13 },
+  { name:'ほのおのふしちょう', emoji:'assets/monsters_refreshed/m5_2.png', hp:26, atk:9, def:3, spd:7, gold:[10,16], exp:14 },
+  { name:'くものかいじゅう', emoji:'assets/monsters_refreshed/m5_3.png', hp:32, atk:6, def:6, spd:3, gold:[10,16], exp:13 },
+  { name:'たいようのせいれい', emoji:'assets/monsters_refreshed/m5_4.png', hp:24, atk:8, def:3, spd:6, gold:[9,15], exp:13 },
 ];
 const ENEMIES_BANDIT = [
-  { name:'みはりの盗賊', emoji:'assets/monsters_new/monster_3.png', hp:15, atk:4, def:1, spd:6, gold:[5,10], exp:7 },
-  { name:'ナイフの盗賊', emoji:'assets/monsters_new/monster_3.png', hp:17, atk:6, def:1, spd:7, gold:[6,11], exp:8 },
-  { name:'ゆみの盗賊', emoji:'assets/monsters_new/monster_3.png', hp:16, atk:5, def:1, spd:9, gold:[6,12], exp:9 },
-  { name:'ばんけんコウモリ', emoji:'assets/monsters_new/monster_5.png', hp:16, atk:5, def:1, spd:8, gold:[6,11], exp:8 },
-  { name:'わなのミミック', emoji:'assets/monsters_new/monster_6.png', hp:27, atk:7, def:3, spd:5, gold:[10,17], exp:13 },
-  { name:'どくつぼスライム', emoji:'assets/monsters_new/monster_1.png', hp:20, atk:5, def:2, spd:4, gold:[7,13], exp:10 },
-  { name:'たいちょうこうほの盗賊', emoji:'assets/monsters_new/monster_3.png', hp:32, atk:9, def:4, spd:8, gold:[13,20], exp:17 },
-  { name:'ほのおのサラマンダー', emoji:'assets/monsters_new/m6_1.png', hp:22, atk:8, def:2, spd:6, gold:[8,14], exp:12 },
-  { name:'こおりのこぎつね', emoji:'assets/monsters_new/m6_2.png', hp:19, atk:6, def:2, spd:8, gold:[7,12], exp:10 },
-  { name:'つばめもどき', emoji:'assets/monsters_new/m6_3.png', hp:16, atk:6, def:1, spd:9, gold:[6,11], exp:9 },
-  { name:'おけがえる', emoji:'assets/monsters_new/m6_4.png', hp:21, atk:5, def:3, spd:5, gold:[7,12], exp:10 },
-  { name:'きのこがえる', emoji:'assets/monsters_new/m6_5.png', hp:23, atk:6, def:3, spd:4, gold:[8,13], exp:11 },
-  { name:'ひまわりのようせい', emoji:'assets/monsters_new/m6_6.png', hp:18, atk:5, def:2, spd:6, gold:[7,11], exp:9 },
-  { name:'まだらのちょう', emoji:'assets/monsters_new/m6_7.png', hp:17, atk:7, def:1, spd:9, gold:[7,12], exp:10 },
-  { name:'きりかぶのぬし', emoji:'assets/monsters_new/m6_8.png', hp:27, atk:6, def:5, spd:3, gold:[9,15], exp:12 },
-  { name:'さまよえるゆうれい', emoji:'assets/monsters_new/m5_5.png', hp:22, atk:7, def:2, spd:7, gold:[8,14], exp:12 },
-  { name:'たからのハチドリ', emoji:'assets/monsters_new/m5_6.png', hp:17, atk:6, def:1, spd:9, gold:[8,13], exp:11 },
-  { name:'にじのはと', emoji:'assets/monsters_new/m5_7.png', hp:19, atk:6, def:2, spd:8, gold:[8,13], exp:11 },
-  { name:'たいようのわ', emoji:'assets/monsters_new/m5_8.png', hp:25, atk:8, def:4, spd:5, gold:[9,15], exp:13 },
+  { name:'みはりの盗賊', emoji:'assets/monsters_refreshed/monster_3.png', hp:15, atk:4, def:1, spd:6, gold:[5,10], exp:7 },
+  { name:'ナイフの盗賊', emoji:'assets/monsters_refreshed/monster_3.png', hp:17, atk:6, def:1, spd:7, gold:[6,11], exp:8 },
+  { name:'ゆみの盗賊', emoji:'assets/monsters_refreshed/monster_3.png', hp:16, atk:5, def:1, spd:9, gold:[6,12], exp:9 },
+  { name:'ばんけんコウモリ', emoji:'assets/monsters_refreshed/monster_5.png', hp:16, atk:5, def:1, spd:8, gold:[6,11], exp:8 },
+  { name:'わなのミミック', emoji:'assets/monsters_refreshed/monster_6.png', hp:27, atk:7, def:3, spd:5, gold:[10,17], exp:13 },
+  { name:'どくつぼスライム', emoji:'assets/monsters_refreshed/monster_1.png', hp:20, atk:5, def:2, spd:4, gold:[7,13], exp:10 },
+  { name:'たいちょうこうほの盗賊', emoji:'assets/monsters_refreshed/monster_3.png', hp:32, atk:9, def:4, spd:8, gold:[13,20], exp:17 },
+  { name:'ほのおのサラマンダー', emoji:'assets/monsters_refreshed/m6_1.png', hp:22, atk:8, def:2, spd:6, gold:[8,14], exp:12 },
+  { name:'こおりのこぎつね', emoji:'assets/monsters_refreshed/m6_2.png', hp:19, atk:6, def:2, spd:8, gold:[7,12], exp:10 },
+  { name:'つばめもどき', emoji:'assets/monsters_refreshed/m6_3.png', hp:16, atk:6, def:1, spd:9, gold:[6,11], exp:9 },
+  { name:'おけがえる', emoji:'assets/monsters_refreshed/m6_4.png', hp:21, atk:5, def:3, spd:5, gold:[7,12], exp:10 },
+  { name:'きのこがえる', emoji:'assets/monsters_refreshed/m6_5.png', hp:23, atk:6, def:3, spd:4, gold:[8,13], exp:11 },
+  { name:'ひまわりのようせい', emoji:'assets/monsters_refreshed/m6_6.png', hp:18, atk:5, def:2, spd:6, gold:[7,11], exp:9 },
+  { name:'まだらのちょう', emoji:'assets/monsters_refreshed/m6_7.png', hp:17, atk:7, def:1, spd:9, gold:[7,12], exp:10 },
+  { name:'きりかぶのぬし', emoji:'assets/monsters_refreshed/m6_8.png', hp:27, atk:6, def:5, spd:3, gold:[9,15], exp:12 },
+  { name:'さまよえるゆうれい', emoji:'assets/monsters_refreshed/m5_5.png', hp:22, atk:7, def:2, spd:7, gold:[8,14], exp:12 },
+  { name:'たからのハチドリ', emoji:'assets/monsters_refreshed/m5_6.png', hp:17, atk:6, def:1, spd:9, gold:[8,13], exp:11 },
+  { name:'にじのはと', emoji:'assets/monsters_refreshed/m5_7.png', hp:19, atk:6, def:2, spd:8, gold:[8,13], exp:11 },
+  { name:'たいようのわ', emoji:'assets/monsters_refreshed/m5_8.png', hp:25, atk:8, def:4, spd:5, gold:[9,15], exp:13 },
 ];
 const BOSSES = {
-  tower5:        { name:'くさはらのぬし', emoji:'assets/monsters_new/boss1_1.png', hp:70, atk:9, def:5, spd:7, gold:[40,60], exp:45 },
-  tower10:       { name:'くさはらの大しゅちょう', emoji:'assets/monsters_new/boss1_1.png', hp:120, atk:13, def:8, spd:9, gold:[90,130], exp:90 },
-  dungeon5:      { name:'ぬまのしはいしゃ', emoji:'assets/monsters_new/boss1_5.png', hp:75, atk:10, def:6, spd:5, gold:[40,60], exp:45 },
-  dungeon10:     { name:'しっこくのぬまおう', emoji:'assets/monsters_new/boss1_5.png', hp:130, atk:14, def:9, spd:8, gold:[90,130], exp:95 },
-  crypt5:        { name:'めいきゅうのぬし', emoji:'assets/monsters_new/boss1_2.png', hp:80, atk:11, def:7, spd:6, gold:[42,62], exp:48 },
-  crypt10:       { name:'くらやみのめいきゅう王', emoji:'assets/monsters_new/boss1_2.png', hp:135, atk:15, def:9, spd:9, gold:[95,135], exp:98 },
-  bandit5:       { name:'とうぞくだんちょう', emoji:'assets/monsters_new/boss1_3.png', hp:78, atk:12, def:5, spd:8, gold:[42,62], exp:47 },
-  bandit10:      { name:'とうぞくの王', emoji:'assets/monsters_new/boss1_3.png', hp:140, atk:16, def:8, spd:8, gold:[95,135], exp:100 },
+  tower5:        { name:'くさはらのぬし', emoji:'assets/monsters_refreshed/boss1_1.png', hp:70, atk:9, def:5, spd:7, gold:[40,60], exp:45 },
+  tower10:       { name:'くさはらの大しゅちょう', emoji:'assets/monsters_refreshed/boss1_1.png', hp:120, atk:13, def:8, spd:9, gold:[90,130], exp:90 },
+  dungeon5:      { name:'ぬまのしはいしゃ', emoji:'assets/monsters_refreshed/boss1_5.png', hp:75, atk:10, def:6, spd:5, gold:[40,60], exp:45 },
+  dungeon10:     { name:'しっこくのぬまおう', emoji:'assets/monsters_refreshed/boss1_5.png', hp:130, atk:14, def:9, spd:8, gold:[90,130], exp:95 },
+  crypt5:        { name:'めいきゅうのぬし', emoji:'assets/monsters_refreshed/boss1_2.png', hp:80, atk:11, def:7, spd:6, gold:[42,62], exp:48 },
+  crypt10:       { name:'くらやみのめいきゅう王', emoji:'assets/monsters_refreshed/boss1_2.png', hp:135, atk:15, def:9, spd:9, gold:[95,135], exp:98 },
+  bandit5:       { name:'とうぞくだんちょう', emoji:'assets/monsters_refreshed/boss1_3.png', hp:78, atk:12, def:5, spd:8, gold:[42,62], exp:47 },
+  bandit10:      { name:'とうぞくの王', emoji:'assets/monsters_refreshed/boss1_3.png', hp:140, atk:16, def:8, spd:8, gold:[95,135], exp:100 },
   // 各エリア専用ボス（boss1_1〜boss1_8のフル活用）
-  forest_boss:   { name:'かけざんのヌシ', emoji:'assets/monsters_new/boss1_4.png', hp:80, atk:11, def:6, spd:6, gold:[45,65], exp:50 },
-  trial_boss:    { name:'試練のガーディアン', emoji:'assets/monsters_new/boss1_3.png', hp:85, atk:12, def:6, spd:7, gold:[50,70], exp:54 },
-  kanji_boss1:   { name:'もりの まじん', emoji:'assets/monsters_new/boss1_6.png', hp:70, atk:8, def:4, spd:5, gold:[40,60], exp:45 },
-  kanji_boss2:   { name:'ほらあなの まじん', emoji:'assets/monsters_new/boss1_2.png', hp:75, atk:9, def:5, spd:5, gold:[42,62], exp:48 },
-  kanji_boss3:   { name:'すなの まじん', emoji:'assets/monsters_new/boss1_7.png', hp:80, atk:10, def:6, spd:6, gold:[45,65], exp:50 },
-  kanji_boss4:   { name:'うみの まじん', emoji:'assets/monsters_new/boss1_8.png', hp:85, atk:11, def:6, spd:7, gold:[48,68], exp:52 },
-  kanji_boss5:   { name:'えんじょうの まじん', emoji:'assets/monsters_new/boss1_4.png', hp:90, atk:12, def:7, spd:6, gold:[50,70], exp:55 },
-  kanji_boss6:   { name:'かんじの まおう', emoji:'assets/monsters_new/boss1_5.png', hp:100, atk:13, def:8, spd:7, gold:[60,90], exp:65 },
-  sky_boss:      { name:'天空のぬし', emoji:'assets/monsters_new/boss1_7.png', hp:92, atk:13, def:7, spd:8, gold:[55,75], exp:60 },
-  castle_boss:   { name:'さんすうの まおう', emoji:'assets/monsters_new/boss1_8.png', hp:105, atk:14, def:8, spd:8, gold:[70,100], exp:70 },
+  forest_boss:   { name:'かけざんのヌシ', emoji:'assets/monsters_refreshed/boss1_4.png', hp:80, atk:11, def:6, spd:6, gold:[45,65], exp:50 },
+  trial_boss:    { name:'試練のガーディアン', emoji:'assets/monsters_refreshed/boss1_3.png', hp:85, atk:12, def:6, spd:7, gold:[50,70], exp:54 },
+  kanji_boss1:   { name:'もりの まじん', emoji:'assets/monsters_refreshed/boss1_6.png', hp:70, atk:8, def:4, spd:5, gold:[40,60], exp:45 },
+  kanji_boss2:   { name:'ほらあなの まじん', emoji:'assets/monsters_refreshed/boss1_2.png', hp:75, atk:9, def:5, spd:5, gold:[42,62], exp:48 },
+  kanji_boss3:   { name:'すなの まじん', emoji:'assets/monsters_refreshed/boss1_7.png', hp:80, atk:10, def:6, spd:6, gold:[45,65], exp:50 },
+  kanji_boss4:   { name:'うみの まじん', emoji:'assets/monsters_refreshed/boss1_8.png', hp:85, atk:11, def:6, spd:7, gold:[48,68], exp:52 },
+  kanji_boss5:   { name:'えんじょうの まじん', emoji:'assets/monsters_refreshed/boss1_4.png', hp:90, atk:12, def:7, spd:6, gold:[50,70], exp:55 },
+  kanji_boss6:   { name:'かんじの まおう', emoji:'assets/monsters_refreshed/boss1_5.png', hp:100, atk:13, def:8, spd:7, gold:[60,90], exp:65 },
+  sky_boss:      { name:'天空のぬし', emoji:'assets/monsters_refreshed/boss1_7.png', hp:92, atk:13, def:7, spd:8, gold:[55,75], exp:60 },
+  castle_boss:   { name:'さんすうの まおう', emoji:'assets/monsters_refreshed/boss1_8.png', hp:105, atk:14, def:8, spd:8, gold:[70,100], exp:70 },
 };
 
 let customEnemies = { tower: {}, dungeon: {}, crypt: {}, bandit: {}, boss: {} };
@@ -2616,7 +2616,7 @@ const AVATAR_BACKGROUNDS = [
   { id: 'sky', name: '天空の城', image: 'assets/characters/bg_skin_sky.png', color: '#90cce8' },
   { id: 'crystal', name: '氷晶の聖域', image: 'assets/characters/bg_skin_crystal.png', color: '#8bd9e9' },
   { id: 'raid_magma', name: 'マグマの火山', image: 'assets/raid/raid_bg_magma_pixel.jpg', color: '#651a16', rewardSource: 'raid' },
-  { id: 'quest_village', name: 'むらの ひろば', image: '画像/ステージ/拠点.jpg', color: '#7a5a33', rewardSource: 'quest' },
+  { id: 'quest_village', name: 'むらの ひろば', image: '画像/home_town_v2.png', color: '#7a5a33', rewardSource: 'quest' },
   { id:'halloween_ballroom', name:'月夜のおばけ舞踏会', image:'assets/halloween/background_haunted_ballroom.png', color:'#352043', rewardSource:'halloween' },
   { id:'halloween_moon_garden', name:'月灯りのハロウィン庭園', image:'assets/halloween/exchange_background_moon_garden.png', color:'#593347', rewardSource:'halloween' },
   { id:'halloween_candy_village', name:'ハロウィンのお菓子村', image:'assets/halloween/background_candy_village.png', color:'#593347', rewardSource:'halloween' },
@@ -9198,10 +9198,103 @@ function blueprintChallengeSource(bp) {
   return {...source,gen:()=>stage.generateProblem(),label:`${area.name} ${stage.name}`,bg:area.bgImage};
 }
 
+const BLUEPRINT_KANJI_AREAS = new Set(['area5','area6','area7','area8','area9','area10']);
+const BLUEPRINT_JAPANESE_AREAS = new Set([...BLUEPRINT_KANJI_AREAS,'area14','area15']);
+
+function blueprintSubjectSources(isKanji) {
+  const cleared=[];
+  for(const [areaId,area] of Object.entries(AREA_STAGES)) {
+    if(BLUEPRINT_JAPANESE_AREAS.has(areaId)!==isKanji)continue;
+    for(let stageIndex=0;stageIndex<area.stages.length;stageIndex++) {
+      const stars=Number(G?.stageClearCounts?.[areaId]?.[stageIndex])||0;
+      const total=Number(G?.stageTotalClears?.[areaId]?.[stageIndex])||0;
+      if(stars>0||total>0)cleared.push({areaId,stageIndex,difficulty:stageDropDifficulty(areaId,stageIndex)});
+    }
+  }
+  cleared.sort((a,b)=>b.difficulty-a.difficulty||b.stageIndex-a.stageIndex||a.areaId.localeCompare(b.areaId));
+  const challenge=cleared[0];
+  if(!challenge)return null;
+  let previous=challenge.stageIndex>0
+    ? {areaId:challenge.areaId,stageIndex:challenge.stageIndex-1}
+    : null;
+  if(!previous) {
+    previous=Object.entries(AREA_STAGES).flatMap(([areaId,area])=>BLUEPRINT_JAPANESE_AREAS.has(areaId)===isKanji
+      ? area.stages.map((_,stageIndex)=>({areaId,stageIndex,difficulty:stageDropDifficulty(areaId,stageIndex)})) : [])
+      .filter(stage=>stage.difficulty<challenge.difficulty)
+      .sort((a,b)=>b.difficulty-a.difficulty||b.stageIndex-a.stageIndex)[0]||null;
+  }
+  if(!previous)previous=challenge;
+  const describe=source=>{
+    const area=AREA_STAGES[source.areaId],stage=area.stages[source.stageIndex];
+    return {...source,area,stage,label:`${area.name} ${stage.name}`};
+  };
+  return {challenge:describe(challenge),previous:describe(previous)};
+}
+
+function blueprintTestProblems(source, isKanji, count=5) {
+  const problems=[],seenWords=new Set(),seenReadings=new Set(),seenMath=new Set();
+  const normalize=value=>String(value??'').normalize('NFKC').replace(/\s/gu,'').replace(/[ァ-ヶ]/gu,c=>String.fromCharCode(c.charCodeAt(0)-0x60));
+  for(let attempt=0;attempt<250&&problems.length<count;attempt++) {
+    const problem=source.stage.generateProblem();
+    const word=normalize(problem.text),answer=normalize(problem.answer);
+    const key=isKanji?`${word}\u0000${answer}`:`${word}\u0000${answer}`;
+    if(!word||!answer||seenMath.has(key)||(isKanji&&(seenWords.has(word)||seenReadings.has(answer))))continue;
+    seenMath.add(key);
+    if(isKanji){seenWords.add(word);seenReadings.add(answer);}
+    problems.push({...problem,...(isKanji?{printContext:kanjiPrintContext(problem)}:{}),sourceLabel:source.label});
+  }
+  if(problems.length<count)throw new Error(`${source.label}から問題を${count}問用意できませんでした`);
+  return problems;
+}
+
+function printBlueprintTest(bp,uid) {
+  const mathSources=blueprintSubjectSources(false),kanjiSources=blueprintSubjectSources(true);
+  if(!mathSources||!kanjiSources) {
+    showConfirmModal('古代の設計図','国語と算数の両方で、ステージを1つずつクリアすると両面テストを印刷できます。',null);
+    return;
+  }
+  try {
+    const pages=[
+      {side:'表',math:blueprintTestProblems(mathSources.challenge,false),kanji:blueprintTestProblems(kanjiSources.challenge,true),sourceLabel:`チャレンジ：${mathSources.challenge.label}／${kanjiSources.challenge.label}`},
+      {side:'裏',math:blueprintTestProblems(mathSources.previous,false),kanji:blueprintTestProblems(kanjiSources.previous,true),sourceLabel:`前のステージ：${mathSources.previous.label}／${kanjiSources.previous.label}`},
+    ];
+    const problems=pages.flatMap(page=>[
+      ...page.kanji.map(problem=>({...problem,subject:'国語'})),
+      ...page.math.map(problem=>({...problem,subject:'算数'})),
+    ]);
+    const printName=`古代の設計図テスト（国語・算数）`;
+    const code=Array.from({length:6},()=>Math.floor(Math.random()*10)).join('');
+    const printId=addPrintCode(bp.id,code,{type:'blueprint',uid,problems,name:printName,questionCount:20,duplex:true});
+    save();
+    const reward=printRewardStripHtml({blueprint:true,questionCount:20});
+    const makeKanji=(problem,index)=>{
+      const mode=index%2===0?'yomi':'kaki';
+      const {before,after}=kanjiPrintContext(problem);
+      if(mode==='yomi')return `<div class="bt-kanji"><b>国語 ${index+1}.</b><span>${escapeHtml(before)}<u>${escapeHtml(problem.text)}</u>${escapeHtml(after)}　（　　　　　　　　　）</span><small>読み</small></div>`;
+      const runs=(String(problem.text||'').match(/[\u3400-\u9fff々]+|[\u3041-\u3096\u30a1-\u30faー]+|./gu)||[]).map(text=>({text,kind:/^[\u3400-\u9fff々]+$/u.test(text)?'kanji':/^[\u3041-\u3096\u30a1-\u30faー]+$/u.test(text)?'kana':'literal'}));
+      const blanks=runs.map(run=>run.kind==='kanji'?Array.from(run.text,()=>'<i class="bt-cell"></i>').join(''):run.kind==='kana'?`（<i class="bt-kana"></i>）`:escapeHtml(run.text)).join('');
+      return `<div class="bt-kanji"><b>国語 ${index+1}.</b><span>${escapeHtml(before)}<u>${escapeHtml(problem.answer)}</u>${escapeHtml(after)}</span><small>書き取り　${blanks}</small></div>`;
+    };
+    const pagesHtml=pages.map((page,pageIndex)=>{
+      const base=pageIndex*10;
+      const kanji=page.kanji.map((problem,index)=>makeKanji(problem,base+index)).join('');
+      const math=page.math.map((problem,index)=>`<div class="bt-math"><b>算数 ${base+index+6}.</b><span>${fractionTextHtml(escapeHtml(problem.text))} = </span><i class="bt-math-blank"></i></div>`).join('');
+      return `<article class="bt-page"><header><h1>古代の設計図　両面チャレンジテスト【${page.side}】</h1><div class="bt-subtitle">${escapeHtml(page.sourceLabel)}　｜　全20問・${page.side}10問</div>${pageIndex===0?reward:''}<div class="bt-meta"><span>なまえ：${escapeHtml(G?.playerName||'')}　＿＿＿＿＿＿</span><span>ステージ：${escapeHtml(mathSources.challenge.area.displayNum||'')}／${escapeHtml(kanjiSources.challenge.area.displayNum||'')}</span><span>プリント番号：${escapeHtml(printId)}</span></div></header><main><section><h2>国語・漢字</h2>${kanji}</section><section><h2>算数</h2>${math}</section></main><footer>プリント番号：${escapeHtml(printId)}　／　${page.side}　（${pageIndex+1} / 2）</footer></article>`;
+    }).join('');
+    openPrintWindow(`<style>
+      @page{size:A4 portrait;margin:8mm}*{box-sizing:border-box}html,body{margin:0!important;padding:0!important;background:#fff;color:#111;font-family:"Yu Mincho","Hiragino Mincho ProN",serif}
+      .bt-page{height:281mm;display:flex;flex-direction:column;page-break-after:always;break-after:page;overflow:hidden}.bt-page:last-child{page-break-after:auto;break-after:auto}
+      .bt-page header{flex:none;border-bottom:1px solid #222;padding-bottom:2mm}.bt-page h1{font-size:16pt;margin:0 0 1mm}.bt-subtitle{font-size:9pt;margin-bottom:1mm}.bt-page .print-rewards{font-size:6.5pt!important;margin:0 0 1mm!important;padding:1mm 0!important}.bt-page .print-reward-icon{width:5mm!important;height:5mm!important;flex-basis:5mm!important;font-size:9pt!important}.bt-page .print-reward-list{gap:1mm 2mm!important}.bt-meta{display:flex;justify-content:space-between;gap:2mm;font-size:9pt;margin-top:1mm}.bt-page main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:5mm;padding-top:3mm}.bt-page main>section{min-width:0;display:flex;flex-direction:column}.bt-page h2{font-size:12pt;margin:0 0 2mm;border-bottom:1px solid #777;padding-bottom:1mm}.bt-kanji,.bt-math{flex:1;min-height:0;border-bottom:1px dotted #aaa;padding:2mm 1mm;display:flex;flex-direction:column;justify-content:center;gap:2mm;font-size:10.5pt;overflow:hidden}.bt-kanji b,.bt-math b{font-size:8pt;color:#444}.bt-kanji span{line-height:1.5}.bt-kanji small{font-size:9pt;color:#333}.bt-cell{display:inline-block;width:9mm;height:9mm;border:1px solid #222;vertical-align:middle}.bt-kana{display:inline-block;width:12mm;border-bottom:1px solid #222}.bt-math{flex-direction:row;align-items:center;gap:2mm;font-size:14pt}.bt-math b{width:16mm;flex:none}.bt-math span{min-width:0}.bt-math-blank{flex:1;min-width:12mm;height:10mm;border:1px solid #333}.bt-page footer{flex:none;padding-top:2mm;font-size:8pt;color:#666;border-top:1px solid #aaa}
+      @media screen{body{padding:8mm!important}.bt-page{width:194mm;height:281mm;border:1px solid #ccc;padding:0 2mm;margin-bottom:8mm;box-shadow:0 1mm 4mm #999}}
+    </style>${pagesHtml}`,null,true);
+  } catch(error) {
+    console.error('Ancient blueprint test generation failed',error);
+    showConfirmModal('古代の設計図','このステージから問題を十分に作れませんでした。別のステージをクリアしてから、もう一度お試しください。',null);
+  }
+}
+
 function printBlueprintSheet(bp,uid) {
-  const source=blueprintChallengeSource(bp);
-  if(!source){showConfirmModal('古代の設計図','ステージを1つクリアすると、その中で最も難しい問題を印刷できます。',null);return;}
-  printAreaStage(source.areaId,source.stageIndex,false,{bp,uid});
+  printBlueprintTest(bp,uid);
 }
 
 function startBlueprintCodeEntry(uid, bp){
@@ -9216,7 +9309,7 @@ function startBlueprintCodeEntry(uid, bp){
     return;
   }
 
-  $('training-progress').innerHTML = `プリントした 10もんの こたえから つくった あんごう（すうじ10けた）を にゅうりょくしよう！`;
+  $('training-progress').innerHTML = `プリントした せっけいずの あんごうを にゅうりょくしよう！`;
   $('training-challenge').innerHTML = `
     <input type="text" inputmode="numeric" id="code-input" class="challenge-input" maxlength="20" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
     <button id="code-submit" class="btn btn-primary" style="margin-top:12px;">けってい</button>
@@ -13809,10 +13902,10 @@ function startBootLoader(){
 
   // 1. 優先アセット（タイトル画面まわり）
   const PRIORITY_KEYS = [
-    '画像/title_sky.jpg',
-    '画像/title_foreground.png',
+    '画像/title_sky_v2.png',
+    '画像/title_foreground_v2.png',
     '画像/title_logo_transparent.png',
-    '画像/ステージ/拠点.jpg',
+    '画像/home_town_v2.png',
     '画像/my_room.jpg',
     '画像/bg_training.jpg',
   ];

@@ -1,0 +1,2271 @@
+{
+  "method": "built-in image_gen",
+  "status": "complete",
+  "date": "2026-10-21",
+  "count": 63,
+  "ordinaryMonsters": 55,
+  "ordinaryBosses": 8,
+  "excluded": [
+    "assets/raid/**",
+    "assets/halloween/**",
+    "unused up_img*.png",
+    "unused monster_2.png"
+  ],
+  "originalAssetsPreserved": true,
+  "styleMaster": "assets/monsters_refreshed/monster_1.png",
+  "sharedStyle": "Coarse square pixel clusters, common dark contour, upper-left highlights, flat material shading, readable original faces; preserve original species, pose and colors.",
+  "scope": "Artwork only; names, IDs, stats, encounter pools and save data unchanged. Legacy image paths resolve to the redraw through assets_bundle.js.",
+  "jobs": [
+    {
+      "file": "boss1_1.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Grassland boss: preserve the golden-brown lion with two large spread brown feather wings, curled ram horns, green leaf mane and tiny pink flower details, four legs, long curling tail and dignified face. Remove all scenery, earth, grass floor and distant flying leaves; no plants below feet. Creature only on transparent alpha.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/boss1_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-13feeef4-49c4-4da3-8a0c-7bbb0576b8e0.png",
+      "path": "assets/monsters_refreshed/boss1_1.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "くさはらのぬし",
+        "くさはらの大しゅちょう"
+      ],
+      "kind": "ordinary_boss",
+      "verification": {
+        "file": "boss1_1.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.4777,
+        "solidBounds": [
+          90,
+          68,
+          1221,
+          1218
+        ],
+        "bytes": 1235565,
+        "sha256": "895a0c711e7e79dca747eb4a305720bfd6b43222470c9e1c8ace7903eb5d27c7"
+      }
+    },
+    {
+      "file": "boss1_2.png",
+      "prompt": "Use case: precise-object-edit. Edit target image 1: the finished bronze minotaur monster. Image 2 is the common coarse pixel-style master; images 3–5 are technique references only. Make ONE very specific cleanup: ERASE every engraved angular spiral or letter-like marking from BOTH chest armor panels and the axe blade. Make these surfaces plain, unmarked, flat bronze/steel with only simple edge highlights. Keep the cyan square gems. Do not add any decorative lines, runes, numbers, lettering or scrollwork. Keep the entire creature's design, pose, size, gold/bronze colors, horns, eyes, face, axe silhouette, big coarse pixel clusters and dark contour unchanged. Keep current true transparent background and solid creature interiors. No gray fringe, backdrop, floor, extra objects, equipment from other references or text. Output just this minotaur, square canvas, whole creature contained with clear transparent margin.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/output/monster-refresh/rejected/boss2-letterlike-marks-v3.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-08ecfb7f-b3a4-478b-8ce2-1b3a9c1e9844.png",
+      "path": "assets/monsters_refreshed/boss1_2.png",
+      "status": "accepted",
+      "iteration": "cohesive_cleanup_v4",
+      "names": [
+        "めいきゅうのぬし",
+        "くらやみのめいきゅう王",
+        "ほらあなの まじん"
+      ],
+      "kind": "ordinary_boss",
+      "verification": {
+        "file": "boss1_2.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5352,
+        "solidBounds": [
+          114,
+          94,
+          1242,
+          1191
+        ],
+        "bytes": 1104357,
+        "sha256": "59d0918b4c85d2f244a6ec04d05fdaa248b34e1cfbee3e77add8a98f19fa7cfe"
+      }
+    },
+    {
+      "file": "boss1_3.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Green orc king, gold crown, dark gray spiked armor, red/brown cloth, upright double axe left, two feet standing. Remove cave, treasures, coins, floor and spare swords; boss and held weapon only.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/boss1_3.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-bd5d0c50-c5d0-4292-8e3b-7d1d9570a74d.png",
+      "path": "assets/monsters_refreshed/boss1_3.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "とうぞくだんちょう",
+        "とうぞくの王",
+        "試練のガーディアン"
+      ],
+      "kind": "ordinary_boss",
+      "verification": {
+        "file": "boss1_3.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5249,
+        "solidBounds": [
+          60,
+          112,
+          1136,
+          1213
+        ],
+        "bytes": 1057613,
+        "sha256": "e242b2021305bcfe2eb80f48539f75b2caaf872028ebc7f2d19ce20c4b7ca9e1"
+      }
+    },
+    {
+      "file": "boss1_4.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Elegant cream and gold winged dragon, pale blue breast plates, long gold swept horns, two huge white feather wings, curling tail, standing legs. Remove floating islands, ground, columns, crystals and light beams; dragon only.\nTARGETED STYLE CORRECTION, highest priority: the previous dragon draft was far too finely drawn. This dragon must look like it was drawn by the SAME pixel artist and on the SAME coarse grid as the slime in image 2. REDUCE each wing to just 6–8 LARGE stepped primary feather clusters, with just three flat cream/lavender shades, NOT dozens of tiny feathers or thin linework. Broad simple body shapes and clearly enlarged readable face, simple pale-blue breast plates and gold swept horns. NO added body jewelry or hip gemstones. Hard dark plum contour around all opaque white feathers; no gray fringe/matte, no soft antialiasing, no semitransparent border. Every small detail is a full approximately 12–16 output-pixel square cluster. Creature's whole wings, feet and tail fit within the center 84% with transparent margins. Keep original dragon design, colors and pose.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/boss1_4.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-e48f52ba-02f5-4aa0-9dfb-1e6b6db6f89f.png",
+      "path": "assets/monsters_refreshed/boss1_4.png",
+      "status": "accepted",
+      "iteration": "cohesive_cleanup_v4",
+      "names": [
+        "かけざんのヌシ",
+        "えんじょうの まじん"
+      ],
+      "kind": "ordinary_boss",
+      "verification": {
+        "file": "boss1_4.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.53,
+        "solidBounds": [
+          59,
+          115,
+          1190,
+          1236
+        ],
+        "bytes": 1064875,
+        "sha256": "4302a6282aa2fdde97c7ce98faf6281cc1778ac0a80796ed37c8669877718a96"
+      }
+    },
+    {
+      "file": "boss1_5.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Giant olive-green crocodile swamp boss, yellow eye, long low body and tail, branch/log-like spines and moss growing on back, four claw feet, slightly open toothy mouth. Remove ALL printed title text, swamp pond, scenery, ground, frogs and foreground logs; creature only.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/boss1_5.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-dd12b276-87a1-4140-9932-ad155c63d4be.png",
+      "path": "assets/monsters_refreshed/boss1_5.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "ぬまのしはいしゃ",
+        "しっこくのぬまおう",
+        "かんじの まおう"
+      ],
+      "kind": "ordinary_boss",
+      "verification": {
+        "file": "boss1_5.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.6358,
+        "solidBounds": [
+          48,
+          273,
+          1249,
+          1049
+        ],
+        "bytes": 871110,
+        "sha256": "e3abd20155be0143ccd1fdcb99def33079a9df41fe673b0f7742fa9bd79893e9"
+      }
+    },
+    {
+      "file": "boss1_6.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Massive black rock lava golem, orange glowing eyes and molten cracks through torso and limbs, red orange flame crown and shoulder flames, two fists and two legs. Remove ALL title lettering, lava floor, rocks and side creatures; golem only.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/boss1_6.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-0b214def-e6bb-4149-a478-ca5e48cd9b7a.png",
+      "path": "assets/monsters_refreshed/boss1_6.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "もりの まじん"
+      ],
+      "kind": "ordinary_boss",
+      "verification": {
+        "file": "boss1_6.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.4996,
+        "solidBounds": [
+          135,
+          28,
+          1173,
+          1215
+        ],
+        "bytes": 1108901,
+        "sha256": "e07dccceeab2b7356fd337b4828348d7ab54396e3a8617f9070b92c072b5b706"
+      }
+    },
+    {
+      "file": "boss1_7.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Sandworm boss rising in an S curve facing left, tan segmented armored rings, broad open circular maw with many teeth. Remove ALL title lettering, sand dune, cacti, scorpions and scenery; entire worm alone floating on true transparent alpha.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/boss1_7.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-f6f40a3d-c3b9-4b73-8788-0835e73c8e8d.png",
+      "path": "assets/monsters_refreshed/boss1_7.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "すなの まじん",
+        "天空のぬし"
+      ],
+      "kind": "ordinary_boss",
+      "verification": {
+        "file": "boss1_7.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.4768,
+        "solidBounds": [
+          77,
+          114,
+          1242,
+          1203
+        ],
+        "bytes": 1144846,
+        "sha256": "de7c5a3cb3b74d8141d516eaf9ec996a350cbfb094851e6fefb5782b041b1182"
+      }
+    },
+    {
+      "file": "boss1_8.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Distinct sandworm boss from image 1, chunky brown overlapping rocky plates on head/back, left-facing circular toothy maw, pale tan curling segmented lower body and a close curling ribbon of sand around body. Remove ALL title text, dunes, cacti, scorpions and floor; creature and close sand ribbon only.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/boss1_8.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-34180e2e-90ba-4e4f-8680-a7c2ad8764f5.png",
+      "path": "assets/monsters_refreshed/boss1_8.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "うみの まじん",
+        "さんすうの まおう"
+      ],
+      "kind": "ordinary_boss",
+      "verification": {
+        "file": "boss1_8.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.4319,
+        "solidBounds": [
+          20,
+          166,
+          1244,
+          1197
+        ],
+        "bytes": 1272993,
+        "sha256": "bb42581e5d97151cd5b14934330b30b2681452e4ab937c4996ef6eca186f2e89"
+      }
+    },
+    {
+      "file": "m1_1.png",
+      "prompt": "Use case: identity-preserve / cohesive sprite redraw. Make ONE INDIVIDUAL MONSTER for a single consistent 16-bit RPG bestiary. Image 1 is the exact monster design target. Image 2 (existing Halloween bat monster) show the shared CHARACTER DRAWING LANGUAGE ONLY: readable expressive eyes, compact volumes, clear dark-purple/near-black stepped outline, clean large square clusters and bright controlled flat colors. Images 3, 4, 5 (equipment) are PIXEL TECHNIQUE REFERENCES ONLY. Never import their crowns, candy, clothing, moons, jewelry or musical motifs. Preserve image 1's species, distinctive silhouette, anatomy, pose, expression, original color families and held props. Use a single approximately 128x128 logical pixel grid, about 24–32 palette colors, 1 logical-pixel dark contour and 3–4 flat shades per material. Same upper-left highlight and lower-right shadow across all sprites. Simplify unnecessary internal noise so details read at 48 and 88 pixels. NO realistic painted gradients, fine illustration, 3D render, blur or microtexture. Repair all accidental white holes in the body. White fur, snow, feathers, bones and eye highlights are solid opaque colored pixels. Canvas is square with genuine alpha transparency, complete creature centered, around 84% extent with margin on every side. Transparent outside silhouette and in natural gaps only. No floor, shadow patch, scenery, rectangle, checkerboard, text, letters, rune glyphs, labels, watermark, or added decorative objects/symbols. Keep only ornaments explicitly described in the subject. Do not draw a sheet or another creature. IMPORTANT: redraw natively into the shared 128-pixel logical sprite style; do not merely enlarge or trace image 1's inconsistent rendering. Every visible edge and highlight uses chunky approximately 8–12 source-pixel steps on a roughly 1024–1280 output; no fine one-source-pixel linework. Simplify small details into chunky shapes while preserving identity. Match image 2's outline, eye finish and degree of stylization, without copying its bat anatomy or costume.\nSubject and specific repairs: Cute round gold sun angel, halo, two small white feather wings, orange smiling face.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m1_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/vampire_bat.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-bee9e375-f9c8-4145-967b-f275b21ea0b1.png",
+      "path": "assets/monsters_refreshed/m1_1.png",
+      "status": "accepted",
+      "iteration": "unified_style_v2",
+      "names": [
+        "たいようのてんし"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m1_1.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.614,
+        "solidBounds": [
+          50,
+          206,
+          1204,
+          1062
+        ],
+        "bytes": 742643,
+        "sha256": "ac3b685215d9c526480ee1c7d1c66a739ffceed98935d6bc91eb11a889a101c4"
+      }
+    },
+    {
+      "file": "m1_2.png",
+      "prompt": "Use case: identity-preserve / cohesive sprite redraw. Make ONE INDIVIDUAL MONSTER for a single consistent 16-bit RPG bestiary. Image 1 is the exact monster design target. Image 2 (existing Halloween bat monster) show the shared CHARACTER DRAWING LANGUAGE ONLY: readable expressive eyes, compact volumes, clear dark-purple/near-black stepped outline, clean large square clusters and bright controlled flat colors. Images 3, 4, 5 (equipment) are PIXEL TECHNIQUE REFERENCES ONLY. Never import their crowns, candy, clothing, moons, jewelry or musical motifs. Preserve image 1's species, distinctive silhouette, anatomy, pose, expression, original color families and held props. Use a single approximately 128x128 logical pixel grid, about 24–32 palette colors, 1 logical-pixel dark contour and 3–4 flat shades per material. Same upper-left highlight and lower-right shadow across all sprites. Simplify unnecessary internal noise so details read at 48 and 88 pixels. NO realistic painted gradients, fine illustration, 3D render, blur or microtexture. Repair all accidental white holes in the body. White fur, snow, feathers, bones and eye highlights are solid opaque colored pixels. Canvas is square with genuine alpha transparency, complete creature centered, around 84% extent with margin on every side. Transparent outside silhouette and in natural gaps only. No floor, shadow patch, scenery, rectangle, checkerboard, text, letters, rune glyphs, labels, watermark, or added decorative objects/symbols. Keep only ornaments explicitly described in the subject. Do not draw a sheet or another creature. IMPORTANT: redraw natively into the shared 128-pixel logical sprite style; do not merely enlarge or trace image 1's inconsistent rendering. Every visible edge and highlight uses chunky approximately 8–12 source-pixel steps on a roughly 1024–1280 output; no fine one-source-pixel linework. Simplify small details into chunky shapes while preserving identity. Match image 2's outline, eye finish and degree of stylization, without copying its bat anatomy or costume.\nSubject and specific repairs: Cute green frog bearing lily pad and white lotus on head, round eyes, cyan water droplets. Remove floor/splash ground.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m1_2.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/vampire_bat.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-ab2f3d9e-404b-46c5-937a-af446142c094.png",
+      "path": "assets/monsters_refreshed/m1_2.png",
+      "status": "accepted",
+      "iteration": "unified_style_v2",
+      "names": [
+        "みずばのかえる"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m1_2.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5745,
+        "solidBounds": [
+          221,
+          70,
+          1136,
+          1184
+        ],
+        "bytes": 816128,
+        "sha256": "a114ed58094cf2dd971617fe437b1ddc143a243bc958fc305dd2c39cae928729"
+      }
+    },
+    {
+      "file": "m1_3.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Dark gray controller robot, antenna, tiny legs, directional cross left and colored buttons right; remove every label and illegible lettering. Buttons stay simple geometric shapes.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m1_3.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-306d7ae8-6e53-4b03-8c9e-790c95bd63cb.png",
+      "path": "assets/monsters_refreshed/m1_3.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "きかいのつかいま"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m1_3.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.6018,
+        "solidBounds": [
+          138,
+          133,
+          1121,
+          1112
+        ],
+        "bytes": 676061,
+        "sha256": "26b5a6dad721e41975c7036c226b32d412bccfd0d883a75eb453fa4f154d0fac"
+      }
+    },
+    {
+      "file": "m1_4.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Round pink and blue macaron monster, cream filling, tiny black eyes, small pink crumbs.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m1_4.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-4601099d-9939-45ab-9900-03b245ef745a.png",
+      "path": "assets/monsters_refreshed/m1_4.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "マカロンモンスター"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m1_4.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5948,
+        "solidBounds": [
+          94,
+          273,
+          1124,
+          1070
+        ],
+        "bytes": 721663,
+        "sha256": "1c96bcb82d16026971103e4eb2255a94cdb2cbe7b02e9d65ff0605bd79f9aabd"
+      }
+    },
+    {
+      "file": "m1_5.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Cute purple and cream Saturn planet fairy with tilted ring, crescent and star ornaments.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m1_5.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-1f8c44dc-5f2c-4d9b-8309-7476da195343.png",
+      "path": "assets/monsters_refreshed/m1_5.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "どせいのようせい"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m1_5.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5796,
+        "solidBounds": [
+          77,
+          151,
+          1223,
+          1145
+        ],
+        "bytes": 795421,
+        "sha256": "c2fb5edd03ccb601f2ffb359064324fb84bcd0427bc37327566ec08212639f63"
+      }
+    },
+    {
+      "file": "m1_6.png",
+      "prompt": "Use case: identity-preserve / cohesive sprite redraw. Make ONE INDIVIDUAL MONSTER for a single consistent 16-bit RPG bestiary. Image 1 is the exact monster design target. Image 2 (existing Halloween bat monster) show the shared CHARACTER DRAWING LANGUAGE ONLY: readable expressive eyes, compact volumes, clear dark-purple/near-black stepped outline, clean large square clusters and bright controlled flat colors. Images 3, 4, 5 (equipment) are PIXEL TECHNIQUE REFERENCES ONLY. Never import their crowns, candy, clothing, moons, jewelry or musical motifs. Preserve image 1's species, distinctive silhouette, anatomy, pose, expression, original color families and held props. Use a single approximately 128x128 logical pixel grid, about 24–32 palette colors, 1 logical-pixel dark contour and 3–4 flat shades per material. Same upper-left highlight and lower-right shadow across all sprites. Simplify unnecessary internal noise so details read at 48 and 88 pixels. NO realistic painted gradients, fine illustration, 3D render, blur or microtexture. Repair all accidental white holes in the body. White fur, snow, feathers, bones and eye highlights are solid opaque colored pixels. Canvas is square with genuine alpha transparency, complete creature centered, around 84% extent with margin on every side. Transparent outside silhouette and in natural gaps only. No floor, shadow patch, scenery, rectangle, checkerboard, text, letters, rune glyphs, labels, watermark, or added decorative objects/symbols. Keep only ornaments explicitly described in the subject. Do not draw a sheet or another creature. IMPORTANT: redraw natively into the shared 128-pixel logical sprite style; do not merely enlarge or trace image 1's inconsistent rendering. Every visible edge and highlight uses chunky approximately 8–12 source-pixel steps on a roughly 1024–1280 output; no fine one-source-pixel linework. Simplify small details into chunky shapes while preserving identity. Match image 2's outline, eye finish and degree of stylization, without copying its bat anatomy or costume.\nSubject and specific repairs: Magic brown amphora/jar monster: preserve thick rim, round brown body, blue single central eye with white highlights, and four tiny cyan sparkles. Remove every rune/letter on the pot: replace these with a few simple cyan square inlays, clearly decoration with no alphabetic shapes.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m1_6.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/vampire_bat.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-f9299fad-1aa4-48a2-be30-54f2ab071e66.png",
+      "path": "assets/monsters_refreshed/m1_6.png",
+      "status": "accepted",
+      "iteration": "unified_style_v2",
+      "names": [
+        "まほうのつぼ"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m1_6.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5433,
+        "solidBounds": [
+          173,
+          152,
+          1113,
+          1103
+        ],
+        "bytes": 789730,
+        "sha256": "5064852044203aa196832b56892caa97cf2be85669c421c1d00d256c077c419e"
+      }
+    },
+    {
+      "file": "m1_7.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Cute orange musical eighth-note angel, round notehead face, white feather wings. Preserve small actual musical notes as intended design.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m1_7.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-f9f2a9e4-bb6d-46d4-92c4-a98e7cb2adf2.png",
+      "path": "assets/monsters_refreshed/m1_7.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "おとのてんし"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m1_7.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.6761,
+        "solidBounds": [
+          136,
+          250,
+          1128,
+          1075
+        ],
+        "bytes": 648977,
+        "sha256": "c83702db74222648a4f85855ecf588f7e610b1d41fc1de28dd97aef10dd12dda"
+      }
+    },
+    {
+      "file": "m1_8.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Round blue anglerfish with curved overhead cyan light lure, small fins and bubbles.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m1_8.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-4dd75849-643c-415e-802c-5bad70016c7c.png",
+      "path": "assets/monsters_refreshed/m1_8.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "ひかるさかな"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m1_8.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.6313,
+        "solidBounds": [
+          110,
+          167,
+          1173,
+          1168
+        ],
+        "bytes": 696372,
+        "sha256": "7340e69d86f05f57a88b2e9cee0d5580cfa07f4dd4c0be170589f6eb785eb0b5"
+      }
+    },
+    {
+      "file": "m2_1.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Brown anthropomorphic tree-stump with hinged open lid, green moss, blue/orange bowl inside, branch arms and root legs.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m2_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-a904cae0-83ea-467a-9c64-8e62fff4f810.png",
+      "path": "assets/monsters_refreshed/m2_1.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "きりかぶモンスター"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m2_1.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5372,
+        "solidBounds": [
+          83,
+          88,
+          1199,
+          1203
+        ],
+        "bytes": 899143,
+        "sha256": "709388ff76e4014b1a5ad61cfe242ea06521d88b8d9c269205c1534b2f5cc9a2"
+      }
+    },
+    {
+      "file": "m2_2.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Violet and cyan crystalline fairy with sharp crystal wings, rainbow gems, small black eyes and crown facets.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m2_2.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-99ef5ac7-fc32-477c-9088-fe1f000820c9.png",
+      "path": "assets/monsters_refreshed/m2_2.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "すいしょうのようせい"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m2_2.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5792,
+        "solidBounds": [
+          87,
+          131,
+          1168,
+          1155
+        ],
+        "bytes": 860291,
+        "sha256": "7ddcd2fc0ea77c59b3244d93630a55aee17661e439c6c12993b47397862daaaa"
+      }
+    },
+    {
+      "file": "m2_3.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Dark green vine creature, curling tendrils, blue and orange flowers, tiny luminous cyan eyes and root limbs.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m2_3.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-bb785364-ecf3-4425-9973-e54f2a0b4ba9.png",
+      "path": "assets/monsters_refreshed/m2_3.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "つるのばけもの"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m2_3.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5173,
+        "solidBounds": [
+          145,
+          145,
+          1159,
+          1137
+        ],
+        "bytes": 959238,
+        "sha256": "514045eb122f2fa3a6761ad6beb867c7915673cf5dd6f0b18f4f76ca629df412"
+      }
+    },
+    {
+      "file": "m2_4.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Dark purple lizard, yellow spots, vivid magenta and teal dorsal frills, curling tail. Keep creature; remove leaf ground.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m2_4.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-8479702d-d747-443c-a43d-eae35f40187d.png",
+      "path": "assets/monsters_refreshed/m2_4.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "どくとかげ"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m2_4.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.59,
+        "solidBounds": [
+          134,
+          158,
+          1200,
+          1156
+        ],
+        "bytes": 772761,
+        "sha256": "28caf284cdef218d1460fb949a13ce076dbe83780bb5e8d55c6d38fdffcac88c"
+      }
+    },
+    {
+      "file": "m2_5.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Bark and moss tree spirit, twig antlers, glowing teal eyes and gems, bark arms and flared root legs, small red fungi.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m2_5.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-622ac9dc-a23a-4145-906f-0f3c7fbc873d.png",
+      "path": "assets/monsters_refreshed/m2_5.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "こけのせいれい"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m2_5.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.6049,
+        "solidBounds": [
+          181,
+          158,
+          1107,
+          1149
+        ],
+        "bytes": 759747,
+        "sha256": "430ca6c5a0b425da3280fa9968a28e6a1c0399d3fe53992a31bdf893422943f2"
+      }
+    },
+    {
+      "file": "m2_6.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Flying jewel-colored hummingbird facing right, green head, long yellow-green beak, orange/yellow/blue feather patterns, violet wings, trailing pointed tail.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m2_6.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-4f460ddf-73b3-4b90-a8b8-5b8fd89e4956.png",
+      "path": "assets/monsters_refreshed/m2_6.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "ぬまのハチドリ"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m2_6.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.6057,
+        "solidBounds": [
+          43,
+          85,
+          1213,
+          1187
+        ],
+        "bytes": 785247,
+        "sha256": "77f9111db8a8b21c06116629c47eed4645c2efe6a22f1725a4c50e98e5219744"
+      }
+    },
+    {
+      "file": "m2_7.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Stocky dark stone golem wrapped in green vines and moss, orange eyes, square head, massive fists, multicolored crystal clusters on shoulders.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m2_7.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-6bc97ffc-5e98-4caa-8e84-528383a2c7c8.png",
+      "path": "assets/monsters_refreshed/m2_7.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "こけいわゴーレム"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m2_7.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.4472,
+        "solidBounds": [
+          92,
+          92,
+          1176,
+          1201
+        ],
+        "bytes": 1106401,
+        "sha256": "ef6d9e6ba38fc6ce30809c2ef096588d3df5cc698df8a91b61ed318c5f1b188b"
+      }
+    },
+    {
+      "file": "m2_8.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Crimson rose monster, many red and violet petals around central blue/yellow iris, green thorn details, little cream stem body and feet.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m2_8.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-d93a4d7c-2146-48b5-982e-7a34a468f90d.png",
+      "path": "assets/monsters_refreshed/m2_8.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "まじゅうのバラ"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m2_8.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5102,
+        "solidBounds": [
+          111,
+          69,
+          1149,
+          1171
+        ],
+        "bytes": 967282,
+        "sha256": "64dcffe96c46fad1fefbdf86298ca0926364394845b81512c98aeb9580489aac"
+      }
+    },
+    {
+      "file": "m3_1.png",
+      "prompt": "Use case: identity-preserve / cohesive sprite redraw. Make ONE INDIVIDUAL MONSTER for a single consistent 16-bit RPG bestiary. Image 1 is the exact monster design target. Image 2 (existing Halloween bat monster) show the shared CHARACTER DRAWING LANGUAGE ONLY: readable expressive eyes, compact volumes, clear dark-purple/near-black stepped outline, clean large square clusters and bright controlled flat colors. Images 3, 4, 5 (equipment) are PIXEL TECHNIQUE REFERENCES ONLY. Never import their crowns, candy, clothing, moons, jewelry or musical motifs. Preserve image 1's species, distinctive silhouette, anatomy, pose, expression, original color families and held props. Use a single approximately 128x128 logical pixel grid, about 24–32 palette colors, 1 logical-pixel dark contour and 3–4 flat shades per material. Same upper-left highlight and lower-right shadow across all sprites. Simplify unnecessary internal noise so details read at 48 and 88 pixels. NO realistic painted gradients, fine illustration, 3D render, blur or microtexture. Repair all accidental white holes in the body. White fur, snow, feathers, bones and eye highlights are solid opaque colored pixels. Canvas is square with genuine alpha transparency, complete creature centered, around 84% extent with margin on every side. Transparent outside silhouette and in natural gaps only. No floor, shadow patch, scenery, rectangle, checkerboard, text, letters, rune glyphs, labels, watermark, or added decorative objects/symbols. Keep only ornaments explicitly described in the subject. Do not draw a sheet or another creature. IMPORTANT: redraw natively into the shared 128-pixel logical sprite style; do not merely enlarge or trace image 1's inconsistent rendering. Every visible edge and highlight uses chunky approximately 8–12 source-pixel steps on a roughly 1024–1280 output; no fine one-source-pixel linework. Simplify small details into chunky shapes while preserving identity. Match image 2's outline, eye finish and degree of stylization, without copying its bat anatomy or costume.\nSubject and specific repairs: White rabbit: preserve sitting body, two long upright ears with pink interiors, pink nose and eye, lavender-gray fur shadows and fluffy tail. Repair fragmented fur so the whole rabbit is solid, no gaps through the white torso.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m3_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/vampire_bat.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-7cbc6a7f-5049-4a4c-ab46-bd482c30b690.png",
+      "path": "assets/monsters_refreshed/m3_1.png",
+      "status": "accepted",
+      "iteration": "unified_style_v2",
+      "names": [
+        "しろいウサギ"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m3_1.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5502,
+        "solidBounds": [
+          173,
+          31,
+          1059,
+          1234
+        ],
+        "bytes": 830892,
+        "sha256": "ce9065277e5c3a2f9af0197f5c7a81b86e24de7ee190f68c4f5e88590d63e289"
+      }
+    },
+    {
+      "file": "m3_2.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Cute brown hedgehog facing left, tan face, brown spiny back sprouting red, orange, green and blue mushrooms.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m3_2.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-f47d9b10-687d-4c95-9807-26c99dbad950.png",
+      "path": "assets/monsters_refreshed/m3_2.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "キノコやまあらし"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m3_2.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5231,
+        "solidBounds": [
+          140,
+          145,
+          1165,
+          1158
+        ],
+        "bytes": 863679,
+        "sha256": "b035b29bf9a71227c674f156ad976aa60304f19682e018f3d5744063d35cc661"
+      }
+    },
+    {
+      "file": "m3_3.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Cute pale blue and white smiling cloud, rosy cheeks, navy eyes, stylized little wind curls and stars, no text.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m3_3.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-5a462c51-87e3-4166-9e24-d07af5946d48.png",
+      "path": "assets/monsters_refreshed/m3_3.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "わたぐも"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m3_3.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5342,
+        "solidBounds": [
+          66,
+          164,
+          1194,
+          1146
+        ],
+        "bytes": 842341,
+        "sha256": "d1b07bbc04c7783c5c35a51452dd54f11181ee0c22ca9c93e10cf31195edbcc6"
+      }
+    },
+    {
+      "file": "m3_4.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Gray metal watering-can spirit facing left, black handle right, two green leaves sprouting from top, round sprinkler spout, tiny cyan droplets. No floor.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m3_4.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-f4aa3139-9e57-48d6-927d-23a643f13361.png",
+      "path": "assets/monsters_refreshed/m3_4.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "じょうろのせいれい"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m3_4.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.6026,
+        "solidBounds": [
+          55,
+          177,
+          1196,
+          1148
+        ],
+        "bytes": 740224,
+        "sha256": "4b4417974b65c193488660ae36bd269487722281b5cae07a7ce916c48ecf4670"
+      }
+    },
+    {
+      "file": "m3_5.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Cute red ladybug with dark face and tiny black legs, green four-leaf-clover spots on shell, a few clover ornaments.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m3_5.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-6163eb3d-3ff9-45d7-ba76-65706702db39.png",
+      "path": "assets/monsters_refreshed/m3_5.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "よつばのてんとうむし"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m3_5.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.6397,
+        "solidBounds": [
+          106,
+          315,
+          1138,
+          1086
+        ],
+        "bytes": 650953,
+        "sha256": "9dc5dcf999c2c37ef585d0c1552f1ab71b7bff72d886f90c62bea9a36005d143"
+      }
+    },
+    {
+      "file": "m3_6.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Cute gray round smiling stone with pink cheeks, overgrown green grass and tiny violet, orange and blue flowers. Greenery part of creature, no floor.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m3_6.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-75a7f13a-512f-42e5-833d-0a1c82cd7dec.png",
+      "path": "assets/monsters_refreshed/m3_6.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "くさむらいわ"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m3_6.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5112,
+        "solidBounds": [
+          99,
+          202,
+          1168,
+          1122
+        ],
+        "bytes": 925919,
+        "sha256": "41bd0d41a522e43a52956e22b4bfcec6db233622abf0050c4d2387068018465c"
+      }
+    },
+    {
+      "file": "m3_7.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Brown and cream sparrow, raised spread wings, holding golden wheat in beak, tiny bird feet; remove ground shadow.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m3_7.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-d138695d-99dd-4232-b833-79143ef87bbd.png",
+      "path": "assets/monsters_refreshed/m3_7.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "はたけのすずめ"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m3_7.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5914,
+        "solidBounds": [
+          74,
+          148,
+          1212,
+          1160
+        ],
+        "bytes": 790492,
+        "sha256": "ef066fc86575095c4f0bc20d992ef40f7bf148687df746ee923959603554c101"
+      }
+    },
+    {
+      "file": "m3_8.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Round brown mud mole with pink cheek and smiling face, a pink earthworm at left, green sprouts growing on head and back; no ground shadow.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m3_8.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-1bef61bd-cfa9-4f8c-aea4-3a9ac8ea74c9.png",
+      "path": "assets/monsters_refreshed/m3_8.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "どろんこモグラ"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m3_8.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5636,
+        "solidBounds": [
+          65,
+          219,
+          1209,
+          1093
+        ],
+        "bytes": 765537,
+        "sha256": "c349bc0e0df7419e7c823baee20c098f5eea81906fb23abe8e62a34cab24d336"
+      }
+    },
+    {
+      "file": "m4_1.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Living terracotta flowerpot, green leafy crown and little flower bud, pink leaf-like ears, cute face on pot, little green arms and short legs.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m4_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-fc861c53-b77a-486b-ab3d-c9ed6f0700a9.png",
+      "path": "assets/monsters_refreshed/m4_1.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "はちうえのぬし"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m4_1.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.6005,
+        "solidBounds": [
+          243,
+          77,
+          1024,
+          1200
+        ],
+        "bytes": 730809,
+        "sha256": "caa186a1f69e4f2bcf793c40a8e559aa106d1356f3eec5cbbd0860b800e3e9bf"
+      }
+    },
+    {
+      "file": "m4_2.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Orange red flame cat, yellow eyes, pointed flaming ears and tall curving flame tail, four slender legs.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m4_2.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-ac330e11-a08b-4063-89f9-f1795117b795.png",
+      "path": "assets/monsters_refreshed/m4_2.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "ほのおのねこ"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m4_2.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5747,
+        "solidBounds": [
+          185,
+          97,
+          1223,
+          1181
+        ],
+        "bytes": 803217,
+        "sha256": "60f815a3e5fc630573d18469b9074a5cf986e04e1ae1dce3e9a477a0a5ba865a"
+      }
+    },
+    {
+      "file": "m4_3.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Cute cyan bubble octopus, rounded bubble head and large bubble overhead, dark eyes, pink cheeks and curling blue tentacles.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m4_3.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-f9a34682-fa94-4310-a1dc-0398577cdf0a.png",
+      "path": "assets/monsters_refreshed/m4_3.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "あわだこ"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m4_3.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.54,
+        "solidBounds": [
+          131,
+          187,
+          1142,
+          1163
+        ],
+        "bytes": 833055,
+        "sha256": "2033b3d5ac4727e9fa72bfcfff5a887a362625324e3cece6c56c0af2685e1f5d"
+      }
+    },
+    {
+      "file": "m4_4.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Purple spherical electric monster on little metal base and feet, yellow lightning cracks across globe, white specular highlights.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m4_4.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-3af0b0a3-2436-408c-94bd-3131f82e2930.png",
+      "path": "assets/monsters_refreshed/m4_4.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "でんきのたま"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m4_4.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.6128,
+        "solidBounds": [
+          176,
+          161,
+          1079,
+          1145
+        ],
+        "bytes": 764989,
+        "sha256": "ce62a32cbd9b3b39b40ec6cd00595b0fedc53c58f40bbcca09a7f1682802f8c4"
+      }
+    },
+    {
+      "file": "m4_5.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Crystal jellyfish, pale blue glass bell, central pale crystal cluster, dark segmented hanging tentacles tipped with purple gems. White crystal faces remain opaque.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m4_5.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-e9900221-b850-4340-a7e7-fb78558fee82.png",
+      "path": "assets/monsters_refreshed/m4_5.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "すいしょうくらげ"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m4_5.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5607,
+        "solidBounds": [
+          176,
+          99,
+          1078,
+          1180
+        ],
+        "bytes": 808246,
+        "sha256": "4bf377eac9407b802b53f64f98601576024844ed8b0b3ae0e27a8da7ff561e01"
+      }
+    },
+    {
+      "file": "m4_6.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Fluffy white and pale blue wind-dust bird spirit, black wind-up key above head, small orange beak, tiny feather wings, colorful pinwheel below; retain actual mechanical key, no stray marks.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m4_6.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-f2acd3d3-ccc7-4d66-bc29-ba429e421ab0.png",
+      "path": "assets/monsters_refreshed/m4_6.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "かぜのわたぼこり"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m4_6.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.6169,
+        "solidBounds": [
+          100,
+          128,
+          1164,
+          1177
+        ],
+        "bytes": 718404,
+        "sha256": "07c8e194584561155d7b7b7372c573c459fc5827a269dc9da7882483b198c5fa"
+      }
+    },
+    {
+      "file": "m4_7.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Single central magenta iris in brown metallic ring, surrounded by six little floating pale-cyan crystal mirrors and purple jewel dots.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m4_7.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-6663ab14-6b54-40e4-b89a-dcd9e8423cec.png",
+      "path": "assets/monsters_refreshed/m4_7.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "まがんのひとみ"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m4_7.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.6753,
+        "solidBounds": [
+          137,
+          172,
+          1116,
+          1113
+        ],
+        "bytes": 634547,
+        "sha256": "be24419ad54a0c1f299247a44abede151c8a456cbd8afa7f257d9591dd306408"
+      }
+    },
+    {
+      "file": "m4_8.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Cute white snowman spirit, icy pointed ears, orange carrot nose, blue eyes, red scarf, two snow body balls and little arms. White snow solid and opaque, no ground patch.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m4_8.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-9d871eeb-5a21-4429-91ac-ae9f97ae628f.png",
+      "path": "assets/monsters_refreshed/m4_8.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "ゆきだるまのれいこん"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m4_8.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.6084,
+        "solidBounds": [
+          193,
+          225,
+          1061,
+          1170
+        ],
+        "bytes": 683004,
+        "sha256": "df8b86adeed794f9a9dae17bad9b75afe12513d3ec533a7431541bd818978a2a"
+      }
+    },
+    {
+      "file": "m5_1.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Blond guardian angel, cyan halo, long white-and-gold robe with blue gems, three pairs of white gold feather wings, full figure. Do not replace with equipment.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m5_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-6f9a7601-9d8c-44fb-878e-4109866b9a17.png",
+      "path": "assets/monsters_refreshed/m5_1.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "まもりのてんし"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m5_1.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.4993,
+        "solidBounds": [
+          18,
+          73,
+          1236,
+          1201
+        ],
+        "bytes": 1059040,
+        "sha256": "504c24f705c37c5c27ab4b28aa408a603fb9109c87dd9a4ced7bf895d8905240"
+      }
+    },
+    {
+      "file": "m5_2.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Orange and crimson phoenix, wings widely raised, dark beak, yellow eyes, fiery head crest, long curling flame tail, little black claws.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m5_2.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-246d67f2-a9fa-4d52-bbae-c29de9a18fe1.png",
+      "path": "assets/monsters_refreshed/m5_2.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "ほのおのふしちょう"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m5_2.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5186,
+        "solidBounds": [
+          35,
+          86,
+          1221,
+          1213
+        ],
+        "bytes": 993616,
+        "sha256": "c7ab87d3625c9c944d91e8a8171ca8fc83b22dcf4c855bc2b7556122d7619268"
+      }
+    },
+    {
+      "file": "m5_3.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Stocky gray-blue cloud/rock monster, lumpy layered shoulders and head, glowing pale eyes in dark face slit, massive arms, small sturdy legs.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m5_3.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-b7a97886-884a-4416-8c23-1ccc9b57ba18.png",
+      "path": "assets/monsters_refreshed/m5_3.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "くものかいじゅう"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m5_3.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.4707,
+        "solidBounds": [
+          72,
+          148,
+          1180,
+          1167
+        ],
+        "bytes": 946873,
+        "sha256": "2ea0246e230f355c22dbd8cd7d934c54dc743081525176100c0131d4a9970b3f"
+      }
+    },
+    {
+      "file": "m5_4.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Cute bright yellow sun elemental, round smiling face with pink cheeks, red-orange pointed flame rays, two flame arms and two flame legs.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m5_4.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-e7cddc1b-4d33-4c7e-8ea4-ff3373bba6b2.png",
+      "path": "assets/monsters_refreshed/m5_4.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "たいようのせいれい"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m5_4.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5193,
+        "solidBounds": [
+          80,
+          64,
+          1196,
+          1194
+        ],
+        "bytes": 938000,
+        "sha256": "dc61a5dd0be83cce0cb1a5c678d9aa9ce5666076230b64306f754909813aaf8c"
+      }
+    },
+    {
+      "file": "m5_5.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Pale icy-blue wandering ghost, dark small eyes, two large ragged spectral wings, small arms, long curling tapered spirit tail. Keep solid clean pale material, only outer gaps transparent.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m5_5.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-8eeaa500-b72b-4e96-b7bc-4e228b5ab228.png",
+      "path": "assets/monsters_refreshed/m5_5.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "さまよえるゆうれい"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m5_5.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5803,
+        "solidBounds": [
+          56,
+          112,
+          1198,
+          1224
+        ],
+        "bytes": 833740,
+        "sha256": "823e0279a9b06a3fb7f463499647dd251289f4a7f9c11cb1717bd803ae470a59"
+      }
+    },
+    {
+      "file": "m5_6.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Green and teal jewel hummingbird flying right, long straight black beak, magenta throat, purple wings and tail, little purple/yellow flower beside it.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m5_6.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-9bf520f9-427b-4fba-9188-67e83ccdf9be.png",
+      "path": "assets/monsters_refreshed/m5_6.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "たからのハチドリ"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m5_6.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.613,
+        "solidBounds": [
+          36,
+          76,
+          1227,
+          1197
+        ],
+        "bytes": 739283,
+        "sha256": "8f86f729002db9c39074913ad7e65b9bf3bdd72f8454a9bb62299752f0c97d78"
+      }
+    },
+    {
+      "file": "m5_7.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Pale blue and white dove facing right in flight with raised feather wing, orange beak, pink cheek, long rainbow ribbon-like tail and a few tiny colorful sparkles. White plumage opaque.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m5_7.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-125fd7be-ac11-48e0-96d8-e49f3d05c83e.png",
+      "path": "assets/monsters_refreshed/m5_7.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "にじのはと"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m5_7.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5759,
+        "solidBounds": [
+          86,
+          119,
+          1227,
+          1175
+        ],
+        "bytes": 823488,
+        "sha256": "d6d43a317f6dc01504702156cf17d2299e970cc29c65b462471f7b9fd8abc3f7"
+      }
+    },
+    {
+      "file": "m5_8.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Cute gold sun-face in golden armillary rings, spoked solar rays, simple tiny face and pink cheeks, colored planet gems on outer orbital rings; true transparent gaps between metal rings.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m5_8.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-0522fbde-a0af-4fe7-be93-450e2728a62d.png",
+      "path": "assets/monsters_refreshed/m5_8.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "たいようのわ"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m5_8.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5087,
+        "solidBounds": [
+          53,
+          64,
+          1202,
+          1180
+        ],
+        "bytes": 1011832,
+        "sha256": "633de13f50e95dac092f7141062d43a26193491e932d5c40520893f73ddfde62"
+      }
+    },
+    {
+      "file": "m6_1.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Small cute orange salamander/dragon facing left, red head spines, cream belly, four short legs, curling tail, red/yellow flames on spine and tail. Remove floor shadow.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m6_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-4d56815a-a46e-4270-869e-f638edb4e73e.png",
+      "path": "assets/monsters_refreshed/m6_1.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "ほのおのサラマンダー"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m6_1.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5773,
+        "solidBounds": [
+          43,
+          154,
+          1231,
+          1114
+        ],
+        "bytes": 774104,
+        "sha256": "4cef625ee987aae2e403901765fc90ab6dfa5944534c949a86207c8ff38ed710"
+      }
+    },
+    {
+      "file": "m6_2.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Cute pale cyan ice fox cub, upright large pointed ears, dark blue eyes, pale fluffy chest and bushy raised tail, small snowflake ornaments. No ground shadow.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m6_2.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-79ca3141-fd57-4c8d-ae63-d53bdfac2f58.png",
+      "path": "assets/monsters_refreshed/m6_2.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "こおりのこぎつね"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m6_2.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5363,
+        "solidBounds": [
+          138,
+          156,
+          1198,
+          1162
+        ],
+        "bytes": 861697,
+        "sha256": "4f1f6ec2910d8ea75810f58885d219e1a0c7e53042fc7339adc54a04e9d0f21b"
+      }
+    },
+    {
+      "file": "m6_3.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Blue and cream swallow flying left, long spread pointed wings and forked tail, dark beak, small pink brow. Keep feather body whole, no wind glyphs or ground shadow.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m6_3.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-9c701747-52de-4d0c-aa07-97dc4a77121f.png",
+      "path": "assets/monsters_refreshed/m6_3.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "つばめもどき"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m6_3.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.6001,
+        "solidBounds": [
+          80,
+          76,
+          1226,
+          1205
+        ],
+        "bytes": 708008,
+        "sha256": "61c6aa98125a61a0a2871e4bdaf5a481b9892b8ff60889aa517de9253a178365"
+      }
+    },
+    {
+      "file": "m6_4.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Wooden bucket frog monster: arched wood handle, two metal bands, blue water and lily flower inside, cute green frog next to bucket, one lily leaf. Both are one original creature design, no ground puddle or shadow.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m6_4.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-9f066190-d6e8-4754-b8e0-d3fdaeaf9cf8.png",
+      "path": "assets/monsters_refreshed/m6_4.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "おけがえる"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m6_4.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5664,
+        "solidBounds": [
+          111,
+          109,
+          1154,
+          1155
+        ],
+        "bytes": 789998,
+        "sha256": "fd0905979205ba637fb5833fe7dbaffd56f0050750b7973a1e1d79bfd39a2f5b"
+      }
+    },
+    {
+      "file": "m6_5.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Large cute olive green frog with cream belly and orange iris, many red, purple, orange and teal mushrooms sprouting from back, rounded body and four short feet. Remove floor shadow.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m6_5.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-66a01521-e321-4a66-91d1-ab5335e3c44b.png",
+      "path": "assets/monsters_refreshed/m6_5.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "きのこがえる"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m6_5.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.4361,
+        "solidBounds": [
+          46,
+          63,
+          1215,
+          1199
+        ],
+        "bytes": 1021663,
+        "sha256": "b014d162417b4c2482124d00aab140d9bf28b76fc02f769ccbb357214de03bc4"
+      }
+    },
+    {
+      "file": "m6_6.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Smiling golden sunflower fairy, pink cheeks and closed happy eyes, wide yellow/orange petals, green stem and two leaves, few golden sparkles. No ground shadow.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m6_6.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-d0c566f6-168b-49a2-9d5a-2b4a29bd4c4b.png",
+      "path": "assets/monsters_refreshed/m6_6.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "ひまわりのようせい"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m6_6.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5182,
+        "solidBounds": [
+          81,
+          68,
+          1173,
+          1211
+        ],
+        "bytes": 912745,
+        "sha256": "9cae67f147f8ab0e4a584ddda4f65be47a5f6b17c478dc6a06662a0073b10415"
+      }
+    },
+    {
+      "file": "m6_7.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Symmetric purple moth/butterfly with pale mint and cream wing markings, navy body, tiny yellow face and long antennae, tiny crescent and star accents. No ground shadow.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m6_7.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-a778f5d9-94fa-43ac-93b6-9cfdc70d5858.png",
+      "path": "assets/monsters_refreshed/m6_7.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "まだらのちょう"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m6_7.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.519,
+        "solidBounds": [
+          25,
+          251,
+          1229,
+          1062
+        ],
+        "bytes": 860607,
+        "sha256": "ec611458c282524bffeadc70c70aaee5baac85034a3090b3b1c760400be8b4cb"
+      }
+    },
+    {
+      "file": "m6_8.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Brown living tree stump with cut top, cute dark eyes and mouth, green moss and sprouts, branch arms and spreading root feet. No ground shadow.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/m6_8.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-cbd310e0-4f21-4568-900b-1876fe9e2c6e.png",
+      "path": "assets/monsters_refreshed/m6_8.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "きりかぶのぬし"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "m6_8.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.507,
+        "solidBounds": [
+          75,
+          122,
+          1200,
+          1147
+        ],
+        "bytes": 873745,
+        "sha256": "b489472e9b6934eb59b602efc512a1dedcb7abf4b56423293044c345170cf66a"
+      }
+    },
+    {
+      "file": "monster_1.png",
+      "prompt": "Use case: identity-preserve / cohesive sprite redraw. Make ONE INDIVIDUAL MONSTER for a single consistent 16-bit RPG bestiary. Image 1 is the exact monster design target. Image 2 (existing Halloween bat monster) show the shared CHARACTER DRAWING LANGUAGE ONLY: readable expressive eyes, compact volumes, clear dark-purple/near-black stepped outline, clean large square clusters and bright controlled flat colors. Images 3, 4, 5 (equipment) are PIXEL TECHNIQUE REFERENCES ONLY. Never import their crowns, candy, clothing, moons, jewelry or musical motifs. Preserve image 1's species, distinctive silhouette, anatomy, pose, expression, original color families and held props. Use a single approximately 128x128 logical pixel grid, about 24–32 palette colors, 1 logical-pixel dark contour and 3–4 flat shades per material. Same upper-left highlight and lower-right shadow across all sprites. Simplify unnecessary internal noise so details read at 48 and 88 pixels. NO realistic painted gradients, fine illustration, 3D render, blur or microtexture. Repair all accidental white holes in the body. White fur, snow, feathers, bones and eye highlights are solid opaque colored pixels. Canvas is square with genuine alpha transparency, complete creature centered, around 84% extent with margin on every side. Transparent outside silhouette and in natural gaps only. No floor, shadow patch, scenery, rectangle, checkerboard, text, letters, rune glyphs, labels, watermark, or added decorative objects/symbols. Keep only ornaments explicitly described in the subject. Do not draw a sheet or another creature. IMPORTANT: redraw natively into the shared 128-pixel logical sprite style; do not merely enlarge or trace image 1's inconsistent rendering. Every visible edge and highlight uses chunky approximately 8–12 source-pixel steps on a roughly 1024–1280 output; no fine one-source-pixel linework. Simplify small details into chunky shapes while preserving identity. Match image 2's outline, eye finish and degree of stylization, without copying its bat anatomy or costume.\nSubject and specific repairs: Cute big cyan-blue slime, large dark eyes with solid white highlights, smiling pink mouth, little side flippers, glossy rounded jelly body and melted scalloped base.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/vampire_bat.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-28b72340-b5f4-439d-bea9-2c71024350a4.png",
+      "path": "assets/monsters_refreshed/monster_1.png",
+      "status": "accepted",
+      "iteration": "unified_style_v2",
+      "names": [
+        "そらとぶスライム",
+        "どくスライム",
+        "どろぬまスライム",
+        "どくつぼスライム"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "monster_1.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5727,
+        "solidBounds": [
+          137,
+          225,
+          1118,
+          1094
+        ],
+        "bytes": 763035,
+        "sha256": "e58ef89170075c012a337a0e6ee7ee38439f21913e79c51d1ea77852f8f58eb6"
+      }
+    },
+    {
+      "file": "monster_3.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Green muscular goblin, brown mohawk, pointed ears, yellow eyes, fangs, brown leather and spiked metal armor, big spiked wooden club on right, full standing body.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/monster_3.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-7f89126d-b30f-4026-bacb-fcd4e1e1ac5d.png",
+      "path": "assets/monsters_refreshed/monster_3.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "ゴブリン",
+        "ほらあなゴブリン",
+        "みはりの盗賊",
+        "ナイフの盗賊",
+        "ゆみの盗賊",
+        "たいちょうこうほの盗賊"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "monster_3.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5511,
+        "solidBounds": [
+          138,
+          107,
+          1224,
+          1207
+        ],
+        "bytes": 986500,
+        "sha256": "5a176c0fa672af897b0cd1a001bd9a9fb46afbbd372542ef908a8271f599e467"
+      }
+    },
+    {
+      "file": "monster_4.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Brown mushroom monster, large red cap with opaque cream spots, cream gills, yellow eyes and smiling fang mouth, small brown arms and walking feet.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/monster_4.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-bd169bd6-130d-4e83-9785-cb97650e0380.png",
+      "path": "assets/monsters_refreshed/monster_4.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "キノコ",
+        "キノコおばけ",
+        "どくキノコ"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "monster_4.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.6742,
+        "solidBounds": [
+          217,
+          186,
+          1041,
+          1134
+        ],
+        "bytes": 621380,
+        "sha256": "2b3796b115c1e2edbbf2d622ab025fef9839f6132b42cdfafb82dd0dd5b39d38"
+      }
+    },
+    {
+      "file": "monster_5.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Dark violet bat flying with two spread angular purple wings, pointed ears, red eyes, fang mouth, small claw feet and long tail. Repair white holes inside wing membranes.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/monster_5.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-49a7f78c-0465-45f5-8d3c-01f6973427c2.png",
+      "path": "assets/monsters_refreshed/monster_5.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "コウモリ",
+        "やみコウモリ",
+        "ばんけんコウモリ"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "monster_5.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.7225,
+        "solidBounds": [
+          47,
+          243,
+          1208,
+          1049
+        ],
+        "bytes": 566939,
+        "sha256": "06c4039f9ff7c817984e881cec7706d019833a43574e179cf0baf7da929ef9af"
+      }
+    },
+    {
+      "file": "monster_6.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Mimic: brown wooden treasure chest reinforced with dark metal bands, two orange reptile eyes in raised lid, open mouth with large cream teeth and curling purple tongue, green clawed limbs. Preserve gold inside, remove floor.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/monster_6.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-6904087b-db2b-4fb4-9d1c-454842715d35.png",
+      "path": "assets/monsters_refreshed/monster_6.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "ミミック",
+        "のろいのミミック",
+        "わなのミミック"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "monster_6.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.4728,
+        "solidBounds": [
+          104,
+          139,
+          1202,
+          1202
+        ],
+        "bytes": 1092323,
+        "sha256": "2c01a03f19e63028fa5f73653e4f44422b2af5c29db393f0d94322ee295687ad"
+      }
+    },
+    {
+      "file": "monster_7.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Menacing blue/cyan spectral wraith, blazing yellow eyes, toothy skull face, streaming pointed hair, two raised claw hands, ragged dark blue robes and curling spectral lower body. Repair pale holes; no broad opaque glow outside silhouette.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/monster_7.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-a907d478-87e7-4584-870a-a10d4cddbf5f.png",
+      "path": "assets/monsters_refreshed/monster_7.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "おばけ",
+        "あくりょう",
+        "さまよえるたましい"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "monster_7.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.5443,
+        "solidBounds": [
+          120,
+          86,
+          1185,
+          1183
+        ],
+        "bytes": 1045575,
+        "sha256": "2f0512694e1ae0349e70f86a825aa82f2130ea9057dbb8bf721371b2ae93a933"
+      }
+    },
+    {
+      "file": "monster_8.png",
+      "prompt": "Use case: style-transfer with identity preservation. Deliver ONE standalone MONSTER sprite with true alpha transparency.\nImage 1 = exact creature design to redraw, preserving its species, pose, main colors and distinctive props. Image 2 = APPROVED MONSTER STYLE MASTER; match its coarse pixel size, contour weight, simple flat highlights, dark plum outline, friendly RPG shape language and low detail density. Images 3–5 = equipment pixel technique references only. Draw absolutely no objects from images 2–5.\nCRITICAL: this must be REDRAWN in the SAME COARSE PIXEL STYLE AS IMAGE 2, not a detailed upscale/trace of image 1. Use a 128x128 logical canvas, with the creature only roughly 80–95 logical pixels high. No line or individual detail thinner than one full logical pixel (about 10–16 output pixels). Simplify fur, scales, feathers, bark, muscles and metal into FEW BIG FLAT CLUSTERS. About 24–32 colors, maximum 3–4 flat shades per material, upper-left lighting. No smooth gradients, no tiny jagged microdetails, no painted/anime illustration or 3D. Make facial features large and readable like image 2 while keeping image 1's expression.\nFull creature centered on square canvas with generous clear margins on all sides. Repair accidental white holes: white fur, feathers, snow, bones and eyes are solid opaque pixels. Background and natural gaps have true alpha transparency. No letters, text, runes, watermarks, white matte, rectangle, floor, ground shadow, scenery or extra symbols. Keep only original ornaments explicitly described below. One creature, no sheet.\n\nSubject and repairs: Skeleton knight, full standing bone body, gray metal helmet and armor, red scarf and torn cape, curved silver sword raised on left, round wooden shield right, metal boots; solid cream bones not transparent.",
+      "refs": [
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_new/monster_8.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/monsters_refreshed/monster_1.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_pumpkin_blade.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_witch_mantle.png",
+        "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/assets/halloween/equip_moon_charm.png"
+      ],
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a15971-4931-7390-b027-2cd17400da16/exec-11178774-c1c1-4b52-b0b1-a1314c66e327.png",
+      "path": "assets/monsters_refreshed/monster_8.png",
+      "status": "accepted",
+      "iteration": "cohesive_style_v3",
+      "names": [
+        "スケルトン",
+        "スケルトンナイト",
+        "がいこつせんし"
+      ],
+      "kind": "ordinary_monster",
+      "verification": {
+        "file": "monster_8.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "transparentRatio": 0.6637,
+        "solidBounds": [
+          132,
+          86,
+          1129,
+          1196
+        ],
+        "bytes": 806435,
+        "sha256": "c0e8ff7a482c69cc8e10ab7c0cdeaa8746e7cfea1d711cb2cde3012a9a82a2e3"
+      }
+    }
+  ],
+  "verification": {
+    "assets": 63,
+    "ordinaryMonsters": 55,
+    "ordinaryBosses": 8,
+    "transparentMargins": "passed all63 RGBA PNGs",
+    "visualReview": "All63 inspected at48px and88px on dark and light backgrounds, plus actual desktop/mobile battle screenshots",
+    "battleRenderer": {
+      "desktop": 63,
+      "mobile": 63,
+      "pageErrors": 0
+    },
+    "legacyImagePaths": "All63 resolve to their redraws",
+    "excludedFilesUnchanged": 36,
+    "gameplayData": "Only image path literals changed; normalized source equals immediate pre-integration baseline",
+    "build": "npm run build passed",
+    "diffCheck": "git diff --check passed",
+    "skillSmoke": "Installed develop-web-game client run; screenshot inspected; expected anonymous account401 only"
+  }
+}

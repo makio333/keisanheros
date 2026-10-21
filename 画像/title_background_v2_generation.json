@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-21",
+  "method": "Built-in image_gen.imagegen",
+  "intent": "Redraw the title scenery with the existing bright pixel-art fantasy atmosphere while preserving the independently scrolling cloud layer.",
+  "assets": [
+    {
+      "path": "画像/title_foreground_v2.png",
+      "reference": "画像/title_foreground.png",
+      "transparent_background": true,
+      "prompt": "Use case: stylized-concept. Asset type: replacement foreground landscape layer for an existing Japanese children's fantasy RPG title screen. Input image 1 is the existing foreground, used as a style, composition, and mood reference. Redraw this setting into a fresh, polished scene with the same bright, inviting, classic 16-bit pixel-art atmosphere. Wide 16:9 panoramic canvas. Keep the same layering function: the entire upper sky area must be genuinely alpha transparent so a separately animated blue sky and moving clouds can show behind it. The terrain silhouette begins around 40–48% down the canvas and fills the entire bottom edge, without a transparent gap at the bottom. Preserve the recognizable arrangement: an elegant pale stone castle with blue slate roofs on a rise left of center; a welcoming small medieval village of colorful timber-and-stone houses and a bridge in the lower middle; lush green rolling fields, trees and a clear winding blue river; receding mountain ridges on the horizon; a distant dark violet demon castle on the far-right mountain with its small atmospheric purple mist kept confined around it. Redesign and improve the architecture and terrain coherently, using readable crisp pixel clusters and detailed handcrafted 16-bit RPG scenery, rich spring greens, blue water, warm ochre paths and sunlit cream stone. An adventurous peaceful feeling, with subtle mystery at the distant dark castle. Preserve a quiet central-upper transparent area for the existing game logo and lower-middle menu overlay. No text, lettering, logo, buttons, interface, characters, spiders, sun, blue-sky pixels, white matte or checkerboard painted into the image. Do not bake ordinary clouds into this foreground. The upper area is real transparency, not a solid background. This is a complete redraw of the scenery, not a screenshot or a collage."
+    },
+    {
+      "path": "画像/title_sky_v2.png",
+      "reference": "画像/title_sky.jpg",
+      "transparent_background": false,
+      "prompt": "Use case: stylized-concept. Asset type: horizontally seamless scrolling sky texture for a Japanese children's 16-bit fantasy RPG title screen. Image 1 is a style and color reference. Redraw a fresh sky with the same cheerful daytime mood and classic crisp pixel-art look. Wide 16:9 canvas, opaque RGB background. A luminous royal blue upper sky softly transitioning through azure to light cyan lower down, with several thoughtfully spaced fluffy white cumulus cloud groups and a few small distant wisps. Clouds must use chunky, deliberate square pixel clusters with flat white highlights, pale icy blue shadows and crisp stepped contours, not smooth vector curves or airbrushed photography. Improve the composition to feel spacious and calm behind a large central game logo. The sky is one seamless horizontal repeat tile: matching blue/cyan background values on both left and right edges at every height; keep all cloud groups completely inside the canvas and leave an approximately 5% clear blue strip at both left and right edges, so no cloud is chopped or creates a vertical seam when tiled. No checkerboard, striped bands, patch seams or abrupt texture squares. Keep generous blue negative space and fewer, better-shaped clouds than the reference. No ground, mountains, castle, village, characters, spiders, birds, sun, moon, stars, text, logo, UI or borders. This is a clean production background layer that will move horizontally behind a separate transparent landscape; the drawing itself contains no animation trails."
+    }
+  ],
+  "preserved": ["titleSkyMove 90s linear infinite", "transparent landscape foreground", "existing title logo and menus", "shared title/save-selection/new-player scenery"],
+  "source_images_retained": true
+}

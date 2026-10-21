@@ -14,9 +14,14 @@ const rankings=[{slotKey:'a',totalKills:100},{slotKey:'b',totalKills:80},{slotKe
 for(const [key,ornament]of [['a','rank_gold'],['b','rank_silver'],['c','rank_bronze'],['d',null]]){const award=eventRaidFinalGift(rankings,key);assert.ok(award.items.some(item=>item.id==='halloween_rank_blade'));assert.equal(award.items.find(item=>item.kind==='decoration')?.id || null,ornament);}
 assert.equal(eventRaidFinalGift(rankings,'absent'),null);
 const source=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');
-const context=vm.createContext({G:{stageClearCounts:{area1:{0:1},area5:{0:1}}},AREA_STAGES:{area1:{name:'math',stages:[{name:'easy',generateProblem:()=>({answer:2})},{name:'uncleared',generateProblem:()=>({answer:99})}]},area5:{name:'kanji',stages:[{name:'hard',generateProblem:()=>({answer:'いち'})}]}},stageDropDifficulty:(id,index)=>id==='area5'?10:1+index,printAreaStage(...args){context.printed=args;}});
+const context=vm.createContext({G:{playerName:'確認用',stageClearCounts:{area1:{0:1},area5:{0:1}},activePrints:{},player:{}},AREA_STAGES:{area1:{name:'math',displayNum:'1年',stages:[{name:'easy',generateProblem:(()=>{let n=0;return()=>({answer:++n,text:`1 + ${n}`})})()},{name:'uncleared',generateProblem:()=>({answer:99,text:'99'})}]},area5:{name:'kanji',displayNum:'1年',stages:[{name:'hard',generateProblem:(()=>{let n=0;return()=>({text:`漢字${++n}`,answer:`よみ${n}`,tier:'kanji_g1'})})()}]}},stageDropDifficulty:(id,index)=>id==='area5'?10:1+index,kanjiPrintContext:p=>({before:'勇者は',after:'をよむ。'}),escapeHtml:s=>String(s),printRewardStripHtml:()=>'<section>報酬 16問以上正解</section>',fractionTextHtml:s=>s,addPrintCode(_id,code,meta){context.printMeta={code,meta};return'1234';},save(){},openPrintWindow(html){context.html=html;},showConfirmModal(title,message){context.warning={title,message};}});
 vm.runInContext(source.slice(source.indexOf('function blueprintChallengeSource('),source.indexOf('function startBlueprintCodeEntry(')),context);
-context.printBlueprintSheet({id:'bp_test'},123);assert.equal(context.printed[0],'area5');assert.equal(context.printed[1],0);assert.equal(context.printed[3].uid,123);
+context.printBlueprintSheet({id:'bp_test'},123);assert.equal(context.printMeta.meta.uid,123);assert.equal(context.printMeta.meta.problems.length,20);assert.equal(context.printMeta.meta.duplex,true);assert.equal((context.html.match(/class="bt-page"/g)||[]).length,2);assert.equal((context.html.match(/class="bt-kanji"/g)||[]).length,10);assert.equal((context.html.match(/class="bt-math"/g)||[]).length,10);assert.ok(context.html.includes('16問以上正解'));assert.ok(context.html.includes('前のステージ'));
+assert.ok(context.html.includes('<b>国語 1.</b>'));
+assert.ok(context.html.includes('<b>国語 15.</b>'));
+assert.ok(!context.html.includes('<b>国語 16.</b>'));
+assert.ok(context.html.includes('class="bt-cell"'),'writing questions must have actual kanji cells');
+assert.ok(context.html.includes('（2 / 2）'));
 context.G.stageClearCounts={area1:{0:1}};assert.equal(context.blueprintChallengeSource().stageIndex,0,'uncleared higher difficulty is never selected');
 context.G.stageClearCounts={};assert.equal(context.blueprintChallengeSource(),null);
 const owned={player:{},ownedEquips:[],nextUid:1,raidCoins:1000};
