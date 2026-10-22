@@ -1,4 +1,4 @@
-const CACHE_NAME = 'legend-heroes-cache-v22';
+const CACHE_NAME = 'legend-heroes-cache-v23';
 const ASSETS_TO_CACHE = [
   './manifest.json',
   './icon-192.png',
@@ -10,7 +10,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker v22] Caching essential PWA assets');
+      console.log('[Service Worker v23] Caching essential PWA assets');
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
@@ -22,7 +22,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
-            console.log('[Service Worker v22] Removing old cache:', key);
+            console.log('[Service Worker v23] Removing old cache:', key);
             return caches.delete(key);
           }
         })
@@ -38,9 +38,11 @@ self.addEventListener('fetch', (event) => {
   }
 
   const url = new URL(event.request.url);
-  // Account/session/save responses must never survive logout or fall back across accounts.
+  // Let the browser own API requests, especially OAuth navigation redirects and
+  // their Set-Cookie headers. Fetching the callback inside a worker can cause
+  // Safari to retry the one-use authorization code. API handlers send no-store.
+  // Returning without respondWith also prevents any offline/cache fallback.
   if (url.pathname === '/api' || url.pathname.startsWith('/api/')) {
-    event.respondWith(fetch(event.request, {cache:'no-store'}));
     return;
   }
 

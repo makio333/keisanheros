@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {createAccountTransport} from '../account_client.js';
-const rows=new Map(),requests=[],failures=[];let forceConflict=false,failSummary=false;
+const rows=new Map(),requests=[],failures=[];let forceConflict=false,failSummary=false,failWrite=false,recoveries=0;
 const clone=value=>structuredClone(value);
 const fetchImpl=async(url,options)=>{
   requests.push({url,options});let status=200,value;
@@ -14,20 +14,31 @@ const fetchImpl=async(url,options)=>{
     const key=decodeURIComponent(url.split('/').at(-1)),row=rows.get(key);
     if(!row){status=404;value={error:'save_not_found'};}
     else if(options.method==='GET')value=clone(row);
+    else if(failWrite){status=503;value={error:'account_service_unavailable'};}
     else if(forceConflict || row.revision!==body.revision){status=409;value={error:'save_revision_conflict'};}
     else{row.gameState=body.gameState;row.revision++;value=clone(row);}
   }
   return {ok:status<400,status,json:async()=>clone(value)};
 };
-const client=await createAccountTransport({fetchImpl,onFailure:(error,save)=>failures.push({error:error.message,save})});
+const client=await createAccountTransport({fetchImpl,onFailure:(error,save)=>failures.push({error:error.message,save}),onRecovery:()=>recoveries++});
 assert.equal(client.owns('typing_rpg_save_v3::unclaimed'),false);
 const count=requests.length;await assert.rejects(client.saveSlot('typing_rpg_save_v3::unclaimed',{player:{gold:1}}),/save_not_found/);assert.equal(requests.length,count,'unowned local snapshots are not uploaded');
 failSummary=true;const created=await client.createSave('fixture-child',{player:{gold:0}});assert.equal(client.owns(created.key),true,'successful creation is not repeated if summary refresh fails');
 await Promise.all([1,2,3].map(gold=>client.saveSlot(created.key,{player:{gold}})));
 assert.equal(rows.get(created.key).revision,4);assert.equal(rows.get(created.key).gameState.player.gold,3);
 await client.flush();assert.equal(client.pending,0);
+const second=await client.createSave('second-fixture',{player:{gold:0}});
+failWrite=true;
+await assert.rejects(client.saveSlot(created.key,{player:{gold:4}}),/account_service_unavailable/);
+await assert.rejects(client.saveSlot(second.key,{player:{gold:5}}),/account_service_unavailable/);
+failWrite=false;
+await client.refreshSummary();assert.equal(recoveries,0,'a successful read does not hide unsaved changes');
+await client.saveSlot(created.key,{player:{gold:6}});assert.equal(recoveries,0,'another failed save still needs recovery');
+await client.saveSlot(second.key,{player:{gold:7}});assert.equal(recoveries,1,'clear the warning only after every failed save is saved successfully');
+assert.equal(rows.get(created.key).gameState.player.gold,6);assert.equal(rows.get(second.key).gameState.player.gold,7);
 forceConflict=true;await assert.rejects(client.saveSlot(created.key,{player:{gold:999}}),/save_revision_conflict/);
-assert.equal(failures.at(-1).save.gameState.player.gold,999);assert.equal(rows.get(created.key).gameState.player.gold,3);
+assert.equal(failures.at(-1).save.gameState.player.gold,999);assert.equal(rows.get(created.key).gameState.player.gold,6);
+await client.refreshSummary();assert.equal(recoveries,1,'a revision conflict is never cleared by a successful read');
 assert.equal(client.hasConflict(created.key),true);await assert.rejects(client.fetchAllSlots(),/save_revision_conflict/);
 await assert.rejects(client.saveSlot(created.key,{player:{gold:1000}}),/save_revision_conflict/);
 assert.equal(requests.every(({options})=>options.credentials==='same-origin' && options.cache==='no-store'),true);

@@ -1,4 +1,4 @@
-const statuses={authentication_required:401,purchase_required:403,admin_required:403,save_not_found:404,save_revision_conflict:409,invalid_game_request:400,invalid_json:400,body_too_large:413};
+const statuses={authentication_required:401,purchase_required:403,admin_required:403,save_not_found:404,save_revision_conflict:409,save_too_large:413,invalid_game_request:400,invalid_json:400,body_too_large:413};
 export function createAccountGameHandler({service,origin}){
   const site=new URL(origin);
   if(site.origin!==origin || site.protocol!=='https:' && !(site.protocol==='http:' && ['127.0.0.1','localhost'].includes(site.hostname)))throw Error('unsafe_game_origin');

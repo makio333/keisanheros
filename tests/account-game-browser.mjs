@@ -67,6 +67,10 @@ try{
   await capture(page,'limit-three.png');await page.locator('#btn-confirm-no').click();await page.locator('#btn-new-save-back').click();
   await page.setViewportSize({width:390,height:844});await capture(page,'title-three-mobile.png');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2),false);
+  await page.locator('#btn-goto-admin').click();
+  const parentPasscode=await page.evaluate(()=>{const date=new Date();return String(date.getMonth()+1).padStart(2,'0')+String(date.getDate()).padStart(2,'0');});
+  await page.locator('#admin-password-input').fill(parentPasscode);await page.locator('#btn-admin-password-submit').click();
+  await page.locator('#admin-tab-btn-account').click();
   await page.locator('#btn-account-logout').click();await page.locator('#btn-account-login').waitFor();
   await demo.fixtureSubject('local-fixture-purchaser-2');await signIn(page);
   assert.deepEqual(await page.evaluate(()=>window.accountGameQA.slots()),[],'another LINE account cannot see first account saves');

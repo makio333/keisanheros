@@ -7,6 +7,17 @@ import {fileURLToPath} from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const qa=process.argv.includes('--qa');
 const output=path.join(root,qa?'output/unity-web-qa':'unity-port/Assets/StreamingAssets/LegendHeroesWeb');
+async function sourceHashes(){
+ const files=['index.html','main.js'],hashes={};
+ for(let i=0;i<files.length;i++){
+  const name=files[i],bytes=await readFile(path.join(root,name));hashes[name]=createHash('sha256').update(bytes).digest('hex');
+  if(name.endsWith('.js'))for(const match of bytes.toString().matchAll(/(?:\b(?:import|export)[^;]*?\bfrom\s*|\bimport\s*)['"](\.[^'"]+)['"]/g)){
+   const dependency=path.normalize(path.join(path.dirname(name),match[1]));if(!files.includes(dependency))files.push(dependency);
+  }
+ }
+ return hashes;
+}
+const hashes=await sourceHashes();
 const qaCode=qa?await readFile(path.join(root,'unity-port/Tests/web-parity-fixture.js'),'utf8'):'';
 await build({root,configFile:path.join(root,'vite.config.ts'),build:{outDir:output,emptyOutDir:true},plugins:[{
  name:'legend-unity-package',enforce:'pre',
@@ -33,12 +44,6 @@ await copyFile(path.join(root,'unity-port/Native/native-browser-bridge.js'),path
 await mkdir(path.join(output,'画像'),{recursive:true});
 await copyFile(path.join(root,'assets/bg/my_room.jpg'),path.join(output,'画像/my_room.jpg'));
 for(const name of ['manifest.json','icon-192.png','icon-512.png','apple-touch-icon.png'])await copyFile(path.join(root,name),path.join(output,name));
-const files=['index.html','main.js'];const hashes={};
-for(let i=0;i<files.length;i++){
- const name=files[i],bytes=await readFile(path.join(root,name));hashes[name]=createHash('sha256').update(bytes).digest('hex');
- if(name.endsWith('.js'))for(const match of bytes.toString().matchAll(/(?:\b(?:import|export)[^;]*?\bfrom\s*|\bimport\s*)['"](\.[^'"]+)['"]/g)){
-  const dependency=path.normalize(path.join(path.dirname(name),match[1]));if(!files.includes(dependency))files.push(dependency);
- }
-}
+if(JSON.stringify(await sourceHashes())!==JSON.stringify(hashes))throw new Error('Web sources changed during packaging; this candidate is not verified. Rebuild after changes settle.');
 await writeFile(path.join(output,'unity-web-manifest.json'),JSON.stringify({format:1,mode:qa?'isolated-qa':'production',sources:hashes,hostChanges:['PWA service-worker registration omitted; native package owns offline content','Chart.js 4.5.1 bundled locally from the same Web dependency','Obsolete my_room preload URL aliases the current room art','WebKit form/CJK text metrics normalized to the existing macOS Chrome layout','Blank popup URL normalized to about:blank for in-app print documents']},null,2));
 console.log('Unity Web package:',output);

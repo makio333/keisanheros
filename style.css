@@ -159,7 +159,15 @@
 .account-purchase-controls select { width: 100%; min-width: 0; padding: 10px 8px; font: inherit; color: #fff; background: #252034; border: 1px solid #81758d; border-radius: 4px; }
 .account-purchase-controls p { margin: 0; font-size: 13px; overflow-wrap: anywhere; }
 .account-purchase-controls [hidden] { display: none; }
-.account-title-controls .account-purchase-controls { padding: 12px; background: rgba(20, 16, 30, 0.94); border-radius: 4px; }
+.account-settings { display: grid; gap: 16px; max-width: 520px; padding: 20px; background: rgba(20, 16, 30, 0.94); border: 1px solid var(--panel-border); border-radius: 12px; }
+.account-settings h3 { color: var(--accent); font-size: 20px; }
+.account-settings > p { font-size: 14px; line-height: 1.6; }
+.account-settings #btn-account-logout { justify-self: start; }
+.account-migration { display: grid; gap: 10px; border-top: 1px solid var(--panel-border, #81758d); padding-top: 16px; min-width: 0; }
+.account-migration p { overflow-wrap: anywhere; font-size: 13px; }
+.account-migration label { display: grid; gap: 6px; }
+.migration-name-list { max-height: 200px; overflow-y: auto; padding-left: 22px; overflow-wrap: anywhere; }
+.account-migration input { width: 100%; min-width: 0; padding: 10px; font: inherit; color: #fff; background: #252034; border: 1px solid #81758d; border-radius: 4px; }
 .account-mock-notice { position: fixed; top: 0; left: 0; width: 100%; padding: 3px 8px; box-sizing: border-box; z-index: 10000002; text-align: center; font-size: 12px; line-height: 18px; color: #111; background: #ffdf64; pointer-events: none; }
 
 * { margin:0; padding:0; box-sizing:border-box; }

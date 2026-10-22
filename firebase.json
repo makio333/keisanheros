@@ -1,11 +1,23 @@
 {
   "hosting": {
-    "site": "keisan-heros",
-    "public": "dist",
+    "site": "ailandgames",
+    "public": "dist-product",
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "run": {
+          "serviceId": "legend-heroes-api",
+          "region": "asia-northeast1"
+        }
+      }
+    ],
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**",
+      "**/AGENTS.md",
+      "**/*prompts*.json",
+      "**/GACHA_ADDITIONS_ART.md",
       "*.py",
       "*.md"
     ],
@@ -49,6 +61,6 @@
     ]
   },
   "firestore": {
-    "rules": "firestore.rules"
+    "rules": "firestore.backend-only.rules"
   }
 }

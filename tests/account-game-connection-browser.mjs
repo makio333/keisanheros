@@ -6,7 +6,7 @@ import {startLocalAccountDemo} from '../server/local-account-demo.mjs';
 const {chromium}=await import(`${homedir()}/.codex/skills/develop-web-game/node_modules/playwright/index.mjs`);
 const directory=await mkdtemp(path.join(tmpdir(),'legend-game-connection-')),out=path.join(tmpdir(),'legend-game-connection-browser');await mkdir(out,{recursive:true});
 const demo=await startLocalAccountDemo({directory,port:0,mockLine:true}),browser=await chromium.launch({channel:'chrome',headless:true});
-const errors=[],firebase=[],requests=[];
+const errors=[],firebase=[],requests=[];let failRecoverySave=true;
 try{
   async function login(){
     const context=await browser.newContext({viewport:{width:1280,height:900},serviceWorkers:'block'});
@@ -15,6 +15,9 @@ try{
       if(!['127.0.0.1','localhost'].includes(url.hostname))return route.fulfill({status:200,body:''});
       if(url.pathname.includes('firebase_init'))firebase.push(url.href);
       if(url.pathname==='/api/game')requests.push(route.request().postDataJSON());
+      if(url.pathname.startsWith('/api/saves/') && route.request().method()==='PUT' && route.request().postDataJSON().gameState?.__recoveryProbe && failRecoverySave){
+        failRecoverySave=false;return route.fulfill({status:503,contentType:'application/json',body:'{"error":"account_service_unavailable"}'});
+      }
       if(url.pathname==='/game.js'){
         const response=await route.fetch();return route.fulfill({response,body:await response.text()+`
           window.connectionQA={state:name=>newGameState(name,'ai_hero_spellblade'),
@@ -47,6 +50,16 @@ try{
     await page.locator('#hotspot-raid-boss').click();await page.waitForFunction(()=>window.connectionQA.data().status==='ready');
     assert.equal(await page.locator('#btn-raid-challenge').isEnabled(),true);
   }
+  await a.page.evaluate(async()=>{
+    const client=window.AccountSession,slot=(await client.fetchAllSlots())[0];
+    window.recoveryFixture=slot;
+    try{await client.saveSlot(slot.slotKey,{...slot.gameState,__recoveryProbe:true});}catch{}
+    await client.refreshSummary();
+  });
+  assert.equal(await a.page.locator('#debug-error-banner').isVisible(),true,'successful reads must not hide a failed save');
+  await a.page.evaluate(()=>window.AccountSession.saveSlot(window.recoveryFixture.slotKey,window.recoveryFixture.gameState));
+  assert.equal(await a.page.locator('#debug-error-banner').isVisible(),false,'successful save retry clears the old connection warning');
+  await shot(a.page,'save-recovered.png');
   assert.equal(await a.page.evaluate(()=>window.connectionQA.damage(120)),true);
   await b.page.waitForFunction(()=>window.connectionQA.data().raid.totalDamage===120);
   await b.page.waitForFunction(()=>document.getElementById('raid-boss-damage').textContent.includes('880'));

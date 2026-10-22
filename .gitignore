@@ -6,9 +6,12 @@ __pycache__/
 .env
 .env.*
 !.env.example
+.local-product-data/
 firebase-debug.log
 node_modules/
 dist/
+dist-legacy/
+dist-product/
 unity-port/Assets/StreamingAssets/LegendHeroesWeb/
 unity-port/Assets/LegendHeroes/Plugins/macOS/libLegendHeroesWeb.dylib
 unity-port/Assets/LegendHeroes/Plugins/macOS/libLegendHeroesWebKit.dylib

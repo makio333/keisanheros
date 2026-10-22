@@ -1,4 +1,6 @@
 import { createGameCloudAPIs } from './game_cloud_apis.js';
+import {mountLegacyExport} from './legacy_file_ui.js';
+import {LEGACY_FIREBASE_CONFIG} from './firebase_legacy_config.js';
 import { initializeApp } from "firebase/app";
 import { getAnalytics, isSupported } from "firebase/analytics";
 import { 
@@ -7,6 +9,7 @@ import {
   setDoc, 
   getDoc, 
   getDocs, 
+  getDocsFromServer,
   collection, 
   deleteDoc, 
   onSnapshot, 
@@ -17,15 +20,7 @@ import {
   where
 } from "firebase/firestore";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDu5F9Dlw4x7E1cDg2K41_mEzaEa0QGW6Q",
-  authDomain: "treegames-ac5db.firebaseapp.com",
-  projectId: "treegames-ac5db",
-  storageBucket: "treegames-ac5db.firebasestorage.app",
-  messagingSenderId: "538793714749",
-  appId: "1:538793714749:web:8cea9794c8b65f8a9d7654",
-  measurementId: "G-T5X3X57WJJ"
-};
+const firebaseConfig=LEGACY_FIREBASE_CONFIG;
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -45,6 +40,15 @@ isSupported().then((supported) => {
 }).catch(() => {});
 
 window._firestoreDb = db;
+const migrationTools=document.getElementById('admin-tab-pane-tools');
+if(migrationTools)mountLegacyExport(migrationTools,{sourceProject:firebaseConfig.projectId,readSaves:async()=>{
+  const snapshot=await getDocsFromServer(collection(db,'saves'));
+  return snapshot.docs.filter(row=>!row.data().deleted).map(row=>{
+    const data=row.data();
+    const gameState=data.gameData?JSON.parse(data.gameData):data;
+    return {documentId:row.id,gameState};
+  });
+}});
 
 // Helper to convert slotKey to a clean doc ID
 function slotKeyToDocId(slotKey) {

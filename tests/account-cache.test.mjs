@@ -1,16 +1,19 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-const handlers={},requests=[];let sequence=0,offline=false;
+const handlers={},requests=[];
 const context=vm.createContext({URL,console,self:{location:{origin:'https://fixture.invalid'},addEventListener:(type,fn)=>handlers[type]=fn},
   caches:{match(){throw Error('private API must never read cache');},open(){throw Error('private API must never write cache');}},
-  fetch:async(request,options)=>{requests.push({request,options});if(offline)throw Error('offline');return {sequence:++sequence};},
+  fetch:async(request,options)=>{requests.push({request,options});throw Error('private API must use the browser network stack');},
 });
 vm.runInContext(fs.readFileSync(new URL('../sw.js',import.meta.url),'utf8'),context);
-async function call(path){let response;handlers.fetch({request:{url:'https://fixture.invalid'+path,method:'GET',mode:'navigate'},respondWith:value=>response=value});return response;}
-for(const path of ['/api/account','/api/auth/session','/api/saves','/api/saves/fixture','/api/auth/line/callback?code=fixture']){
-  const first=await call(path),next=await call(path);assert.notEqual(first.sequence,next.sequence);assert.equal(requests.at(-1).options.cache,'no-store');
+for(const path of ['/api','/api/account','/api/auth/session','/api/saves','/api/saves/fixture','/api/auth/line/callback?code=fixture','/api/payments/stripe/webhook']){
+  for(const mode of ['navigate','cors','same-origin']){
+    let handled=false;
+    handlers.fetch({request:{url:'https://fixture.invalid'+path,method:'GET',mode},respondWith:()=>handled=true});
+    assert.equal(handled,false,'API requests and OAuth redirects must be handled directly by the browser');
+  }
 }
-offline=true;await assert.rejects(call('/api/account'),/offline/);
+assert.equal(requests.length,0,'the worker must not duplicate private API requests');
 let handled=false;handlers.fetch({request:{url:'https://fixture.invalid.attacker.test/api/account',method:'GET'},respondWith:()=>handled=true});assert.equal(handled,false);
-console.log('PASS: auth/account/save APIs bypass service-worker caches, stay fresh across logins and fail closed offline.');
+console.log('PASS: auth/account/save/payment APIs bypass the service worker entirely, including OAuth navigations; no duplicate fetch or private cache fallback.');

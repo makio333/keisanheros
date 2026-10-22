@@ -52,7 +52,8 @@ try{
   assert.equal((await checkout()).status,200);await checkout();
   assert.equal(checkouts.size,1);assert.equal(calls[0].params.mode,'payment');assert.equal(calls[0].params.client_reference_id,idA);
   assert.deepEqual(calls[0].params.line_items,[{price:price.id,quantity:1}]);
-  assert.equal(calls[0].options.idempotencyKey,calls[1].options.idempotencyKey);
+  assert.equal(calls.length,1,'existing open checkout is retrieved instead of recreated');
+  assert.deepEqual(calls[0].params.adaptive_pricing,{enabled:false},'fixed JPY prices must not be localized');
   assert.equal((await checkout('organization10')).status,409,'parallel plan purchases cannot reuse the same upgrade credit');
   assert.equal((await payments.accounts.summary(session)).saveLimit,0,'opening checkout never grants access');
   await assert.rejects(payments.accounts.applyPurchaseEvidence({accountId:idA,eventId:'forged',purchaseId:'forged',productId:'personal'}),/unverified_purchase/);

@@ -1,0 +1,12 @@
+*
+!Dockerfile
+!.dockerignore
+!package.json
+!package-lock.json
+!server/
+!server/**
+!game_cloud_apis.js
+!economy.js
+!event_raid.js
+!event_equipment.js
+!legacy_save_file.js

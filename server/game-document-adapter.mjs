@@ -7,17 +7,17 @@ export function createGameDocumentAdapter(tx,{accountId,now=Date.now}){
   const pathOf=ref=>typeof ref==='string'?ref:ref.path;
   const reference=path=>({path,id:path.split('/').at(-1)});
   const saveKey=ref=>decodeURIComponent(ref.slice('saves/'.length));
-  function read(ref){
+  async function read(ref){
     ref=pathOf(ref);
     if(!ref.startsWith('saves/'))return tx.getGameDocument(ref);
-    const row=tx.getSave(saveKey(ref));if(!row || row.ownerAccountId!==accountId)fail();
+    const row=await tx.getSave(saveKey(ref));if(!row || row.ownerAccountId!==accountId)fail();
     return {slotKey:row.key,playerName:row.gameState.playerName,lvl:row.gameState.player?.lvl,gold:row.gameState.player?.gold,gameData:JSON.stringify(row.gameState),updatedAt:row.gameState.updatedAt||row.updatedAt,deleted:false};
   }
-  function write(ref,value,options){
+  async function write(ref,value,options){
     ref=pathOf(ref);
-    const next=options?.merge?{...read(ref),...copy(value)}:copy(value);
+    const next=options?.merge?{...await read(ref),...copy(value)}:copy(value);
     if(!ref.startsWith('saves/')){tx.putGameDocument(ref,next);return;}
-    const key=saveKey(ref),row=tx.getSave(key);if(!row || row.ownerAccountId!==accountId)fail();
+    const key=saveKey(ref),row=await tx.getSave(key);if(!row || row.ownerAccountId!==accountId)fail();
     const gameState=JSON.parse(next.gameData);gameState.updatedAt=now();
     tx.putSave({...row,gameState,revision:row.revision+1,updatedAt:now()});changed.add(key);
   }
@@ -30,10 +30,10 @@ export function createGameDocumentAdapter(tx,{accountId,now=Date.now}){
     where:(field,operator,value)=>({kind:'where',field,operator,value}),
     orderBy:(field,direction='asc')=>({kind:'order',field,direction}),
     limit:count=>({kind:'limit',count}),
-    getDoc:async ref=>snapshot(pathOf(ref).split('/').at(-1),read(ref)),
+    getDoc:async ref=>snapshot(pathOf(ref).split('/').at(-1),await read(ref)),
     getDocs:async reference=>{
       if(reference.collection==='saves')throw Error('unscoped_save_query');
-      let rows=tx.listGameDocuments(reference.collection).map(([key,value])=>({key,value}));
+      let rows=(await tx.listGameDocuments(reference.collection)).map(([key,value])=>({key,value}));
       for(const condition of reference.conditions||[]){
         if(condition.kind==='where'){
           if(condition.operator!=='==')throw Error('unsupported_query');
@@ -49,7 +49,7 @@ export function createGameDocumentAdapter(tx,{accountId,now=Date.now}){
     runTransaction:async(_db,callback)=>{
       const writes=[];
       const result=await callback({get:adapter.getDoc,set:(...args)=>writes.push(args),update:(ref,value)=>writes.push([ref,value,{merge:true}])});
-      for(const args of writes)write(...args);
+      for(const args of writes)await write(...args);
       return result;
     },
   };

@@ -56,11 +56,21 @@ try{
   assert.equal(await page.locator('#account-purchase-plan option').count(),3);
   assert.equal(await page.locator('#account-purchase-plan option[value="personal"]').count(),0);
   assert.ok((await page.locator('#account-purchase-plan option[value="organization10"]').textContent()).includes('差額 ￥14,820'));
-  // Isolate the account controls from the unrelated asset-loading splash.
+  assert.equal(await page.locator('#screen-title .account-purchase-controls').count(),0,'the child-facing title has no purchases or prices');
+  assert.equal(await page.locator('#screen-title #btn-account-logout').count(),0);
+  assert.equal(await page.locator('#btn-account-purchase').isVisible(),false,'upgrades stay behind the existing parent settings entry');
+  // Isolate the title from the unrelated asset-loading splash.
   await page.evaluate(()=>{document.getElementById('boot-loader-screen')?.remove();document.getElementById('title-white-fade')?.remove();document.getElementById('screen-title').classList.add('active');});
-  await page.locator('.account-title-controls .account-purchase-controls').scrollIntoViewIfNeeded();
+  await page.screenshot({path:path.join(out,'paid-title-mobile.png')});
+  await page.locator('#btn-goto-admin').click();await page.locator('#admin-password-overlay:not(.hidden)').waitFor();
+  assert.equal(await page.locator('#btn-account-purchase').isVisible(),false,'opening the parent password prompt does not expose purchase controls');
+  const passcode=await page.evaluate(()=>{const date=new Date();return String(date.getMonth()+1).padStart(2,'0')+String(date.getDate()).padStart(2,'0');});
+  await page.locator('#admin-password-input').fill(passcode);await page.locator('#btn-admin-password-submit').click();
+  await page.locator('#admin-tab-btn-account').click();
+  await page.locator('#admin-tab-pane-account .account-purchase-controls').scrollIntoViewIfNeeded();
   await page.screenshot({path:path.join(out,'upgrade-mobile.png')});
-  const upgrade=await page.locator('.account-title-controls .account-purchase-controls').boundingBox();
+  const upgrade=await page.locator('#admin-tab-pane-account .account-purchase-controls').boundingBox();
   assert.ok(upgrade.width>0 && upgrade.x>=0 && upgrade.x+upgrade.width<=390);
+  assert.equal(await page.locator('#btn-account-logout').isVisible(),true);assert.deepEqual(errors,[]);
   console.log('PASS: mobile one-time purchase gate, recoverable error, hosted Checkout redirect, pending/cancel states, server-confirmed unlock; offline fixtures only. '+out);
 }finally{await browser.close();await vite.close();}

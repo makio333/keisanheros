@@ -6,9 +6,17 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "dev:legacy": "node scripts/release-web.mjs legacy --dev",
+    "dev:product": "node scripts/release-web.mjs product --dev",
+    "build:legacy": "node scripts/release-web.mjs legacy",
+    "build:product": "node scripts/release-web.mjs product",
     "build:single": "BUILD_SINGLEFILE=true vite build",
     "preview": "vite preview",
-    "deploy": "vite build && firebase deploy --only hosting"
+    "deploy": "node -e \"console.error('Choose npm run deploy:legacy (company) or npm run deploy:product (LINE version). Nothing deployed.'); process.exit(1)\"",
+    "deploy:legacy": "node scripts/release-web.mjs legacy --deploy",
+    "deploy:product": "node scripts/release-web.mjs product --deploy",
+    "account:local": "node --env-file=.env server/local-product-check.mjs",
+    "stripe:products:test": "node --env-file=.env scripts/setup-stripe-products.mjs --apply-test"
   },
   "devDependencies": {
     "typescript": "^5.4.5",
@@ -17,6 +25,11 @@
   },
   "dependencies": {
     "firebase": "^12.18.0",
+    "firebase-admin": "^14.5.0",
+    "google-auth-library": "^11.3.1",
     "stripe": "^23.0.0"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.6"
   }
 }

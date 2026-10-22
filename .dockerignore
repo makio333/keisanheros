@@ -1,0 +1,14 @@
+.git
+.firebase
+.env
+.env.*
+!.env.example
+node_modules
+dist
+dist-legacy
+dist-product
+output
+.local-product-data
+*.log
+*.pem
+*.crt

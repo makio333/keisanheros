@@ -5,19 +5,21 @@ import fs from 'fs';
 
 // ビルド完了時にPWA関連ファイルを dist/ にコピーするプラグイン
 function pwaCopyPlugin(): Plugin {
+  let outputDirectory: string;
   return {
     name: 'pwa-copy-plugin',
     enforce: 'post',
+    configResolved(config) { outputDirectory=path.resolve(config.root,config.build.outDir); },
     closeBundle() {
       const pwaFiles = ['manifest.json', 'sw.js', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
       for (const file of pwaFiles) {
         const src = path.resolve(__dirname, file);
-        const dest = path.resolve(__dirname, 'dist', file);
+        const dest = path.resolve(outputDirectory, file);
         if (fs.existsSync(src)) {
           fs.copyFileSync(src, dest);
         }
       }
-      console.log('PWA files copied to dist/ successfully!');
+      console.log('PWA files copied to '+outputDirectory);
     },
   };
 }

@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import path from 'node:path';
+import {openLocalAccountStore} from '../server/local-account-store.mjs';
+import {createAccountSaveService} from '../server/account-saves.mjs';
+const directory=await mkdtemp(path.join(tmpdir(),'legend-trial-'));
+const store=await openLocalAccountStore(directory);
+let clock=1000000;
+const service=createAccountSaveService({store,sessions:store.sessions,trialsEnabled:true,now:()=>clock,verifyReceipt:async()=>({accountId:'trial',productId:'personal',eventId:'paid',purchaseId:'paid'})});
+try{
+  await store.transaction(tx=>{tx.putAccount({id:'trial'});tx.putSession('session',{accountId:'trial',expiresAt:clock+30*86400000});});
+  assert.equal((await service.summary('session')).trial.available,true);
+  await Promise.all([service.startTrial('session'),service.startTrial('session')]);
+  const first=await service.summary('session');assert.equal(first.saveLimit,3);assert.equal(first.paidSaveLimit,0);
+  const save=await service.createSave('session',{name:'hero',gameState:{player:{gold:12}}});
+  await service.createSave('session',{name:'second',gameState:{}});
+  await service.createSave('session',{name:'third',gameState:{}});
+  await assert.rejects(service.createSave('session',{name:'fourth',gameState:{}}),/save_limit_reached/);
+  clock=first.trial.expiresAt-1;assert.equal((await service.summary('session')).saveLimit,3);
+  clock++;assert.equal((await service.summary('session')).saveLimit,0);
+  await service.startTrial('session');assert.equal((await service.summary('session')).trial.expiresAt,first.trial.expiresAt);
+  await assert.rejects(service.updateSave('session',{key:save.key,revision:1,gameState:{}}),/purchase_required/);
+  assert.equal((await service.readSave('session',save.key)).gameState.player.gold,12);
+  await service.applyPurchaseEvidence('verified');assert.equal((await service.summary('session')).saveLimit,3);
+  await service.updateSave('session',{key:save.key,revision:1,gameState:{player:{gold:13}}});
+  assert.equal((await service.readSave('session',save.key)).gameState.player.gold,13);
+  assert.equal((await service.summary('session')).trial.active,false);
+  console.log('PASS: single seven-day trial, three slots, exact expiry, no reset, retained save and purchase continuation.');
+}finally{await store.close();await rm(directory,{recursive:true,force:true});}

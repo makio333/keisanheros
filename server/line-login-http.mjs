@@ -1,7 +1,7 @@
 import {randomBytes} from 'node:crypto';
 
 // Node HTTP adapter. The caller supplies a durable, expiring session store and the protocol core.
-export function createLineLoginHandler({login, sessions, origin, callbackPath='/api/auth/line/callback', now=Date.now}) {
+export function createLineLoginHandler({login, sessions, origin, callbackPath='/api/auth/line/callback', startPath='/api/auth/line/start', sharedRoutes=true, now=Date.now}) {
   const site=new URL(origin);
   const secure=site.protocol==='https:';
   if(site.origin!==origin || (!secure && !(site.protocol==='http:' && ['localhost','127.0.0.1'].includes(site.hostname))))throw Error('unsafe_auth_origin');
@@ -17,8 +17,8 @@ export function createLineLoginHandler({login, sessions, origin, callbackPath='/
   }
   return async function handle(req,res) {
     const url=new URL(req.url,origin);
-    const start=url.pathname==='/api/auth/line/start', callback=url.pathname===callbackPath;
-    const session=url.pathname==='/api/auth/session', logout=url.pathname==='/api/auth/logout';
+    const start=url.pathname===startPath, callback=url.pathname===callbackPath;
+    const session=sharedRoutes&&url.pathname==='/api/auth/session', logout=sharedRoutes&&url.pathname==='/api/auth/logout';
     if(!start && !callback && !session && !logout)return false;
     if(req.method!==(start||logout?'POST':'GET')){reply(res,405,{error:'method_not_allowed'},{Allow:start||logout?'POST':'GET'});return true;}
     if((start||logout) && req.headers.origin!==origin){reply(res,403,{error:'invalid_origin'});return true;}
@@ -48,7 +48,7 @@ export function createLineLoginHandler({login, sessions, origin, callbackPath='/
       await sessions.rotate(browserId,next,{accountId:result.accountId,expiresAt:now()+ttl});
       reply(res,303,{ok:true},{Location:'/?login=success','Set-Cookie':cookie(next)});
     }catch(error){
-      if(callback)reply(res,303,{ok:false},{Location:error.message==='line_login_cancelled'?'/?login=cancelled':'/?login=failed'});
+      if(callback)reply(res,303,{ok:false},{Location:['line_login_cancelled','google_login_cancelled'].includes(error.message)?'/?login=cancelled':'/?login=failed'});
       else reply(res,503,{error:'login_unavailable'});
     }
     return true;

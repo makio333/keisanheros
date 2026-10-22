@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "treegames-ac5db"
+    "default": "ailandgames",
+    "legacy": "treegames-ac5db",
+    "product": "ailandgames"
   }
 }

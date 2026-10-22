@@ -30,6 +30,7 @@ export function createStripePaymentHandler({payments,origin}){
       reply(res,200,result);
     }catch(error){
       const codes={authentication_required:401,account_not_found:401,already_purchased:409,purchase_changed:409,checkout_in_progress:409,payment_processing:409,unsupported_upgrade:409,invalid_product:400,invalid_json:400,invalid_stripe_signature:400,stripe_mode_mismatch:400,invalid_stripe_checkout:400,body_too_large:413};
+      codes.facility_account_managed=403;
       const status=codes[error.message]||503;reply(res,status,{error:status===503?'payment_service_unavailable':error.message});
     }
     return true;
