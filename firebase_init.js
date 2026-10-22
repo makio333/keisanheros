@@ -1,4 +1,5 @@
 import { createGameCloudAPIs } from './game_cloud_apis.js';
+import {mountLegacyExport} from './legacy_file_ui.js';
 import { initializeApp } from "firebase/app";
 import { getAnalytics, isSupported } from "firebase/analytics";
 import { 
@@ -7,6 +8,7 @@ import {
   setDoc, 
   getDoc, 
   getDocs, 
+  getDocsFromServer,
   collection, 
   deleteDoc, 
   onSnapshot, 
@@ -45,6 +47,15 @@ isSupported().then((supported) => {
 }).catch(() => {});
 
 window._firestoreDb = db;
+const migrationTools=document.getElementById('admin-tab-pane-tools');
+if(migrationTools)mountLegacyExport(migrationTools,{sourceProject:firebaseConfig.projectId,readSaves:async()=>{
+  const snapshot=await getDocsFromServer(collection(db,'saves'));
+  return snapshot.docs.filter(row=>!row.data().deleted).map(row=>{
+    const data=row.data();
+    const gameState=data.gameData?JSON.parse(data.gameData):data;
+    return {documentId:row.id,gameState};
+  });
+}});
 
 // Helper to convert slotKey to a clean doc ID
 function slotKeyToDocId(slotKey) {
