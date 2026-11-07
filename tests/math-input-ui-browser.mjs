@@ -42,11 +42,10 @@ try{
     const entry=cases.find(entry=>entry.area==='area12' && entry.stage===stage);
     cases.push({...entry,name:entry.name+'（単位付き入力）',printInput:String(entry.problem.answer)+unit});
   }
-  async function typeBattle(value,portrait){
-    if(portrait){
-      assert.equal(await page.locator('#ch-input').evaluate(el=>el.readOnly),true);
-      for(const key of String(value))await page.locator(`.portrait-calc-pad [data-key="${key}"]`).click();
-    }else await page.locator('#ch-input').fill(String(value));
+  async function typeBattle(value){
+    assert.equal(await page.locator('#ch-input').evaluate(el=>el.readOnly),false);
+    assert.equal(await page.locator('.portrait-calc-pad').count(),0);
+    await page.locator('#ch-input').fill(String(value));
   }
   async function fits(selectors,label,allowVerticalScroll=false){
     const bad=await page.evaluate(({selectors,allowVerticalScroll})=>selectors.flatMap(selector=>[...document.querySelectorAll(selector)]).filter(el=>el.getClientRects().length).filter(el=>{const r=el.getBoundingClientRect();return r.left<-.5 || r.right>innerWidth+.5 || !allowVerticalScroll && (r.top<-.5 || r.bottom>innerHeight+.5);}).map(el=>({id:el.id,class:el.className,rect:el.getBoundingClientRect().toJSON()})),{selectors,allowVerticalScroll});
@@ -59,6 +58,8 @@ try{
       const p=entry.problem,parts=entry.parts||(p.remainder!=null?[String(p.answer),String(p.remainder)]:typeof p.answer==='string' && /[/:]/.test(p.answer)?p.answer.split(/[/:]/):[String(p.answer)]);
       await page.evaluate(p=>window.mathInputQA.battle(p),p);
       assert.equal(await page.locator('#ch-input').count(),1,'old finished input is removed before a new challenge');
+      const symbols=await page.locator('#ch-input').getAttribute('data-calc-symbols') || '';
+      assert.equal(await page.locator('#ch-input').getAttribute('inputmode'),/[\/:%-]/.test(symbols)?'text':symbols.includes('.')?'decimal':'numeric');
       if(parts.length===2){
         assert.equal(await page.locator('#ch-word [data-slot]').count(),2);
         await typeBattle(parts[0],portrait);await page.locator('#ch-submit').click();
@@ -66,7 +67,7 @@ try{
         await page.locator('#ch-word [data-slot="0"]').click();assert.equal(await page.locator('#ch-input').inputValue(),parts[0]);
         await page.locator('#ch-word [data-slot="1"]').click();await typeBattle(parts[1],portrait);
       }else await typeBattle(parts[0],portrait);
-      await fits(['#ch-submit','#ch-input','#ch-word','.portrait-calc-pad button'],`${entry.area}/${entry.name} battle controls fit ${width}`,true);
+      await fits(['#ch-submit','#ch-input','#ch-word'],`${entry.area}/${entry.name} battle controls fit ${width}`,true);
       if(['remainder-zero','decimal-half'].includes(entry.name) || entry.area==='area12' && ['比の値','円の面積（π=3.14）'].includes(entry.name)){
         await page.locator('#ch-word').scrollIntoViewIfNeeded();
         await page.evaluate(()=>Promise.all(document.getAnimations().filter(a=>Number.isFinite(a.effect.getComputedTiming().iterations)).map(a=>a.finished.catch(()=>{}))));
@@ -86,7 +87,7 @@ try{
     for(const p of [{text:'7 ÷ 2',answer:3,remainder:1},{text:'7 と 8 の平均',answer:7.5}]){
       await page.evaluate(p=>window.mathInputQA.battle(p,'training'),p);
       await typeBattle(String(p.answer),portrait);if(p.remainder!=null){await page.locator('#ch-submit').click();await typeBattle(String(p.remainder),portrait);}
-      await fits(['#ch-submit','#ch-input','.portrait-calc-pad button'],'training input remains reachable',true);
+      await fits(['#ch-submit','#ch-input'],'training input remains reachable',true);
       await page.locator('#ch-submit').click();assert.equal(await page.evaluate(()=>window.mathInputResult),true);report.training.push({width,text:p.text});
     }
     for(let start=0;start<cases.length;start+=10){

@@ -1,4 +1,7 @@
+import {validRaidDamage,raidInitialHp,raidConfiguredHp} from './raid_run_rules.js';
+import {raidGlobalDocIdForBossId,raidJstMonthKey,raidMonthlyBossId,raidMonthlyGlobalDocId,parseRaidMonthlyBossId} from './raid_monthly_rules.js';
 import {applyGiftPayload,raidRankCoins} from './economy.js';
+import {GHOST_RAID_DEFEAT_DECORATION} from './ghost_raid_content.js';
 import {eventRaidRewardEntitlements,eventRaidBonusEntitlements,EVENT_RAID_FINAL_AT,eventRaidFinalGift} from './event_raid.js';
 
 // Shared gameplay rules; callers supply storage, never authentication decisions.
@@ -58,23 +61,38 @@ const EventRaidAPI = {
 
 const RaidBossAPI = {
   async syncPlayer(slotKey, profile, progress = {}) {
-    const globalRef = doc(db, 'raidGlobal', 'currentBoss');
+    const now = clock();
+    const requestedMonsterHint = typeof progress.monsterId === 'string' && progress.monsterId ? progress.monsterId : '';
+    const monthlyGhost = requestedMonsterHint === 'moonWraith' || now >= Date.parse('2026-11-01T00:00:00+09:00');
+    const periodKey = monthlyGhost ? raidJstMonthKey(now) : null;
+    const globalDocId = monthlyGhost ? raidMonthlyGlobalDocId(periodKey) : 'currentBoss';
+    const globalRef = doc(db, 'raidGlobal', globalDocId);
     return runTransaction(db, async transaction => {
       const globalSnap = await transaction.get(globalRef);
       let global = globalSnap.exists() ? globalSnap.data() : {};
-      const now = clock();
+      const requestedMonsterId = monthlyGhost ? 'moonWraith' : requestedMonsterHint || global.monsterId || 'darkBahamut';
       let archivedBoss = null;
       let settledBossId = null;
 
       if (global.finalizedAt && (!global.startsAt || now >= global.startsAt)) { // startsAt 欠落データ（旧コードで集計）でも次のレベルへ進める
-         archivedBoss = { ...global, bossLevel: global.bossLevel || 50, bossId: global.bossId || 'boss_50', maxHp: global.maxHp || 1000 };
+         archivedBoss = { ...global, bossLevel: global.bossLevel || 50, bossId: global.bossId || 'boss_50', maxHp: global.maxHp || 1000, monsterId: global.monsterId || 'darkBahamut' };
          settledBossId = global.bossId || 'boss_50';
-         const nextLevel = (global.bossLevel || 50) + 10;
+         const currentLevel = Number(global.bossLevel) || 50;
+         // ダークバハムート最終決戦の期間は現在の最大レベルを維持し、次レベルへ進めない。
+         // 11月1日以降に幽霊王へ切り替わった後は従来どおり10レベル上がる。
+         const nextLevel = requestedMonsterId === 'darkBahamutFinal' ? Math.max(50, currentLevel) : currentLevel + 10;
+         const nextBossId = monthlyGhost
+           ? raidMonthlyBossId(periodKey, nextLevel)
+           : requestedMonsterId === 'darkBahamutFinal' && nextLevel === currentLevel
+             ? `boss_${nextLevel}_final_${now}`
+             : 'boss_' + nextLevel;
          global = {
              ...global,
              bossLevel: nextLevel,
-             bossId: 'boss_' + nextLevel,
-             maxHp: 1000 + (nextLevel - 50) * 100,
+             bossId: nextBossId,
+             monsterId: requestedMonsterId,
+             maxHp: monthlyGhost ? raidInitialHp('moonWraith') : 1000 + (nextLevel - 50) * 100,
+             ...(periodKey ? { periodKey } : {}),
              startsAt: null,
              totalDamageDealt: 0,
              defeatedAt: null,
@@ -87,12 +105,14 @@ const RaidBossAPI = {
       }
 
       const bossLevel = global.bossLevel || 50;
-      const bossId = global.bossId || 'boss_' + bossLevel;
-      const maxHp = global.maxHp || 1000;
+      const bossId = global.bossId || (monthlyGhost ? raidMonthlyBossId(periodKey, bossLevel) : 'boss_' + bossLevel);
+      const maxHp = raidConfiguredHp(global,requestedMonsterId);
       if (!global.bossId) {
           global.bossLevel = bossLevel;
           global.bossId = bossId;
+          global.monsterId = requestedMonsterId;
           global.maxHp = maxHp;
+          if (periodKey) global.periodKey = periodKey;
       }
 
       const rankRef = doc(db, 'raidRankings_' + bossId, slotKeyToDocId(slotKey));
@@ -101,6 +121,7 @@ const RaidBossAPI = {
       const challenge2ClaimRef = doc(db, 'raidClaims', slotKeyToDocId(slotKey) + '_challenge2');
       const challenge3ClaimRef = doc(db, 'raidClaims', slotKeyToDocId(slotKey) + '_challenge3');
       const saveRef = doc(db, 'saves', slotKeyToDocId(slotKey));
+      const monthlyRankRef = monthlyGhost ? doc(db, 'raidMonthlyRankings_' + periodKey, slotKeyToDocId(slotKey)) : null;
 
       const rankSnap = await transaction.get(rankRef);
       const claimSnap = await transaction.get(claimRef);
@@ -108,6 +129,7 @@ const RaidBossAPI = {
       const challenge2ClaimSnap = await transaction.get(challenge2ClaimRef);
       const challenge3ClaimSnap = await transaction.get(challenge3ClaimRef);
       const saveSnap = await transaction.get(saveRef);
+      const monthlyRankSnap = monthlyRankRef ? await transaction.get(monthlyRankRef) : null;
       const previous = rankSnap.exists() ? rankSnap.data() : {};
 
       const isActive = !global.startsAt || now >= global.startsAt;
@@ -123,14 +145,18 @@ const RaidBossAPI = {
       let addedDamage = acceptingDamage && !defeatedAt ? legacyDamage - oldBaseline : 0;
       let acceptedEvents = 0;
       let acceptedChallenges = 0;
+      const acceptedMonthlyEvents = [];
       for (const event of progress.events || []) {
         if (!event.id || appliedEvents[event.id]) continue;
+        const eventDamage=validRaidDamage(event.damage);
+        if(eventDamage===null) { appliedEvents[event.id]=true; continue; }
         const fightStartedAt = Number(event.fightStartedAt) || Number(event.createdAt) || now;
         const eventMatchesBoss = !archivedBoss && progressMatchesBoss && (!event.bossId || event.bossId === bossId);
         if (eventMatchesBoss && acceptingDamage && (!defeatedAt || fightStartedAt <= defeatedAt)) {
-          addedDamage += Math.max(0, Math.round(Number(event.damage) || 0));
+          addedDamage += eventDamage;
           acceptedEvents++;
           acceptedChallenges++;
+          if (monthlyGhost) acceptedMonthlyEvents.push({ id: event.id, damage: eventDamage });
         }
         appliedEvents[event.id] = true;
       }
@@ -139,12 +165,21 @@ const RaidBossAPI = {
       const participatedBeforeDefeat = progressMatchesBoss && !!progress.participated && (!defeatedAt || participationAt <= defeatedAt);
       const participated = previous.participated || participatedBeforeDefeat || legacyDamage > 0 || acceptedEvents > 0;
       const nextTotal = (previous.totalDamage || 0) + addedDamage;
+      const monthlyPrevious = monthlyRankSnap?.exists() ? monthlyRankSnap.data() : {};
+      const monthlyProcessedRuns = { ...(monthlyPrevious.processedRuns || {}) };
+      let monthlyAddedDamage = 0;
+      for (const event of acceptedMonthlyEvents) {
+        if (monthlyProcessedRuns[event.id]) continue;
+        monthlyProcessedRuns[event.id] = true;
+        monthlyAddedDamage += event.damage;
+      }
+      const monthlyTotalDamage = (Number(monthlyPrevious.totalDamage) || 0) + monthlyAddedDamage;
       const excludedFromRanking = !!previous.excludedFromRanking && acceptedEvents===0;
       const challengeCount = (Number(challengeCounterSnap.data()?.challengeCount) || 0) + acceptedChallenges;
       let challenge2EquipTenCount = null;
       let challenge3SkinTicketCount = null;
-      const shouldGrantChallenge2 = challengeCount >= 2 && acceptedChallenges > 0 && !challenge2ClaimSnap.exists();
-      const shouldGrantChallenge3 = challengeCount >= 3 && acceptedChallenges > 0 && !challenge3ClaimSnap.exists();
+      const shouldGrantChallenge2 = false; // Participation-count rewards ended; old ownership remains.
+      const shouldGrantChallenge3 = false;
       let challengeSave = null;
       if (shouldGrantChallenge2 || shouldGrantChallenge3) {
         const cloudState=saveSnap.exists() && saveSnap.data()?.gameData ? JSON.parse(saveSnap.data().gameData) : null;
@@ -212,8 +247,13 @@ const RaidBossAPI = {
 
       if (archivedBoss) transaction.set(doc(db, 'raidHistory', settledBossId), archivedBoss);
 
-      if (archivedBoss || addedDamage > 0 || startsSettlement || finalize || !globalSnap.exists()) {
-        const payload = { bossLevel, bossId, maxHp, totalDamageDealt: nextGlobalTotal, ...(startsSettlement ? { defeatedAt: now, settlesAt: now + RAID_SETTLEMENT_MS } : {}), ...(finisherSlotKeys.length ? { finisherSlotKeys } : {}), ...(finalize ? { finalizedAt: now, finalRankings, finalHitters, startsAt: nextStartsAt } : {}) }; if (archivedBoss) { payload.defeatedAt = null; payload.settlesAt = null; payload.finalizedAt = null; payload.finalRankings = null; payload.finalHitters = null; payload.startsAt = null; payload.finisherSlotKeys = []; } transaction.set(globalRef, payload, { merge: true });
+      if (archivedBoss || addedDamage > 0 || startsSettlement || finalize || !globalSnap.exists() || global.monsterId !== requestedMonsterId) {
+        const payload = { bossLevel, bossId, monsterId: requestedMonsterId, maxHp, totalDamageDealt: nextGlobalTotal, ...(periodKey ? { periodKey } : {}), ...(startsSettlement ? { defeatedAt: now, settlesAt: now + RAID_SETTLEMENT_MS } : {}), ...(finisherSlotKeys.length ? { finisherSlotKeys } : {}), ...(finalize ? { finalizedAt: now, finalRankings, finalHitters, startsAt: nextStartsAt } : {}) }; if (archivedBoss) { payload.defeatedAt = null; payload.settlesAt = null; payload.finalizedAt = null; payload.finalRankings = null; payload.finalHitters = null; payload.startsAt = null; payload.finisherSlotKeys = []; } transaction.set(globalRef, payload, { merge: true });
+      }
+
+      if (monthlyRankRef && acceptedMonthlyEvents.length) {
+        const appearance = { playerName: profile.playerName || '勇者', avatar: profile.avatar || '', avatarBackground: profile.avatarBackground || 'default', avatarHolographic: !!profile.avatarHolographic, avatarBackgroundHolographic: !!profile.avatarBackgroundHolographic, avatarDecoration: profile.avatarDecoration || '', level: profile.level || 1, equipment: profile.equipment || {} };
+        transaction.set(monthlyRankRef, { ...appearance, slotKey, totalDamage: monthlyTotalDamage, processedRuns: monthlyProcessedRuns, lastUpdated: now }, { merge: true });
       }
 
       if ((shouldGrantChallenge2 || shouldGrantChallenge3) && challengeSave?.player) {
@@ -237,6 +277,10 @@ const RaidBossAPI = {
          finalRankings,
          bossLevel,
          bossId,
+         periodKey,
+         monthlyDamage: monthlyTotalDamage,
+         monthlyAddedDamage,
+         monsterId: requestedMonsterId,
          challengeCount,
          challenge2EquipTenCount,
          challenge3SkinTicketCount,
@@ -248,7 +292,9 @@ const RaidBossAPI = {
   },
 
   watchBoss(onChange, onError) {
-    return onSnapshot(doc(db, 'raidGlobal', 'currentBoss'), { includeMetadataChanges: true }, snapshot => {
+    const now = clock();
+    const docId = now >= Date.parse('2026-11-01T00:00:00+09:00') ? raidMonthlyGlobalDocId(raidJstMonthKey(now)) : 'currentBoss';
+    return onSnapshot(doc(db, 'raidGlobal', docId), { includeMetadataChanges: true }, snapshot => {
       if (!snapshot.metadata.fromCache) onChange();
     }, onError);
   },
@@ -258,7 +304,7 @@ const RaidBossAPI = {
     const coinClaimRef=doc(db,'raidCoinRankClaims',slotKeyToDocId(slotKey)+'_'+bossId);
     const claimRef = doc(db, 'raidClaims', slotKeyToDocId(slotKey) + '_' + bossId);
     const saveRef = doc(db, 'saves', slotKeyToDocId(slotKey));
-    const globalRef = doc(db, 'raidGlobal', 'currentBoss');
+    const globalRef = doc(db, 'raidGlobal', raidGlobalDocIdForBossId(bossId));
     const historyRef = doc(db, 'raidHistory', bossId);
     const rankRef = doc(db, 'raidRankings_' + bossId, slotKeyToDocId(slotKey));
     return runTransaction(db, async transaction => {
@@ -292,7 +338,8 @@ const RaidBossAPI = {
       const rankIndex = rankList.findIndex(entry => (Array.isArray(entry) ? entry[0] : entry.slotKey) === slotKey);
       const playerRank = rankIndex >= 0 ? rankIndex + 1 : -1;
       if (playerRank < 1) return { eligible: false };
-      const isFinisher = (gData.finisherSlotKeys || []).includes(slotKey);
+      const isGhostDefeat = gData.monsterId === 'moonWraith';
+      const isFinisher = !isGhostDefeat && (gData.finisherSlotKeys || []).includes(slotKey);
       const reward = playerRank === 1 ? { gold: 5000, seeds: 3, tickets: 1 } : playerRank === 2 ? { gold: 3000, seeds: 3, tickets: 1 } : playerRank === 3 ? { gold: 2000, seeds: 3, tickets: 1 } : playerRank <= 10 ? { gold: 1000, seeds: 1, tickets: 0 } : { gold: 500, seeds: 1, tickets: 0 };
       reward.coins=coinClaim.exists()?0:raidRankCoins(playerRank);
       if (isFinisher) reward.tickets++;
@@ -300,6 +347,10 @@ const RaidBossAPI = {
       const cloudState=saved.exists() && saved.data().gameData ? JSON.parse(saved.data().gameData) : null;
       const currentState=JSON.parse(JSON.stringify((fallbackState?.updatedAt || 0)>(cloudState?.updatedAt || 0)?fallbackState:cloudState || fallbackState));
       if (!currentState?.player) return { eligible: false };
+      if (isGhostDefeat && totalDamage > 0 && !(currentState.unlockedDecorations || []).includes(GHOST_RAID_DEFEAT_DECORATION.id)) {
+        reward.bonusDecoration = GHOST_RAID_DEFEAT_DECORATION.id;
+        currentState.unlockedDecorations = [...new Set([...(currentState.unlockedDecorations || []), GHOST_RAID_DEFEAT_DECORATION.id])];
+      }
       currentState.raidCoins=(Number(currentState.raidCoins)||0)+reward.coins;
       if(!coinClaim.exists())transaction.set(coinClaimRef,{coins:reward.coins,rank:playerRank,claimedAt:clock()});
       if (applyReward) applyReward(currentState, reward);
@@ -327,18 +378,33 @@ const RaidBossAPI = {
     return snap.docs.map(doc => ({ ...doc.data(), slotKey: doc.data().slotKey || doc.id })).filter(row=>!row.excludedFromRanking);
   },
 
+  async getMonthlyRankings(periodKey = raidJstMonthKey(clock())) {
+    const month = String(periodKey || '');
+    if (!/^\d{6}$/.test(month)) throw new Error('Invalid raid ranking period');
+    const snap = await getDocs(query(collection(db, 'raidMonthlyRankings_' + month), orderBy('totalDamage', 'desc'), limit(100)));
+    return snap.docs.map(entry => { const { processedRuns, ...publicRow } = entry.data(); return { ...publicRow, slotKey: publicRow.slotKey || entry.id }; })
+      .filter(row => !row.excludedFromRanking && (Number(row.totalDamage) || 0) > 0)
+      .sort((a, b) => (b.totalDamage || 0) - (a.totalDamage || 0) || String(a.slotKey || '').localeCompare(String(b.slotKey || '')));
+  },
+
   async getHistory() {
     // bossLevel が無い古い記録（Lv.50）も含めるため、orderBy は使わず 取得後に並べ替える
     const snap = await getDocs(query(collection(db, 'raidHistory'), limit(100)));
     return snap.docs
-      .map(doc => ({ bossId: doc.id, bossLevel: Number(String(doc.id).replace('boss_', '')) || 50, ...doc.data() }))
+      .map(doc => {
+        const monthly = parseRaidMonthlyBossId(doc.id);
+        const level = Number(monthly?.bossLevel || String(doc.id).match(/^boss_(\d+)/)?.[1]) || 50;
+        return { bossId: doc.id, bossLevel: level, ...doc.data() };
+      })
       .sort((a, b) => (b.bossLevel || 0) - (a.bossLevel || 0))
       .slice(0, 50);
   },
 
   async getGlobalBoss() {
     try {
-      const docRef = doc(db, 'raidGlobal', 'currentBoss');
+      const now = clock();
+      const docId = now >= Date.parse('2026-11-01T00:00:00+09:00') ? raidMonthlyGlobalDocId(raidJstMonthKey(now)) : 'currentBoss';
+      const docRef = doc(db, 'raidGlobal', docId);
       const snap = await getDoc(docRef);
       if (snap.exists()) return snap.data();
       return { totalDamageDealt: 0 };

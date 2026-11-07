@@ -23,6 +23,7 @@ let isFlickMode = false;
 let currentChallengeAnswer = null;
 let currentAcceptedAnswers = null;   // おくりがな ありでも なしでも せいかいに する
 let onAnswerCallback = null;
+let resultOverlayHideTimer = 0;
 
 /* ひらがな・カタカナ（おくりがな）かどうか */
 function isKanaChar(ch){ return /[\u3041-\u309F\u30A0-\u30FF\u30FCー]/.test(ch); }
@@ -32,6 +33,12 @@ function kanjiAcceptedAnswers(text, answer, alternatives = []) {
   return getAcceptedKanjiReadings(text, answer, alternatives);
 }
 let currentKanjiAnswerMode = false;
+
+function usesNativeMobileKeyboard() {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia?.('(pointer: coarse)').matches === true ||
+    /Android|iPhone|iPad|iPod/i.test(window.navigator?.userAgent || '');
+}
 
 /**
  * 入力UIの初期化
@@ -80,7 +87,8 @@ function initKanjiInputUI(callback) {
 function buildKanaGrid(columns, labels = []) {
   const grid = document.createElement('div');
   grid.className = 'kana-grid kana-board-grid';
-  grid.style.gridTemplateRows='repeat(5,minmax(22px,1fr))';
+  // ボードの余った高さでキーが縦に伸びないよう、行はキーの正方形サイズに合わせる。
+  grid.style.gridTemplateRows='repeat(5,auto)';
   columns.forEach((col,index) => {
     const label=document.createElement('span'); label.className='kana-row-label';
     const gridRow=index%5+1, firstColumn=index<5?1:7;
@@ -229,12 +237,14 @@ function setupKanjiChallenge(problemData) {
     }
   } else {
     // ===== 通常入力モード =====
+    const nativeMobileKeyboard = usesNativeMobileKeyboard();
+    if (nativeMobileKeyboard) isFlickMode = true;
     if (normalDisplay) normalDisplay.classList.remove('hidden');
     if (locDisplay) { locDisplay.classList.add('hidden'); locDisplay.style.display = ''; }
     if (choiceDisplay) { choiceDisplay.classList.add('hidden'); choiceDisplay.style.display = ''; }
     if (inputDisplay) inputDisplay.classList.remove('hidden');
-    if (inputToggle) inputToggle.classList.remove('hidden');
-    if (keyboard && !isFlickMode) keyboard.classList.remove('hidden');
+    if (inputToggle) inputToggle.classList.toggle('hidden', nativeMobileKeyboard);
+    if (keyboard) keyboard.classList.toggle('hidden', isFlickMode);
     
     const textEl = document.getElementById('challenge-problem-text');
     if(textEl) {
@@ -245,6 +255,7 @@ function setupKanjiChallenge(problemData) {
     const inputEl = document.getElementById('challenge-input');
     if(inputEl) {
       inputEl.value = '';
+      inputEl.readOnly = !isFlickMode;
       if (tierStr.startsWith('kana_kata')) {
         inputEl.placeholder = 'カタカナで入力';
       } else if (tierStr.startsWith('kana_hira')) {
@@ -333,6 +344,8 @@ function showResultOverlay(isCorrect) {
   const overlay = document.getElementById('result-overlay');
   const text = document.getElementById('result-text');
   if (!overlay || !text) return;
+
+  if (resultOverlayHideTimer) clearTimeout(resultOverlayHideTimer);
   
   overlay.classList.remove('hidden');
   
@@ -344,8 +357,9 @@ function showResultOverlay(isCorrect) {
     text.className = 'result-incorrect';
   }
   
-  setTimeout(() => {
+  resultOverlayHideTimer = setTimeout(() => {
     overlay.classList.add('hidden');
+    resultOverlayHideTimer = 0;
   }, 1000);
 }
 

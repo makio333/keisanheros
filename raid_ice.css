@@ -1,0 +1,19 @@
+/* Each new question owns a fresh ice element: no animation timers survive navigation. */
+.challenge-word.raid-ice-word{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:1.85em;min-height:1.85em;margin:0 .15em;color:#effeff;isolation:isolate;text-shadow:0 1px 3px #153e61;vertical-align:middle;animation:raid-ice-arrive .3s ease-out both;}
+.raid-ice-word::before{content:'';position:absolute;inset:0;z-index:-1;border:2px solid #d5ffff;border-radius:22% 15% 24% 12%;background:linear-gradient(135deg,#e7ffffdd 0%,#68c8eabb 32%,#7fb4eac9 62%,#d5ffffdd 100%);box-shadow:inset 3px 3px 0 #f2ffffa8,inset -3px -3px 0 #4487be88,0 0 8px #89dce744;clip-path:polygon(8% 0,89% 3%,100% 19%,95% 86%,81% 100%,0 94%,3% 16%);animation:raid-frost-spread .3s ease-out both;pointer-events:none;}
+.raid-ice-word::after{content:'';position:absolute;inset:9%;z-index:1;opacity:.7;background:linear-gradient(30deg,transparent 44%,#eaffff 45% 47%,transparent 48%),linear-gradient(110deg,transparent 55%,#d9ffff 56% 58%,transparent 59%);clip-path:polygon(0 0,100% 0,100% 100%,0 100%);animation:raid-frost-veins .3s ease-out both;pointer-events:none;}
+.raid-ice-word.is-shattered{animation:none;color:#b8ffd2;text-shadow:none;}
+.raid-ice-word.is-shattered::before,.raid-ice-word.is-shattered::after{animation:raid-ice-break .32s ease-out forwards;}
+@keyframes raid-ice-arrive{0%,55%{transform:scale(1)}64%{transform:scale(1.17) rotate(-3deg)}75%{transform:scale(.96) rotate(2deg)}100%{transform:scale(1)}}
+@keyframes raid-frost-spread{0%,40%{opacity:0;transform:scale(.35);clip-path:polygon(0 100%,0 100%,0 100%,0 100%)}62%{opacity:1;transform:scale(1.12)}100%{opacity:1;transform:scale(1);clip-path:polygon(8% 0,89% 3%,100% 19%,95% 86%,81% 100%,0 94%,3% 16%)}}
+@keyframes raid-frost-veins{from{opacity:0;transform:scale(.7)}to{opacity:.7;transform:scale(1)}}
+@keyframes raid-ice-break{0%{opacity:.9;transform:scale(1)}55%{opacity:.5;transform:scale(1.18) rotate(6deg);clip-path:polygon(0 0,43% 5%,35% 40%,60% 20%,100% 0,100% 100%,55% 95%,65% 58%,30% 80%,0 100%)}100%{opacity:0;transform:scale(1.4) rotate(10deg)}}
+@media(prefers-reduced-motion:reduce){.challenge-word.raid-ice-word,.raid-ice-word::before,.raid-ice-word::after{animation:none!important}.raid-ice-word.is-shattered::before,.raid-ice-word.is-shattered::after{opacity:0}}
+
+/* Large ice fragments converge on the unknown, then disappear into the locked block. */
+.raid-ice-shard{position:absolute;inset:8%;pointer-events:none;z-index:2;border:2px solid #ecffff;background:linear-gradient(135deg,#efffffef,#6cccf0d9 48%,#315faaa8);box-shadow:inset 3px 2px #e4ffffaa;clip-path:polygon(10% 0,80% 5%,100% 37%,77% 100%,0 75%);animation:raid-ice-collision .3s cubic-bezier(.5,0,.85,.45) both;}
+.shard-left{--ice-x:clamp(-360px,-26vw,-125px);--ice-y:-60px;--ice-turn:-55deg}
+.shard-right{--ice-x:clamp(125px,26vw,360px);--ice-y:75px;--ice-turn:65deg}
+.shard-top{--ice-x:30px;--ice-y:-190px;--ice-turn:130deg;animation-delay:0s}
+@keyframes raid-ice-collision{0%{opacity:0;transform:translate(var(--ice-x),var(--ice-y)) scale(1.5) rotate(var(--ice-turn))}12%{opacity:.95}57%{opacity:1;transform:translate(0,0) scale(1.08) rotate(0deg)}68%{opacity:.85;transform:translate(0,0) scale(.9)}78%,100%{opacity:0;transform:translate(0,0) scale(.7)}}
+@media(prefers-reduced-motion:reduce){.raid-ice-shard{display:none;animation:none!important}}

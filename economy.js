@@ -1,3 +1,4 @@
+import {raidDamageCoins} from './raid_run_rules.js';
 import { eventEquipmentAbility } from './event_equipment.js';
 // Shared, deterministic economy rules for save delivery and raid rewards.
 export function applyGiftPayload(game, gift) {
@@ -23,8 +24,8 @@ export function applyGiftPayload(game, gift) {
   return true;
 }
 export function raidResumeStage(lastStage=0) {return Math.max(0,Math.floor(Number(lastStage)||0)-2);}
-export function raidRankCoins(rank) {return rank===1?50:rank===2?30:rank===3?15:rank>3?5:0;}
-export function raidParticipationCoins(damage) {return Math.ceil(Math.max(0,Number(damage)||0)/4);}
+export function raidRankCoins(rank) {return rank===1?20:rank===2?15:rank===3?10:rank>3&&rank<=10?5:0;}
+export function raidParticipationCoins(damage) {return raidDamageCoins(damage);}
 
 // A replacement is reclaimed once, even when an older browser still has the original grant.
 export function recallGiftPayload(game,gift) {

@@ -1,7 +1,8 @@
 import {randomBytes} from 'node:crypto';
+import {logSafeApiFailure} from './safe-api-logging.mjs';
 
 // Node HTTP adapter. The caller supplies a durable, expiring session store and the protocol core.
-export function createLineLoginHandler({login, sessions, origin, callbackPath='/api/auth/line/callback', startPath='/api/auth/line/start', sharedRoutes=true, now=Date.now}) {
+export function createLineLoginHandler({login, sessions, rateLimiter, origin, callbackPath='/api/auth/line/callback', startPath='/api/auth/line/start', sharedRoutes=true, now=Date.now,logFailure=logSafeApiFailure}) {
   const site=new URL(origin);
   const secure=site.protocol==='https:';
   if(site.origin!==origin || (!secure && !(site.protocol==='http:' && ['localhost','127.0.0.1'].includes(site.hostname))))throw Error('unsafe_auth_origin');
@@ -36,6 +37,12 @@ export function createLineLoginHandler({login, sessions, origin, callbackPath='/
         // Do not replace an authenticated account silently; explicit linking must prove both identities.
         if(intent==='login' && current?.accountId){reply(res,409,{error:'already_authenticated'});return true;}
         const id=current?browserId:newId();
+        if(rateLimiter){
+          const provider=startPath.includes('/google/')?'google':'line';
+          const identity=current?.accountId?`account:${current.accountId}`:`browser:${id}`;
+          const attempt=await rateLimiter.consume(`auth.${provider}.start`,identity);
+          if(!attempt.allowed){reply(res,429,{error:'rate_limited',retryAfterSeconds:attempt.retryAfterSeconds},{'Retry-After':String(attempt.retryAfterSeconds)});return true;}
+        }
         if(!current)await sessions.create(id,{accountId:null,expiresAt:now()+ttl});
         const result=await login.begin({browserSessionId:id,intent,preferQr:url.searchParams.get('qr')==='1'});
         reply(res,200,result,{'Set-Cookie':cookie(id)});return true;
@@ -48,8 +55,9 @@ export function createLineLoginHandler({login, sessions, origin, callbackPath='/
       await sessions.rotate(browserId,next,{accountId:result.accountId,expiresAt:now()+ttl});
       reply(res,303,{ok:true},{Location:'/?login=success','Set-Cookie':cookie(next)});
     }catch(error){
-      if(callback)reply(res,303,{ok:false},{Location:['line_login_cancelled','google_login_cancelled'].includes(error.message)?'/?login=cancelled':'/?login=failed'});
-      else reply(res,503,{error:'login_unavailable'});
+      const requestId=logFailure({request:req});
+      if(callback)reply(res,303,{ok:false},{Location:['line_login_cancelled','google_login_cancelled'].includes(error.message)?'/?login=cancelled':'/?login=failed','X-Request-Id':requestId});
+      else reply(res,503,{error:'login_unavailable'},{'X-Request-Id':requestId});
     }
     return true;
   };

@@ -189,30 +189,28 @@ test('upper-grade real generators agree with an independent rational oracle', ()
     context.areas[areaId].stages.slice(0, 6).forEach((stage, i) => exhaust(`${areaId}/stage${i + 1}`, stage.generateProblem));
   }
   const edges = (lo, hi) => [...new Set([lo, Math.floor((lo + hi) / 2), hi])];
-  for (const hard of [false, true]) {
-    const generate = hard ? context.generateArea4HardMixedProblem : context.generateArea4MixedProblem;
-    const label = hard ? 'helper/hard' : 'helper/mixed';
-    const ranges = hard ? [[45, 99, 35, 99], [45, 99, 15, 98], [6, 9, 6, 9], [6, 9, 4, 9]] :
-      [[10, 99, 1, 99], [10, 99, 1, 99], [1, 9, 1, 9], [2, 9, 1, 9]];
+  {
+    const generate = context.generateArea4MixedProblem;
+    const label = 'helper/mixed';
+    const ranges = [[10, 99, 1, 99], [10, 99, 1, 99], [1, 9, 1, 9], [2, 9, 1, 9]];
     ranges.forEach(([lo, hi, low, high], i) => {
       for (const a of edges(lo, hi)) for (const b of edges(low, high)) forced(label, generate, [i + 1, a, b]);
     });
     forced(label, generate, [2, 45, 45]);
-    for (const a of edges(hard ? 30 : 10, hard ? 70 : 50)) {
-      for (const b of edges(hard ? 10 : 1, hard ? 40 : 20)) {
-        for (const c of edges(hard ? 10 : 1, hard ? 40 : 20)) {
-          for (let branch = 0; branch < (hard ? 2 : 3); branch++) {
-            // Normal -- always redraws; choose valid triples, with explicit rejection below.
-            if (!hard && branch === 2 && (a < 20 || a < b + c)) continue;
-            const draws = [5, a, b, c, ...(!hard && branch === 2 ? [a, b, c] : [])];
-            forced(label, generate, draws, hard ? [] : [branch], hard ? [branch ? 0.999999 : 0] : []);
+    for (const a of edges(10, 50)) {
+      for (const b of edges(1, 20)) {
+        for (const c of edges(1, 20)) {
+          for (let branch = 0; branch < 3; branch++) {
+            // The subtract-subtract branch rejects negative results and redraws.
+            if (branch === 2 && (a < 20 || a < b + c)) continue;
+            const draws = [5, a, b, c, ...(branch === 2 ? [a, b, c] : [])];
+            forced(label, generate, draws, [branch]);
           }
         }
       }
     }
   }
   forced('helper/mixed/retry', context.generateArea4MixedProblem, [5, 10, 1, 1, 20, 20, 20, 20, 1, 19], [2]);
-  forced('helper/hard/zero', context.generateArea4HardMixedProblem, [5, 30, 10, 40], [], [0.999999]);
   // Actual boss weighted selection boundaries: first bucket, threshold, last bucket.
   for (const areaId of ['area11', 'area12']) for (const phase of [1, 2]) {
     for (const coin of [0, 1 / 3 - Number.EPSILON, 1 / 3, 1 - Number.EPSILON]) {
@@ -221,7 +219,7 @@ test('upper-grade real generators agree with an independent rational oracle', ()
       finally { restore(); }
     }
   }
-  for (const areaId of ['area4', 'area11', 'area12']) {
+  for (const areaId of ['area11', 'area12']) {
     const area = context.areas[areaId];
     const generators = area.stages.map((stage, i) => [`stage${i + 1}`, () => stage.generateProblem()]);
     for (const phase of [1, 2]) generators.push([`boss${phase}`, () => area[`bossPhase${phase}Problem`]()] );

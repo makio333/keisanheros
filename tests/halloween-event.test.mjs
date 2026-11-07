@@ -7,6 +7,7 @@ const elements = [];
 let started = 0, saved = 0, nextHome = 0, now = Date.parse('2026-10-13T12:00:00+09:00');
 let review = { areaId:'area2', stageIndex:1 };
 const context = vm.createContext({
+  applyEnemyAttackStatMultiplier: value => value,
   G: { raidTickets:0, player:{hp:10,mp:5}, stageClearCounts:{area2:[0,0]} }, explore:null,
   AREA_STAGES: { area1:{ stages:[{},{}] }, area2:{ stages:[{},{}] } },
   Date: class extends Date { static now() { return now; } },

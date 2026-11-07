@@ -114,6 +114,16 @@ try{
   assert.equal((await signed({...event,id:'evt_direct_org',data:{object:{id:direct.id}}})).status,200);
   assert.equal((await payments.accounts.summary(second)).saveLimit,30,'organization can be the first purchase');
   assert.equal((await payments.accounts.listSaves(second)).length,0,'no other purchaser saves are imported');
+  const failedOwner=(await db.auth.resolveIdentity({provider:'line',providerId:'fixture',subject:'failed-payment'})).accountId,failedSession='f'.repeat(64);
+  await db.sessions.create(failedSession,{accountId:failedOwner,expiresAt:Date.now()+86400000});
+  await payments.checkout(failedSession);let failedCheckout=[...checkouts.values()].at(-1);failedCheckout.status='complete';
+  const failedEvent={...event,id:'evt_async_failed',type:'checkout.session.async_payment_failed',data:{object:{id:failedCheckout.id}}};
+  assert.equal((await signed(failedEvent)).status,200);assert.equal((await signed(failedEvent)).status,200);assert.equal((await payments.checkoutStatus(failedSession)).state,'failed');assert.equal((await payments.accounts.summary(failedSession)).saveLimit,0);
+  await payments.checkout(failedSession);const expiredCheckout=[...checkouts.values()].at(-1);assert.notEqual(expiredCheckout.id,failedCheckout.id);expiredCheckout.status='expired';
+  assert.equal((await signed({...event,id:'evt_expired',type:'checkout.session.expired',data:{object:{id:expiredCheckout.id}}})).status,200);assert.equal((await payments.checkoutStatus(failedSession)).state,'cancelled');
+  await payments.checkout(failedSession);const recovered=[...checkouts.values()].at(-1);recovered.status='complete';recovered.payment_status='paid';
+  const recoveredEvent={...event,id:'evt_recovered',data:{object:{id:recovered.id}}};await signed(recoveredEvent);await signed(recoveredEvent);assert.equal((await payments.checkoutStatus(failedSession)).state,'paid');assert.equal((await db.transaction(tx=>tx.listPurchases(failedOwner))).length,1);
+  assert.equal((await fetch(origin+'/api/payments/status')).status,401);
   const plans=Object.entries(PURCHASE_PRICES);
   for(const [fromId,from] of plans)for(const [toId,to] of plans){
     if(to.saveLimit>from.saveLimit){

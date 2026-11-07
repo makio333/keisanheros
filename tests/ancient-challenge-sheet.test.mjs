@@ -1,0 +1,9 @@
+import assert from 'node:assert/strict';import {ancientStoryProblem,ancientChallengeSheetHtml} from '../ancient_challenge_sheet.js';import {isPrintAnswerCorrect} from '../print_answers.js';
+for(const p of [{a:3,b:4,op:'+',answer:7},{a:8,b:3,op:'-',answer:5},{a:'1/2',b:'1/3',op:'×',answer:'1/6'},{a:13,b:4,op:'÷',answer:3,remainder:1},{a:10,b:14,op:'平均',answer:12},{a:200,b:'30%',op:'の',answer:60},{a:'6:9',op:'かんたん',answer:'2:3'},{a:'時速40km',b:'3時間',op:'道のり',answer:120},{a:'半径2cm',op:'面積',answer:12.56},{a:'y=3x',b:'x=4',op:'yの値',answer:12},{a:'4人',op:'並び方',answer:24}]){const story=ancientStoryProblem(p);assert.ok(story?.isWordProblem);assert.equal(story.answer,p.answer);assert.equal(story.remainder,p.remainder);assert.ok(isPrintAnswerCorrect(story,p.remainder!=null?'3あまり1':String(p.answer)));}
+assert.equal(ancientStoryProblem({op:'?',answer:1}),null);
+const writing={text:'がっこう',answer:'学校',printMode:'kaki'};assert.ok(isPrintAnswerCorrect(writing,'学校'));assert.equal(isPrintAnswerCorrect(writing,'がっこう'),false);assert.ok(isPrintAnswerCorrect({text:'学校',answer:'がっこう'},'がっこう'));
+const sample={text:'学校',answer:'がっこう',printContext:{before:'森の',after:'へ行く。'}};
+const html=ancientChallengeSheetHtml({calculations:Array(10).fill({text:'1 + 1'}),stories:Array(3).fill({text:'文章題'}),readings:Array(10).fill(sample),writings:Array(10).fill(sample),name:'fixture',printId:'1234',mathLabel:'math',kanjiLabel:'kanji',rewardsHtml:''});
+for(const [cls,count]of [['ac-calc-row',10],['ac-story',3],['ac-kanji-question ac-yomi',10],['ac-kanji-question ac-kaki',10]])assert.equal(html.split(`class="${cls}"`).length-1,count);
+assert.ok(html.indexOf('【表】 算数')<html.indexOf('【裏】 国語'));assert.ok(html.includes('27問以上正解'));assert.ok(html.includes('<b>33.</b>'));
+console.log('PASS: grade-appropriate story operations keep answers/remainders, writing requires kanji, 10 calculation/3 story/10 reading/10 writing, order and 27/33 reward threshold');

@@ -1,0 +1,24 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+const source={files:[{name:'firestore.rules',content:await readFile('firestore.private-migration.rules','utf8')}]};
+const path='/databases/(default)/documents/privateMigration/fixture-owner/saves/fixture-save';
+const auth={uid:'fixture-owner',token:{email_verified:true,firebase:{sign_in_provider:'google.com'}}};
+const data={ownerUid:auth.uid,sourceProject:'fixture-old',sourceDocumentId:'fixture-id',gameData:'{"player":{"lvl":1}}',importedAt:1234};
+const make=(method,expectation,overrides={})=>({expectation,request:{path,method,auth,...(method==='create'?{resource:{data}}:{}),...overrides}});
+const cases=[make('get','ALLOW'),make('list','ALLOW'),make('create','ALLOW'),make('get','DENY',{auth:null}),make('get','DENY',{auth:{uid:'other',token:{email_verified:true}}}),make('create','DENY',{auth:{uid:'other',token:{email_verified:true}}}),make('create','DENY',{auth:{uid:auth.uid,token:{email_verified:false}}}),make('update','DENY'),make('delete','DENY',{resource:{data}}),make('get','DENY',{path:'/databases/(default)/documents/saves/fixture-save'}),make('create','DENY',{resource:{data:{...data,paid:true}}}),make('create','DENY',{resource:{data:{...data,ownerUid:'other'}}})];
+cases.push(make('get','ALLOW',{auth:{uid:auth.uid,token:{firebase:{sign_in_provider:'oidc.line'}}}}),make('create','ALLOW',{auth:{uid:auth.uid,token:{firebase:{sign_in_provider:'oidc.line'}}}}),make('get','DENY',{auth:{uid:'other',token:{firebase:{sign_in_provider:'oidc.line'}}}}));
+const gamePath='/databases/(default)/documents/privateGame/fixture-owner/saves/fixture-save';
+const gameData={ownerUid:auth.uid,gameData:'{"player":{"lvl":8}}',revision:1,createdAt:1,updatedAt:1,sourceMigrationId:null};
+const gameCase=(method,expectation,changes={})=>({...make(method,expectation,{path:gamePath,...(['create','update','delete'].includes(method)?{resource:{data:method==='update'?{...gameData,revision:2,updatedAt:2}:gameData}}:{}),...changes}),...(method==='update'?{resource:{data:gameData}}:{})});
+cases.push(gameCase('get','ALLOW'),gameCase('create','ALLOW'),gameCase('update','ALLOW'),gameCase('delete','ALLOW'),gameCase('get','DENY',{auth:null}),gameCase('get','DENY',{auth:{uid:'other',token:auth.token}}),gameCase('create','DENY',{auth:{uid:'other',token:auth.token}}),gameCase('delete','DENY',{auth:{uid:'other',token:auth.token}}),gameCase('delete','DENY',{auth:null}),gameCase('update','DENY',{resource:{data:{...gameData,revision:1}}}),gameCase('update','DENY',{resource:{data:{...gameData,revision:2,ownerUid:'other'}}}),gameCase('update','DENY',{resource:{data:{...gameData,revision:2,paid:true}}}));
+const token=execFileSync('gcloud',['auth','print-access-token'],{encoding:'utf8'}).trim();
+const response=await fetch('https://firebaserules.googleapis.com/v1/projects/ailandgames:test',{method:'POST',headers:{Authorization:`Bearer ${token}`,'x-goog-user-project':'ailandgames','Content-Type':'application/json'},body:JSON.stringify({source,testSuite:{testCases:cases}})});
+const result=await response.json();
+if(!response.ok){console.log(JSON.stringify(result));throw Error('Rules checks unavailable');}
+assert.equal(result.issues?.some(issue=>issue.severity==='ERROR')||false,false,JSON.stringify(result.issues));
+assert.equal(result.testResults.length,cases.length);
+for(const [i,test] of result.testResults.entries())assert.equal(test.state,'SUCCESS',JSON.stringify({case:i,test}));
+const closed=await fetch('https://firebaserules.googleapis.com/v1/projects/ailandgames:test',{method:'POST',headers:{Authorization:`Bearer ${token}`,'x-goog-user-project':'ailandgames','Content-Type':'application/json'},body:JSON.stringify({source:{files:[{name:'firestore.rules',content:source.files[0].content.replace('function migrationOpen() { return true; }','function migrationOpen() { return false; }')}]},testSuite:{testCases:[make('create','DENY'),make('get','ALLOW'),gameCase('get','ALLOW'),gameCase('update','ALLOW')]}})});
+const closedResult=await closed.json();assert.equal(closed.ok,true);assert.equal(closedResult.testResults?.length,4,JSON.stringify(closedResult));for(const test of closedResult.testResults)assert.equal(test.state,'SUCCESS',JSON.stringify(test));
+console.log('PASS: rules checks: owner-only gameplay deletion, revision enforcement, immutable original snapshots; closing import blocks uploads but preserves reading and normal saves. No save writes.');

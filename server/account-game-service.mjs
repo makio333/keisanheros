@@ -1,13 +1,14 @@
 import {createGameCloudAPIs} from '../game_cloud_apis.js';
 import {createGameDocumentAdapter} from './game-document-adapter.mjs';
 import {accountSaveLimit} from './account-access.mjs';
+import {isValidRaidBossId,raidJstMonthKey,raidMonthlyGlobalDocId} from '../raid_monthly_rules.js';
 
-const allowed={RaidBossAPI:['syncPlayer','settleReward','getRankings','getHistory','getGlobalBoss','receiveCheers','sendCheer'],EventRaidAPI:['recordBest','getRankings','finalizeRankings','claimFinalReward'],AdminGiftAPI:['send','fetchPending','claim','claimToSave','listRecent','listTargets','permissions']};
+const allowed={RaidBossAPI:['syncPlayer','settleReward','getRankings','getMonthlyRankings','getHistory','getGlobalBoss','receiveCheers','sendCheer'],EventRaidAPI:['recordBest','getRankings','finalizeRankings','claimFinalReward'],AdminGiftAPI:['send','fetchPending','claim','claimToSave','listRecent','listTargets','permissions']};
 const fail=code=>{throw Error(code);};
 const integer=(value,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(value) && value>=0 && value<=max;
 const string=value=>typeof value==='string' && value.length>0 && value.length<=256;
 const eventId=value=>{if(!['halloween_2026_raid_v1','halloween_2026_raid_v1_kanji'].includes(value))fail('invalid_game_request');return value;};
-const bossId=value=>{if(value!=null && !/^boss(?:1|_\d{1,8})$/.test(value))fail('invalid_game_request');return value;};
+const bossId=value=>{if(value!=null && !isValidRaidBossId(value))fail('invalid_game_request');return value;};
 function profile(game){
   const equipment={};
   for(const type of ['weapon','armor','accessory']){
@@ -37,7 +38,8 @@ export function createAccountGameService({store,now=Date.now}){
       }
       const storage=createGameDocumentAdapter(tx,{accountId:account.id,now});
       const apis=createGameCloudAPIs({...storage,now});let callArgs=args,result;
-      if(api==='RaidBossAPI' && method==='getGlobalBoss' && !await tx.getGameDocument('raidGlobal/currentBoss')){
+      const activeGlobalDocId=now()>=Date.parse('2026-11-01T00:00:00+09:00')?raidMonthlyGlobalDocId(raidJstMonthKey(now())):'currentBoss';
+      if(api==='RaidBossAPI' && method==='getGlobalBoss' && !await tx.getGameDocument(`raidGlobal/${activeGlobalDocId}`)){
         const first=(await tx.listSaves(account.id))[0];
         if(first)await apis.RaidBossAPI.syncPlayer(first.key,profile(first.gameState),{});
       }
@@ -56,6 +58,10 @@ export function createAccountGameService({store,now=Date.now}){
         else if(method==='receiveCheers'){await own(args[0]);callArgs=[args[0]];}
         else if(method==='sendCheer'){await own(args[0]);if(!string(args[1]) || !await tx.getSave(args[1]))fail('save_not_found');}
         else if(method==='getRankings')callArgs=[bossId(args[0])];
+        else if(method==='getMonthlyRankings'){
+          const period=args[0];if(period!==raidJstMonthKey(now()))fail('invalid_game_request');
+          callArgs=[period];
+        }
       }else if(api==='EventRaidAPI'){
         eventId(args[0]);
         if(method==='recordBest'){
@@ -91,7 +97,7 @@ export function createAccountGameService({store,now=Date.now}){
         }
       }
       if(result===undefined)result=await apis[api][method](...callArgs);
-      if(method==='getRankings')result=result.map(publicRank);
+      if(method==='getRankings'||method==='getMonthlyRankings')result=result.map(publicRank);
       const saves=[];for(const key of storage.changed)saves.push(structuredClone(await tx.getSave(key)));
       return {result,saves};
     });

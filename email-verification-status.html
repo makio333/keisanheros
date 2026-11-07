@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>確認状態チェック | レジェンドヒーローズ</title>
+    <link rel="stylesheet" href="/email-verification-request.css" />
+  </head>
+  <body>
+    <main class="card">
+      <p class="eyebrow">LEGEND HEROES</p>
+      <h1>確認状態チェック</h1>
+      <p class="intro">Firebase Authに登録された確認状態だけを読み取ります。ゲームへのログインやセーブには触れません。</p>
+
+      <div class="account" aria-label="確認するメールアドレス">
+        <span>確認対象</span>
+        <strong>motoyanyouuki0326@gmail.com</strong>
+      </div>
+
+      <form id="status-form">
+        <label for="password">このアカウントのパスワード</label>
+        <input id="password" type="password" autocomplete="off" required aria-describedby="password-help" />
+        <p id="password-help" class="help">入力内容はこの画面内で認証に使い、保存しません。</p>
+        <button id="check-button" type="submit">確認状態をチェック</button>
+      </form>
+
+      <p id="status" class="status" role="status" aria-live="polite">ボタンを押すまで、ログインしません。</p>
+      <p class="footnote">確認状態の読取専用です。メール送信・ゲームAPI・Firestore・決済は呼び出しません。</p>
+    </main>
+    <script type="module" src="/email-verification-status.js"></script>
+  </body>
+</html>

@@ -1,0 +1,31 @@
+{
+  "fallbackId": "hero_female_1",
+  "skins": {
+    "hero_female_1": { "image": "assets/characters/hero_female_1_hd.png", "sourceSize": [1024, 1024], "zoom": 285, "focusX": 0.62, "focusY": 0.25 },
+    "raid_moon_exorcist": { "image": "assets/raid/spirit_guardian.png", "sourceSize": [1223, 1286], "zoom": 300, "focusX": 0.66, "focusY": 0.24 },
+    "raid_star_guardian": { "image": "assets/raid/raid_star_guardian.png", "sourceSize": [1223, 1286], "zoom": 285, "focusX": 0.62, "focusY": 0.24 },
+    "hero_male_1": { "image": "assets/characters/hero_male_1_hd.png", "sourceSize": [1024, 1024], "zoom": 300, "focusX": 0.50, "focusY": 0.25 },
+    "hero_male_2": { "image": "assets/characters/hero_male_2_hd.png", "sourceSize": [1024, 1024], "zoom": 290, "focusX": 0.50, "focusY": 0.29 },
+    "hero_female_2": { "image": "assets/characters/hero_female_2_hd.png", "sourceSize": [1024, 1024], "zoom": 285, "focusX": 0.48, "focusY": 0.25 },
+    "ai_hero_boy": { "image": "assets/characters/ai_hero_boy_clean.png", "sourceSize": [1024, 1024], "zoom": 285, "focusX": 0.50, "focusY": 0.28 },
+    "ai_hero_youngman": { "image": "assets/characters/ai_hero_youngman_clean.png", "sourceSize": [1024, 1024], "zoom": 290, "focusX": 0.50, "focusY": 0.23 },
+    "ai_hero_girl": { "image": "assets/characters/ai_hero_girl_clean.png", "sourceSize": [1024, 1024], "zoom": 280, "focusX": 0.49, "focusY": 0.25 },
+    "ai_hero_woman": { "image": "assets/characters/ai_hero_woman_clean.png", "sourceSize": [1024, 1024], "zoom": 280, "focusX": 0.53, "focusY": 0.24 },
+    "ai_hero_spellblade": { "image": "assets/characters/ai_hero_spellblade_transparent.png", "sourceSize": [1024, 1024], "zoom": 280, "focusX": 0.49, "focusY": 0.25 },
+    "ai_hero_alchemist": { "image": "assets/characters/ai_hero_alchemist_transparent.png", "sourceSize": [1024, 1024], "zoom": 285, "focusX": 0.50, "focusY": 0.26 },
+    "skin_fire_lancer_m": { "image": "assets/characters/skin_fire_lancer_m.png", "sourceSize": [1024, 1024], "zoom": 280, "focusX": 0.52, "focusY": 0.29 },
+    "skin_fire_lancer_f": { "image": "assets/characters/skin_fire_lancer_f.png", "sourceSize": [1024, 1024], "zoom": 280, "focusX": 0.50, "focusY": 0.27 },
+    "skin_tide_cleric_m": { "image": "assets/characters/skin_tide_cleric_m.png", "sourceSize": [1024, 1024], "zoom": 270, "focusX": 0.46, "focusY": 0.33 },
+    "skin_tide_cleric_f": { "image": "assets/characters/skin_tide_cleric_f.png", "sourceSize": [1024, 1024], "zoom": 280, "focusX": 0.46, "focusY": 0.24 },
+    "skin_forest_scout_m": { "image": "assets/characters/skin_forest_scout_m.png", "sourceSize": [1024, 1024], "zoom": 275, "focusX": 0.50, "focusY": 0.27 },
+    "skin_forest_scout_f": { "image": "assets/characters/skin_forest_scout_f.png", "sourceSize": [1024, 1024], "zoom": 275, "focusX": 0.50, "focusY": 0.24 },
+    "skin_astral_dancer_m": { "image": "assets/characters/skin_astral_dancer_m.png", "sourceSize": [1024, 1024], "zoom": 280, "focusX": 0.47, "focusY": 0.23 },
+    "skin_astral_dancer_f": { "image": "assets/characters/skin_astral_dancer_f.png", "sourceSize": [1024, 1024], "zoom": 285, "focusX": 0.50, "focusY": 0.23 },
+    "halloween_pumpkin_knight": { "image": "assets/halloween/skin_pumpkin_knight.png", "sourceSize": [1230, 1278], "zoom": 260, "focusX": 0.50, "focusY": 0.28 },
+    "halloween_moon_witch": { "image": "assets/halloween/skin_moon_witch.png", "sourceSize": [1024, 1536], "zoom": 260, "focusX": 0.52, "focusY": 0.25 },
+    "halloween_vampire_prince": { "image": "assets/halloween/skin_vampire_prince.png", "sourceSize": [1214, 1295], "zoom": 270, "focusX": 0.50, "focusY": 0.24 },
+    "halloween_ghost_ranger": { "image": "assets/halloween/skin_ghost_ranger.png", "sourceSize": [1024, 1536], "zoom": 260, "focusX": 0.52, "focusY": 0.22 },
+    "halloween_festival_king": { "image": "assets/halloween/exchange_skin_king.png", "sourceSize": [1024, 1536], "zoom": 250, "focusX": 0.52, "focusY": 0.20 },
+    "halloween_festival_queen": { "image": "assets/halloween/exchange_skin_queen.png", "sourceSize": [1217, 1292], "zoom": 260, "focusX": 0.53, "focusY": 0.25 }
+  }
+}

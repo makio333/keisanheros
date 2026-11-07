@@ -8,7 +8,7 @@ class Element {
     this.innerHTML = '';
     this.value = '';
     this.style = {};
-    this.classList = { add() {}, remove() {} };
+    this.classList = { add() {}, remove() {}, toggle() {} };
   }
   set textContent(value) {
     this.text = String(value);
@@ -19,7 +19,7 @@ class Element {
 }
 const elements = new Map();
 const context = vm.createContext({
-  window: {}, getAcceptedKanjiReadings,normalizeReading,
+  window: {}, getAcceptedKanjiReadings,normalizeReading,initializeUiReadingTooltips(){},
   document: { getElementById(id) {
     if (!elements.has(id)) elements.set(id, new Element());
     return elements.get(id);

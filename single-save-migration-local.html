@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>1人分だけセーブ引っ越し（ローカル確認）</title>
+  <link rel="stylesheet" href="/single-save-migration-local.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="page-head">
+      <p class="eyebrow">合成ローカル確認</p>
+      <h1>1人分だけセーブを引っ越す</h1>
+      <p>JSONファイルから1人を選び、内容と移行先の空き枠を確認します。</p>
+    </header>
+
+    <aside class="boundary-note" aria-label="安全境界">
+      <strong>この画面はローカルの合成確認専用です。</strong>
+      <span>実アカウント・Firebase Auth・Firestoreには接続しません。移行元の正当性を証明する仕組みがまだないため、実ファイルの確定は停止します。</span>
+    </aside>
+
+    <section class="step-card" aria-labelledby="step-file-title">
+      <h2 id="step-file-title"><span>1</span> 引っ越しJSONを選ぶ</h2>
+      <label class="file-label" for="save-file">JSONファイル
+        <input id="save-file" type="file" accept=".json,application/json">
+      </label>
+      <p class="hint">ファイルの読み込みと一覧表示はこのブラウザー内で行います。APIへ送るのは、あとで選んだ1人分だけです。</p>
+      <p id="file-status" class="status" role="status" aria-live="polite">JSONファイルを選択してください。</p>
+    </section>
+
+    <section id="children-section" class="step-card" aria-labelledby="step-child-title" hidden>
+      <h2 id="step-child-title"><span>2</span> 引っ越す1人を選ぶ</h2>
+      <p id="file-summary" class="hint"></p>
+      <div id="children-list" class="children-list" role="list"></div>
+    </section>
+
+    <section id="preview-section" class="step-card preview-card" aria-labelledby="step-preview-title" hidden>
+      <h2 id="step-preview-title"><span>3</span> 内容と移行先を確認</h2>
+      <div class="preview-grid">
+        <article class="preview-box">
+          <h3>選んだセーブ 1人分</h3>
+          <dl id="child-preview" class="facts"></dl>
+        </article>
+        <article class="preview-box destination-box">
+          <h3>移行先の枠</h3>
+          <p id="destination-label" class="destination-label"></p>
+          <p id="slot-count" class="slot-count"></p>
+          <progress id="slot-progress" max="1" value="0" aria-label="移行先のセーブ枠使用状況"></progress>
+          <p id="capacity-note" class="hint"></p>
+        </article>
+      </div>
+      <p id="integrity-note" class="integrity-note" role="status" aria-live="polite"></p>
+      <p id="preview-status" class="status" role="status" aria-live="polite"></p>
+      <div class="actions">
+        <button id="cancel-selection" class="secondary" type="button">選択を取り消す</button>
+        <button id="continue-confirm" type="button" disabled>内容を確認して確定へ</button>
+      </div>
+    </section>
+
+    <dialog id="confirm-dialog" aria-labelledby="confirm-title">
+      <form method="dialog" class="confirm-content">
+        <h2 id="confirm-title">1人分だけを移行しますか？</h2>
+        <p id="confirm-summary"></p>
+        <p class="confirm-warning">選択した1件だけを送信します。別のセーブ、ランキング、購入情報、認証情報は移しません。</p>
+        <label class="confirm-check"><input id="confirm-single" type="checkbox"> 選択した1人分だけを移行する内容を確認しました。</label>
+        <div class="actions">
+          <button id="cancel-confirm" class="secondary" type="button">戻って取り消す</button>
+          <button id="confirm-import" type="button" disabled>この1人分を移行</button>
+        </div>
+      </form>
+    </dialog>
+
+    <footer>
+      <p>元のJSONと旧版セーブは変更・削除しません。結果が確認できるまで元データを保管してください。</p>
+    </footer>
+  </main>
+  <script type="module" src="/single-save-migration-local.js"></script>
+</body>
+</html>

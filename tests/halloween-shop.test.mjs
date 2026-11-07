@@ -1,10 +1,11 @@
+import {GHOST_RAID_SKIN,GHOST_RAID_BACKGROUND,GHOST_RAID_EQUIPMENT} from '../ghost_raid_content.js';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import {eventEquipmentAbility} from '../event_equipment.js';
 const source = fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');
 let now = Date.parse('2026-10-13T12:00:00+09:00'), clearCount=100, review={areaId:'area1',stageIndex:0};
-const context=vm.createContext({eventEquipmentAbility,
+const context=vm.createContext({eventEquipmentAbility,applyEnemyAttackStatMultiplier:value=>value,
  G:{halloweenCandy:300,halloweenTickets:2,player:{gold:4000},nextUid:1},explore:null,
  Date:class extends Date {static now(){return now;}},
  Math:Object.create(Math),rnd:(min)=>min,save(){},updateHud(){},
@@ -27,7 +28,7 @@ assert.match(heroesBlock,/halloween_festival_queen[^\n]*gender:'female'/);
 for(const name of ['HERO_AVATARS','AVATAR_BACKGROUNDS','HALLOWEEN_EQUIP_DB']) {
   const start=source.indexOf('const '+name+' =');
   const end=source.indexOf('\n];',start)+3;
-  const catalog=vm.runInNewContext(source.slice(start,end)+'\n'+name);
+  const catalog=vm.runInNewContext(source.slice(start,end)+'\n'+name,{GHOST_RAID_SKIN,GHOST_RAID_BACKGROUND,GHOST_RAID_EQUIPMENT});
   for(const prize of [...exchange,...pool]) {
     const entry=catalog.find(value=>value.id===prize.id);
     if(entry) assert.ok(fs.existsSync(new URL('../'+(entry.image || entry.emoji),import.meta.url)),'prize artwork saved: '+prize.id);

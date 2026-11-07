@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {describeLogin} from '../migration_identity.js';
+const claims=provider=>({firebase:{sign_in_provider:provider}});
+const user={displayName:'模擬ユーザー',email:'fixture@example.test',providerData:[{providerId:'oidc.line',displayName:'模擬施設LINE'},{providerId:'google.com',email:'google@example.test',displayName:'模擬Google'}]};
+assert.equal(describeLogin(user,claims('oidc.line')),'LINEでログイン中：模擬施設LINE');
+assert.equal(describeLogin(user,claims('google.com')),'Googleでログイン中：google@example.test');
+assert.equal(describeLogin(user,claims('password')),'メールでログイン中：fixture@example.test');
+assert.equal(describeLogin({},claims('oidc.line')),'LINEでログイン中（表示名を取得できませんでした）');
+assert.equal(describeLogin({}, {...claims('oidc.line'),name:'模擬トークン名'}),'LINEでログイン中：模擬トークン名');
+assert.equal(describeLogin(null),'ログイン中：アカウント情報なし');
+console.log('PASS: active provider labels, linked-account identity, LINE names, email addresses and missing-profile fallback.');

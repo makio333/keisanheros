@@ -1,0 +1,14 @@
+import {createServer} from 'node:http';
+import {readFile} from 'node:fs/promises';
+import {resolve,extname} from 'node:path';
+import assert from 'node:assert/strict';
+import {chromium} from '/Users/motoyamayuuki/.codex/skills/develop-web-game/node_modules/playwright/index.mjs';
+const base=resolve('.');const server=createServer(async(req,res)=>{try{const p=resolve(base,'.'+decodeURIComponent(new URL(req.url,'http://local').pathname));if(!p.startsWith(base+'/'))throw Error();res.setHeader('Content-Type',({'.js':'text/javascript','.css':'text/css','.html':'text/html'})[extname(p)]||'text/plain');res.end(await readFile(p));}catch{res.statusCode=404;res.end();}});await new Promise(r=>server.listen(0,'127.0.0.1',r));
+const browser=await chromium.launch({headless:true,executablePath:process.env.WPP2_CHROME||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
+try{const page=await browser.newPage();await page.goto((process.env.WPP2_PREVIEW_URL||`http://127.0.0.1:${server.address().port}`)+'/ancient_word_problem_print_adapter_v2_preview.html');await page.waitForFunction(()=>window.adapterReady);
+assert.equal(await page.evaluate(()=>window.adapterReady.ready),true);assert.equal(await page.evaluate(()=>window.adapterReady.pages),2);
+await page.selectOption('#data','long');await page.click('#prepare');await page.waitForFunction(()=>window.adapterReady);assert.equal(await page.evaluate(()=>window.adapterReady.ready),false);assert.equal(await page.locator('#open').isDisabled(),true);
+await page.selectOption('#strategy','readability');await page.click('#prepare');await page.waitForFunction(()=>window.adapterReady?.ready);const result=await page.evaluate(()=>({pages:window.adapterReady.pages,questions:document.querySelectorAll('.wpp2-question').length,overflow:[...document.querySelectorAll('.wpp2-page-body')].some(n=>n.scrollHeight>n.clientHeight+1),story:[...document.querySelectorAll('.wpp2-story .wpp2-text')].map(n=>n.textContent).join('')}));assert.ok(result.pages>2);assert.equal(result.questions,33);assert.equal(result.overflow,false);assert.ok(result.story.includes('第11問。'));assert.ok(result.story.includes('第13問。'));assert.equal(await page.locator('#open').isDisabled(),true);await page.check('#confirm');assert.equal(await page.locator('#open').isDisabled(),false);
+const popupPromise=page.waitForEvent('popup');await page.click('#open');const popup=await popupPromise;await popup.waitForLoadState();assert.equal(await page.locator('#count').textContent(),'模擬消費：1');await page.click('#open');assert.equal(await page.locator('#count').textContent(),'模擬消費：1');
+console.log(JSON.stringify({shortPages:2,longPages:result.pages,questionCount:result.questions,overflow:false,explicitConfirmation:true,consumption:1}));
+}finally{await browser.close();server.close();}

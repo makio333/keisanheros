@@ -1,4 +1,4 @@
-const CACHE_NAME = 'legend-heroes-cache-v23';
+const CACHE_NAME = 'legend-heroes-cache-v24';
 const ASSETS_TO_CACHE = [
   './manifest.json',
   './icon-192.png',
@@ -46,9 +46,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // HTML / JS / ナビゲーションリクエストは必ず「ネットワーク優先（Network-First）」
+  // HTML / JS / CSS / ナビゲーションリクエストは必ず「ネットワーク優先（Network-First）」
   // 端末がオンラインなら常に最新のスクリプトとHTMLを取得し、オフライン時のみキャッシュへフォールバック
-  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html') || url.pathname.endsWith('.js')) {
+  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html') || url.pathname.endsWith('.js') || url.pathname.endsWith('.css') || event.request.destination === 'style') {
     event.respondWith(
       fetch(event.request).then((networkResponse) => {
         if (networkResponse && networkResponse.status === 200 && !networkResponse.headers.get('Cache-Control')?.includes('no-store')) {
@@ -63,7 +63,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 静的画像・音声・スタイルなどは「キャッシュ優先（Cache-First）」
+  // 静的画像・音声などは「キャッシュ優先（Cache-First）」
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {

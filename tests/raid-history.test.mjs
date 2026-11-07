@@ -22,6 +22,8 @@ const oldProfile = { slotKey: 'me', playerName: '昔の勇者', avatar: 'old', l
 let resolveOld;
 let calls = 0;
 const context = vm.createContext({
+  raidFeatureOpen: () => true,
+  getRaidBossAppearanceForHistory: () => ({menuName: '月影の幽霊王'}),
   window: { RaidBossAPI: {
     getHistory: async () => [
       { bossId: 'boss_52', bossLevel: 52, finalRankings: [{ ...oldProfile, totalDamage: 1000 }] },

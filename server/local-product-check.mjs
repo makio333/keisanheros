@@ -10,6 +10,8 @@ import {createAccountGameService} from './account-game-service.mjs';
 import {createAccountGameHandler} from './account-game-http.mjs';
 import {createStripePaymentIntegration} from './stripe-payment-integration.mjs';
 import {createGoogleLoginIntegration} from './google-login-integration.mjs';
+import {createDurableRateLimiter} from './durable-rate-limiter.mjs';
+import {logSafeApiFailure} from './safe-api-logging.mjs';
 
 const signals=['SIGINT','SIGTERM'];
 const previousListeners=new Map(signals.map(signal=>[signal,new Set(process.listeners(signal))]));
@@ -30,14 +32,15 @@ const directory=path.resolve(process.env.LOCAL_PRODUCT_DATA_DIR||'.local-product
 const root=fileURLToPath(new URL('../',import.meta.url)),publicDirectory=path.join(root,'public');
 if(directory===root || directory===publicDirectory || directory.startsWith(publicDirectory+path.sep))throw Error('Local account data must be outside the public directory and separate from the project root.');
 const store=await openLocalAccountStore(directory);
+const rateLimiter=createDurableRateLimiter({store});
 let authHandler,googleAuthHandler,accountHandler,gameHandler,stripe;
 const apiServer=createServer(async(req,res)=>{
   try{
     if(authHandler && (await authHandler(req,res)||await googleAuthHandler(req,res)||await accountHandler(req,res)||await gameHandler(req,res)||await stripe.handler(req,res)))return;
     res.writeHead(404,{'Content-Type':'application/json'});res.end('{"error":"not_found"}');
   }catch(error){
-    console.error('Local product API error:',error.message);
-    if(!res.headersSent)res.writeHead(503,{'Content-Type':'application/json','Cache-Control':'no-store'});
+    const requestId=logSafeApiFailure({request:req});
+    if(!res.headersSent)res.writeHead(503,{'Content-Type':'application/json','Cache-Control':'no-store','X-Request-Id':requestId});
     res.end('{"error":"service_unavailable"}');
   }
 });
@@ -64,9 +67,9 @@ try{
   });
   const login=createLineLogin({channelId:process.env.LINE_CHANNEL_ID,channelSecret:process.env.LINE_CHANNEL_SECRET,
     providerId:process.env.LINE_PROVIDER_ID,redirectUri,store:store.auth});
-  stripe=createStripePaymentIntegration({store,sessions:store.sessions,origin:origin.origin});
-  authHandler=createLineLoginHandler({login,sessions:store.sessions,origin:origin.origin});
-  googleAuthHandler=createGoogleLoginIntegration({store:store.auth,sessions:store.sessions,origin:origin.origin});
+  stripe=createStripePaymentIntegration({store,sessions:store.sessions,origin:origin.origin,rateLimiter});
+  authHandler=createLineLoginHandler({login,sessions:store.sessions,rateLimiter,origin:origin.origin});
+  googleAuthHandler=createGoogleLoginIntegration({store:store.auth,sessions:store.sessions,rateLimiter,origin:origin.origin});
   accountHandler=createAccountSaveHandler({service:stripe.accounts,origin:origin.origin});
   gameHandler=createAccountGameHandler({service:createAccountGameService({store}),origin:origin.origin});
   await vite.listen();

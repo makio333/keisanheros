@@ -22,8 +22,9 @@ function encode(collection,row){
   return {...clone(metadata),gameStateGzip:compressed.toString('base64')};
 }
 
-export function createFirestoreAccountStore(db){
+export function createFirestoreAccountStore(db,{isAccountDeletionBlocked=async()=>false}={}){
   if(typeof db?.runTransaction!=='function' || typeof db?.doc!=='function' || typeof db?.collection!=='function')throw Error('firestore_not_configured');
+  if(typeof isAccountDeletionBlocked!=='function')throw Error('invalid_account_deletion_guard');
   function documentPath(collection,id){return `${collection}/${segment(id)}`;}
   function gamePath(key){
     if(typeof key!=='string' || key.length>512)throw Error('invalid_game_document');
@@ -34,7 +35,15 @@ export function createFirestoreAccountStore(db){
   async function transaction(callback){
     if(typeof callback!=='function')throw Error('invalid_transaction');
     return db.runTransaction(async native=>{
-      const cache=new Map(),writes=new Map();
+      const cache=new Map(),writes=new Map(),accountStatus=new Map();
+      async function ensureActive(accountId){
+        if(typeof accountId!=='string'||!accountId)throw Error('account_unavailable');
+        if(accountStatus.has(accountId)){
+          const status=accountStatus.get(accountId);if(status==='blocked')throw Error('account_deletion_in_progress');if(status==='unavailable')throw Error('account_status_unavailable');return;
+        }
+        let blocked;try{blocked=await isAccountDeletionBlocked(accountId,{transaction:native});}catch{accountStatus.set(accountId,'unavailable');throw Error('account_status_unavailable');}
+        accountStatus.set(accountId,blocked?'blocked':'active');if(blocked)throw Error('account_deletion_in_progress');
+      }
       async function get(collection,id){
         if(typeof id!=='string' || !id || id.length>1500)return undefined;
         const path=documentPath(collection,id);
@@ -64,8 +73,9 @@ export function createFirestoreAccountStore(db){
       }
       const list=(collection,field,value)=>entries(collection,field,value).then(rows=>rows.map(([,row])=>row));
       const tx={
-        getAccount:id=>get('accounts',id),putAccount:row=>put('accounts',row.id,row),
-        getSave:key=>get('saves',key),putSave:row=>put('saves',row.key,row),
+        assertAccountActive:ensureActive,
+        getAccount:async id=>{await ensureActive(id);return get('accounts',id);},putAccount:row=>put('accounts',row.id,row),
+        getSave:key=>get('saves',key),putSave:row=>put('saves',row.key,row),removeSave:key=>remove('saves',key),
         listSaves:id=>list('saves','ownerAccountId',id),listAllSaves:()=>list('saves'),
         getGameDocument:async key=>{const path=gamePath(key),collection=path.split('/')[0],id=path.slice(collection.length+1);return getPath(path,collection,id);},
         putGameDocument:(key,row)=>put('gameDocuments',key,row),
@@ -74,7 +84,7 @@ export function createFirestoreAccountStore(db){
         listPurchases:id=>list('purchases','accountId',id),
         getPurchaseEvent:id=>get('events',id),putPurchaseEvent:row=>put('events',row.eventId,row),
         getLegacyClaim:key=>get('claims',key),putLegacyClaim:row=>put('claims',row.legacyKey,row),
-        getSession:id=>get('sessions',id),putSession:(id,row)=>put('sessions',id,{...row,ttlAt:new Date(row.expiresAt)}),removeSession:id=>remove('sessions',id),
+        getSession:async id=>{const row=await get('sessions',id);if(row)await ensureActive(row.accountId);return row;},putSession:(id,row)=>put('sessions',id,{...row,ttlAt:new Date(row.expiresAt)}),removeSession:id=>remove('sessions',id),
         getAttempt:key=>get('attempts',key),putAttempt:(key,row)=>put('attempts',key,{...row,ttlAt:new Date(row.expiresAt)}),removeAttempt:key=>remove('attempts',key),
         getIdentity:key=>get('identities',identityId(key)),putIdentity:(key,id)=>put('identities',identityId(key),{accountId:id}),
       };
@@ -96,8 +106,8 @@ export function createFirestoreAccountStore(db){
   }
   const sessions={
     get:(id,now)=>transaction(async tx=>{const row=await tx.getSession(id);return row?.expiresAt>now?row:null;}),
-    create:(id,row)=>transaction(async tx=>{if(await tx.getSession(id))throw Error('session_exists');tx.putSession(id,row);}),
-    rotate:(old,id,row)=>transaction(async tx=>{if(!await tx.getSession(old) || await tx.getSession(id))throw Error('session_rotation_conflict');tx.removeSession(old);tx.putSession(id,row);}),
+    create:(id,row)=>transaction(async tx=>{await tx.assertAccountActive(row?.accountId);if(await tx.getSession(id))throw Error('session_exists');tx.putSession(id,row);}),
+    rotate:(old,id,row)=>transaction(async tx=>{const existing=await tx.getSession(old);if(!existing||await tx.getSession(id))throw Error('session_rotation_conflict');await tx.assertAccountActive(row?.accountId);tx.removeSession(old);tx.putSession(id,row);}),
     remove:id=>transaction(tx=>tx.removeSession(id)),
   };
   const auth={
@@ -107,12 +117,12 @@ export function createFirestoreAccountStore(db){
       tx.removeAttempt(key);return attempt;
     }),
     getAuthenticatedAccount:async id=>(await sessions.get(id,Date.now()))?.accountId||null,
-    resolveIdentity:({provider,providerId,subject,linkAccountId})=>transaction(async tx=>{
+    resolveIdentity:({provider,providerId,subject,linkAccountId,accountCreatedAt})=>transaction(async tx=>{
       const key=JSON.stringify([provider,providerId,subject]),existing=(await tx.getIdentity(key))?.accountId;
       if(existing){if(linkAccountId && linkAccountId!==existing)throw Error('identity_already_linked');return {accountId:existing,created:false};}
       if(linkAccountId && !await tx.getAccount(linkAccountId))throw Error('account_not_found');
       const id=linkAccountId||randomUUID();
-      if(!linkAccountId)tx.putAccount({id,createdAt:Date.now()});
+      if(!linkAccountId)tx.putAccount({id,createdAt:Number.isSafeInteger(accountCreatedAt)&&accountCreatedAt>=0?accountCreatedAt:Date.now()});
       tx.putIdentity(key,id);return {accountId:id,created:!linkAccountId};
     }),
   };

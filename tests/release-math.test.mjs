@@ -50,7 +50,7 @@ assert.equal(isPrintAnswerCorrect({text:'学校',answer:'がっこう'},'やま'
 assert.equal(isPrintAnswerCorrect({text:'がっこう',answer:'がっこう'},'がつこう'),false);
 
 const nodes={};let result;
-const grade=vm.createContext({window:{},isPrintAnswerCorrect,showPrintScoreResult:(_cur,correct,total)=>{result={correct,total};},$:id=>nodes[id]||={value:'',innerHTML:''}});
+const grade=vm.createContext({window:{},isPrintAnswerCorrect,formatPrintAnswer,showPrintScoreResult:(_cur,correct,total)=>{result={correct,total};},$:id=>nodes[id]||={value:'',innerHTML:''}});
 vm.runInContext(source.slice(source.indexOf('function gradeUnifiedPrint()'),source.indexOf('function showPrintScoreResult(')),grade);
 for(const [p,input,correct] of [[{answer:12},'1+2',0],[{a:7,b:2,answer:3,remainder:1},'3あまり1',1],[oldRatio,'1:1',1],[{text:'日',answer:'ひ'},'にち',1]]){
   grade.window.unifiedCurrentPrint={meta:{problems:[p]}};grade.$('unified-ans-0').value=input;grade.gradeUnifiedPrint();assert.equal(result.correct,correct);

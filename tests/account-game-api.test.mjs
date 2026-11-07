@@ -57,7 +57,7 @@ try{
   let watched=0;const stop=B.RaidBossAPI.watchBoss(()=>watched++);
   await A.RaidBossAPI.syncPlayer(saveA.key,{playerName:'forged'},{bossId:'boss_50',participated:true,state:saveA.gameState});
   const first=await a.callGameAPI('RaidBossAPI','syncPlayer',[saveA.key,{playerName:'forged'},{bossId:'boss_50',events:[1,2,3].map((n)=>({id:'a'+n,bossId:'boss_50',damage:n===3?200:250,createdAt:time,fightStartedAt:time-1})),state:{player:{gold:999999}},claimed:{applied:true}}]);
-  assert.equal(first.challengeCount,3);assert.equal(first.challenge2EquipTenCount,1);assert.equal(first.challenge3SkinTicketCount,1);
+  assert.equal(first.challengeCount,3);assert.equal(first.challenge2EquipTenCount,null);assert.equal(first.challenge3SkinTicketCount,null);
   const duplicate=await a.callGameAPI('RaidBossAPI','syncPlayer',[saveA.key,null,{bossId:'boss_50',events:[{id:'a1',damage:250}]}]);assert.equal(duplicate.challengeCount,3);
   assert.equal((await accounts.readSave(sessions.a,saveA.key)).gameState.player.gold,10,'caller fallback state is not authoritative');
   await B.RaidBossAPI.syncPlayer(saveB.key,{}, {bossId:'boss_50',participated:true,events:[{id:'b1',damage:400,fightStartedAt:time-1}],state:saveB.gameState});
@@ -69,7 +69,7 @@ try{
   time=global.settlesAt+1;const final=await a.callGameAPI('RaidBossAPI','syncPlayer',[saveA.key,null,{bossId:'boss_50'}]);assert.ok(final.finalizedAt);assert.equal((await A.RaidBossAPI.getGlobalBoss()).finalHitters.length,2);
   const beforePayout=(await accounts.readSave(sessions.a,saveA.key)).gameState;
   const payouts=await Promise.all([A.RaidBossAPI.settleReward(saveA.key,'boss_50',beforePayout),A.RaidBossAPI.settleReward(saveA.key,'boss_50',beforePayout)]);
-  assert.equal(payouts.filter(row=>row.eligible && !row.alreadyClaimed).length,1);assert.equal((await accounts.readSave(sessions.a,saveA.key)).gameState.raidCoins,50);
+  assert.equal(payouts.filter(row=>row.eligible && !row.alreadyClaimed).length,1);assert.equal((await accounts.readSave(sessions.a,saveA.key)).gameState.raidCoins,20);
   const next=await B.RaidBossAPI.syncPlayer(saveB.key,{}, {bossId:'boss_50'});assert.equal(next.bossId,'boss_60');assert.equal((await B.RaidBossAPI.getGlobalBoss()).totalDamageDealt,0);assert.equal((await A.RaidBossAPI.getHistory())[0].bossId,'boss_50');
   response=await raw('a',rpc('RaidBossAPI','settleReward',[saveB.key,'boss_50'],{[saveB.key]:1}));assert.equal(response.status,404);
   response=await raw('a',rpc('RaidBossAPI','settleReward',[saveA.key,'boss_50'],{[saveA.key]:1}));assert.equal(response.status,409);

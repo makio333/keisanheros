@@ -4,13 +4,13 @@ import {purchaseQuote,PURCHASE_PRICES} from './purchase-pricing.mjs';
 import {paidSaveLimit,facilitySaveLimit} from './account-access.mjs';
 
 // Inject the official server-only Stripe client. Receipt verification is never an HTTP API.
-export function createStripePayments({stripe,store,sessions,origin,webhookSecret,personalPriceId,priceIds={},liveMode=false,now=Date.now,verifyLegacyClaim,fileMigrationAccountId,trialsEnabled=false}){
+export function createStripePayments({stripe,store,sessions,origin,webhookSecret,personalPriceId,priceIds={},liveMode=false,requireAdultManagerAcknowledgement=liveMode,now=Date.now,verifyLegacyClaim,fileMigrationAccountId,trialsEnabled=false,complimentarySaveLimit=0,complimentaryAccountCutoff=null,legalLinks={},verifyCheckoutEligibility}){
   const site=new URL(origin),local=['127.0.0.1','localhost'].includes(site.hostname);
   if(site.origin!==origin || (site.protocol!=='https:' && !(local && site.protocol==='http:')) || liveMode && site.protocol!=='https:')throw Error('unsafe_payment_origin');
   const prices=new Map(Object.entries({...{personal:personalPriceId},...priceIds}).filter(([,id])=>id));
   if(!webhookSecret?.startsWith('whsec_') || !prices.size || typeof liveMode!=='boolean' || [...prices].some(([product,id])=>!Object.hasOwn(DEFAULT_ACCOUNT_PRODUCTS,product) || typeof id!=='string' || !id.startsWith('price_')) || new Set(prices.values()).size!==prices.size)throw Error('stripe_not_configured');
   const verified=new WeakSet();
-  const accounts=createAccountSaveService({store,sessions,now,verifyLegacyClaim,fileMigrationAccountId,trialsEnabled,verifyReceipt:async receipt=>verified.has(receipt)?receipt:null});
+  const accounts=createAccountSaveService({store,sessions,now,verifyLegacyClaim,fileMigrationAccountId,trialsEnabled,complimentarySaveLimit,complimentaryAccountCutoff,verifyReceipt:async receipt=>verified.has(receipt)?receipt:null});
   async function productPrice(productId){
     const id=prices.get(productId);if(!id)throw Error('invalid_product');
     const price=await stripe.prices.retrieve(id);
@@ -53,21 +53,32 @@ export function createStripePayments({stripe,store,sessions,origin,webhookSecret
   }
   return {
     accounts,
+    legalReferences:()=>({...legalLinks}),
+    async checkoutStatus(sessionId){
+      const summary=await accounts.summary(sessionId);
+      const order=await store.transaction(tx=>tx.getGameDocument(`stripeCheckout/${summary.accountId}`));
+      return {state:!order?'none':order.fulfilled?'paid':order.failureReason==='payment_failed'?'failed':order.cancelled?'cancelled':'processing',saveLimit:summary.saveLimit};
+    },
     async listProducts(sessionId){
       const summary=await accounts.summary(sessionId),products=[];
       if(summary.facilityAccess)return products;
+      const entitlementLimit=Math.max(summary.paidSaveLimit,summary.complimentarySaveLimit||0);
       for(const [id] of prices){
-        const product=DEFAULT_ACCOUNT_PRODUCTS[id];if(product.saveLimit<=summary.paidSaveLimit)continue;
+        const product=DEFAULT_ACCOUNT_PRODUCTS[id];if(product.saveLimit<=entitlementLimit)continue;
         await productPrice(id);
-        products.push({id,saveLimit:product.saveLimit,kind:product.kind,...purchaseQuote(summary.paidSaveLimit,id),currency:'jpy'});
+        products.push({id,saveLimit:product.saveLimit,kind:product.kind,...purchaseQuote(entitlementLimit,id),currency:'jpy'});
       }
       return products.sort((a,b)=>a.saveLimit-b.saveLimit);
     },
-    async checkout(sessionId,productId='personal'){
+    async checkout(sessionId,productId='personal',idToken){
       const summary=await accounts.summary(sessionId);
       if(summary.facilityAccess)throw Error('facility_account_managed');
+      if(requireAdultManagerAcknowledgement&&!summary.adultManagerAcknowledged)throw Error('adult_manager_acknowledgement_required');
+      if(typeof verifyCheckoutEligibility==='function')await verifyCheckoutEligibility({sessionId,accountId:summary.accountId,idToken});
+      else if(liveMode)throw Error('email_verification_not_configured');
       if(!prices.has(productId))throw Error('invalid_product');
-      const quote=purchaseQuote(summary.paidSaveLimit,productId);
+      const entitlementLimit=Math.max(summary.paidSaveLimit,summary.complimentarySaveLimit||0);
+      const quote=purchaseQuote(entitlementLimit,productId);
       const price=await productPrice(productId);
       const previous=await store.transaction(tx=>tx.getGameDocument(`stripeCheckout/${summary.accountId}`));
       if(active(previous)){
@@ -80,7 +91,8 @@ export function createStripePayments({stripe,store,sessions,origin,webhookSecret
         const account=await tx.getAccount(summary.accountId);
         if(facilitySaveLimit(account))throw Error('facility_account_managed');
         const capacity=await paidSaveLimit(tx,account);
-        if(capacity!==summary.paidSaveLimit)throw Error('purchase_changed');
+        const complimentary=complimentarySaveLimit>0&&Number.isFinite(account?.createdAt)&&account.createdAt<=complimentaryAccountCutoff?complimentarySaveLimit:0;
+        if(capacity!==summary.paidSaveLimit||complimentary!==(summary.complimentarySaveLimit||0)||Math.max(capacity,complimentary)!==quote.fromLimit)throw Error('purchase_changed');
         const key=`stripeCheckout/${summary.accountId}`,previous=await tx.getGameDocument(key);
         let order=previous;
         if(active(previous)){
@@ -117,9 +129,18 @@ export function createStripePayments({stripe,store,sessions,origin,webhookSecret
       let event;
       try{event=stripe.webhooks.constructEvent(rawBody,signature,webhookSecret);}catch{throw Error('invalid_stripe_signature');}
       if(event.livemode!==liveMode)throw Error('stripe_mode_mismatch');
-      if(!['checkout.session.completed','checkout.session.async_payment_succeeded'].includes(event.type))return {received:true};
+      const failed=event.type==='checkout.session.async_payment_failed',expired=event.type==='checkout.session.expired';
+      if(!failed&&!expired&&!['checkout.session.completed','checkout.session.async_payment_succeeded'].includes(event.type))return {received:true};
       const checkout=await stripe.checkout.sessions.retrieve(event.data.object.id,{expand:['line_items']});
       if(checkout.livemode!==liveMode || checkout.mode!=='payment')throw Error('invalid_stripe_checkout');
+      if(failed||expired){
+        const order=await store.transaction(tx=>tx.getGameDocument(`stripeOrders/${checkout.metadata?.orderId}`));
+        if(!order)throw Error('invalid_stripe_checkout');
+        validateSession(order,checkout);
+        if(checkout.payment_status!=='unpaid'||checkout.status!==(failed?'complete':'expired'))return {received:true};
+        await updateOrder(order.id,current=>current.fulfilled?current:{...current,stripeSessionId:checkout.id,cancelled:true,failureReason:failed?'payment_failed':'expired'});
+        return {received:true};
+      }
       if(checkout.payment_status!=='paid' || checkout.status!=='complete')return {received:true};
       const order=await store.transaction(tx=>tx.getGameDocument(`stripeOrders/${checkout.metadata?.orderId}`));
       const lines=checkout.line_items;

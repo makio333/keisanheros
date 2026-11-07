@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>メール確認 | レジェンドヒーローズ</title>
+    <link rel="stylesheet" href="/email-verification-request.css" />
+  </head>
+  <body>
+    <main class="card">
+      <p class="eyebrow">LEGEND HEROES</p>
+      <h1>メール確認</h1>
+      <p class="intro">登録済みアカウントに確認メールを送ります。</p>
+
+      <div class="account" aria-label="送信先メールアドレス">
+        <span>送信先</span>
+        <strong>motoyanyouuki0326@gmail.com</strong>
+      </div>
+
+      <form id="verification-form">
+        <label for="password">このアカウントのパスワード</label>
+        <input
+          id="password"
+          type="password"
+          autocomplete="off"
+          required
+          aria-describedby="password-help"
+        />
+        <p id="password-help" class="help">入力内容はこの画面内で認証に使い、保存しません。</p>
+        <button id="send-button" type="submit">確認メールを送る</button>
+      </form>
+
+      <p id="status" class="status" role="status" aria-live="polite">
+        ボタンを押すまで、ログインもメール送信も行いません。
+      </p>
+      <p class="footnote">確認メールだけでゲームデータや購入情報は変更されません。</p>
+    </main>
+    <script type="module" src="/email-verification-request.js"></script>
+  </body>
+</html>

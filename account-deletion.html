@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>アカウント削除の申請 | レジェンドヒーローズ</title>
+</head>
+<body>
+  <main id="deletion-panel">
+    <h1>アカウント削除の申請</h1>
+    <p>保護者または施設担当者が、対象アカウントを確認して操作してください。申請すると、そのアカウントのすべてのプレイヤー枠と利用権が対象になります。</p>
+    <div class="notice">
+      <strong>申請と削除完了は別です</strong>
+      <ul>
+        <li>受付後すぐにアカウントの利用を止め、サーバーのゲーム・アカウントデータは東京時間の暦月1か月保持してから削除する方針です。</li>
+        <li>購入・会計上必要な記録は別に扱います。端末内のコピーはサーバーから消せないため、完了後に利用者側で削除してください。</li>
+        <li>画面で準備が整っていないと表示された場合、申請は始まっていません。</li>
+      </ul>
+    </div>
+    <p id="deletion-status" role="status" aria-live="polite">ログイン状態を確認しています…</p>
+    <section aria-labelledby="account-heading">
+      <h2 id="account-heading">対象アカウント</h2>
+      <p id="deletion-identity" class="identity">確認中</p>
+      <p class="small">このアカウントが削除対象であることを確認してください。別の保護者・施設のアカウントは操作しないでください。</p>
+      <p id="login-link" hidden><a href="/">ゲームへ戻ってログインする</a></p>
+    </section>
+    <section id="reauth-area" aria-labelledby="reauth-heading" hidden>
+      <h2 id="reauth-heading">本人確認</h2>
+      <label id="password-field" hidden for="deletion-password">パスワード
+        <input id="deletion-password" type="password" autocomplete="current-password">
+      </label>
+      <div class="actions"><button id="deletion-plan" class="button" type="button">本人確認して削除可否を確認</button></div>
+    </section>
+    <section id="plan-area" aria-labelledby="plan-heading" hidden>
+      <h2 id="plan-heading">申請前の確認</h2>
+      <p>削除対象: <strong id="confirm-identity"></strong></p>
+    </section>
+    <section id="confirm-area" aria-labelledby="confirm-heading" hidden>
+      <h2 id="confirm-heading">削除を申請する</h2>
+      <label class="check"><input id="deletion-impact" type="checkbox"><span>このアカウントのすべてのセーブと利用権が対象になること、受付直後に利用が止まることを確認しました。</span></label>
+      <label for="deletion-phrase">確認のため「削除する」と入力してください
+        <input id="deletion-phrase" type="text" autocomplete="off" maxlength="20">
+      </label>
+      <div class="actions">
+        <button id="deletion-confirm" class="button" type="button">削除を申請する</button>
+        <button id="deletion-cancel" class="button secondary" type="button">キャンセル</button>
+      </div>
+    </section>
+    <p id="retention-date" hidden></p>
+    <p id="device-cleanup-link" hidden><a href="/account-device-cleanup.html">この端末に残ったコピーを確認する</a></p>
+    <p id="contact-link" class="small">申請を開始できない場合や、受付結果を確認できない場合は、登録メールから<a href="mailto:ailandgames.jp@gmail.com?subject=アカウント削除の相談">サポートへお問い合わせください</a>。パスワード・認証コード・子どもの情報はメールに書かないでください。</p>
+    <p class="small"><a href="/privacy.html">プライバシーポリシー</a> · <a href="/">ゲームへ戻る</a></p>
+  </main>
+  <script type="module" src="/sales-pages/account-deletion-page.js"></script>
+</body>
+</html>

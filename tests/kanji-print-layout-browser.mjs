@@ -72,6 +72,8 @@ try {
     }
     if(mode==='kaki'){
       const cell=await sheet.locator('.kp-cell').first().boundingBox();
+      const prompt=await sheet.locator('.kp-prompt').first().boundingBox();
+      assert.ok(cell.x>prompt.x,'writing answer cells sit to the right of the kanji prompt');
       assert.ok(cell.width>=18*96/25.4-1 && cell.height>=18*96/25.4-1,'short words use 18mm square cells');
       assert.equal(await sheet.locator('.kp-question').last().locator('.kp-cell').count(),1,'弱い has one kanji cell');
       assert.equal(await sheet.locator('.kp-question').last().locator('.kp-okurigana').count(),1,'okurigana goes in a separate parenthesis');

@@ -1,0 +1,3 @@
+import assert from 'node:assert/strict';import {READING_PURSUIT_QUESTS} from '../reading_pursuit_quests.js';import {readingAnswerMatches} from '../reading_quests.js';
+for(const q of READING_PURSUIT_QUESTS.filter(q=>q.grade<=2)){assert.equal(q.steps.length,5);for(const s of q.steps){assert.ok(s.letter.includes(s.evidence));assert.ok(/てした|たから|かぎ|すず|宝箱|手下|宝の|門/.test(s.letter));assert.ok(!/こねこ|パンを|ケーキ|草が、しおれ/.test(s.letter));assert.ok(readingAnswerMatches(s,s.answer));if(s.extraction)assert.equal([...s.answer].length,s.extraction.characterCount);if(q.grade===1)assert.ok(!/\p{Script=Han}/u.test(s.letter+s.question));}}
+console.log('PASS: low grades use thief/loot/henchman/signal story; no daily-life exercises; simple kana for grade1, evidence and extraction counts valid');

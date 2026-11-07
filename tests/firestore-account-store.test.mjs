@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {createFirestoreAccountStore} from '../server/firestore-account-store.mjs';
+import {createAccountGameService} from '../server/account-game-service.mjs';
 
 const rows=new Map();
 const db={
@@ -44,4 +45,14 @@ await store.sessions.rotate('session-token-012345678901234567890123456789','sess
 assert.equal(await store.sessions.get('session-token-012345678901234567890123456789',0),null);
 assert.equal((await store.sessions.get('session-token-112345678901234567890123456789',0)).accountId,identity.accountId);
 assert.ok(rows.get('saves/save%2Fone').gameStateGzip);
+let deletionPending=false;
+const guardedStore=createFirestoreAccountStore(db,{isAccountDeletionBlocked:async accountId=>deletionPending&&accountId===identity.accountId});
+await guardedStore.sessions.create('guarded-session-012345678901234567890123456789',{accountId:identity.accountId,expiresAt:9999999999999});
+deletionPending=true;
+await assert.rejects(guardedStore.sessions.get('guarded-session-012345678901234567890123456789',0),/account_deletion_in_progress/);
+await assert.rejects(guardedStore.transaction(tx=>tx.getAccount(identity.accountId)),/account_deletion_in_progress/);
+await assert.rejects(guardedStore.transaction(tx=>tx.getSession('guarded-session-012345678901234567890123456789')),/account_deletion_in_progress/);
+const guardedGame=createAccountGameService({store:guardedStore,now:()=>0});
+await assert.rejects(guardedGame.call('guarded-session-012345678901234567890123456789',{api:'AdminGiftAPI',method:'permissions'}),/account_deletion_in_progress/);
+await assert.rejects(guardedStore.sessions.create('new-guarded-session-012345678901234567890123456789',{accountId:identity.accountId,expiresAt:9999999999999}),/account_deletion_in_progress/);
 console.log('PASS: Firestore adapter identity/session safety, compressed saves, owner query, game documents and atomic session rotation. In-memory fake only; no cloud writes.');

@@ -1,16 +1,20 @@
 import {gunzipSync} from 'node:zlib';
 import {parseLegacySaveFile} from '../legacy_save_file.js';
+import {parseLegacyTransferFile,legacyTransferRecordCount} from '../legacy_transfer_file.js';
+import {applyLegacyRaidImport} from './legacy-raid-import.mjs';
 import {legacySnapshot,grantLegacyFacilityAccessInTransaction} from './legacy-migration.mjs';
 export function createLegacyFileImporter({store,sessions,accountId:recipientId,sourceProject,now=Date.now}){
   return {async process(sessionId,{file,apply=false}){
     const session=await sessions.get(sessionId,now());
     if(!session||session.expiresAt<=now())throw Error('authentication_required');
     if(!recipientId||session.accountId!==recipientId||!sourceProject)throw Error('migration_not_authorized');
-    const parsed=parseLegacySaveFile(file);
+    const fullTransfer=file?.format==='legend-heroes-full-transfer';
+    const parsed=fullTransfer?parseLegacyTransferFile(file):parseLegacySaveFile(file);
     if(parsed.sourceProject!==sourceProject)throw Error('migration_source_mismatch');
     const snapshots=parsed.saves.map(row=>legacySnapshot(sourceProject,row.documentId,{gameData:JSON.stringify(row.gameState)}));
+    const slotMap=new Map(parsed.saves.map((row,index)=>[row.sourceSlotKey||row.documentId,snapshots[index].legacyKey]));
     if(snapshots.reduce((size,row)=>size+Buffer.byteLength(row.gameStateGzip),0)>7*1024*1024)throw Error('migration_file_too_large');
-    return store.transaction(async tx=>{
+    const result=await store.transaction(async tx=>{
       if(!await tx.getAccount(recipientId))throw Error('account_not_found');
       const plans=[];
       for(const snapshot of snapshots){
@@ -19,12 +23,12 @@ export function createLegacyFileImporter({store,sessions,accountId:recipientId,s
         if(claim&&!save)throw Error('migration_inconsistent');
         plans.push({snapshot,exists:!!save});
       }
-      const result={total:plans.length,imported:plans.filter(row=>!row.exists).length,skipped:plans.filter(row=>row.exists).length,names:snapshots.map(row=>row.name)};
-      if(!apply)return {...result,applied:false};
+      const summary={total:plans.length,imported:plans.filter(row=>!row.exists).length,skipped:plans.filter(row=>row.exists).length,names:snapshots.map(row=>row.name)};
+      if(!apply)return {...summary,applied:false,raidRecords:fullTransfer?legacyTransferRecordCount(parsed.raidData):0};
       await grantLegacyFacilityAccessInTransaction({tx,accountId:recipientId,sourceProject,snapshots,now:now()});
       // The grant must also cover any unrelated saves already created in this account.
       const existing=await tx.listSaves(recipientId),owner=await tx.getAccount(recipientId);
-      if(existing.length+result.imported>owner.facilityAccess.saveLimit)throw Error('save_limit_reached');
+      if(existing.length+summary.imported>owner.facilityAccess.saveLimit)throw Error('save_limit_reached');
       for(const {snapshot,exists} of plans){
         if(!exists){
           const gameState=JSON.parse(gunzipSync(Buffer.from(snapshot.gameStateGzip,'base64')).toString());
@@ -32,7 +36,10 @@ export function createLegacyFileImporter({store,sessions,accountId:recipientId,s
         }
         tx.putLegacyClaim({legacyKey:snapshot.legacyKey,saveKey:snapshot.legacyKey,accountId:recipientId,claimedAt:now()});
       }
-      return {...result,applied:true};
+      return {...summary,applied:true};
     });
+    if(!apply||!fullTransfer)return result;
+    const raid=await applyLegacyRaidImport({store,raidData:parsed.raidData,slotMap,now:now()});
+    return {...result,raid};
   }};
 }
