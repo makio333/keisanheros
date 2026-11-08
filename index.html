@@ -491,6 +491,8 @@
           <button id="btn-gacha-tab-skins" type="button" role="tab" aria-controls="skin-gacha-section" aria-selected="true">背景スキンガチャ</button>
           <button id="btn-gacha-tab-items" type="button" role="tab" aria-controls="gacha-item-section" aria-selected="false">装備ガチャ</button>
           <button id="btn-gacha-tab-halloween" type="button" role="tab" aria-controls="halloween-gacha-section" aria-selected="false">ハロウィンガチャ</button>
+          <button id="btn-gacha-tab-christmas-skins" type="button" role="tab" aria-controls="christmas-skin-gacha-section" aria-selected="false">クリスマススキン</button>
+          <button id="btn-gacha-tab-christmas-items" type="button" role="tab" aria-controls="christmas-equip-gacha-section" aria-selected="false">クリスマス装備</button>
         </div>
         <section id="skin-gacha-section" class="skin-gacha-panel" role="tabpanel" aria-labelledby="btn-gacha-tab-skins">
           <div class="gacha-showcase">
@@ -533,6 +535,43 @@
           <div id="equipment-gacha-collection" class="equipment-gacha-collection"></div>
         </section>
         <section id="halloween-gacha-section" class="hidden" role="tabpanel" aria-labelledby="btn-gacha-tab-halloween"></section>
+        <section id="christmas-skin-gacha-section" class="hidden" role="tabpanel" aria-labelledby="btn-gacha-tab-christmas-skins">
+          <div class="christmas-gacha-showcase christmas-skin-gacha-showcase">
+            <img class="christmas-gacha-logo" src="assets/christmas/skin_gacha_logo.webp" alt="クリスマススキンガチャ">
+            <p>いつものスキンと、雪の国から届いたクリスマス限定スキンを集めよう！</p>
+          </div>
+          <div class="christmas-gacha-controls">
+            <div class="skin-gacha-balance"><img class="skin-ticket-icon" src="assets/items/background_skin_ticket.png" alt="背景スキンガチャチケット"> 所持チケット <b id="christmas-skin-gacha-tickets">0</b> 枚</div>
+            <div class="menu-grid christmas-gacha-draw-actions">
+              <button id="btn-christmas-skin-gacha-draw" class="btn btn-primary" type="button">1000Gで1回引く</button>
+              <button id="btn-christmas-skin-gacha-ticket" class="btn" type="button">チケット1枚で1回引く</button>
+            </div>
+            <p id="christmas-skin-gacha-status" class="christmas-gacha-note" aria-live="polite"></p>
+            <div class="gacha-collection-heading"><h3>ラインナップ</h3><span>通常スキン・背景＋クリスマス限定スキン・背景・フレーム</span></div>
+            <div id="christmas-skin-gacha-collection" class="christmas-skin-gacha-collection" aria-live="polite"></div>
+          </div>
+        </section>
+        <section id="christmas-equip-gacha-section" class="hidden" role="tabpanel" aria-labelledby="btn-gacha-tab-christmas-items">
+          <div class="christmas-gacha-showcase christmas-equip-gacha-showcase">
+            <img class="christmas-gacha-logo" src="assets/christmas/equipment_gacha_logo.webp" alt="クリスマス装備ガチャ">
+            <p>いつもの装備に、雪の国の限定装備が加わった特別ラインナップ！</p>
+          </div>
+          <div class="christmas-gacha-controls">
+            <div class="gacha-collection-heading"><h3>ガチャ限定装備</h3><span>通常限定＋クリスマス限定 ／ ★1〜★5</span></div>
+            <div id="christmas-equipment-gacha-featured" class="equipment-gacha-featured"></div>
+            <div class="menu-grid christmas-equipment-gacha-actions">
+              <button id="btn-christmas-gacha-1" class="btn" type="button">1回引く (150G)</button>
+              <button id="btn-christmas-gacha-6" class="btn" type="button">6回引く (750G)</button>
+              <button id="btn-christmas-gacha-13" class="btn" type="button">13回引く (1400G)</button>
+            </div>
+            <div class="skin-gacha-balance christmas-equipment-ticket-balance">🎫 装備ガチャ10連チケット：<b id="christmas-equip-gacha-tickets">0</b>枚
+              <button id="btn-christmas-gacha-ticket" class="btn" type="button">10連チケットで10回引く</button>
+            </div>
+            <div id="christmas-gacha-results" class="log-box christmas-gacha-results"></div>
+            <div class="gacha-collection-heading"><h3>通常装備</h3><span>クリスマス装備ガチャにも登場</span></div>
+            <div id="christmas-equipment-gacha-collection" class="equipment-gacha-collection"></div>
+          </div>
+        </section>
       </div>
     </section>
 
@@ -727,8 +766,8 @@
                   <div class="study-card-val-row"><span class="study-card-value" id="player-stat-overall-rate">0</span><span class="study-card-unit">%</span></div>
                 </div>
                 <div class="study-summary-card">
-                  <span class="study-card-label">せいちょうど (UP!)</span>
-                  <div class="study-card-val-row"><span class="study-card-value highlight-up" id="player-stat-growth-rate">+0</span><span class="study-card-unit">%</span></div>
+                  <span class="study-card-label" id="player-stat-growth-label">まだ くらべたデータはないよ</span>
+                  <div class="study-card-val-row"><span class="study-card-value highlight-up" id="player-stat-growth-rate">—</span><span class="study-card-unit">ポイント</span></div>
                 </div>
                 <div class="study-summary-card">
                   <span class="study-card-label">へいきん タイム</span>
@@ -741,8 +780,8 @@
               </div>
 
               <div class="study-chart-section">
-                <h3 style="color:var(--accent); margin-bottom:4px;">📈 たんげんべつ せいちょうグラフ</h3>
-                <p class="hint" style="margin-bottom:8px;">青＝さいしょの 正答率 ｜ 金＝いまの 正答率</p>
+                <h3 style="color:var(--accent); margin-bottom:4px;">📈 ステージごとの せいちょう</h3>
+                <p class="hint" style="margin-bottom:8px;">青＝さいしょの5もん ｜ 金＝24時間たってからの直近5もん。ヒントを使った答えも入るよ。</p>
                 <div class="study-chart-container">
                   <canvas id="player-study-chart" class="study-canvas"></canvas>
                 </div>
@@ -1018,7 +1057,7 @@
                     <select id="admin-stats-slot-select" class="admin-select" style="min-width:180px; padding:6px 10px; font-size:13px;"></select>
                   </div>
                 </div>
-                <p class="flavor" style="margin:4px 0 14px;">お子様の単元・ステージごとの解答履歴、最初の正答率と最新の正答率の比較、苦手・得意分野を詳細に可視化します。</p>
+                <p class="flavor" style="margin:4px 0 14px;">学習の目安としてご覧ください。同じステージの最初の5問と、24時間以上あけた後の直近5問を比較します。各5問がそろうまでは成長度に含めず、ヒントを使った回答も記録します。過去の累積記録は初回測定に流用せず、今後の回答から測定します。学校の成績を判定する評価ではありません。</p>
 
                 <!-- サマリーカード -->
                 <div class="study-summary-cards">
@@ -1031,8 +1070,8 @@
                     <div class="study-card-val-row"><span class="study-card-value" id="admin-stat-overall-rate">0</span><span class="study-card-unit">%</span></div>
                   </div>
                   <div class="study-summary-card">
-                    <span class="study-card-label">平均成長度 (UP!)</span>
-                    <div class="study-card-val-row"><span class="study-card-value highlight-up" id="admin-stat-growth-rate">+0</span><span class="study-card-unit">%</span></div>
+                    <span class="study-card-label" id="admin-stat-growth-label">比較できる記録なし</span>
+                    <div class="study-card-val-row"><span class="study-card-value highlight-up" id="admin-stat-growth-rate">—</span><span class="study-card-unit">ポイント</span></div>
                   </div>
                   <div class="study-summary-card">
                     <span class="study-card-label">平均解答タイム</span>
@@ -1048,17 +1087,17 @@
                   </div>
                 </div>
 
-                <!-- 単元別 成長比較グラフ -->
+                <!-- ステージ別 成長比較グラフ -->
                 <div class="study-chart-section">
                   <div class="study-section-title-row">
-                    <h4 style="color:var(--accent); margin:0;">📈 単元別 正答率の推移（初回 ➔ 最新）</h4>
+                    <h4 style="color:var(--accent); margin:0;">📈 ステージ別 正答率の比較</h4>
                     <div style="display:flex; gap:6px;">
                       <button id="btn-admin-filter-all" class="btn btn-sm btn-filter is-active">すべて</button>
                       <button id="btn-admin-filter-math" class="btn btn-sm btn-filter">さんすう</button>
                       <button id="btn-admin-filter-kanji" class="btn btn-sm btn-filter">こくご(漢字)</button>
                     </div>
                   </div>
-                  <p class="hint" style="margin:4px 0 8px;">青バー＝初期の正答率 ｜ 金バー＝最新の正答率 ｜ 右側の数値＝成長率（UP!）</p>
+                  <p class="hint" style="margin:4px 0 8px;">青バー＝初回5問 ｜ 金バー＝24時間以上後の直近5問 ｜ 右側＝変化（ポイント）。5問ずつそろうまで比較値は表示しません。</p>
                   <div class="study-chart-container">
                     <canvas id="admin-study-chart" class="study-canvas"></canvas>
                   </div>
@@ -1077,18 +1116,18 @@
 
                 <!-- 詳細データテーブル -->
                 <div class="study-table-section" style="margin-top:18px;">
-                  <h4 style="color:var(--accent); margin-bottom:8px;">📋 単元・ステージ別 詳細データ一覧</h4>
+                  <h4 style="color:var(--accent); margin-bottom:8px;">📋 ステージ別 詳細データ一覧</h4>
                   <div class="study-table-wrap">
                     <table class="study-data-table" id="admin-study-table">
                       <thead>
                         <tr>
-                          <th>教科 / 学年</th>
-                          <th>単元・ステージ名</th>
-                          <th>解答数 (正解)</th>
-                          <th>初回正答率</th>
-                          <th>最新正答率</th>
-                          <th>成長度</th>
-                          <th>ステータス</th>
+                          <th>教科</th>
+                          <th>ステージ名</th>
+                          <th>解答数</th>
+                          <th>最初の5問</th>
+                          <th>後日の5問</th>
+                          <th>正答率の変化</th>
+                          <th>確認状況</th>
                         </tr>
                       </thead>
                       <tbody id="admin-study-table-body">

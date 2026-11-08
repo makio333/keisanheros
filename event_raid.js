@@ -1,16 +1,18 @@
 // Event combat rules are separate from stage rewards and world-raid damage.
 export const EVENT_RAID_RULES = Object.freeze({
   durationMs: 120000, enemyHp: 10, slots: 7, hitIntervalMs:120,
-  targetSteps: [{until:10000,count:4},{until:20000,count:3}], minimumTargets:2,
+  targetsPerCorrectAnswer: 3, maxNormalTargets: 4,
   chargeGoal: 5, specialTargets: 7, enemyAtk:2, enemyDef:0,
   hpPerKill:5, atkPerKill:1, defPerKill:1,
 });
 
-export function eventRaidTargetCount(elapsedMs, rules = EVENT_RAID_RULES) {
-  return rules.targetSteps.find(step=>Math.max(0,elapsedMs)<=step.until)?.count || rules.minimumTargets;
+export function eventRaidTargetCount(_elapsedMs, rules = EVENT_RAID_RULES) {
+  return rules.targetsPerCorrectAnswer;
 }
 
-export function eventRaidGaugeRatio(elapsedMs) { return Math.max(0.5,1-Math.max(0,elapsedMs)/40000); }
+export function eventRaidGaugeRatio(_elapsedMs, rules = EVENT_RAID_RULES) {
+  return rules.targetsPerCorrectAnswer / rules.maxNormalTargets;
+}
 export function formatEventRaidTime(remainingMs) {
   const seconds=Math.ceil(Math.max(0,remainingMs)/1000);
   return `${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;
@@ -41,7 +43,7 @@ export class EventRaidRun {
   }
   beginQuestion(now) { this.questionAt=now; this.answered=false; }
   remaining(now) { return Math.max(0,this.endsAt-now); }
-  answer(correct, now, random = Math.random, elapsedMs = now-this.questionAt) {
+  answer(correct, now, random = Math.random, _elapsedMs = now-this.questionAt) {
     if(this.over || !this.remaining(now) || this.answered || this.questionAt===undefined) return null;
     this.answered=true; this.answers++;
     if(!correct) return {correct:false,special:false,targets:[]};
