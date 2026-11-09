@@ -9749,16 +9749,16 @@ function showItems(){
 /* ==========================================================
    ガチャ・合成
    ========================================================== */
-let gachaView = 'skins';
+let gachaView = 'christmas-skins';
 
 function setGachaView(view) {
-  gachaView = ['skins','items','halloween','christmas-skins','christmas-items'].includes(view) ? view : 'skins';
-  $('skin-gacha-section').classList.toggle('hidden', gachaView !== 'skins');
-  $('gacha-item-section').classList.toggle('hidden', gachaView !== 'items');
-  $('btn-gacha-tab-skins').setAttribute('aria-selected', String(gachaView === 'skins'));
-  $('btn-gacha-tab-items').setAttribute('aria-selected', String(gachaView === 'items'));
-  $('halloween-gacha-section').classList.toggle('hidden', gachaView !== 'halloween');
-  $('btn-gacha-tab-halloween').setAttribute('aria-selected', String(gachaView === 'halloween'));
+  gachaView = ['items','christmas-items'].includes(view) ? 'christmas-items' : 'christmas-skins';
+  $('skin-gacha-section').classList.add('hidden');
+  $('gacha-item-section').classList.add('hidden');
+  $('halloween-gacha-section').classList.add('hidden');
+  $('btn-gacha-tab-skins').setAttribute('aria-selected', 'false');
+  $('btn-gacha-tab-items').setAttribute('aria-selected', 'false');
+  $('btn-gacha-tab-halloween').setAttribute('aria-selected', 'false');
   $('christmas-skin-gacha-section').classList.toggle('hidden', gachaView !== 'christmas-skins');
   $('christmas-equip-gacha-section').classList.toggle('hidden', gachaView !== 'christmas-items');
   $('btn-gacha-tab-christmas-skins').setAttribute('aria-selected', String(gachaView === 'christmas-skins'));
@@ -11653,7 +11653,7 @@ function showHalloweenMenu(tab = 'stage', message = '') {
     <section class="halloween-stage-entry" aria-label="従来のイベントステージ">${stageEntry}</section>
     <div class="halloween-season2-entry"><button type="button" class="btn btn-primary" data-action="season2-stages">👻 イベント専用レイド・ランキング</button><small>おばけから町を守れ！ 討伐数の最高記録に挑戦</small></div>
     <section class="halloween-tab-panel" id="halloween-tab-panel" aria-labelledby="halloween-exchange-title">${message ? `<p class="halloween-action-message" role="status">${escapeHtml(message)}</p>` : ''}${body}</section>
-    <footer class="halloween-hub-footer"><button type="button" class="btn" data-action="open-gacha">🎃 ハロウィンガチャへ</button><button type="button" class="btn" data-action="close">とじる</button></footer>
+    <footer class="halloween-hub-footer"><button type="button" class="btn" data-action="close">とじる</button></footer>
   </div>`;
   document.body.appendChild(overlay);
   bindStageRewardTooltips(overlay);
@@ -11661,7 +11661,6 @@ function showHalloweenMenu(tab = 'stage', message = '') {
   overlay.querySelector('[data-action="season2-stages"]').onclick = showHalloweenSeason2Stages;
   overlay.querySelector('[data-action="start"]')?.addEventListener('click', () => { hideTooltip(); overlay.remove(); startHalloweenChallenge(source); });
   overlay.querySelectorAll('[data-exchange]').forEach(button => { button.onclick = () => confirmHalloweenExchange(button.dataset.exchange,button); });
-  overlay.querySelector('[data-action="open-gacha"]').onclick = () => { hideTooltip(); overlay.remove(); showGacha('halloween'); };
   (tab === 'exchange' ? overlay.querySelector('[data-exchange]:not(:disabled)') || overlay.querySelector('[data-action="start"]') : overlay.querySelector('[data-action="start"]')).focus({preventScroll:true});
 }
 

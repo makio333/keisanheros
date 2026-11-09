@@ -3326,7 +3326,7 @@ h3 { font-size:15px; margin:16px 0 10px; color: var(--accent); }
 .gacha-page-header h2 { margin: 0; padding: 0; border: 0; font-size: 20px; }
 .gacha-wallet { display: flex; align-items: center; gap: 12px; color: #d3d8d5; font-size: 12px; }
 .gacha-wallet strong { color: #ffdc72; font-size: 20px; white-space: nowrap; }
-.gacha-page-tabs { display: grid; grid-template-columns: repeat(5, minmax(110px,1fr)); overflow-x: auto; scrollbar-width: thin; border-bottom: 2px solid #ae914e; }
+.gacha-page-tabs { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); overflow-x: auto; scrollbar-width: thin; border-bottom: 2px solid #ae914e; }
 .gacha-page-tabs button { padding: 12px 16px; border: 1px solid #526057; border-bottom: 0; background: #1a2822; color: #bacbc1; font: inherit; font-weight: bold; cursor: pointer; }
 .gacha-page-tabs button[aria-selected="true"] { background: #344334; color: #ffe196; border-color: #ae914e; }
 #skin-gacha-section.skin-gacha-panel { margin: 0; padding: 0; border: 0; border-radius: 0; background: #121b19; }

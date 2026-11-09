@@ -484,17 +484,17 @@
       <div class="gacha-page">
         <header class="gacha-page-header">
           <button id="btn-gacha-back" class="window-nav-btn window-back-btn">← もどる</button>
-          <h2>ガチャ</h2>
+          <h2>クリスマスガチャ</h2>
           <div class="gacha-wallet"><span>所持ゴールド</span><strong><b id="gacha-current-gold">0</b> G</strong></div>
         </header>
-        <div class="gacha-page-tabs" role="tablist" aria-label="ガチャの種類">
-          <button id="btn-gacha-tab-skins" type="button" role="tab" aria-controls="skin-gacha-section" aria-selected="true">背景スキンガチャ</button>
-          <button id="btn-gacha-tab-items" type="button" role="tab" aria-controls="gacha-item-section" aria-selected="false">装備ガチャ</button>
-          <button id="btn-gacha-tab-halloween" type="button" role="tab" aria-controls="halloween-gacha-section" aria-selected="false">ハロウィンガチャ</button>
-          <button id="btn-gacha-tab-christmas-skins" type="button" role="tab" aria-controls="christmas-skin-gacha-section" aria-selected="false">クリスマススキン</button>
-          <button id="btn-gacha-tab-christmas-items" type="button" role="tab" aria-controls="christmas-equip-gacha-section" aria-selected="false">クリスマス装備</button>
+        <div class="gacha-page-tabs" role="tablist" aria-label="クリスマスガチャの種類">
+          <button id="btn-gacha-tab-skins" class="hidden" type="button" role="tab" aria-controls="skin-gacha-section" aria-selected="false">背景スキンガチャ</button>
+          <button id="btn-gacha-tab-items" class="hidden" type="button" role="tab" aria-controls="gacha-item-section" aria-selected="false">装備ガチャ</button>
+          <button id="btn-gacha-tab-halloween" class="hidden" type="button" role="tab" aria-controls="halloween-gacha-section" aria-selected="false">ハロウィンガチャ</button>
+          <button id="btn-gacha-tab-christmas-skins" type="button" role="tab" aria-controls="christmas-skin-gacha-section" aria-selected="true">クリスマススキンガチャ</button>
+          <button id="btn-gacha-tab-christmas-items" type="button" role="tab" aria-controls="christmas-equip-gacha-section" aria-selected="false">クリスマス装備ガチャ</button>
         </div>
-        <section id="skin-gacha-section" class="skin-gacha-panel" role="tabpanel" aria-labelledby="btn-gacha-tab-skins">
+        <section id="skin-gacha-section" class="skin-gacha-panel hidden" role="tabpanel" aria-labelledby="btn-gacha-tab-skins">
           <div class="gacha-showcase">
             <img id="skin-gacha-title" class="gacha-logo" src="assets/ui/background_skin_gacha_logo.png" alt="背景スキンガチャ">
             <div class="gacha-feature-lineup">
