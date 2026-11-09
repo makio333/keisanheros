@@ -9802,9 +9802,15 @@ function renderChristmasEquipmentGachaControls() {
   const tickets = G.equipGachaTenPullTickets || 0;
   $('christmas-equip-gacha-tickets').textContent = tickets;
   $('btn-christmas-gacha-ticket').disabled = equipmentGachaRolling || tickets < 1;
-  const entry = db => `<button type="button" class="skin-gacha-theme equipment-gacha-preview christmas-equipment-gacha-preview" data-equip-id="${db.id}" aria-label="${db.name}の抽選レアリティと性能を表示"><img src="${av(db.emoji)}" alt=""><b>${db.name}</b><span class="christmas-equipment-badge${db.id.startsWith('christmas_') ? '' : ' is-standard'}">${db.id.startsWith('christmas_') ? 'クリスマス限定' : '通常限定'}</span><span>${SLOT_LABELS[db.slot]}</span><span class="equipment-gacha-rates"><i class="rarity-3">★3 9%</i><i class="rarity-4">★4 0.7%</i><i class="rarity-5">★5 0.3%</i></span></button>`;
-  $('christmas-equipment-gacha-featured').innerHTML = [...LIMITED_EQUIP_DB,...CHRISTMAS_EQUIP_DB].map(entry).join('');
-  $('christmas-equipment-gacha-collection').innerHTML = EQUIP_DB.filter(db => !db.assist).map(entry).join('');
+  const gachaExclusiveIds = new Set(LIMITED_EQUIP_DB.map(db => db.id));
+  const entry = db => {
+    const badge = db.id.startsWith('christmas_')
+      ? '<span class="christmas-equipment-badge">クリスマス限定</span>'
+      : gachaExclusiveIds.has(db.id) ? '<span class="christmas-equipment-badge is-standard">ガチャ限定装備</span>' : '';
+    return `<button type="button" class="skin-gacha-theme equipment-gacha-preview christmas-equipment-gacha-preview" data-equip-id="${db.id}" aria-label="${db.name}の抽選レアリティと性能を表示"><img src="${av(db.emoji)}" alt=""><b>${db.name}</b>${badge}<span>${SLOT_LABELS[db.slot]}</span><span class="equipment-gacha-rates"><i class="rarity-3">★3 9%</i><i class="rarity-4">★4 0.7%</i><i class="rarity-5">★5 0.3%</i></span></button>`;
+  };
+  $('christmas-equipment-gacha-featured').innerHTML = CHRISTMAS_EQUIP_DB.map(entry).join('');
+  $('christmas-equipment-gacha-collection').innerHTML = [...LIMITED_EQUIP_DB,...EQUIP_DB.filter(db => !db.assist)].map(entry).join('');
   document.querySelectorAll('#christmas-equip-gacha-section .equipment-gacha-preview').forEach(button => {
     bindEquipDetailTooltip(button,getEquipTemplate(button.dataset.equipId),{rarity:3});
   });
@@ -10289,10 +10295,12 @@ function showSkinGachaSummon(prize, hero, theme = 'standard') {
    レベルが ひくすぎて どれも おさまらない時だけ、いちばん コストの ひくいものを わたす */
 function gachaEquipPick(rarity, includeChristmas = false){
   const cap = costCap();
-  const featuredPool = includeChristmas ? [...LIMITED_EQUIP_DB,...CHRISTMAS_EQUIP_DB] : LIMITED_EQUIP_DB;
+  const featuredPool = includeChristmas ? CHRISTMAS_EQUIP_DB : LIMITED_EQUIP_DB;
   const limited = featuredPool.filter(db => equipCost(db, rarity) <= cap);
   if (limited.length && Math.random() < 0.15) return pick(limited);
-  const pool = EQUIP_DB.filter(db => !db.assist);
+  const pool = includeChristmas
+    ? [...LIMITED_EQUIP_DB,...EQUIP_DB.filter(db => !db.assist)]
+    : EQUIP_DB.filter(db => !db.assist);
   const eligible = pool.filter(db => equipCost(db, rarity) <= cap);
   if (eligible.length > 0) return pick(eligible);
   const minCost = Math.min(...pool.map(db => equipCost(db, rarity)));
