@@ -7499,6 +7499,8 @@ function openMathWordQuestMode(){
     save:()=>save(true),
     grantExp,
     refresh:()=>{updateHud();renderQuestMedalCount();renderMathWordQuestProgress();},
+    npcAt:index=>QUEST_NPCS[index % QUEST_NPCS.length],
+    npcImage:getNPCImage,
     levelStart:()=>({lvl:G.player.lvl,hp:totalMaxHp(),mp:totalMaxMp(),points:G.player.points}),
     levelFinish:before=>({
       fromLvl:before.lvl,toLvl:G.player.lvl,hpBefore:before.hp,hpAfter:totalMaxHp(),

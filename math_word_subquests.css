@@ -1,0 +1,108 @@
+/* Arithmetic notice cards and answer scene borrow the Japanese quest layout. */
+.reading-subquest-overlay{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:12px;background:#000b}
+.reading-subquest-panel{display:flex;flex-direction:column;box-sizing:border-box;width:min(740px,100%);max-height:94dvh;overflow:auto;overscroll-behavior:contain;padding:20px;border:3px solid #a47c43;border-radius:14px;background:#fff3dd;color:#302419;line-height:1.9}
+.math-word-subquest-overlay{z-index:200}
+.math-word-subquest-panel{border-color:#302016;background:repeating-linear-gradient(0deg,#ffd79b0a 0 2px,transparent 3px 42px,#2312085c 43px 47px),repeating-linear-gradient(90deg,#2d160821 0 2px,transparent 3px 110px),linear-gradient(180deg,#87502a,#a66b38 16%,#80502c 39%,#a36a37 64%,#744825);box-shadow:inset 0 0 0 3px #60401f,inset 0 0 40px #14090399,0 20px 70px #000b}
+.math-word-subquest-header{padding:12px 16px 4px}
+.math-word-subquest-description{margin:3px 16px 10px}
+.math-word-subquest-progress,.math-word-grade-progress{color:#fff0ce}
+.math-word-grade-progress{margin:3px 0 9px;text-align:center}
+.math-word-grade-tab{border:1px solid #a58450;border-radius:3px;background:#f4e5bf;color:#573d26;box-shadow:0 2px 3px #25170c55}
+.math-word-grade-tab[aria-pressed="true"]{border-color:#f5bc4f;background:#ffe2a0;color:#573d26;box-shadow:inset 0 -3px #b67c30}
+.math-word-set-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 18px;align-items:stretch;padding:12px 8px 24px}
+.math-word-set-card.quest-card.math-word-notice-card{position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:center;min-width:0;min-height:250px;margin:0;padding:10px 12px 16px;border:0;border-radius:0;background:transparent;color:#463021;box-shadow:none;filter:drop-shadow(0 5px 4px #180d0766);text-align:center}
+.math-word-set-card.quest-card.math-word-notice-card::before{content:"";position:absolute;inset:0;z-index:-1;border:28px solid transparent;border-image:var(--math-notice-paper) var(--math-notice-slice,200) fill / 28px / 0 stretch;pointer-events:none}
+.math-word-set-card[data-notice-variant="fold-upper-left"]{--math-notice-paper:url('./assets/quest-notices/fold-upper-left.png');--math-notice-slice:200}
+.math-word-set-card[data-notice-variant="fold-lower-right"]{--math-notice-paper:url('./assets/quest-notices/fold-lower-right.png');--math-notice-slice:260}
+.math-word-set-card[data-notice-variant="fold-lower-left"]{--math-notice-paper:url('./assets/quest-notices/fold-lower-left.png');--math-notice-slice:180}
+.math-word-set-card[data-notice-variant="torn-upper-right"]{--math-notice-paper:url('./assets/quest-notices/torn-upper-right.png');--math-notice-slice:270}
+.math-word-set-card.quest-card.math-word-notice-card::after{top:5px;left:calc(50% - 4px);width:9px;height:9px}
+.math-word-notice-card .quest-card-ribbon{position:static;top:auto;left:auto;transform:none;width:100%;height:24px;margin:0 0 3px;background:transparent;box-shadow:none}
+.math-word-notice-card .quest-card-stars span{color:#c6b99d;text-shadow:none;font-size:16px}
+.math-word-notice-card .quest-card-stars span.on{color:#bd8425;text-shadow:0 1px #fff7d8}
+.math-word-notice-card .quest-card-art{position:relative;width:100%;height:70px;margin:0 0 5px;overflow:hidden;border:0;border-radius:3px;background:transparent;box-shadow:none}
+.math-word-notice-card .quest-card-art img{width:100%;height:100%;object-fit:contain;object-position:center bottom}
+.math-word-notice-card .quest-card-name{margin:1px 0;color:#785d40;font-size:12px}
+.math-word-notice-card .quest-card-title{width:100%;margin:2px 0 4px;color:#3e2c20;text-shadow:none;font:700 16px/1.45 'Hiragino Mincho ProN','Yu Mincho',serif}
+.math-word-notice-card .quest-card-tag{margin:0 0 6px;padding:0;border:0;background:transparent;color:#785d40;font-size:12px}
+.math-word-notice-rewards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;justify-items:center;width:100%;gap:2px;margin:auto 0 8px;padding:5px 0 0;border:0;border-top:1px solid #c4ad84;border-radius:0;background:transparent;color:#594125;font-size:10px;font-weight:700}
+.math-word-notice-rewards>span{white-space:nowrap}
+.math-word-notice-card .reading-quest-card-actions{display:flex;width:100%;margin:0}
+.math-word-notice-card .math-word-set-start{width:100%;margin:0;padding:6px 8px;border:1px solid #563c29;border-radius:3px;background:#70503b;color:#fff4db;box-shadow:0 2px 0 #493120;font-size:12px}
+
+.math-word-reading-overlay{z-index:210}
+.reading-subquest-panel.quest-answer-panel.math-word-reading-answer-panel{box-sizing:border-box;width:min(1280px,calc(100vw - 24px));height:min(98dvh,980px);max-height:98dvh;min-height:0;padding:14px;gap:10px;overflow:hidden;border:2px solid #ae8b50;border-radius:16px;background:#283b42;color:#342b23;box-shadow:0 18px 65px #0008;line-height:1.55}
+.math-word-reading-answer-panel .reading-v2-scene-header{grid-template-columns:auto minmax(0,1fr)}
+.math-word-reading-answer-panel .math-word-scene-back{flex:0 0 auto;width:auto;margin:0;padding:6px 12px;border:1px solid #a98a56;background:#3b5056;color:#fff4d8;white-space:nowrap}
+.math-word-scene-step{justify-self:end;max-width:100%;padding:7px 12px;border:1px solid #d4b574;border-radius:10px;background:#fff0cc;color:#51391f;font-size:13px;font-weight:700;text-align:center}
+.math-word-reading-answer-panel .quest-answer-content{display:grid;grid-template-columns:minmax(0,2fr) minmax(280px,1fr);flex:1 1 auto;min-height:0;overflow:hidden;gap:18px}
+.math-word-reading-answer-panel .quest-question-context{display:flex;min-width:0;min-height:0;overflow:hidden}
+.math-word-reading-answer-panel .quest-answer-center{position:relative;display:flex;flex-direction:column;justify-content:flex-end;flex:initial;min-width:0;min-height:0;overflow:hidden;padding:0;gap:0;border:1px solid #bda16d;border-radius:10px;background:radial-gradient(ellipse at 50% 25%,#6b8585,#344f56 70%);color:#342b23}
+.math-word-reading-answer-panel .reading-v2-answer-foreground{overflow-y:auto}
+.math-word-reading-answer-panel .math-word-story-progress{margin:0;font-size:14px}
+.math-word-reading-answer-panel .math-word-question-text{margin:0;text-align:left}
+.math-word-reading-answer-panel .math-word-answer-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));align-items:end;justify-content:stretch;gap:10px;width:100%;margin:0}
+.math-word-reading-answer-panel .math-word-field{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;padding:8px 6px;border:1px solid #cbb98e;border-radius:7px;background:#fffbef}
+.math-word-reading-answer-panel .math-word-field-label{font-size:14px;font-weight:700;color:#59452d}
+.math-word-reading-answer-panel .math-word-field input{box-sizing:border-box;width:min(100%,118px);min-width:0;min-height:44px;padding:6px 8px;border:2px solid #91612e;border-radius:8px;background:#fff;color:#24170d;font:inherit;font-size:20px;text-align:center}
+.math-word-reading-answer-panel .math-word-field-unit{color:#5b3213;font-weight:700;white-space:nowrap}
+.math-word-reading-answer-panel .math-word-answer-form>.btn{grid-column:1/-1;width:100%;max-width:none;min-height:44px;margin:0;padding:8px 12px}
+.math-word-reading-answer-panel .math-word-form-status{min-height:1.3em;margin:0;color:#8a3b0f;text-align:left;font-weight:700}
+.math-word-reading-answer-panel .reading-villager-dialogue{flex:0 0 auto;margin:8px 0 0;padding:9px 0 0;gap:0;border-top:1px solid #c6ae7b;border-radius:0;background:transparent;box-shadow:none;color:#3f3325}
+.math-word-reading-answer-panel .reading-villager-dialogue p{margin:4px 0 0;font-size:13px;line-height:1.55}
+.math-word-reading-answer-panel .math-word-results-title{margin:0;color:#4f3b28;text-align:left;font-size:19px}
+.math-word-reading-answer-panel .math-word-results-list{display:grid;grid-template-columns:1fr;gap:7px;max-height:34dvh;overflow-y:auto;padding:1px 3px 2px 0;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#a58a58 transparent}
+.math-word-reading-answer-panel .math-word-result-row{padding:8px 10px;border:1px solid #c6b393;border-left:4px solid #4c8659;border-radius:7px;background:#fffdfa}
+.math-word-reading-answer-panel .math-word-result-row.is-wrong{border-left-color:#c6873f}
+.math-word-reading-answer-panel .math-word-result-row p{margin:4px 0 0;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.math-word-reading-answer-panel .math-word-result-explanation{color:#60472d}
+.math-word-reading-answer-panel .math-word-run-reward,.math-word-reading-answer-panel .math-word-run-complete{margin:0;color:#6c3e15;text-align:left;font-size:13px;line-height:1.5}
+.math-word-reading-answer-panel .math-word-retry-start{width:100%;max-width:none;margin:0;padding:9px 10px}
+.math-word-reading-answer-panel .math-word-hint{margin:0;padding:9px 11px;border:1px dashed #a38e65;border-left:4px solid #d39a34;border-radius:7px;background:#fff9e9;color:#58452c;font-size:13px;line-height:1.55}
+.math-word-reading-answer-panel .math-word-hint p{margin:4px 0 0}
+
+@media(max-width:1000px){
+ .math-word-set-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 10px}
+ .math-word-set-card.quest-card.math-word-notice-card{min-height:255px;padding:12px 10px 18px}
+ .math-word-notice-card .quest-card-art{height:94px}
+ .math-word-notice-rewards{grid-template-columns:1fr;font-size:11px}
+ .math-word-reading-answer-panel .quest-answer-content{display:flex;flex-direction:column;overflow-y:auto;gap:12px}
+ .math-word-reading-answer-panel .quest-question-context{flex:0 0 auto;overflow:visible}
+ .math-word-reading-answer-panel .quest-answer-center{flex:0 0 auto;overflow:hidden}
+ .math-word-reading-answer-panel .reading-v2-answer-foreground{max-height:none;overflow:visible}
+ .math-word-reading-answer-panel .reading-v2-scene-villager{height:300px;top:4px}
+ .math-word-reading-answer-panel .reading-villager-dialogue{display:none}
+}
+@media(max-width:600px){
+ .math-word-subquest-panel{width:100%;height:96dvh;max-height:96dvh;border-width:5px}
+ .math-word-subquest-header{gap:7px;padding:9px 8px 2px}
+ .math-word-subquest-title{font-size:19px}
+ .math-word-subquest-description{margin:4px 8px 8px;font-size:12px}
+ .math-word-subquest-content{padding:6px 10px 14px}
+ .math-word-set-grid{gap:12px 6px;padding:7px 2px 18px}
+ .math-word-set-card.quest-card.math-word-notice-card{min-height:230px;padding:11px 8px 16px}
+ .math-word-notice-card .quest-card-art{height:78px}
+ .math-word-notice-card .quest-card-title{font-size:14px}
+ .math-word-notice-rewards{font-size:10px}
+ .reading-subquest-panel.quest-answer-panel.math-word-reading-answer-panel{width:calc(100vw - 16px);height:96dvh;max-height:96dvh;padding:10px;gap:8px}
+ .math-word-reading-answer-panel .reading-v2-letter{max-height:58dvh;padding:16px 18px 12px}
+ .math-word-reading-answer-panel .reading-v2-letter-header{padding-bottom:7px;margin-bottom:9px}
+ .math-word-reading-answer-panel .reading-v2-letter-header h2{font-size:19px}
+ .math-word-reading-answer-panel .reading-v2-letter .reading-v2-passage{max-height:39dvh;font-size:18px;line-height:1.85}
+ .math-word-reading-answer-panel .reading-v2-answer-foreground{padding:12px;gap:8px}
+ .math-word-reading-answer-panel .reading-v2-prompt{font-size:17px}
+ .math-word-reading-answer-panel .math-word-answer-form{grid-template-columns:1fr}
+ .math-word-reading-answer-panel .math-word-answer-form>.btn{grid-column:1}
+ .math-word-reading-answer-panel .math-word-field{justify-content:flex-start}
+ .math-word-reading-answer-panel .math-word-field input{width:118px}
+ .math-word-reading-answer-panel .math-word-results-list{max-height:none}
+ .math-word-reading-answer-panel .math-word-scene-back{padding:6px 8px;font-size:12px}
+ .math-word-scene-step{padding:6px 7px;font-size:10px}
+}
+@media(max-height:620px){
+ .math-word-set-card.quest-card.math-word-notice-card{min-height:210px}
+ .math-word-notice-card .quest-card-art{height:60px}
+ .math-word-reading-answer-panel .reading-v2-letter{max-height:48dvh}
+ .math-word-reading-answer-panel .reading-v2-letter .reading-v2-passage{max-height:30dvh}
+ .math-word-reading-answer-panel .reading-v2-answer-foreground{margin-top:clamp(110px,21dvh,170px)}
+}

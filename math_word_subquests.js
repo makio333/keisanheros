@@ -1,4 +1,7 @@
 import { getMathWordQuestsV2, scoreMathWordAnswerV2 } from './math_word_quests_v2.js';
+import './reading_quest_letter.css';
+import './math_word_subquests.css';
+import { assignQuestNotice } from './quest_notice_variants.js';
 
 const FIRST_CLEAR_REWARD = Object.freeze({ gold: 300, exp: 20, medal: 1 });
 const QUESTIONS_PER_SET = 5;
@@ -137,18 +140,37 @@ export function openMathWordSubquests(api) {
     const progressNote = el('p', `${selectedGrade}年：${gradeProgress.completed} / ${gradeProgress.total} 問クリア`, 'math-word-grade-progress');
     grid.before(progressNote);
     for (const group of groupsForGrade(selectedGrade)) {
+      const villager = api.npcAt?.(group.index) || { name: '村人', emoji: '🧑' };
       const session = state.sessions[group.id];
       const solved = group.questions.filter(problem => state.completed[problem.id]).length;
-      const card = el('article', null, 'math-word-set-card');
-      const title = el('h3', `${group.index + 1}. ${group.title}`, 'math-word-set-title');
-      const count = el('p', `${solved} / ${group.questions.length} 問クリア`, 'math-word-set-progress');
+      const card = el('article', null, 'math-word-set-card quest-card reading-quest-card math-word-notice-card');
+      card.dataset.questNoticeKey = group.id;
+      assignQuestNotice(card);
+      const ribbon = el('div', null, 'quest-card-ribbon');
+      const stars = el('span', null, `quest-card-stars${solved === group.questions.length ? ' is-complete' : ''}`);
+      stars.setAttribute('aria-label', `${solved}問 / ${group.questions.length}問クリア`);
+      for (let index = 0; index < group.questions.length; index++) stars.append(el('span', '★', index < solved ? 'on' : ''));
+      ribbon.append(stars);
+      const art = el('div', null, 'quest-card-art');
+      const portrait = el('img');
+      portrait.src = api.npcImage?.(villager) || '';
+      portrait.alt = '';
+      portrait.draggable = false;
+      art.append(portrait);
+      const title = el('h3', group.questions[0].title || group.title, 'quest-card-title math-word-set-title');
+      const count = el('p', `${group.title}・${solved} / ${group.questions.length} 問クリア`, 'quest-card-tag math-word-set-progress');
       const actionText = session && ['answering', 'results', 'review'].includes(session.phase)
         ? 'つづきから'
         : isGroupComplete(state, group) ? 'もう一度' : '依頼を受ける';
+      const rewards = el('div', null, 'quest-card-rewards reading-card-rewards math-word-notice-rewards');
+      rewards.append(el('span', `💰 最大 ${FIRST_CLEAR_REWARD.gold * group.questions.length}G`), el('span', `✨ ${FIRST_CLEAR_REWARD.exp * group.questions.length}EXP`), el('span', `🏅 ${FIRST_CLEAR_REWARD.medal * group.questions.length}枚`));
+      const actions = el('div', null, 'reading-quest-card-actions');
       const start = el('button', actionText, 'btn btn-primary math-word-set-start');
       start.type = 'button';
       start.onclick = () => openSession(group);
-      card.append(title, count, start);
+      actions.append(start);
+      card.append(ribbon, art, el('div', villager.name, 'quest-card-name'), title, count, rewards, actions);
+      card.onclick = event => { if (!event.target.closest('button')) start.click(); };
       grid.append(card);
     }
   }
@@ -199,23 +221,85 @@ export function openMathWordSubquests(api) {
     return { form, inputs };
   }
 
+  function createScene(group, problem, problemIndex, sceneTitle, backOptions = {}) {
+    overlay.remove();
+    document.querySelector('.math-word-reading-overlay')?.remove();
+    const villager = api.npcAt?.(group.index) || { name: '村人', emoji: '🧑' };
+    const sceneOverlay = el('div', null, 'reading-subquest-overlay math-word-reading-overlay');
+    const scenePanel = el('section', null, 'reading-subquest-panel quest-answer-panel reading-v2-answer-panel math-word-reading-answer-panel');
+    scenePanel.dataset.grade = String(group.grade);
+    scenePanel.setAttribute('role', 'dialog');
+    scenePanel.setAttribute('aria-modal', 'true');
+    scenePanel.setAttribute('aria-label', `${group.title}：${sceneTitle}`);
+
+    const header = el('header', null, 'reading-v2-scene-header');
+    const back = el('button', backOptions.label || '← 依頼一覧へ', 'btn math-word-scene-back');
+    back.type = 'button';
+    back.onclick = () => {
+      sceneOverlay.remove();
+      if (backOptions.onClick) {
+        backOptions.onClick();
+        return;
+      }
+      document.body.append(overlay);
+      saveAndRefresh();
+      renderMenu();
+    };
+    const stepText = sceneTitle === '5問の答え合わせ'
+      ? '5問の答え合わせ'
+      : `${sceneTitle}　${problemIndex + 1} / ${QUESTIONS_PER_SET}問`;
+    const step = el('div', stepText, 'math-word-scene-step');
+    header.append(back, step);
+
+    const answerContent = el('div', null, 'quest-answer-content reading-v2-answer-content');
+    const questionContext = el('div', null, 'quest-question-context reading-v2-question-context');
+    const letter = el('article', null, 'reading-v2-letter math-word-letter');
+    letter.setAttribute('aria-label', '村人から届いた算数の依頼');
+    const letterHeader = el('header', null, 'reading-v2-letter-header');
+    letterHeader.append(el('span', '村人からの算数の依頼', 'reading-v2-letter-eyebrow'), el('h2', problem.title || group.title));
+    const story = el('div', problem.story, 'reading-v2-passage math-word-letter-story');
+    story.lang = 'ja';
+    story.tabIndex = 0;
+    const signature = el('footer', null, 'reading-v2-letter-signature');
+    signature.append(el('span', '勇者へ'), el('b', `${villager.name} より`));
+    letter.append(letterHeader, story, signature);
+    questionContext.append(letter);
+
+    const answerStage = el('div', null, 'quest-answer-center reading-v2-answer-center');
+    const villagerImage = el('img');
+    villagerImage.src = api.npcImage?.(villager) || '';
+    villagerImage.alt = '';
+    villagerImage.className = 'reading-v2-scene-villager';
+    villagerImage.draggable = false;
+    const answerForeground = el('div', null, 'reading-v2-answer-foreground math-word-answer-foreground');
+    answerStage.append(villagerImage, answerForeground);
+    answerContent.append(questionContext, answerStage);
+
+    const dialogue = el('section', null, 'reading-villager-dialogue');
+    const speech = el('div');
+    speech.append(el('b', villager.name), el('p', group.grade <= 2
+      ? 'この もんだいを いっしょに かんがえて、こたえを みつけよう！'
+      : '村の依頼を一緒に考えてくれる？ 5問の答え合わせは最後にまとめてするよ。'));
+    dialogue.append(speech);
+
+    scenePanel.append(header, answerContent);
+    sceneOverlay.append(scenePanel);
+    document.body.append(sceneOverlay);
+    return { sceneOverlay, scenePanel, answerForeground, dialogue, villager };
+  }
+
   function renderQuestion(group, session) {
     const index = Math.max(0, Math.min(QUESTIONS_PER_SET - 1, Number(session.currentIndex) || 0));
     const problem = group.questions[index];
-    content.replaceChildren();
-    const nav = el('div', null, 'math-word-run-nav');
-    const back = el('button', '← 問題一覧へ', 'btn math-word-subquest-back');
-    back.type = 'button';
-    back.onclick = () => { saveAndRefresh(); renderMenu(); };
-    nav.append(back, el('span', `${index + 1} / ${QUESTIONS_PER_SET} 問`, 'math-word-run-count'));
-    const card = el('section', null, 'math-word-question-card');
-    const story = el('p', problem.story, 'math-word-question-story');
-    const question = el('h3', problem.question, 'math-word-question-text');
-    const helper = el('p', '答え合わせは、5問ぜんぶに答えたあとに出ます。', 'math-word-question-helper');
+    const scene = createScene(group, problem, index, '算数の依頼');
+    const { answerForeground: body, dialogue } = scene;
+    const progress = el('p', `${index + 1}／${QUESTIONS_PER_SET}問め　${group.title}`, 'reading-story-progress math-word-story-progress');
+    const helper = el('p', '答え合わせは、5問ぜんぶに答えたあとに出ます。', 'reading-v2-batch-note');
+    const question = el('h3', problem.question, 'challenge-problem challenge-problem-word quest-reading-question reading-v2-prompt math-word-question-text');
     const { form, inputs } = answerValues(problem, session.answers[index]);
     const status = el('p', '', 'math-word-form-status');
     status.setAttribute('role', 'status');
-    const submit = el('button', index === QUESTIONS_PER_SET - 1 ? '5問の答え合わせへ' : 'つぎの問題へ', 'btn btn-primary');
+    const submit = el('button', index === QUESTIONS_PER_SET - 1 ? '5問まとめて答え合わせ' : '回答を保存して次へ', 'btn btn-primary quest-answer-next');
     submit.type = 'submit';
     form.append(submit);
     form.onsubmit = event => {
@@ -247,8 +331,7 @@ export function openMathWordSubquests(api) {
       renderResults(group, session);
       grantLevelSummary(api, levelSummary);
     };
-    card.append(story, question, helper, form, status);
-    content.append(nav, el('p', `${selectedGrade}年・${group.title}`, 'math-word-current-topic'), card);
+    body.append(progress, helper, question, form, status, dialogue);
     inputs[problem.input.fields[0].name]?.focus({ preventScroll: true });
   }
 
@@ -257,13 +340,12 @@ export function openMathWordSubquests(api) {
     const allMastered = wrongIndexes.length === 0 && (session.results || []).length === QUESTIONS_PER_SET;
     session.phase = allMastered ? 'done' : 'results';
     api.save();
-    content.replaceChildren();
-    const nav = el('div', null, 'math-word-run-nav');
-    const back = el('button', '← 問題一覧へ', 'btn math-word-subquest-back');
-    back.type = 'button';
-    back.onclick = () => { saveAndRefresh(); renderMenu(); };
-    nav.append(back, el('span', '5問の答え合わせ', 'math-word-run-count'));
+    const scene = createScene(group, group.questions[wrongIndexes[0] ?? 0], wrongIndexes[0] ?? 0, '5問の答え合わせ');
+    const { answerForeground: body, dialogue } = scene;
     const title = el('h3', allMastered ? 'ぜんぶクリア！' : `正解 ${session.results.filter(result => result.correct || result.reviewed).length} / ${QUESTIONS_PER_SET} 問`, 'math-word-results-title');
+    const summary = el('p', allMastered
+      ? '5問ぜんぶ正解！村人の依頼をやりとげたよ。'
+      : 'まちがえた問題は、ヒントを見ながらもう一度考えてみよう。', 'reading-v2-batch-note');
     const list = el('div', null, 'math-word-results-list');
     group.questions.forEach((problem, index) => {
       const result = session.results[index];
@@ -282,32 +364,31 @@ export function openMathWordSubquests(api) {
       list.append(row);
     });
     const reward = el('p', `今回の初回報酬：💰 ${session.reward.gold}G　✨ ${session.reward.exp}EXP　🏅 ${session.reward.medal}枚`, 'math-word-run-reward');
-    content.append(nav, title, list, reward);
+    body.append(el('p', `5／${QUESTIONS_PER_SET}問　${group.title}`, 'reading-story-progress math-word-story-progress'), title, summary, list, reward);
     if (wrongIndexes.length) {
       const retry = el('button', `まちがえた ${wrongIndexes.length} 問をヒント付きでやり直す`, 'btn btn-primary math-word-retry-start');
       retry.type = 'button';
       retry.onclick = () => renderRetry(group, session, wrongIndexes[0]);
-      content.append(retry);
+      body.append(retry);
     } else {
       const done = el('p', '今回の5問はすべて正解です。報酬は初回クリア時に受け取れます。', 'math-word-run-complete');
       const again = el('button', 'もう一度挑戦', 'btn math-word-retry-start');
       again.type = 'button';
       again.onclick = () => { state.sessions[group.id] = blankSession(group); api.save(); renderQuestion(group, state.sessions[group.id]); };
-      content.append(done, again);
+      body.append(done, again);
     }
+    body.append(dialogue);
   }
 
   function renderRetry(group, session, index) {
     const problem = group.questions[index];
-    content.replaceChildren();
-    const nav = el('div', null, 'math-word-run-nav');
-    const back = el('button', '← 答え合わせへ', 'btn math-word-subquest-back');
-    back.type = 'button';
-    back.onclick = () => renderResults(group, session);
-    nav.append(back, el('span', `やり直し ${index + 1} / ${QUESTIONS_PER_SET}`, 'math-word-run-count'));
-    const card = el('section', null, 'math-word-question-card math-word-retry-card');
-    const story = el('p', problem.story, 'math-word-question-story');
-    const question = el('h3', problem.question, 'math-word-question-text');
+    const scene = createScene(group, problem, index, 'ヒント付き再挑戦', {
+      label: '← 答え合わせへ',
+      onClick: () => renderResults(group, session),
+    });
+    const { answerForeground: body, dialogue } = scene;
+    const progress = el('p', `${index + 1}／${QUESTIONS_PER_SET}問め　やり直し`, 'reading-story-progress math-word-story-progress');
+    const question = el('h3', problem.question, 'challenge-problem challenge-problem-word quest-reading-question reading-v2-prompt math-word-question-text');
     const hint = el('div', null, 'math-word-hint');
     const hintButton = el('button', 'ヒントを見る', 'btn math-word-hint-button');
     hintButton.type = 'button';
@@ -351,8 +432,9 @@ export function openMathWordSubquests(api) {
       else renderResults(group, session);
       grantLevelSummary(api, levelSummary);
     };
-    card.append(story, question, hint, form, status);
-    content.append(nav, el('h3', `問題 ${index + 1} をやり直そう`, 'math-word-results-title'), card);
+    hint.classList.add('reading-v2-retry-hint');
+    hint.append(el('p', '本文の数字と、何を聞かれているかを順番に確かめよう。'));
+    body.append(progress, el('h3', `問題 ${index + 1} をやり直そう`, 'math-word-results-title'), hint, question, form, status, dialogue);
     inputs[problem.input.fields[0].name]?.focus({ preventScroll: true });
   }
 
