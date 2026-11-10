@@ -1,0 +1,17626 @@
+import {QUEST_MEDAL_IMAGE} from './quest_medal_art.js';
+const LOCAL_ART_PREVIEW = import.meta.env.DEV && new URLSearchParams(location.search).get('art-preview') === '1';
+const HANDDRAWN_GRASS_BG = 'assets/artist-stage-samples/komorebi-clearing-v1.png';
+let localArtEnemyRef = null;
+import {QUEST_MEDAL_SKIN,QUEST_MEDAL_BACKGROUND,QUEST_MEDAL_FRAME,QUEST_MEDAL_EQUIPMENT,QUEST_MEDAL_EXCLUSIVE_PRIZES,claimQuestMedalExclusive} from './quest_medal_exclusives.js';
+import handdrawnTownUrl from './assets/artist-stage-samples/komorebi-village-aerial-v2.png?url';
+import {regularMathPrintCss} from './regular_math_print_layout.js';
+import {renderKanjiStagePrint} from './stage_print_layout.js';
+import {renderPrintRewardIcons} from './print_reward_icons.js';
+import {REVIEW_SETTINGS} from './gameplay_review_settings.js';
+import {renderReadingSubquests} from './reading_subquests.js';
+import {renderMathWordSubquests} from './math_word_subquests.js';
+import {renderMathWordPrintV2,renderMathWordSetPrintV2} from './math_word_problem_print_adapter_v2.js';
+import {renderJapaneseReadingPrintV2} from './japanese_reading_print_adapter_v2.js';
+import {ancientPrintPlanV2,paginateAncientAutomaticV2} from './ancient_word_problem_print_adapter_v2.js';
+import {createAncientExpToast} from './ancient_exp_toast_v2.js';
+import {createDamageFloatQueueV2} from './damage_float_queue_v2.js';
+import {createRaidBossIntro} from './raid_boss_intro.js';
+import {createRaidIntroBgmTransition} from './raid_intro_bgm.js';
+import {applyBattleAvatarCrop} from './battle_avatar_crop.js';
+import {renderIconCellV2} from './icon_presentation_v2.js';
+import {uniquePrintProblems} from './print_uniqueness.js';
+import {kanaChoicePrintHtml,kanaPrintChoice} from './kana_choice_print.js';
+import {ancientStoryProblem,ancientCalculationProblem} from './ancient_challenge_sheet.js';
+import './window_dismiss.js';
+import {initializeUiReadingTooltips} from './ui_reading_tooltip.js';
+import {trackHpRecovery} from './hp_recovery_feedback.js';
+import './battle_question_layout.css';
+import {openKukuTraining,closeKukuTraining,kukuMastered} from './kuku_training.js';
+import './skill_menu.css';
+import './icon_presentation_v2.css';
+import './damage_float_queue_v2.css';
+import './ancient_exp_toast_v2.css';
+import './town_raid.css';
+import './raid_ice.css';
+import {playIceBreath} from './ice_breath.js';
+import './ghost_boss_motion.css';
+import './print_answer_review.css';
+import {GHOST_RAID_BACKGROUND,GHOST_RAID_SKIN,GHOST_RAID_FRAME,GHOST_RAID_DEFEAT_DECORATION,GHOST_RAID_EQUIPMENT,GHOST_RAID_PRIZES,ownsRaidPrize,purchaseRaidPrize} from './ghost_raid_content.js';
+import {grantRaidRun,validRaidDamage,raidInitialHp,raidConfiguredHp} from './raid_run_rules.js';
+import {raidJstMonthKey} from './raid_monthly_rules.js';
+import { awakeningState, awakeningScale, isAncientEquipment, equippedAncients, grantAwakeningExp, masterExistingAncients } from './ancient_awakening.js';
+import { eventEquipmentAbility, ensureEventEquipmentAbilities } from './event_equipment.js';
+import { applyGiftPayload, recallGiftPayload, raidResumeStage, raidParticipationCoins } from './economy.js';
+import { kanjiPrintContext } from './kanji_print_context.js';
+import { isPrintAnswerCorrect, formatPrintAnswer } from './print_answers.js';
+import { createSaveDeletionWorkflow } from './save_deletion_workflow.js';
+import { canReuseRaidChallengeSnapshot, createRaidChallengeStartGate, raidChallengeAvailability } from './raid_challenge_gate.js';
+
+import { EVENT_RAID_RULES, EVENT_RAID_BONUSES, EventRaidRun, eventRaidTargetCount, rankEventRaidRecords, eventRaidRewardEntitlements, eventRaidBonusEntitlements, eventRaidGaugeRatio, formatEventRaidTime, EVENT_RAID_FINAL_AT } from './event_raid.js';
+const RAID_CLOSED_UNTIL = Date.parse(import.meta.env?.VITE_RAID_CLOSED_UNTIL || '');
+function raidFeatureOpen(now = Date.now()) { return !Number.isFinite(RAID_CLOSED_UNTIL) || now >= RAID_CLOSED_UNTIL; }
+function showRaidClosedNotice() { showConfirmModal('レイドは休止中', '11月1日の新レイド開始まで封鎖中です。開始後に再開します。', null); }
+window.addEventListener('online',()=>{ if(raidFeatureOpen()&&G) for(const mode of ['math','kanji']) if(eventRaidState(mode).pendingBest) syncEventRaidRecord(mode).catch(()=>{}); });
+
+function skillPower(s){
+  if (s.dmgMult) return s.dmgMult;
+  if (s.healPct) return 1 + s.healPct * 4;
+  return 1;
+}
+function skillTimeMult(s){ return 1.0; }
+function skillTimePenaltyLabel(s){ return ''; }
+'use strict';
+
+
+/* ==========================================================
+   Tooltips
+   ========================================================== */
+let globalTooltip = null;
+function showTooltip(e, html) {
+  if (!globalTooltip) {
+    globalTooltip = document.createElement('div');
+    globalTooltip.id = 'global-tooltip';
+    document.body.appendChild(globalTooltip);
+  }
+  globalTooltip.innerHTML = html;
+  const equipmentCard = globalTooltip.querySelector('.equip-unified-card[data-equip-rarity]');
+  if (equipmentCard) globalTooltip.dataset.equipRarity = equipmentCard.dataset.equipRarity;
+  else delete globalTooltip.dataset.equipRarity;
+  globalTooltip.style.display = 'block';
+  centerEquipmentCardArtwork(globalTooltip);
+  alignEquipmentCategoryIcons(globalTooltip);
+  updateTooltipPos(e);
+}
+function hideTooltip() {
+  if (globalTooltip) globalTooltip.style.display = 'none';
+}
+function updateTooltipPos(e) {
+  if (!globalTooltip || globalTooltip.style.display === 'none') return;
+  const clientX = e.clientX !== undefined ? e.clientX : (e.pageX - (window.scrollX || window.pageXOffset || 0));
+  const clientY = e.clientY !== undefined ? e.clientY : (e.pageY - (window.scrollY || window.pageYOffset || 0));
+  globalTooltip.style.left = (clientX + 15) + 'px';
+  globalTooltip.style.top = (clientY + 15) + 'px';
+  const rect = globalTooltip.getBoundingClientRect();
+  if (rect.right > window.innerWidth) globalTooltip.style.left = (window.innerWidth - rect.width - 10) + 'px';
+  if (rect.bottom > window.innerHeight) globalTooltip.style.top = Math.max(10, clientY - rect.height - 10) + 'px';
+}
+document.addEventListener('mousemove', updateTooltipPos);
+
+/* ==========================================================
+   安全なローカルストレージラッパー (iPad file:// 環境対応)
+   ========================================================== */
+const _fallbackMemStore = new Map();
+const _fallbackRemovedKeys = new Set();
+function storageGet(k) {
+  if (_fallbackRemovedKeys.has(k)) return null;
+  if (_fallbackMemStore.has(k)) return _fallbackMemStore.get(k);
+  try { if (typeof localStorage !== 'undefined') return localStorage.getItem(k); } catch (e) {}
+  return null;
+}
+function storageSet(k, v) {
+  try { if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(k, v);
+    _fallbackMemStore.delete(k); _fallbackRemovedKeys.delete(k);
+    return true;
+  } } catch (e) {}
+  _fallbackMemStore.set(k, String(v));
+  _fallbackRemovedKeys.delete(k);
+  if (typeof document !== 'undefined') {
+    const banner = document.getElementById('debug-error-banner');
+    if(banner){
+      banner.style.display = 'block';
+      banner.textContent = '端末への保存に失敗しました。変更はこの画面内に一時保持しています。画面を閉じずに、保存先の空き容量と共有セーブへの保存状況を確認してください。';
+    }
+  }
+  return false;
+}
+function storageRemove(k) {
+  _fallbackMemStore.delete(k);
+  try { if (typeof localStorage !== 'undefined') { localStorage.removeItem(k); _fallbackRemovedKeys.delete(k); return; } } catch (e) {}
+  _fallbackRemovedKeys.add(k);
+}
+function storageKeys() {
+  const keys = new Set();
+  try { if (typeof localStorage !== 'undefined') for(let i=0;i<localStorage.length;i++) {
+    const key = localStorage.key(i);
+    if(key !== null && !_fallbackRemovedKeys.has(key))keys.add(key);
+  } } catch (e) {}
+  for(const key of _fallbackMemStore.keys())keys.add(key);
+  return [...keys];
+}
+function storageLen() { return storageKeys().length; }
+function storageK(i) {
+  return storageKeys()[i] ?? null;
+}
+
+/* ==========================================================
+   ユーティリティ
+   ========================================================== */
+function rnd(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function $(id){ return document.getElementById(id); }
+const damageFloatsV2=createDamageFloatQueueV2();
+const raidBossIntro=createRaidBossIntro();
+let raidIntroAbort=null;
+const ancientToastV2=createAncientExpToast({root:$('ancient-exp-toast-v2'),nameOf:id=>getEquipTemplate(id)?.name||'古代装備'});
+function cancelRaidBossIntro(){raidIntroAbort?.abort();raidBossIntro.cancel();raidIntroAbort=null;}
+
+/* 画像アセットの キャッシュたいさく。ブラウザが 古い画像を キャッシュしつづけて
+   さしかえた あとの絵に ならない もんだいを ふせぐため、パスの うしろに ?v= を つける。
+   画像を さしかえた ときは この番号を あげる（game.js/style.css の ?v= と おなじ考えかた） */
+const ASSET_V = 1;
+function av(path){
+  if (!path) return path;
+  if (path.startsWith('http') || path.startsWith('data:')) return path; // 外部URL・data URIは そのまま
+  if (typeof window !== 'undefined' && window.__ASSET_MAP__) {
+    const pure = path.split('?')[0];
+    const resolved = window.__ASSET_MAP__[pure] ||
+                     window.__ASSET_MAP__[decodeURI(pure)] ||
+                     window.__ASSET_MAP__[encodeURI(pure)] ||
+                     window.__ASSET_MAP__['./' + pure] ||
+                     window.__ASSET_MAP__['./' + decodeURI(pure)] ||
+                     window.__ASSET_MAP__['./' + encodeURI(pure)];
+    if (resolved) return resolved;
+  }
+  return path + (path.includes('?') ? '&' : '?') + 'v=' + ASSET_V;
+}
+function characterFoilMaskStyle(image){
+  return `--character-foil-mask:url('${av(image)}')`; // style="..." 内で使うので内側はシングルクォート
+}
+function isFireCharacter(id){ return String(id || '').startsWith('skin_fire_lancer_'); }
+
+/* ==========================================================
+   サウンド管理 (Web Audio API)
+   ========================================================== */
+class SoundManager {
+  constructor() {
+    this.beepCtx = null;
+    this.effectGain = null;
+    this.initialized = false;
+    this.audios = {}; 
+    this.activeSE = new Set();
+    this.bgmKey = null;
+    this.muted = false;
+    this.globalVolume = 0.7; // マスター音量 (0.0〜1.0)
+    
+    this.audioFiles = {
+      bgm_title: 'assets_audio/bgm_title.m4a',
+      bgm_home: 'assets_audio/bgm_home_kaisei.mp3', // 快晴の街：拠点
+      bgm_room: 'assets_audio/bgm_room.m4a',
+      bgm_stage1: 'assets_audio/bgm_stage1.m4a',
+      bgm_area_boss: 'assets_audio/bgm_area_boss.mp3', // 空中散歩：各エリアのボス戦
+      bgm_raid_boss: 'assets_audio/bgm_raid_boss.mp3',
+      bgm_halloween_normal: 'assets_audio/bgm_halloween_normal.mp3',
+      bgm_halloween_boss: 'assets_audio/bgm_halloween_boss.mp3',
+      bgm_training: 'assets_audio/bgm_training.m4a',
+      se_crit: 'assets_audio/se_crit.mp3',
+      se_clear: 'assets_audio/se_clear.mp3',
+      se_type: 'assets_audio/se_type.mp3',
+      se_slash: 'assets_audio/se_slash.mp3',
+      se_decide: 'assets_audio/se_decide.mp3',
+      se_gameover: 'assets_audio/se_gameover.m4a',
+      se_gacha_result: 'assets_audio/se_gacha_result.mp3',
+      se_gacha_result2: 'assets_audio/se_gacha_result2.mp3',
+    };
+  }
+  
+  setGlobalVolume(vol) {
+    this.globalVolume = Math.max(0, Math.min(1, vol));
+    const volume = this.muted ? 0 : this.globalVolume;
+    for (const [key, audio] of Object.entries(this.audios)) {
+      if (key.startsWith('bgm_')) audio.volume = this.getBgmBaseVolume(key) * volume;
+    }
+    for (const audio of this.activeSE) audio.volume = audio.effectBaseVolume * volume;
+    if (this.effectGain) this.effectGain.gain.setValueAtTime(volume, this.beepCtx.currentTime);
+  }
+
+  setMuted(muted) {
+    this.muted = muted;
+    this.setGlobalVolume(this.globalVolume);
+  }
+
+  getSeBaseVolume(key) {
+    // 頻繁に鳴る決定音・入力音はBGMを遮らない音量にする。
+    if (key === 'se_decide') return 0.06;
+    if (key === 'se_type') return 0.06;
+    return 0.2;
+  }
+
+  getEffectGain() {
+    if (!this.effectGain) {
+      this.effectGain = this.beepCtx.createGain();
+      this.effectGain.gain.setValueAtTime(this.muted ? 0 : this.globalVolume, this.beepCtx.currentTime);
+      this.effectGain.connect(this.beepCtx.destination);
+    }
+    return this.effectGain;
+  }
+
+  getBgmBaseVolume(key) {
+    return key === 'bgm_home' ? 0.075 : 0.4;
+  }
+
+  init() {
+    if (this.initialized) return;
+    this.initialized = true;
+    this.resumeContext(); // Unlock Web Audio in the initiating user gesture.
+
+    for (const [key, path] of Object.entries(this.audioFiles)) {
+      const isBgm = key.startsWith('bgm_');
+      const audio = new Audio();
+      audio.preload = isBgm ? 'none' : 'auto';
+      audio.addEventListener('error', () => {
+        console.warn('Failed to load audio:', path);
+      });
+      // SEのみ初期ロード。BGMは再生時にオンデマンドでsrcを設定してロード
+      if (!isBgm) {
+        const src = av(path);
+        audio.src = src.startsWith('data:') ? src : encodeURI(src);
+      }
+      this.audios[key] = audio;
+    }
+
+    if ($('screen-home').classList.contains('active')) {
+      this.playBGM('bgm_home');
+    } else if ($('screen-title').classList.contains('active')) {
+      this.playBGM('bgm_title');
+    }
+  }
+
+  resumeContext() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!this.beepCtx && AudioContext) this.beepCtx = new AudioContext();
+    if (this.beepCtx?.state === 'suspended') {
+      const resumed = this.beepCtx.resume();
+      resumed?.catch(() => {});
+    }
+  }
+  
+  playCorrectAnswer() { this.play('se_type',4); }
+
+  play(key, volumeScale = 1) {
+    if (this.muted || this.globalVolume === 0) return;
+    const base = this.audios[key];
+    if (!base) {
+      if (key === 'se_type' || key === 'se_decide') this.playBeep('type',volumeScale);
+      if (key === 'se_slash') this.playBeep('hit',volumeScale);
+      if (key === 'se_crit') this.playBeep('hit',volumeScale);
+      if (key === 'se_heal') this.playBeep('heal',volumeScale);
+      return;
+    }
+    const node = base.cloneNode(true);
+    node.effectBaseVolume = Math.min(1,this.getSeBaseVolume(key)*Math.max(0,volumeScale));
+    node.volume = node.effectBaseVolume * this.globalVolume;
+    this.activeSE.add(node);
+    node.addEventListener('ended', () => this.activeSE.delete(node), { once:true });
+    node.play().catch(() => {
+      this.activeSE.delete(node);
+      if (key === 'se_type' || key === 'se_decide') this.playBeep('type',volumeScale);
+      if (key === 'se_slash') this.playBeep('hit',volumeScale);
+      if (key === 'se_crit') this.playBeep('hit',volumeScale);
+      if (key === 'se_heal') this.playBeep('heal',volumeScale);
+    });
+  }
+
+  playBGM(key) {
+    if (this.muted) {
+      this.bgmKey = key;
+      return;
+    }
+    const audio = this.audios[key];
+    if (this.bgmKey === key && audio && !audio.paused) return;
+    this.stopBGM();
+    if (!audio) return;
+    
+    // オンデマンドロード：srcが未設定ならここで設定
+    if (!audio.src) {
+      const path = this.audioFiles[key];
+      if (path) {
+        const src = av(path);
+        audio.src = src.startsWith('data:') ? src : encodeURI(src);
+      }
+    }
+    audio.preload = 'auto';
+    audio.loop = true;
+    
+    audio.volume = this.getBgmBaseVolume(key) * this.globalVolume;
+    
+    audio.currentTime = 0;
+    audio.play().catch(e => console.warn('BGM playback blocked:', e));
+    this.bgmKey = key;
+  }
+
+  playIceFreeze() {
+    if (this.muted || this.globalVolume === 0) return () => {};
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!this.beepCtx && AudioContext) this.beepCtx = new AudioContext();
+    const ctx = this.beepCtx;
+    if (!ctx) return () => {};
+    this.resumeContext();
+    const now = ctx.currentTime;
+    const nodes = [], sources = [];
+    const connect = node => { nodes.push(node); return node; };
+    // A short rising air sweep, followed by two crystalline taps at the ice collision.
+    const buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * .3), ctx.sampleRate);
+    const samples = buffer.getChannelData(0);
+    for (let i=0;i<samples.length;i++) samples[i] = Math.random()*2-1;
+    const wind = connect(ctx.createBufferSource());wind.buffer=buffer;
+    const filter = connect(ctx.createBiquadFilter());filter.type='bandpass';filter.Q.value=.8;
+    filter.frequency.setValueAtTime(550,now);
+    filter.frequency.exponentialRampToValueAtTime(4200,now+.15);
+    filter.frequency.exponentialRampToValueAtTime(1800,now+.23);
+    const air = connect(ctx.createGain());
+    air.gain.setValueAtTime(.0001,now);air.gain.exponentialRampToValueAtTime(.45,now+.11);air.gain.exponentialRampToValueAtTime(.0001,now+.24);
+    wind.connect(filter);filter.connect(air);air.connect(this.getEffectGain());
+    sources.push(wind);wind.start(now);wind.stop(now+.3);
+    for (const hz of [1900,2850]) {
+      const tone=connect(ctx.createOscillator()),gain=connect(ctx.createGain());tone.type='triangle';
+      tone.frequency.setValueAtTime(hz,now+.17);tone.frequency.exponentialRampToValueAtTime(hz*.65,now+.29);
+      gain.gain.setValueAtTime(.0001,now);gain.gain.setValueAtTime(.0001,now+.17);gain.gain.exponentialRampToValueAtTime(.14,now+.18);gain.gain.exponentialRampToValueAtTime(.0001,now+.3);
+      tone.connect(gain);gain.connect(this.getEffectGain());sources.push(tone);tone.start(now+.17);tone.stop(now+.3);
+    }
+    // Three dry, high-frequency fractures make the collision feel like snapping ice.
+    const crackBuffer=ctx.createBuffer(1,Math.ceil(ctx.sampleRate*.028),ctx.sampleRate);
+    const crackSamples=crackBuffer.getChannelData(0);
+    for(let i=0;i<crackSamples.length;i++)crackSamples[i]=(Math.random()*2-1)*Math.exp(-i/(ctx.sampleRate*.006));
+    for(const [offset,volume] of [[.17,.65],[.193,.4],[.217,.22]]){
+      const crack=connect(ctx.createBufferSource());crack.buffer=crackBuffer;
+      const crisp=connect(ctx.createBiquadFilter());crisp.type='highpass';crisp.frequency.setValueAtTime(2300,now+offset);crisp.Q.value=.7;
+      const gain=connect(ctx.createGain());gain.gain.setValueAtTime(.0001,now);gain.gain.setValueAtTime(volume,now+offset);gain.gain.exponentialRampToValueAtTime(.0001,now+offset+.028);
+      crack.connect(crisp);crisp.connect(gain);gain.connect(this.getEffectGain());sources.push(crack);crack.start(now+offset);crack.stop(now+offset+.028);
+    }
+    let stopped=false;
+    const stop=()=>{if(stopped)return;stopped=true;for(const source of sources){try{source.stop();}catch{}}for(const node of nodes)node.disconnect();};
+    wind.onended=stop;
+    return stop;
+  }
+
+  playRumble(durationMs = 2200) {
+    if (this.muted || this.globalVolume === 0) return;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!this.beepCtx && AudioContext) this.beepCtx = new AudioContext();
+    const ctx = this.beepCtx;
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+
+    const now = ctx.currentTime;
+    const duration = durationMs / 1000;
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.exponentialRampToValueAtTime(0.21, now + 0.08);
+    master.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    master.connect(this.getEffectGain());
+
+    const makeOsc = (type, startHz, endHz, gainValue) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(startHz, now);
+      osc.frequency.exponentialRampToValueAtTime(endHz, now + duration);
+      gain.gain.setValueAtTime(gainValue, now);
+      osc.connect(gain);
+      gain.connect(master);
+      osc.start(now);
+      osc.stop(now + duration);
+    };
+
+    makeOsc('sawtooth', 62, 34, 0.55);
+    makeOsc('triangle', 97, 48, 0.35);
+
+    setTimeout(() => master.disconnect(), durationMs + 120);
+  }
+
+  stopBGM() {
+    if (this.bgmKey && this.audios[this.bgmKey]) {
+      const a = this.audios[this.bgmKey];
+      a.pause();
+      a.currentTime = 0;
+    }
+    this.bgmKey = null;
+  }
+  
+  playBeep(type = 'type', volumeScale = 1) {
+    if (this.muted || this.globalVolume === 0) return;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!this.beepCtx && AudioContext) this.beepCtx = new AudioContext();
+    if (!this.beepCtx) return;
+    this.resumeContext();
+
+    const osc = this.beepCtx.createOscillator();
+    const gain = this.beepCtx.createGain();
+
+    osc.connect(gain);
+    gain.connect(this.getEffectGain());
+
+    const now = this.beepCtx.currentTime;
+    const volBase = (type === 'type' ? 0.13 : 0.25)*Math.max(0,volumeScale); // マスター音量は共通のeffectGainで適用する
+    
+    if (type === 'type') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, now);
+      osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
+      gain.gain.setValueAtTime(0.3 * volBase, now);
+      gain.gain.exponentialRampToValueAtTime(0.01 * volBase, now + 0.05);
+      osc.start(now);
+      osc.stop(now + 0.05);
+    } else if (type === 'correct') {
+      osc.type='sine';
+      osc.frequency.setValueAtTime(659.25,now);
+      osc.frequency.setValueAtTime(1046.5,now+.09);
+      gain.gain.setValueAtTime(.35*volBase,now);
+      gain.gain.exponentialRampToValueAtTime(.01*volBase,now+.25);
+      osc.start(now); osc.stop(now+.25);
+    } else if (type === 'hit') {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(400, now);
+      osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+      gain.gain.setValueAtTime(0.5 * volBase, now);
+      gain.gain.exponentialRampToValueAtTime(0.01 * volBase, now + 0.1);
+      osc.start(now);
+      osc.stop(now + 0.1);
+    } else if (type === 'damage') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, now);
+      osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
+      gain.gain.setValueAtTime(0.6 * volBase, now);
+      gain.gain.exponentialRampToValueAtTime(0.01 * volBase, now + 0.2);
+      osc.start(now);
+      osc.stop(now + 0.2);
+    } else if (type === 'error') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(200, now);
+      osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
+      gain.gain.setValueAtTime(0.4 * volBase, now);
+      gain.gain.exponentialRampToValueAtTime(0.01 * volBase, now + 0.1);
+      osc.start(now);
+      osc.stop(now + 0.1);
+    } else if (type === 'heal') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.setValueAtTime(659.25, now + 0.07);
+      osc.frequency.setValueAtTime(783.99, now + 0.14);
+      osc.frequency.setValueAtTime(1046.50, now + 0.21);
+      gain.gain.setValueAtTime(0.4 * volBase, now);
+      gain.gain.exponentialRampToValueAtTime(0.01 * volBase, now + 0.35);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } else if (type === 'miss') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(750, now);
+      osc.frequency.exponentialRampToValueAtTime(320, now + 0.15);
+      gain.gain.setValueAtTime(0.35 * volBase, now);
+      gain.gain.exponentialRampToValueAtTime(0.01 * volBase, now + 0.15);
+      osc.start(now);
+      osc.stop(now + 0.15);
+    }
+  }
+}
+const SM = new SoundManager();
+if (typeof window !== 'undefined') window.SM = SM;
+const raidIntroBgm = createRaidIntroBgmTransition({
+  playBGM: key => SM.playBGM(key),
+  getRestoreBGM: () => {
+    const activeScreen = document.querySelector('.screen.active');
+    return activeScreen ? bgmKeyForScreen(activeScreen.id) : null;
+  },
+});
+
+// 最初のクリック等でAudioContextを初期化
+document.addEventListener('click', (e) => {
+  if (!SM.initialized) {
+    SM.init();
+  } else {
+    SM.resumeContext();
+  }
+  
+  // 汎用的な決定音 (非同期で初期化中でもとりあえず呼び出す。ロードされていれば鳴る)
+  if (e.target.tagName === 'BUTTON' || e.target.closest('.btn')) {
+    SM.play('se_decide');
+  }
+});
+document.addEventListener('keydown', () => {
+  if (!SM.initialized) SM.init();
+  else SM.resumeContext();
+}, { once: true });
+
+/* ==========================================================
+   描画管理 (Canvas API)
+   ========================================================== */
+class CanvasManager {
+  constructor(canvasId = 'game-canvas') {
+    this.canvasId = canvasId;
+    this.canvas = null;
+    this.ctx = null;
+    this.width = 0;
+    this.height = 0;
+    this.effects = [];
+    this.running = false;
+    this.lastTime = 0;
+    this.imageLoader = new Map(); // src -> Image
+  }
+  
+  loadImage(src) {
+    const resolved = (typeof av === 'function') ? av(src) : src;
+    if (this.imageLoader.has(resolved)) return this.imageLoader.get(resolved);
+    const img = new Image();
+    img.src = resolved;
+    this.imageLoader.set(resolved, img);
+    return img;
+  }
+  
+  init() {
+    if (this.ctx) return; // 既に初期化済み
+    if (this.ctx && this.canvas && this.canvas.isConnected) return;
+    this.canvas = $(this.canvasId);
+    if (!this.canvas) return;
+    this.ctx = this.canvas.getContext('2d');
+    
+    window.addEventListener('resize', () => this.syncSize());
+    this.syncSize();
+  }
+
+  syncSize() {
+    if (!this.canvas) return;
+    const rect = this.canvas.getBoundingClientRect();
+    const width = Math.round(rect.width), height = Math.round(rect.height);
+    if (width <= 0 || height <= 0) return;
+    if (this.canvas.width !== width || this.canvas.height !== height) {
+      this.canvas.width = width;
+      this.canvas.height = height;
+    }
+    this.width = this.canvas.width;
+    this.height = this.canvas.height;
+  }
+  
+  start() {
+    this.init();
+    if (this.running) return;
+    this.running = true;
+    this.lastTime = performance.now();
+    requestAnimationFrame((t) => this.loop(t));
+  }
+  
+  stop() {
+    this.running = false;
+    damageFloatsV2.clear();
+  }
+  
+  loop(time) {
+    if (!this.running) return;
+    
+    // Canvasの表示サイズが変わっていれば内部サイズも同期する（エフェクトのズレ・歪み防止）
+    this.syncSize();
+    
+    const dt = (time - this.lastTime) / 1000;
+    this.lastTime = time;
+    
+    this.update(dt);
+    this.draw();
+    
+    requestAnimationFrame((t) => this.loop(t));
+  }
+  
+  update(dt) {
+    for (let i = this.effects.length - 1; i >= 0; i--) {
+      const e = this.effects[i];
+      e.life -= dt;
+      if (e.update) e.update(dt);
+      if (e.life <= 0) {
+        this.effects.splice(i, 1);
+      }
+    }
+  }
+  
+  draw() {
+    if (!this.ctx) return;
+    if (this.canvasId === 'game-canvas') positionBattleProgressStars();
+    this.ctx.clearRect(0, 0, this.width, this.height);
+    for (const e of this.effects) {
+      if (e.targetElement?.isConnected) {
+        const point = canvasTargetPoint(this, e.targetElement);
+        e.x = point.x;
+        e.y = point.y;
+      }
+      if (e.draw) e.draw(this.ctx);
+    }
+  }
+  
+  addEffect(effect, targetElement = null) {
+    effect.targetElement = targetElement;
+    this.effects.push(effect);
+  }
+}
+class SlashEffect {
+  constructor(x, y) {
+    this.x = x; this.y = y;
+    this.life = 0.25;
+    this.maxLife = 0.25;
+  }
+  update(dt) {}
+  draw(ctx) {
+    const progress = 1 - (this.life / this.maxLife);
+    ctx.save();
+    ctx.strokeStyle = `rgba(255, 255, 255, ${1 - progress})`;
+    ctx.lineWidth = 6;
+    ctx.shadowColor = 'rgba(200, 200, 255, 0.8)';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.moveTo(this.x - 60 + progress*30, this.y - 60 + progress*30);
+    ctx.lineTo(this.x + 60 - progress*30, this.y + 60 - progress*30);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+
+/* 連続斬り（れんぞくぎり / れんぞくぎりⅡ）の超美麗スプライトスラッシュエフェクト */
+class RenzokuSlashEffect {
+  constructor(x, y, isLevel2 = false) {
+    this.x = x;
+    this.y = y;
+    this.isLevel2 = isLevel2;
+    this.life = isLevel2 ? 0.75 : 0.55;
+    this.maxLife = this.life;
+    this.particles = [];
+    
+    // スプライト画像のロード
+    this.imgArc = CM.loadImage('画像/エフェクト/slash_blue_arc.png');
+    this.imgCross = CM.loadImage('画像/エフェクト/slash_cross_gold.png');
+
+    // 多段スラッシュ定義（角度、反転、ディレイ、スケール、タイプ、パーティクル色）
+    this.slashes = isLevel2 ? [
+      { angle: -0.4, flipX: false, flipY: false, delay: 0.0,  scale: 1.0,  type: 'arc',   color: '#00d2d3' },
+      { angle: 0.4,  flipX: true,  flipY: false, delay: 0.12, scale: 1.08, type: 'arc',   color: '#ff9f43' },
+      { angle: -0.8, flipX: false, flipY: true,  delay: 0.24, scale: 1.15, type: 'arc',   color: '#1dd1a1' },
+      { angle: 0.8,  flipX: true,  flipY: true,  delay: 0.36, scale: 1.22, type: 'arc',   color: '#feca57' },
+      { angle: 0.0,  flipX: false, flipY: false, delay: 0.48, scale: 1.5,  type: 'cross', color: '#ff4757' }
+    ] : [
+      { angle: -0.4, flipX: false, flipY: false, delay: 0.0,  scale: 1.05, type: 'arc',   color: '#54a0ff' },
+      { angle: 0.4,  flipX: true,  flipY: false, delay: 0.14, scale: 1.12, type: 'arc',   color: '#ff9f43' },
+      { angle: 0.0,  flipX: false, flipY: false, delay: 0.28, scale: 1.35, type: 'cross', color: '#ffd32a' }
+    ];
+
+    this.playedHits = new Set();
+  }
+
+  update(dt) {
+    const elapsed = this.maxLife - this.life;
+
+    this.slashes.forEach((s, idx) => {
+      if (elapsed >= s.delay && !this.playedHits.has(idx)) {
+        this.playedHits.add(idx);
+        if (typeof SM !== 'undefined' && SM.play) {
+          if (s.type === 'cross') {
+            SM.play('se_crit');
+          } else {
+            SM.play('se_slash');
+          }
+        }
+        
+        // 敵またはカカシのヒット振動
+        const targets = document.querySelectorAll('.enemy-sprite, .training-dummy-wrap');
+        targets.forEach(frame => {
+          frame.classList.remove('enemy-damage-hit', 'hit');
+          void frame.offsetWidth;
+          frame.classList.add('enemy-damage-hit', 'hit');
+        });
+
+        // 飛び散る光粒子パーティクル
+        const pCount = s.type === 'cross' ? 24 : 12;
+        for (let i = 0; i < pCount; i++) {
+          const spd = (Math.random() * 180 + 80);
+          const pAngle = Math.random() * Math.PI * 2;
+          this.particles.push({
+            x: this.x + (Math.random() * 40 - 20),
+            y: this.y + (Math.random() * 40 - 20),
+            vx: Math.cos(pAngle) * spd,
+            vy: Math.sin(pAngle) * spd,
+            color: s.color,
+            size: Math.random() * 5 + 2,
+            life: 0.3,
+            maxLife: 0.3
+          });
+        }
+      }
+    });
+
+    this.particles.forEach(p => {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt;
+    });
+    this.particles = this.particles.filter(p => p.life > 0);
+  }
+
+  draw(ctx) {
+    const elapsed = this.maxLife - this.life;
+    ctx.save();
+
+    // 加算合成で光り輝かせる
+    ctx.globalCompositeOperation = 'lighter';
+
+    // スラッシュスプライト描画
+    this.slashes.forEach(s => {
+      if (elapsed < s.delay) return;
+      const slashTime = elapsed - s.delay;
+      const slashDuration = 0.22;
+      if (slashTime > slashDuration) return;
+
+      const progress = slashTime / slashDuration;
+      const scaleEase = 0.7 + Math.sin(progress * Math.PI * 0.5) * 0.45;
+      const alpha = Math.sin(progress * Math.PI);
+
+      const img = s.type === 'cross' ? this.imgCross : this.imgArc;
+      if (!img || !img.complete || img.naturalWidth === 0) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(s.angle);
+        ctx.scale(
+          (s.flipX ? -1 : 1) * s.scale * scaleEase,
+          (s.flipY ? -1 : 1) * s.scale * scaleEase
+        );
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = s.color;
+        ctx.shadowColor = s.color;
+        ctx.shadowBlur = 20;
+        ctx.lineWidth = (s.type === 'cross' ? 12 : 8) * scaleEase;
+        ctx.beginPath();
+        if (s.type === 'cross') {
+          ctx.moveTo(-80, -80);
+          ctx.lineTo(80, 80);
+          ctx.moveTo(-80, 80);
+          ctx.lineTo(80, -80);
+        } else {
+          ctx.arc(0, 0, 90, -Math.PI * 0.45, Math.PI * 0.45);
+        }
+        ctx.stroke();
+        ctx.restore();
+        return;
+      }
+
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(s.angle);
+      ctx.scale(
+        (s.flipX ? -1 : 1) * s.scale * scaleEase,
+        (s.flipY ? -1 : 1) * s.scale * scaleEase
+      );
+      ctx.globalAlpha = alpha;
+
+      const baseSize = s.type === 'cross' ? 240 : 200;
+      ctx.drawImage(img, -baseSize / 2, -baseSize / 2, baseSize, baseSize);
+
+      ctx.restore();
+    });
+
+    // 光粒子パーティクル描画
+    this.particles.forEach(p => {
+      const pAlpha = Math.max(0, p.life / p.maxLife);
+      ctx.save();
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 12;
+      ctx.globalAlpha = pAlpha;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+
+    ctx.restore();
+  }
+}
+
+/* ほのおの剣 / ほのおの剣Ⅱ の火炎爆砕エフェクト */
+class FlameSlashEffect {
+  constructor(x, y, isLevel2 = false) {
+    this.x = x;
+    this.y = y;
+    this.isLevel2 = isLevel2;
+    this.life = isLevel2 ? 0.65 : 0.5;
+    this.maxLife = this.life;
+    this.particles = [];
+    this.played = false;
+  }
+  update(dt) {
+    if (!this.played) {
+      this.played = true;
+      if (typeof SM !== 'undefined') {
+        if (SM.play) SM.play('se_slash');
+        if (SM.playBeep) SM.playBeep('hit');
+      }
+      const pCount = this.isLevel2 ? 45 : 30;
+      for (let i = 0; i < pCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const spd = Math.random() * 200 + 80;
+        this.particles.push({
+          x: this.x + (Math.random() * 30 - 15),
+          y: this.y + (Math.random() * 30 - 15),
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd - (Math.random() * 120 + 60),
+          color: ['#ff4757', '#ff6b6b', '#ffa502', '#ffd32a'][Math.floor(Math.random() * 4)],
+          size: Math.random() * 8 + 4,
+          life: 0.45,
+          maxLife: 0.45
+        });
+      }
+      const targets = document.querySelectorAll('.enemy-sprite, .training-dummy-wrap');
+      targets.forEach(frame => {
+        frame.classList.remove('enemy-damage-hit', 'hit');
+        void frame.offsetWidth;
+        frame.classList.add('enemy-damage-hit', 'hit');
+      });
+    }
+    this.particles.forEach(p => {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt;
+    });
+    this.particles = this.particles.filter(p => p.life > 0);
+  }
+  draw(ctx) {
+    const progress = 1 - (this.life / this.maxLife);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const scale = (this.isLevel2 ? 1.4 : 1.1) * (0.8 + Math.sin(progress * Math.PI) * 0.4);
+    const alpha = Math.sin(progress * Math.PI);
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(-0.35 + progress * 0.7);
+    ctx.scale(scale, scale);
+    ctx.strokeStyle = '#ffa502';
+    ctx.shadowColor = '#ff4757';
+    ctx.shadowBlur = 24;
+    ctx.lineWidth = 14;
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.arc(0, 0, 85, -Math.PI * 0.5, Math.PI * 0.4);
+    ctx.stroke();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 6;
+    ctx.stroke();
+    ctx.restore();
+
+    this.particles.forEach(p => {
+      const pAlpha = Math.max(0, p.life / p.maxLife);
+      ctx.save();
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 14;
+      ctx.globalAlpha = pAlpha;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * pAlpha, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+    ctx.restore();
+  }
+}
+
+/* いなずま斬り / いなずま斬りⅡ の雷光撃滅エフェクト */
+class InazumaSlashEffect {
+  constructor(x, y, isLevel2 = false) {
+    this.x = x;
+    this.y = y;
+    this.isLevel2 = isLevel2;
+    this.life = isLevel2 ? 0.6 : 0.45;
+    this.maxLife = this.life;
+    this.particles = [];
+    this.bolts = [];
+    this.played = false;
+  }
+  generateBolts() {
+    const boltCount = this.isLevel2 ? 4 : 2;
+    this.bolts = [];
+    for (let b = 0; b < boltCount; b++) {
+      const points = [];
+      let curX = this.x + (Math.random() * 60 - 30);
+      let curY = this.y - 180;
+      points.push({ x: curX, y: curY });
+      while (curY < this.y + 30) {
+        curX += (Math.random() * 40 - 20);
+        curY += (Math.random() * 30 + 15);
+        points.push({ x: curX, y: curY });
+      }
+      this.bolts.push(points);
+    }
+  }
+  update(dt) {
+    if (!this.played) {
+      this.played = true;
+      this.generateBolts();
+      if (typeof SM !== 'undefined' && SM.play) {
+        SM.play('se_crit');
+      }
+      const pCount = this.isLevel2 ? 40 : 25;
+      for (let i = 0; i < pCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const spd = Math.random() * 220 + 100;
+        this.particles.push({
+          x: this.x + (Math.random() * 20 - 10),
+          y: this.y + (Math.random() * 20 - 10),
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd,
+          color: ['#feca57', '#ffd32a', '#70a1ff', '#ffffff'][Math.floor(Math.random() * 4)],
+          size: Math.random() * 5 + 2,
+          life: 0.35,
+          maxLife: 0.35
+        });
+      }
+      const targets = document.querySelectorAll('.enemy-sprite, .training-dummy-wrap');
+      targets.forEach(frame => {
+        frame.classList.remove('enemy-damage-hit', 'hit');
+        void frame.offsetWidth;
+        frame.classList.add('enemy-damage-hit', 'hit');
+      });
+    }
+    if (Math.random() < 0.3) this.generateBolts();
+    this.particles.forEach(p => {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt;
+    });
+    this.particles = this.particles.filter(p => p.life > 0);
+  }
+  draw(ctx) {
+    const progress = 1 - (this.life / this.maxLife);
+    const alpha = Math.sin(progress * Math.PI);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const bolt of this.bolts) {
+      if (bolt.length < 2) continue;
+      ctx.save();
+      ctx.strokeStyle = '#ffd32a';
+      ctx.shadowColor = '#70a1ff';
+      ctx.shadowBlur = 20;
+      ctx.lineWidth = this.isLevel2 ? 8 : 5;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.moveTo(bolt[0].x, bolt[0].y);
+      for (let i = 1; i < bolt.length; i++) ctx.lineTo(bolt[i].x, bolt[i].y);
+      ctx.stroke();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.restore();
+    }
+    this.particles.forEach(p => {
+      const pAlpha = Math.max(0, p.life / p.maxLife);
+      ctx.save();
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 12;
+      ctx.globalAlpha = pAlpha;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+    ctx.restore();
+  }
+}
+
+/* しっぷう斬り / しっぷう斬りⅡ の旋風斬撃エフェクト */
+class GaleSlashEffect {
+  constructor(x, y, isLevel2 = false) {
+    this.x = x;
+    this.y = y;
+    this.isLevel2 = isLevel2;
+    this.life = isLevel2 ? 0.6 : 0.45;
+    this.maxLife = this.life;
+    this.particles = [];
+    this.played = false;
+  }
+  update(dt) {
+    if (!this.played) {
+      this.played = true;
+      if (typeof SM !== 'undefined' && SM.play) {
+        SM.play('se_slash');
+      }
+      const pCount = this.isLevel2 ? 40 : 25;
+      for (let i = 0; i < pCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const spd = Math.random() * 220 + 80;
+        this.particles.push({
+          x: this.x + (Math.random() * 20 - 10),
+          y: this.y + (Math.random() * 20 - 10),
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd,
+          color: ['#1dd1a1', '#10ac84', '#00d2d3', '#c8d6e5'][Math.floor(Math.random() * 4)],
+          size: Math.random() * 6 + 2,
+          life: 0.4,
+          maxLife: 0.4
+        });
+      }
+      const targets = document.querySelectorAll('.enemy-sprite, .training-dummy-wrap');
+      targets.forEach(frame => {
+        frame.classList.remove('enemy-damage-hit', 'hit');
+        void frame.offsetWidth;
+        frame.classList.add('enemy-damage-hit', 'hit');
+      });
+    }
+    this.particles.forEach(p => {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt;
+    });
+    this.particles = this.particles.filter(p => p.life > 0);
+  }
+  draw(ctx) {
+    const progress = 1 - (this.life / this.maxLife);
+    const alpha = Math.sin(progress * Math.PI);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const scale = (this.isLevel2 ? 1.5 : 1.1) * (0.8 + progress * 0.4);
+    for (const rot of [-0.6 + progress * 1.2, 0.6 - progress * 1.2]) {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(rot);
+      ctx.scale(scale, scale);
+      ctx.strokeStyle = '#1dd1a1';
+      ctx.shadowColor = '#00d2d3';
+      ctx.shadowBlur = 18;
+      ctx.lineWidth = 8;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.arc(0, 0, 80, -Math.PI * 0.5, Math.PI * 0.3);
+      ctx.stroke();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.restore();
+    }
+    this.particles.forEach(p => {
+      const pAlpha = Math.max(0, p.life / p.maxLife);
+      ctx.save();
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 10;
+      ctx.globalAlpha = pAlpha;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+    ctx.restore();
+  }
+}
+
+class DamageEffect {
+  constructor(x, y, text, typeClass = 'enemy-dmg') {
+    this.x = x + (Math.random() * 24 - 12);
+    this.y = y;
+    this.text = String(text);
+    this.typeClass = typeClass;
+    this.life = 1.1;
+    this.maxLife = 1.1;
+    this.vy = (typeClass.includes('heal') || typeClass.includes('mana')) ? -40 : -55;
+    this.isSkill = typeClass.includes('skill');
+    this.isCrit = typeClass.includes('crit');
+  }
+  update(dt) {
+    this.y += this.vy * dt;
+    this.vy *= 0.96;
+  }
+  draw(ctx) {
+    const elapsed = this.maxLife - this.life;
+    const alpha = Math.max(0, Math.min(1, this.life / (this.maxLife * 0.75)));
+    
+    ctx.save();
+    
+    // スキルダメージ・クリティカル時は出現時にポップアップ拡大
+    let scale = 1.0;
+    if (this.isSkill || this.isCrit) {
+      if (elapsed < 0.15) {
+        scale = 1.0 + (elapsed / 0.15) * 0.45;
+      } else if (elapsed < 0.3) {
+        scale = 1.45 - ((elapsed - 0.15) / 0.15) * 0.45;
+      }
+    }
+
+    ctx.translate(this.x, this.y);
+    ctx.scale(scale, scale);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    if (this.isSkill) {
+      // 🌟 超ド派手なスキル専用ダメージ
+      ctx.font = this.isCrit ? "900 48px 'DotGothic16', sans-serif" : "900 42px 'DotGothic16', sans-serif";
+      
+      // 黒/濃い色の極太アウトライン
+      ctx.strokeStyle = 'rgba(15, 10, 30, ' + alpha + ')';
+      ctx.lineWidth = 6;
+      ctx.lineJoin = 'round';
+      ctx.strokeText(this.text, 0, 0);
+
+      // ネオン発光と鮮烈なカラー
+      if (this.isCrit) {
+        ctx.fillStyle = `rgba(255, 235, 59, ${alpha})`;
+        ctx.shadowColor = `rgba(255, 100, 0, ${alpha})`;
+      } else {
+        ctx.fillStyle = `rgba(84, 240, 255, ${alpha})`;
+        ctx.shadowColor = `rgba(0, 180, 255, ${alpha})`;
+      }
+      ctx.shadowBlur = 20;
+      ctx.fillText(this.text, 0, 0);
+
+    } else if (this.typeClass.includes('heal')) {
+      ctx.font = "900 36px 'DotGothic16', sans-serif";
+      ctx.strokeStyle = 'rgba(0, 0, 0, ' + alpha + ')';
+      ctx.lineWidth = 4;
+      ctx.strokeText(this.text, 0, 0);
+      ctx.fillStyle = `rgba(46, 213, 115, ${alpha})`;
+      ctx.shadowColor = `rgba(46, 213, 115, ${alpha})`;
+      ctx.shadowBlur = 12;
+      ctx.fillText(this.text, 0, 0);
+
+    } else if (this.typeClass.includes('mana')) {
+      ctx.font = "900 36px 'DotGothic16', sans-serif";
+      ctx.strokeStyle = 'rgba(0, 0, 0, ' + alpha + ')';
+      ctx.lineWidth = 4;
+      ctx.strokeText(this.text, 0, 0);
+      ctx.fillStyle = `rgba(54, 162, 235, ${alpha})`;
+      ctx.shadowColor = `rgba(54, 162, 235, ${alpha})`;
+      ctx.shadowBlur = 12;
+      ctx.fillText(this.text, 0, 0);
+
+    } else if (this.typeClass.includes('enemy-dmg')) {
+      ctx.font = this.isCrit ? "900 40px 'DotGothic16', sans-serif" : "900 30px 'DotGothic16', sans-serif";
+      ctx.strokeStyle = 'rgba(0, 0, 0, ' + alpha + ')';
+      ctx.lineWidth = 4;
+      ctx.strokeText(this.text, 0, 0);
+
+      if (this.isCrit) {
+        ctx.fillStyle = `rgba(255, 235, 59, ${alpha})`;
+        ctx.shadowColor = `rgba(255, 152, 0, ${alpha})`;
+        ctx.shadowBlur = 14;
+      } else {
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx.shadowColor = `rgba(255, 50, 50, ${alpha})`;
+        ctx.shadowBlur = 8;
+      }
+      ctx.fillText(this.text, 0, 0);
+
+    } else { // player-dmg
+      ctx.font = "900 30px 'DotGothic16', sans-serif";
+      ctx.fillStyle = `rgba(255, 75, 75, ${alpha})`;
+      ctx.shadowColor = `rgba(0, 0, 0, ${alpha})`;
+      ctx.shadowBlur = 6;
+      ctx.fillText(this.text, 0, 0);
+    }
+    
+    ctx.restore();
+  }
+}
+
+const CM = new CanvasManager('game-canvas');
+const TCM = new CanvasManager('training-canvas');
+
+/* 全角→半角変換（半角強制入力の要） */
+function toHalfWidth(s){
+  return s
+    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+    .replace(/[ー－―‐]/g, '-')
+    .replace(/　/g, ' ');
+}
+
+/* ==========================================================
+   けいさん問題
+   エリアごとに演算が1つに決まっていて（草原=たしざん／沼地=ひきざん／
+   地下ダンジョン=かけざん／盗賊のアジト=わりざん）、そのエリアの中で
+   1〜5だんかいの ちいさな カリキュラムじゅんに むずかしくなる
+   ========================================================== */
+/* 草原エリア（tower→crypt→bandit の3ステージ）は ぜんぶ たしざん。
+   ステージが すすむほど（草原→地下ダンジョン→盗賊のアジト）たしざんの だんかいが あがっていく。
+   沼地（dungeon）は べつエリアで、ひきざん専用 */
+const ZONE_TIERS = {
+  tower:   ['add1', 'add1', 'add2', 'add2', 'add3'],
+  crypt:   ['add2', 'add3', 'add3', 'add4', 'add4'],
+  bandit:  ['add3', 'add4', 'add4', 'add5', 'add5'],
+  dungeon: ['sub1', 'sub2', 'sub3', 'sub4', 'sub5'],
+};
+/* えんざんの おおまかな 呼びかた（ぶんしょうだいの かいほう判定など、だんかいを 気にしない場面用） */
+const ZONE_OP_LABELS = { tower:'たしざん', crypt:'たしざん', bandit:'たしざん', dungeon:'ひきざん' };
+
+const OP_LABELS = {
+  add1: '1桁+1桁（くり上がりなし）',
+  add2: '1桁+1桁（くり上がりあり）',
+  add3: '2桁+1桁（くり上がりなし）',
+  add4: '2桁+1桁（くり上がりあり）',
+  add5: '2桁+2桁（たしざん そうしあげ）',
+  sub1: '1桁-1桁',
+  sub2: '2桁-1桁（くり下がりなし）',
+  sub3: '2桁-1桁（くり下がりあり）',
+  sub4: '2桁-2桁（くり下がりなし）',
+  sub5: '2桁-2桁（くり下がりあり）',
+  mul1: '2〜3の段',
+  mul2: '4〜6の段',
+  mul3: '7〜9の段',
+  mul4: '2桁×1桁（かけざん・小）',
+  mul5: '2桁×1桁（かけざん・大）',
+  div1: 'わり算（こたえ1〜5）',
+  div2: 'わり算（こたえ6〜9）',
+  div3: 'わり算（こたえ10〜12）',
+  div4: 'わり算（こたえ13〜15）',
+  div5: 'わり算（こたえ16〜19）',
+};
+
+/* 1〜10階を「1-2F/3-4F/5F(ボス)/6-7F/8-9F/10F(ボス)」の5だんかいに ふりわける */
+function stageIndexForFloor(floor){
+  if (floor <= 2) return 0;
+  if (floor <= 4) return 1;
+  if (floor <= 6) return 2;
+  if (floor <= 8) return 3;
+  return 4;
+}
+function opTierForZoneFloor(zone, floor){
+  const stages = ZONE_TIERS[zone] || ZONE_TIERS.tower;
+  return stages[stageIndexForFloor(floor)];
+}
+/* tier文字列の さいごの すうじ（1〜5）から、0〜4の だんかいindexを とりだす */
+function tierStageIndex(tier){
+  const n = parseInt(String(tier).slice(-1), 10);
+  return isNaN(n) ? 0 : n - 1;
+}
+
+function generateProblem(tier){
+  let a, b, op, answer;
+  if (tier === 'add1') {
+    do { a = rnd(1, 9); b = rnd(1, 9); } while (a + b > 9);
+    op = '+'; answer = a + b;
+  } else if (tier === 'add2') {
+    do { a = rnd(1, 9); b = rnd(1, 9); } while (a + b < 10);
+    op = '+'; answer = a + b;
+  } else if (tier === 'add3') {
+    do { a = rnd(10, 89); b = rnd(1, 9); } while ((a % 10) + b > 9);
+    op = '+'; answer = a + b;
+  } else if (tier === 'add4') {
+    do { a = rnd(10, 89); b = rnd(1, 9); } while ((a % 10) + b <= 9);
+    op = '+'; answer = a + b;
+  } else if (tier === 'add5') {
+    do { a = rnd(11, 88); b = rnd(11, 88); } while (a + b > 99);
+    op = '+'; answer = a + b;
+  } else if (tier === 'sub1') {
+    a = rnd(3, 9); b = rnd(1, a - 1);
+    op = '-'; answer = a - b;
+  } else if (tier === 'sub2') {
+    do { a = rnd(11, 98); b = rnd(1, 9); } while ((a % 10) < b);
+    op = '-'; answer = a - b;
+  } else if (tier === 'sub3') {
+    do { a = rnd(11, 98); b = rnd(1, 9); } while ((a % 10) >= b);
+    op = '-'; answer = a - b;
+  } else if (tier === 'sub4') {
+    do { a = rnd(21, 98); b = rnd(10, a - 1); } while ((a % 10) < (b % 10));
+    op = '-'; answer = a - b;
+  } else if (tier === 'sub5') {
+    do { a = rnd(21, 98); b = rnd(10, a - 1); } while ((a % 10) >= (b % 10));
+    op = '-'; answer = a - b;
+  } else if (tier === 'mul1') {
+    a = rnd(2, 3); b = rnd(1, 9);
+    op = '×'; answer = a * b;
+  } else if (tier === 'mul2') {
+    a = rnd(4, 6); b = rnd(1, 9);
+    op = '×'; answer = a * b;
+  } else if (tier === 'mul3') {
+    a = rnd(7, 9); b = rnd(1, 9);
+    op = '×'; answer = a * b;
+  } else if (tier === 'mul4') {
+    a = rnd(10, 19); b = rnd(2, 9);
+    op = '×'; answer = a * b;
+  } else if (tier === 'mul5') {
+    a = rnd(20, 49); b = rnd(2, 9);
+    op = '×'; answer = a * b;
+  } else if (tier === 'div1') {
+    b = rnd(2, 9); const c1 = rnd(1, 5); a = b * c1;
+    op = '÷'; answer = c1;
+  } else if (tier === 'div2') {
+    b = rnd(2, 9); const c2 = rnd(6, 9); a = b * c2;
+    op = '÷'; answer = c2;
+  } else if (tier === 'div3') {
+    b = rnd(2, 9); const c3 = rnd(10, 12); a = b * c3;
+    op = '÷'; answer = c3;
+  } else if (tier === 'div4') {
+    b = rnd(2, 9); const c4 = rnd(13, 15); a = b * c4;
+    op = '÷'; answer = c4;
+  } else { // div5
+    b = rnd(2, 9); const c5 = rnd(16, 19); a = b * c5;
+    op = '÷'; answer = c5;
+  }
+  return { a, b, op, answer, text: `${a} ${op} ${b}`, tier };
+}
+
+const TIER_TIME_LIMITS = {
+  add1:5000, add2:6000, add3:6500, add4:7000, add5:8000,
+  sub1:5500, sub2:6500, sub3:7000, sub4:7500, sub5:8500,
+  mul1:6000, mul2:6500, mul3:7000, mul4:7500, mul5:8500,
+  div1:6500, div2:7000, div3:7500, div4:8000, div5:9000,
+};
+function problemTimeLimit(tier){
+  return TIER_TIME_LIMITS[tier] || 8000;
+}
+
+/* ==========================================================
+   新ステージシステム（エリア1：足し算／エリア2：引き算）
+   ゾーン・フロアの かわりに、エリアごとに ステージ1〜7＋ボスの
+   こていリストを もつ。ボスは HP50%で フェーズ2（限界突破）へ
+   ステートいこうする
+   ========================================================== */
+function stageProblem(a, b, op, answer){
+  return { a, b, op, answer, text: `${a} ${op} ${b}` };
+}
+
+/* ボス用の出題：そのエリアの ステージのうち 難しい方（うしろ4割・さいてい2つ）から、
+   うしろの ステージほど 出やすい重みで えらぶ（ステージは すすむほど むずかしくなる つくり） */
+function pickHardStageProblem(stages){
+  const n = stages.length;
+  let pool = stages.slice(Math.max(0, n - Math.max(2, Math.ceil(n * 0.4))));
+  // 「まとめ」ステージ（易しい数も出る 汎用の四則ミックス）は、ほかに むずかしい ステージが あるかぎり ボスでは使わない
+  const specific = pool.filter(st => st.generateProblem !== generateArea4MixedProblem);
+  if (specific.length) pool = specific;
+  const total = pool.reduce((sum, _, i) => sum + i + 1, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < pool.length; i++) {
+    r -= i + 1;
+    if (r < 0) return pool[i].generateProblem();
+  }
+  return pool[pool.length - 1].generateProblem();
+}
+
+const AREA_STAGES = {
+
+  area14: {
+    name: 'ひらがなの森',
+    recLv: 1,
+    displayNum: '幼児',
+    opLabel: '特殊なひらがな',
+    enemyZone: 'tower',
+    bossKey: 'kanji_boss1',
+    rewardZone: 'kanji1',
+    bgImage: '画像/ステージ/かけ算の森.jpg',
+    bossName: 'もりの まじん',
+    stages: [
+      { name: '文で学ぶ長音・2択', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_hira_1') },
+      { name: '長い言葉の長音・4択', timeLimit: 20000, generateProblem: () => generateKanjiProblem('kana_hira_7') },
+      { name: '文で学ぶ促音・2択', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_hira_2') },
+      { name: '長い言葉の促音・4択', timeLimit: 20000, generateProblem: () => generateKanjiProblem('kana_hira_6') },
+      { name: '拗音（小さいやゆよ）', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_hira_3') },
+      { name: '長音と小さい文字の複合', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_hira_4') },
+      { name: '特殊な読み・助詞', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_hira_5') },
+    ],
+    bossTimeLimit1: 15000, bossTimeLimit2: 15000,
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area14.stages),
+    bossPhase2Problem: () => generateKanjiProblem(Math.random() < 0.5 ? 'kana_hira_6' : 'kana_hira_7'),
+  },
+  area15: {
+    name: 'カタカナの森',
+    recLv: 1,
+    displayNum: '1年',
+    opLabel: '特殊なカタカナ',
+    enemyZone: 'crypt',
+    bossKey: 'kanji_boss1',
+    rewardZone: 'kanji2',
+    bgImage: '画像/ステージ/かけ算の森.jpg',
+    bossName: 'どうくつの まじん',
+    stages: [
+      { name: 'かんたんな長音・2択', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_kata_1') },
+      { name: '長い言葉の長音・4択', timeLimit: 20000, generateProblem: () => generateKanjiProblem('kana_kata_7') },
+      { name: '3文字の促音・2択', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_kata_2') },
+      { name: '長い言葉の促音・4択', timeLimit: 20000, generateProblem: () => generateKanjiProblem('kana_kata_6') },
+      { name: '拗音など', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_kata_3') },
+      { name: '複合', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_kata_4') },
+      { name: '外来音', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kana_kata_5') },
+    ],
+    bossTimeLimit1: 15000, bossTimeLimit2: 15000,
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area15.stages),
+    bossPhase2Problem: () => generateKanjiProblem(Math.random() < 0.5 ? 'kana_kata_6' : 'kana_kata_7'),
+  },
+
+  area1: {
+    name: '始まりの平原',
+    recLv: 1,
+    displayNum: '1',
+    opLabel: 'たしざん',
+    enemyZone: 'tower',   // 敵の見た目は 既存の草原プールを流用
+    bossKey: 'tower5',    // ボスの見た目・ステータスは 既存の草原ボスを流用
+    rewardZone: 'tower',  // クリア報酬・救助イベントは 既存の草原クリア処理を流用
+    bgImage: 'assets/artist-stage-samples/komorebi-clearing-v1.png',
+    bossName: 'たしざんの まじん',
+    stages: [
+      { name:'1桁＋1桁（くり上がりなし）', timeLimit:5000, generateProblem:() => {
+        let a, b;
+        do { a = rnd(1,9); b = rnd(1,9); } while (a + b > 9);
+        return stageProblem(a, b, '+', a + b);
+      }},
+      { name:'10をつくる（たすと10）', timeLimit:5000, generateProblem:() => {
+        const a = rnd(1,9);
+        const b = 10 - a;
+        return stageProblem(a, b, '+', 10);
+      }},
+      { name:'10＋〇（10のまとまり）', timeLimit:5000, generateProblem:() => {
+        const a = 10, b = rnd(1,9);
+        return Math.random() < 0.5 ? stageProblem(a, b, '+', a + b) : stageProblem(b, a, '+', a + b);
+      }},
+      { name:'1桁＋1桁（くり上がりあり）', timeLimit:5500, generateProblem:() => {
+        let a, b;
+        do { a = rnd(2,9); b = rnd(2,9); } while (a + b < 10);
+        return stageProblem(a, b, '+', a + b);
+      }},
+      { name:'3つの数のたし算', timeLimit:6500, generateProblem:() => {
+        const a = rnd(1,5), b = rnd(1,5), c = rnd(1,5);
+        return { a, b, c, op:'+', answer: a + b + c, text:`${a} + ${b} + ${c}` };
+      }},
+      { name:'2桁＋1桁のたし算', timeLimit:6000, generateProblem:() => {
+        const a = rnd(11,49), b = rnd(1,9);
+        return stageProblem(a, b, '+', a + b);
+      }},
+      { name:'2桁＋2桁のたし算', timeLimit:7000, generateProblem:() => {
+        const a = rnd(12,48), b = rnd(12,48);
+        return stageProblem(a, b, '+', a + b);
+      }},
+    ],
+    bossTimeLimit1: 6500,
+    bossTimeLimit2: 8000,
+    bossPhase1Problem(){ return pickHardStageProblem(this.stages); },
+    bossPhase2Problem(){
+      let a, b;
+      do { a = rnd(15,59); b = rnd(15,49); } while ((a % 10) + (b % 10) < 10);
+      return stageProblem(a, b, '+', a + b);
+    },
+  },
+  area13: {
+    name: '迷いの沼',
+    recLv: 3,
+    displayNum: '2',
+    opLabel: 'ひきざん',
+    enemyZone: 'dungeon',
+    bossKey: 'dungeon5',
+    rewardZone: 'dungeon',
+    bgImage: '画像/ステージ/沼地.jpg',
+    bossName: 'ひきざんの ヌシ',
+    stages: [
+      { name:'1桁－1桁', timeLimit:5000, generateProblem:() => {
+        const a = rnd(3,9), b = rnd(1,a-1);
+        return stageProblem(a, b, '-', a - b);
+      }},
+      { name:'10からのひき算（10－〇）', timeLimit:5000, generateProblem:() => {
+        const b = rnd(1,9);
+        return stageProblem(10, b, '-', 10 - b);
+      }},
+      { name:'2桁－1桁（くり下がりなし）', timeLimit:5500, generateProblem:() => {
+        const a = rnd(11,19), b = rnd(1, a % 10 || 1);
+        return stageProblem(a, b, '-', a - b);
+      }},
+      { name:'くり下がりのあるひき算', timeLimit:6000, generateProblem:() => {
+        let a, b;
+        do { a = rnd(11,18); b = rnd(a - 9, 9); } while ((a % 10) >= b);
+        return stageProblem(a, b, '-', a - b);
+      }},
+      { name:'3つの数のひき算', timeLimit:6500, generateProblem:() => {
+        let a, b, c;
+        do { a = rnd(10,18); b = rnd(1,5); c = rnd(1,5); } while (a - b - c < 0);
+        return { a, b, c, op:'-', answer: a - b - c, text:`${a} - ${b} - ${c}` };
+      }},
+      { name:'2桁－1桁（くり下がりあり）', timeLimit:6500, generateProblem:() => {
+        let a, b;
+        do { a = rnd(21,58); b = rnd((a % 10) + 1, 9); } while ((a % 10) >= b);
+        return stageProblem(a, b, '-', a - b);
+      }},
+      { name:'2桁－2桁のひき算', timeLimit:7000, generateProblem:() => {
+        const a = rnd(25,69), b = rnd(11, a - 5);
+        return stageProblem(a, b, '-', a - b);
+      }},
+    ],
+    bossTimeLimit1: 6500,
+    bossTimeLimit2: 8000,
+    bossPhase1Problem(){ return pickHardStageProblem(this.stages); },
+    bossPhase2Problem(){
+      let a, b;
+      do { a = rnd(31,78); b = rnd(15, a - 10); } while ((a % 10) >= (b % 10));
+      return stageProblem(a, b, '-', a - b);
+    },
+  },
+  area2: {
+    name: 'かけ算の森',
+    recLv: 6,
+    displayNum: '3',
+    opLabel: 'かけざん（九九）',
+    enemyZone: 'crypt',
+    bossKey: 'forest_boss',
+    rewardZone: 'forest',
+    bgImage: '画像/ステージ/かけ算の森.jpg',
+    bossName: 'かけざんのヌシ',
+    stages: [
+      { name:'1の段', timeLimit:4500, generateProblem:() => { const b = rnd(1,9); return stageProblem(1, b, '×', 1 * b); } },
+      { name:'2の段', timeLimit:4500, generateProblem:() => { const b = rnd(1,9); return stageProblem(2, b, '×', 2 * b); } },
+      { name:'3の段', timeLimit:4500, generateProblem:() => { const b = rnd(1,9); return stageProblem(3, b, '×', 3 * b); } },
+      { name:'4の段', timeLimit:4500, generateProblem:() => { const b = rnd(1,9); return stageProblem(4, b, '×', 4 * b); } },
+      { name:'5の段', timeLimit:4500, generateProblem:() => { const b = rnd(1,9); return stageProblem(5, b, '×', 5 * b); } },
+      { name:'6の段', timeLimit:4500, generateProblem:() => { const b = rnd(1,9); return stageProblem(6, b, '×', 6 * b); } },
+      { name:'7の段', timeLimit:4500, generateProblem:() => { const b = rnd(1,9); return stageProblem(7, b, '×', 7 * b); } },
+      { name:'8の段', timeLimit:4500, generateProblem:() => { const b = rnd(1,9); return stageProblem(8, b, '×', 8 * b); } },
+      { name:'9の段', timeLimit:4500, generateProblem:() => { const b = rnd(1,9); return stageProblem(9, b, '×', 9 * b); } },
+    ],
+    bossTimeLimit1: 4500,
+    bossTimeLimit2: 5500,
+    // ボスは むずかしい 6〜9の段を中心に（かけられる数も 6〜9が出やすい）
+    bossPhase1Problem(){ const a = rnd(6,9), b = Math.random() < 0.7 ? rnd(6,9) : rnd(2,9); return stageProblem(a, b, '×', a * b); },
+    bossPhase2Problem(){ const a = rnd(6,9), b = Math.random() < 0.8 ? rnd(6,9) : rnd(2,9); return stageProblem(a, b, '×', a * b); },
+  },
+  area3: {
+    name: 'わり算の海',
+    recLv: 10,
+    displayNum: '4',
+    opLabel: 'わりざん',
+    enemyZone: 'dungeon',
+    bossKey: 'dungeon5',
+    rewardZone: 'dungeon',
+    bgImage: '画像/ステージ/わり算の海.jpg',
+    bossName: 'うみの ぬし',
+    stages: [
+      { name:'2・5の段のわり算', timeLimit:5500, generateProblem:() => {
+        const divisor = Math.random() < 0.5 ? 2 : 5;
+        const ans = rnd(1,9);
+        return stageProblem(divisor * ans, divisor, '÷', ans);
+      }},
+      { name:'1〜3の段のわり算', timeLimit:5500, generateProblem:() => {
+        const divisor = rnd(1,3);
+        const ans = rnd(1,9);
+        return stageProblem(divisor * ans, divisor, '÷', ans);
+      }},
+      { name:'4〜6の段のわり算', timeLimit:6000, generateProblem:() => {
+        const divisor = rnd(4,6);
+        const ans = rnd(1,9);
+        return stageProblem(divisor * ans, divisor, '÷', ans);
+      }},
+      { name:'7〜9の段のわり算', timeLimit:6000, generateProblem:() => {
+        const divisor = rnd(7,9);
+        const ans = rnd(1,9);
+        return stageProblem(divisor * ans, divisor, '÷', ans);
+      }},
+      { name:'九九ぜんぶのわり算', timeLimit:6500, generateProblem:() => {
+        const divisor = rnd(2,9);
+        const ans = rnd(1,9);
+        return stageProblem(divisor * ans, divisor, '÷', ans);
+      }},
+      { name:'あまりのあるわり算（小）', timeLimit:7000, generateProblem:() => {
+        const divisor = rnd(2,5);
+        const ans = rnd(2,7);
+        const rem = rnd(1, divisor - 1);
+        const dividend = divisor * ans + rem;
+        return { a:dividend, b:divisor, op:'÷', answer:ans, remainder:rem, text:`${dividend} ÷ ${divisor}` };
+      }},
+      { name:'あまりのあるわり算（大）', timeLimit:7000, generateProblem:() => {
+        const divisor = rnd(6,9);
+        const ans = rnd(2,7);
+        const rem = rnd(1, divisor - 1);
+        const dividend = divisor * ans + rem;
+        return { a:dividend, b:divisor, op:'÷', answer:ans, remainder:rem, text:`${dividend} ÷ ${divisor}` };
+      }},
+    ],
+    bossTimeLimit1: 6500,
+    bossTimeLimit2: 7500,
+    bossPhase1Problem(){ return pickHardStageProblem(this.stages); },
+    bossPhase2Problem(){
+      // フェーズ2：あまりのあるわり算（わる数は 6〜9が出やすい）
+      const divisor = Math.random() < 0.7 ? rnd(6,9) : rnd(2,9);
+      const ans = rnd(2,8);
+      const rem = rnd(1, divisor - 1);
+      const dividend = divisor * ans + rem;
+      return { a:dividend, b:divisor, op:'÷', answer:ans, remainder:rem, text:`${dividend} ÷ ${divisor}` };
+    },
+  },
+  area4: {
+    name: '試練の塔',
+    recLv: 15,
+    displayNum: '4年',
+    opLabel: '4年生の算数',
+    enemyZone: 'bandit',
+    bgImage: '画像/ステージ/試練の塔.jpg',
+    bossName: '試練のガーディアン',
+    bossKey: 'trial_boss',
+    rewardZone: 'cave',
+    stages: [
+      { name:'1けたでわる筆算', timeLimit:9000, generateProblem: generateArea4OneDigitDivisionProblem },
+      { name:'2けたでわる筆算', timeLimit:11000, generateProblem: generateArea4TwoDigitDivisionProblem },
+      { name:'小数の計算', timeLimit:10000, generateProblem: generateArea4DecimalProblem },
+      { name:'同分母の分数', timeLimit:11000, generateProblem: generateArea4FractionProblem },
+      { name:'四則と（ ）の計算', timeLimit:11000, generateProblem: generateArea4ExpressionProblem },
+      { name:'面積（長方形・正方形）', timeLimit:10000, generateProblem: generateArea4AreaProblem },
+      { name:'角度の大きさ', timeLimit:10000, generateProblem: generateArea4AngleProblem },
+    ],
+    bossTimeLimit1: 9000,
+    bossTimeLimit2: 10000,
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area4.stages),
+    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area4.stages),
+  },
+  // --- 漢字エリア（小1〜小6） ---
+  area5: {
+    name: '漢字の森',
+    recLv: 1,
+    displayNum: '1年',
+    opLabel: '1年生の漢字',
+    enemyZone: 'tower',
+    bossKey: 'kanji_boss1',
+    rewardZone: 'kanji1',
+    bgImage: '画像/ステージ/かけ算の森.jpg',
+    bossName: 'もりの まじん',
+    stages: [
+      { name: 'かず・大きさ', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g1_1') },
+      { name: 'からだ・ひと', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g1_2') },
+      { name: 'しぜん', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g1_3') },
+      { name: 'がっこう・まち', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g1_4') },
+      { name: 'いろ・いきもの', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g1_5') },
+    ],
+    bossTimeLimit1: 15000, bossTimeLimit2: 15000,
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area5.stages),
+    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area5.stages),
+  },
+  area6: {
+    name: '漢字の洞窟',
+    recLv: 5,
+    displayNum: '2年',
+    opLabel: '2年生の漢字',
+    enemyZone: 'dungeon',
+    bossKey: 'kanji_boss2',
+    rewardZone: 'kanji2',
+    bgImage: '画像/ステージ/沼地.jpg',
+    bossName: 'ほらあなの まじん',
+    stages: [
+      { name: 'とき・こよみ', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g2_1') },
+      { name: 'ひと・いえ・まち', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g2_2') },
+      { name: 'しぜん・いきもの', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g2_3') },
+      { name: 'がっこう・べんきょう', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g2_4') },
+      { name: 'せいかつ・ことば', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g2_5') },
+    ],
+    bossTimeLimit1: 15000, bossTimeLimit2: 15000,
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area6.stages),
+    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area6.stages),
+  },
+  area7: {
+    name: '漢字の砂漠',
+    recLv: 10,
+    displayNum: '3年',
+    opLabel: '3年生の漢字',
+    enemyZone: 'crypt',
+    bossKey: 'kanji_boss3',
+    rewardZone: 'kanji3',
+    bgImage: '画像/ステージ/幻影の砂漠.jpg',
+    bossName: 'すなの まじん',
+    stages: [
+      { name: 'その1', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g3_1') },
+      { name: 'その2', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g3_2') },
+      { name: 'その3', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g3_3') },
+      { name: 'その4', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g3_4') },
+      { name: 'その5', timeLimit: 15000, generateProblem: () => generateKanjiProblem('kanji_g3_5') },
+    ],
+    bossTimeLimit1: 15000, bossTimeLimit2: 15000,
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area7.stages),
+    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area7.stages),
+  },
+  area8: {
+    name: '漢字の海',
+    recLv: 15,
+    displayNum: '4年',
+    opLabel: '4年生の漢字',
+    enemyZone: 'bandit',
+    bossKey: 'kanji_boss4',
+    rewardZone: 'kanji4',
+    bgImage: '画像/ステージ/わり算の海.jpg',
+    bossName: 'うみの まじん',
+    stages: [
+      { name: 'その1', timeLimit: 16000, generateProblem: () => generateKanjiProblem('kanji_g4_1') },
+      { name: 'その2', timeLimit: 16000, generateProblem: () => generateKanjiProblem('kanji_g4_2') },
+      { name: 'その3', timeLimit: 16000, generateProblem: () => generateKanjiProblem('kanji_g4_3') },
+      { name: 'その4', timeLimit: 16000, generateProblem: () => generateKanjiProblem('kanji_g4_4') },
+      { name: 'その5', timeLimit: 16000, generateProblem: () => generateKanjiProblem('kanji_g4_5') },
+    ],
+    bossTimeLimit1: 16000, bossTimeLimit2: 16000,
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area8.stages),
+    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area8.stages),
+  },
+  area9: {
+    name: '漢字の火山',
+    recLv: 20,
+    displayNum: '5年',
+    opLabel: '5年生の漢字',
+    enemyZone: 'crypt',
+    bossKey: 'kanji_boss5',
+    rewardZone: 'kanji5',
+    bgImage: '画像/ステージ/灼熱の火山.jpg',
+    bossName: 'えんじょうの まじん',
+    stages: [
+      { name: 'その1', timeLimit: 17000, generateProblem: () => generateKanjiProblem('kanji_g5_1') },
+      { name: 'その2', timeLimit: 17000, generateProblem: () => generateKanjiProblem('kanji_g5_2') },
+      { name: 'その3', timeLimit: 17000, generateProblem: () => generateKanjiProblem('kanji_g5_3') },
+      { name: 'その4', timeLimit: 17000, generateProblem: () => generateKanjiProblem('kanji_g5_4') },
+      { name: 'その5', timeLimit: 17000, generateProblem: () => generateKanjiProblem('kanji_g5_5') },
+    ],
+    bossTimeLimit1: 17000, bossTimeLimit2: 17000,
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area9.stages),
+    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area9.stages),
+  },
+  area10: {
+    name: '漢字の魔王城',
+    recLv: 25,
+    displayNum: '6年',
+    opLabel: '6年生の漢字',
+    enemyZone: 'bandit',
+    bossKey: 'kanji_boss6',
+    rewardZone: 'kanji6',
+    bgImage: '画像/ステージ/魔王城.jpg',
+    bossName: 'かんじの まおう',
+    stages: [
+      { name: 'その1', timeLimit: 18000, generateProblem: () => generateKanjiProblem('kanji_g6_1') },
+      { name: 'その2', timeLimit: 18000, generateProblem: () => generateKanjiProblem('kanji_g6_2') },
+      { name: 'その3', timeLimit: 18000, generateProblem: () => generateKanjiProblem('kanji_g6_3') },
+      { name: 'その4', timeLimit: 18000, generateProblem: () => generateKanjiProblem('kanji_g6_4') },
+      { name: 'その5', timeLimit: 18000, generateProblem: () => generateKanjiProblem('kanji_g6_5') },
+    ],
+    bossTimeLimit1: 18000, bossTimeLimit2: 18000,
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area10.stages),
+    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area10.stages),
+  },
+  // --- 算数エリア（小5・小6） ---
+  area11: {
+    name: '天空の階段',
+    recLv: 20,
+    displayNum: '6',
+    opLabel: '小5 算数',
+    enemyZone: 'crypt',
+    bossKey: 'sky_boss',
+    rewardZone: 'sky',
+    bgImage: '画像/ステージ/天空.jpg',
+    bossName: '天空のぬし',
+    stages: [
+      { name: '小数の掛け算', timeLimit: 7500, generateProblem: () => { const a = (rnd(11,49)/10).toFixed(1), b = rnd(2,9); return stageProblem(a, b, '×', Math.round(parseFloat(a)*b*10)/10); } },
+      { name: '小数の割り算', timeLimit: 7500, generateProblem: () => { const b = rnd(2,6), ans = (rnd(11,39)/10).toFixed(1), a = (Math.round(ans*b*10)/10).toFixed(1); return stageProblem(a, b, '÷', parseFloat(ans)); } },
+      { name: '分数＋分数（同分母）', timeLimit: 7000, generateProblem: () => { const d = rnd(3,9), a = rnd(1,d-2), b = rnd(1,d-1-a); return { a:`${a}/${d}`, b:`${b}/${d}`, op:'+', answer:`${a+b}/${d}`, text:`${a}/${d} + ${b}/${d}` }; } },
+      { name: '分数－分数（同分母）', timeLimit: 7000, generateProblem: () => { const d = rnd(3,9), b = rnd(1,d-2), a = rnd(b+1,d-1); return { a:`${a}/${d}`, b:`${b}/${d}`, op:'-', answer:`${a-b}/${d}`, text:`${a}/${d} - ${b}/${d}` }; } },
+      { name: '平均の計算', timeLimit: 8000, generateProblem: () => { const center = rnd(5,15), a = center - rnd(1,3), b = center + rnd(1,3); return { a, b, op:'平均', answer:(a+b)/2, text:`${a} と ${b} の平均` }; } },
+      { name: '割合（%）', timeLimit: 8000, generateProblem: () => { const base = rnd(1,9)*100, pct = pick([10,20,30,50]); return { a:base, b:`${pct}%`, op:'の', answer:base*(pct/100), text:`${base} の ${pct}%` }; } },
+      { name: '5年まとめ', timeLimit: 8000, generateProblem: generateArea4MixedProblem },
+    ],
+    bossTimeLimit1: 7500, bossTimeLimit2: 8000,
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area11.stages),
+    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area11.stages),
+  },
+  area12: {
+    name: '算数の魔王城',
+    recLv: 25,
+    displayNum: '7',
+    opLabel: '小6 算数',
+    enemyZone: 'bandit',
+    bossKey: 'castle_boss',
+    rewardZone: 'castle',
+    bgImage: '画像/ステージ/魔王城.jpg',
+    bossName: 'さんすうの まおう',
+    stages: [
+      { name: '分数の掛け算', timeLimit: 8000, generateProblem: () => { const a = rnd(1,3), b = rnd(4,5), c = rnd(1,2), d = rnd(3,5); return { a:`${a}/${b}`, b:`${c}/${d}`, op:'×', answer:`${a*c}/${b*d}`, text:`${a}/${b} × ${c}/${d}` }; } },
+      { name: '比の値', timeLimit: 7500, generateProblem: () => { const m = rnd(2,5), a = rnd(1,4)*m, b = rnd(1,4)*m; let x=a,y=b; while(y)[x,y]=[y,x%y]; return { a:`${a}:${b}`, op:'かんたん', answer:`${a/x}:${b/x}`, text:`${a} : ${b} をかんたんに` }; } },
+      { name: '速さ・道のり', timeLimit: 8500, generateProblem: () => { const spd = rnd(3,8)*10, t = rnd(2,4); return { a:`時速${spd}km`, b:`${t}時間`, op:'道のり', answer:spd*t, text:`時速${spd}km で ${t}時間の道のり（km）` }; } },
+      { name: '円の面積（π=3.14）', timeLimit: 9000, generateProblem: () => { const r = pick([1,2,10]); return { a:`半径${r}cm`, op:'面積', answer:Math.round(r*r*3.14*100)/100, text:`半径${r}cmの円の面積（cm²、円周率3.14）` }; } },
+      { name: '比例と反比例', timeLimit: 8000, generateProblem: () => { const k = rnd(2,5), x = rnd(2,6); return { a:`y=${k}x`, b:`x=${x}`, op:'yの値', answer:k*x, text:`y=${k}x で x=${x} のとき y` }; } },
+      { name: '場合の数', timeLimit: 8000, generateProblem: () => { const n = rnd(3,4); return { a:`${n}人`, op:'並び方', answer: n===3?6:24, text:`${n}人が1列に並ぶ並び方` }; } },
+      { name: '6年総まとめ', timeLimit: 8500, generateProblem: generateArea4MixedProblem },
+    ],
+    bossTimeLimit1: 8000, bossTimeLimit2: 8500,
+    bossPhase1Problem: () => pickHardStageProblem(AREA_STAGES.area12.stages),
+    bossPhase2Problem: () => pickHardStageProblem(AREA_STAGES.area12.stages),
+  }
+};
+
+function generateArea4MixedProblem() {
+  const type = rnd(1, 5);
+  if (type === 1) {
+    const a = rnd(10, 99), b = rnd(1, 99);
+    return stageProblem(a, b, '+', a + b);
+  } else if (type === 2) {
+    let a = rnd(10, 99), b = rnd(1, 99);
+    if (a < b) [a, b] = [b, a];
+    return stageProblem(a, b, '-', a - b);
+  } else if (type === 3) {
+    const a = rnd(1, 9), b = rnd(1, 9);
+    return stageProblem(a, b, '×', a * b);
+  } else if (type === 4) {
+    // わり算（九九の逆算：割り切れる計算）
+    const b = rnd(2, 9);
+    const ans = rnd(1, 9);
+    const a = b * ans;
+    return stageProblem(a, b, '÷', ans);
+  } else {
+    const ops = [ ['+','+'], ['+','-'], ['-','-'] ];
+    const opPair = pick(ops);
+    let a = rnd(10, 50), b = rnd(1, 20), c = rnd(1, 20);
+    if (opPair[0] === '+' && opPair[1] === '+') {
+      return { a, b, c, op: '+', answer: a + b + c, text: `${a} + ${b} + ${c}` };
+    } else if (opPair[0] === '+' && opPair[1] === '-') {
+      return { a, b, c, op: '+-', answer: a + b - c, text: `${a} + ${b} - ${c}` };
+    } else {
+      do { a = rnd(20, 50); b = rnd(1, 20); c = rnd(1, 20); } while (a - b - c < 0);
+      return { a, b, c, op: '-', answer: a - b - c, text: `${a} - ${b} - ${c}` };
+    }
+  }
+}
+
+function grade4DecimalText(scaled, places) {
+  const digits = String(scaled).padStart(places + 1, '0');
+  return `${digits.slice(0, -places)}.${digits.slice(-places)}`;
+}
+
+/* 4年の通常ステージ専用。5・6年のまとめ問題では従来の共有関数を使う。 */
+function generateArea4OneDigitDivisionProblem() {
+  const divisor = rnd(2, 9);
+  const minQuotient = Math.max(10, Math.ceil(100 / divisor));
+  const maxQuotient = Math.min(99, Math.floor(999 / divisor));
+  const quotient = rnd(minQuotient, maxQuotient);
+  const dividendBase = divisor * quotient;
+  const remainder = rnd(0, Math.min(divisor - 1, 999 - dividendBase));
+  const dividend = dividendBase + remainder;
+  return {
+    a: dividend, b: divisor, op: '÷', answer: quotient, remainder,
+    text: `${dividend} ÷ ${divisor}`
+  };
+}
+
+function generateArea4TwoDigitDivisionProblem() {
+  const divisor = rnd(12, 49);
+  const minQuotient = Math.max(10, Math.ceil(100 / divisor));
+  const maxQuotient = Math.min(99, Math.floor(999 / divisor));
+  const quotient = rnd(minQuotient, maxQuotient);
+  const dividendBase = divisor * quotient;
+  const remainder = rnd(0, Math.min(divisor - 1, 999 - dividendBase));
+  const dividend = dividendBase + remainder;
+  return {
+    a: dividend, b: divisor, op: '÷', answer: quotient, remainder,
+    text: `${dividend} ÷ ${divisor}`
+  };
+}
+
+function generateArea4DecimalProblem() {
+  const kind = rnd(1, 4);
+  const places = rnd(1, 2);
+  const scale = 10 ** places;
+  const maxScaled = 9 * scale + (scale - 1);
+  if (kind === 1) {
+    const a = rnd(1, maxScaled), b = rnd(1, maxScaled), answer = a + b;
+    const aText = grade4DecimalText(a, places), bText = grade4DecimalText(b, places);
+    return { a: aText, b: bText, op: '+', answer: grade4DecimalText(answer, places), text: `${aText} + ${bText}` };
+  }
+  if (kind === 2) {
+    const a = rnd(1, maxScaled), b = rnd(1, a), answer = a - b;
+    const aText = grade4DecimalText(a, places), bText = grade4DecimalText(b, places);
+    return { a: aText, b: bText, op: '-', answer: grade4DecimalText(answer, places), text: `${aText} - ${bText}` };
+  }
+  if (kind === 3) {
+    const a = rnd(1, maxScaled), b = rnd(2, 9), answer = a * b;
+    const aText = grade4DecimalText(a, places);
+    return { a: aText, b, op: '×', answer: grade4DecimalText(answer, places), text: `${aText} × ${b}` };
+  }
+  const divisor = rnd(2, 9), quotient = rnd(1, maxScaled), dividend = quotient * divisor;
+  const dividendText = grade4DecimalText(dividend, places), quotientText = grade4DecimalText(quotient, places);
+  return { a: dividendText, b: divisor, op: '÷', answer: quotientText, text: `${dividendText} ÷ ${divisor}` };
+}
+
+function generateArea4FractionProblem() {
+  if (rnd(1, 2) === 1) {
+    const denominator = rnd(3, 12);
+    const a = rnd(1, denominator - 1);
+    let b = rnd(1, denominator - 1);
+    if (a + b === denominator) b = b === 1 ? 2 : b - 1;
+    return {
+      a: `${a}/${denominator}`, b: `${b}/${denominator}`, op: '+',
+      answer: `${a + b}/${denominator}`, text: `${a}/${denominator} + ${b}/${denominator}`
+    };
+  }
+  const denominator = rnd(3, 12);
+  const b = rnd(1, denominator - 2), a = rnd(b + 1, denominator - 1);
+  return {
+    a: `${a}/${denominator}`, b: `${b}/${denominator}`, op: '-',
+    answer: `${a - b}/${denominator}`, text: `${a}/${denominator} - ${b}/${denominator}`
+  };
+}
+
+function generateArea4ExpressionProblem() {
+  const kind = rnd(1, 6);
+  if (kind === 1) {
+    const a = rnd(1, 50), b = rnd(2, 9), c = rnd(2, 9);
+    return { a, b, c, op: 'grade4_expression', answer: a + b * c, text: `${a} + ${b} × ${c}`,
+      storyText: `${a}個の石を持っています。1箱に${b}個ずつ入った箱が${c}箱あります。全部で何個ですか。` };
+  }
+  if (kind === 2) {
+    const b = rnd(1, 9), c = rnd(1, 9), spent = b * c, a = rnd(spent, spent + 50);
+    return { a, b, c, op: 'grade4_expression', answer: a - spent, text: `${a} - ${b} × ${c}`,
+      storyText: `${a}個の石から、1箱に${b}個ずつ入った石を${c}箱分使いました。残りは何個ですか。` };
+  }
+  if (kind === 3) {
+    const a = rnd(1, 30), b = rnd(1, 30), c = rnd(2, 9);
+    return { a, b, c, op: 'grade4_expression', answer: (a + b) * c, text: `(${a} + ${b}) × ${c}`,
+      storyText: `1組に赤い石が${a}個、青い石が${b}個あります。${c}組では全部で何個ですか。` };
+  }
+  if (kind === 4) {
+    const a = rnd(2, 9), b = rnd(1, 20), c = rnd(1, 20);
+    return { a, b, c, op: 'grade4_expression', answer: a * (b + c), text: `${a} × (${b} + ${c})`,
+      storyText: `1袋に赤い石が${b}個、青い石が${c}個入っています。${a}袋では全部で何個ですか。` };
+  }
+  const divisor = rnd(2, 9), quotient = rnd(1, 9), b = divisor * quotient;
+  if (kind === 5) {
+    const a = rnd(1, 40);
+    return { a, b, c: divisor, op: 'grade4_expression', answer: a + quotient, text: `${a} + ${b} ÷ ${divisor}`,
+      storyText: `${b}個の石を${divisor}人で同じ数ずつ分けます。それとは別に${a}個あると、合わせて何個ですか。` };
+  }
+  const a = rnd(quotient, quotient + 40);
+  return { a, b, c: divisor, op: 'grade4_expression', answer: a - quotient, text: `${a} - ${b} ÷ ${divisor}`,
+    storyText: `${a}個の石から、${b}個を${divisor}人で同じ数ずつ分けた分を使いました。残りは何個ですか。` };
+}
+
+function generateArea4AreaProblem() {
+  const kind = rnd(1, 3);
+  if (kind === 1) {
+    const height = rnd(2, 15), width = rnd(2, 15), answer = height * width;
+    const text = `縦${height}cm、横${width}cmの長方形の面積は何cm²ですか。`;
+    return { a: height, b: width, op: 'grade4_area', answer, text,
+      storyText: `縦${height}cm、横${width}cmの花だんがあります。面積は何cm²ですか。` };
+  }
+  if (kind === 2) {
+    const side = rnd(2, 20), answer = side * side;
+    const text = `1辺が${side}cmの正方形の面積は何cm²ですか。`;
+    return { a: side, b: side, op: 'grade4_area', answer, text,
+      storyText: `1辺が${side}cmの正方形の花だんがあります。面積は何cm²ですか。` };
+  }
+  const height = rnd(8, 15), width = rnd(8, 15), side = rnd(2, 7);
+  const difference = height * width - side * side;
+  const text = `縦${height}cm、横${width}cmの長方形と、1辺${side}cmの正方形があります。面積の差は何cm²ですか。`;
+  return { a: height * width, b: side * side, op: 'grade4_area', answer: difference, text,
+    storyText: `長方形の花だんは縦${height}cm、横${width}cmです。正方形の花だんは1辺${side}cmです。長方形の花だんの方が何cm²広いですか。` };
+}
+
+function generateArea4AngleProblem() {
+  const kind = rnd(1, 3);
+  if (kind === 1) {
+    const known = rnd(10, 80), answer = 90 - known;
+    const text = `直角は90°です。2つに分けた一方が${known}°です。もう一方は何度ですか。`;
+    return { a: 90, b: known, op: 'grade4_angle', answer, text,
+      storyText: `直角を2つに分けます。一方が${known}°なら、もう一方は何度ですか。` };
+  }
+  if (kind === 2) {
+    const known = rnd(100, 170), answer = 180 - known;
+    const text = `一直線上の隣り合う2つの角は合わせて180°です。一方が${known}°なら、もう一方は何度ですか。`;
+    return { a: 180, b: known, op: 'grade4_angle', answer, text,
+      storyText: `一直線上の隣り合う角の一方は${known}°です。もう一方は何度ですか。` };
+  }
+  const first = rnd(30, 150), second = rnd(30, 150), answer = 360 - first - second;
+  const text = `1回転を3つの角に分けました。2つが${first}°と${second}°なら、残りは何度ですか。`;
+  return { a: 360, b: first, c: second, op: 'grade4_angle', answer, text,
+    storyText: `1回転は360°です。3つに分けた角のうち、2つは${first}°と${second}°です。残りの角は何度ですか。` };
+}
+
+/* 1つの ステージ（例：1-1）で、おなじ もんだいタイプの 敵を なんたい たおすと
+   つぎの ステージへ すすむか（＝おなじ けいさんに くりかえし ふれて なれる ための かいすう） */
+const ENEMIES_PER_STAGE = 5;
+
+/* いま えらんでいる エリア／ステージの じょうたい。
+   { stageMode:true, areaId, stageIndex(0〜6・ボスはnull), isBoss, bossPhase(ボスのみ),
+     stageKillCount(いまの ステージで たおした 数、0〜ENEMIES_PER_STAGE-1) } */
+function enterAreaStage(areaId, stageIndex){
+  explore = { stageMode:true, areaId, stageIndex, isBoss:false, stageKillCount:0, sessionDrops: [], sessionGold: 0, stageDrops: [], stageGold: 0, stageExp: 0, usedProblems: new Set() };
+  startBattle(false);
+}
+function enterAreaBoss(areaId){
+  explore = { stageMode:true, areaId, stageIndex:null, isBoss:true, bossPhase:1, sessionDrops: [], sessionGold: 0, stageDrops: [], stageGold: 0, stageExp: 0, usedProblems: new Set() };
+  startBattle(false);
+}
+
+const RARE_STAGE_FORMS = [
+  { name:'星渡りのこぎつね', image:'assets/rare_monsters/starlight_fox_1.png' },
+  { name:'星晶のまもりぎつね', image:'assets/rare_monsters/starlight_fox_2.png' },
+  { name:'虹星の九尾神', image:'assets/rare_monsters/starlight_fox_3.png' },
+];
+function rareStageForm(areaId, stageIndex){
+  const score = Math.max(1, (AREA_STAGES[areaId]?.recLv || 1) + Math.max(0, stageIndex || 0));
+  const form = score >= 20 ? RARE_STAGE_FORMS[2] : score >= 9 ? RARE_STAGE_FORMS[1] : RARE_STAGE_FORMS[0];
+  // むずかしいステージほどボーナスを上げ、序盤ステージ周回では高経験値を得にくくする。
+  const expMultiplier = Math.min(4, 1.5 + (score - 1) * 0.07);
+  return { form, expMultiplier };
+}
+function battleEnemyDisplayName(enemy){
+  return enemy?.isRare ? `🌟 レアモンスター　${enemy.name}` : (enemy?.name || '');
+}
+
+function generateStageEnemy(areaId, stageIndex, isBoss){
+  if (explore?.isHalloween) return generateHalloweenEnemy(explore);
+  const area = AREA_STAGES[areaId];
+  if (isBoss){
+    const tmpl = getEnemyTemplate('boss', area.bossKey);
+    /* このボスは 素で 装備なしの プレイヤーが たおす もの。
+       ながびく せりあいに ならないよう、HPを へらして 決着を はやめ、
+       こうげき力も おさえて よゆうを もたせる */
+    const e = {
+      name: `【ボス】${tmpl.name}`, emoji: tmpl.emoji,
+      maxHp: Math.round(tmpl.hp * 0.8), atk: Math.round(tmpl.atk * 0.55), def: tmpl.def, spd: tmpl.spd,
+      goldMin: tmpl.gold[0], goldMax: tmpl.gold[1], exp: tmpl.exp,
+      isBoss: true,
+    };
+    const bossDiffMult = getAreaDifficultyMultiplier(areaId);
+    if (bossDiffMult !== 1.0) {
+      e.maxHp = Math.max(2, Math.round(e.maxHp * bossDiffMult));
+      e.atk = Math.max(1, Math.round(e.atk * bossDiffMult));
+    }
+    /* たおすたびに 強化レベルが あがり、HP・こうげき・ぼうぎょが ふえる */
+    const bossLv = (G && G.areaBossLevel && G.areaBossLevel[areaId]) || 0;
+    if (bossLv > 0) {
+      const grow = 1 + bossLv * rewardSettings.bossGrowthPct / 100;
+      e.maxHp = Math.max(2, Math.round(e.maxHp * grow));
+      e.atk = Math.max(1, Math.round(e.atk * grow));
+      e.def = Math.round(e.def * grow);
+      e.name += ` 強化Lv.${bossLv}`;
+    }
+    e.hp = e.maxHp;
+    return applyEnemyAttackStatMultiplier(e);
+  }
+  const areaPool = AREA_ENEMY_POOLS[areaId] || [
+    { zone: area.enemyZone || 'tower', key: 0 }
+  ];
+  // ステージ進行度に応じてモンスターを解放（前半は先頭の敵、後半は奥のモンスターまで出現）
+  const totalStages = Math.max(1, (area.stages || []).length);
+  const progressRatio = Math.min(1, Math.max(0, (stageIndex || 0) / Math.max(1, totalStages - 1)));
+  const unlockCount = Math.max(2, Math.ceil(areaPool.length * (0.4 + progressRatio * 0.6)));
+  const availablePool = areaPool.slice(0, unlockCount);
+  const selectedEnemyRef = (LOCAL_ART_PREVIEW && localArtEnemyRef) || pick(availablePool);
+  const tmpl = getEnemyTemplate(selectedEnemyRef.zone, selectedEnemyRef.key);
+
+  /* エリア1は 初心者向け。エリア2・3は少し本格的に */
+  let mult = 1 + (stageIndex || 0) * 0.05;
+  let hpMult = mult;
+
+  if (areaId === 'area1') {
+    // 始まりの平原は HPを低めからスタート（たしざん・ひきざん）
+    hpMult = 0.35 + (stageIndex || 0) * 0.12;
+  } else if (areaId === 'area2' || areaId === 'area5') {
+    // かけ算の森・漢字の森もやや低め
+    hpMult = 0.5 + (stageIndex || 0) * 0.1;
+  }
+
+  let atk = Math.round(tmpl.atk * mult);
+  /* area1の 1〜2ステージめは はじめての計算に集中できるよう、攻撃力を控えめに */
+  if (areaId === 'area1' && (stageIndex || 0) < 2) atk = rnd(1, 2);
+
+  // HPが低くなりすぎないように最低値は 2 を保証
+  const calculatedHp = Math.max(2, Math.round(tmpl.hp * hpMult));
+
+  const e = {
+    name: tmpl.name, emoji: tmpl.emoji,
+    maxHp: calculatedHp, atk, def: Math.round(tmpl.def * mult),
+    spd: tmpl.spd + Math.floor((stageIndex || 0) / 2),
+    goldMin: Math.round(tmpl.gold[0] * mult), goldMax: Math.round(tmpl.gold[1] * mult),
+    exp: Math.round(tmpl.exp * mult),
+    isBoss: false,
+  };
+  const diffMult = getAreaDifficultyMultiplier(areaId);
+  if (diffMult !== 1.0) {
+    e.maxHp = Math.max(2, Math.round(e.maxHp * diffMult));
+    e.atk = Math.max(1, Math.round(e.atk * diffMult));
+  }
+  if (Math.random() < 0.05) {
+    const rare = rareStageForm(areaId, stageIndex);
+    e.name = rare.form.name;
+    e.emoji = rare.form.image;
+    e.isRare = true;
+    e.expMultiplier = rare.expMultiplier;
+    e.exp = Math.max(e.exp + 1, Math.round(e.exp * rare.expMultiplier));
+    e.maxHp = Math.max(2, Math.round(e.maxHp * 1.15));
+    e.atk = Math.max(1, Math.round(e.atk * 1.1));
+  }
+  e.hp = e.maxHp;
+  return applyEnemyAttackStatMultiplier(e);
+}
+
+function stageBattleBg(areaId, stageIndex, isBoss){
+  const area = AREA_STAGES[areaId];
+  if (!area) return HANDDRAWN_GRASS_BG;
+  if (isBoss) return battleBgFor(area.enemyZone, 10);
+  return battleBgFor(area.enemyZone, Math.min((stageIndex || 0) + 1, 9));
+}
+
+/* いま 何たいめか わかる 星の ならび：たおした＝金の★、いま＝ひかって 点滅する★、まだ＝灰色の☆ */
+function progressStarsHtml(current, total){
+  let h = '';
+  for (let i = 1; i <= total; i++){
+    const cls = i < current ? 'done' : i === current ? 'now' : 'todo';
+    h += `<span class="pstar ${cls}">${i < current || i === current ? '★' : '☆'}</span>`;
+  }
+  return `<div class="progress-stars" role="img" aria-label="${current}／${total}">${h}</div>`;
+}
+
+function stageBattleTitleHtml(areaId, stageIndex, isBoss, bossPhase, killCount){
+  const area = AREA_STAGES[areaId];
+  if (isBoss){
+    const phaseLabel = bossPhase === 2 ? 'フェーズ2：限界突破' : 'フェーズ1：総復習';
+    return `${area.name} ${area.bossName}（${phaseLabel}）`;
+  }
+  const stage = area.stages[stageIndex];
+  const enemyNo = Math.min(ENEMIES_PER_STAGE, (killCount || 0) + 1);
+  return `${area.name} ステージ${stageIndex + 1}／${area.stages.length}（${stage.name}）${enemyNo}／${ENEMIES_PER_STAGE}たいめ`;
+}
+
+function renderBattleProgressStars() {
+  const el = $('battle-enemy-progress');
+  if (!el) return;
+  const raid = !explore || !!explore.isRaid || !!explore.isEventRaid || !!explore.readingQuest;
+  el.classList.toggle('hidden', raid);
+  if (raid) { el.innerHTML = ''; return; }
+  const total = explore.stageMode ? (explore.isBoss ? 2 : ENEMIES_PER_STAGE) : 10;
+  const eventTotal = explore.isHalloween ? halloweenEncounterTotal(explore) : total;
+  const current = explore.isHalloween ? explore.halloweenIndex + 1 : explore.stageMode
+    ? (explore.isBoss ? (explore.bossPhase === 2 ? 2 : 1) : Math.min(total, (explore.stageKillCount || 0) + 1))
+    : explore.floor;
+  el.innerHTML = progressStarsHtml(current, eventTotal);
+}
+
+/* エリア2は エリア1をクリアしないと ちょうせんできない */
+function isAreaUnlocked(areaId){
+  // テストプレイ用に全エリアを一時的に解放
+  return true;
+}
+
+/* ==========================================================
+   RPGふうの ぶんしょうだい（サブクエストボードで 出題）
+   けいさんじたいは generateProblem() と おなじ数字づくりを つかい、
+   ものがたりの文章で つつむだけ
+   ========================================================== */
+/* サブクエストを たのんでくる むらびとたち（1クエスト＝おなじ人物から 3問） */
+const QUEST_NPCS = [
+  { name:'むらびとトム', emoji:'👨‍🌾', image:'./画像/NPC/npc_farmer_tom_transparent_v2.png' },
+  { name:'しょうにんリナ', emoji:'👩‍💼', image:'./画像/NPC/npc_merchant_lina_transparent_v2.png' },
+  { name:'ろうけんじゃ ゴンド', emoji:'🧙', image:'./画像/NPC/npc_wiseman_gondo_transparent_v2.png' },
+  { name:'パンやのサラ', emoji:'👩‍🍳', image:'./画像/NPC/npc_baker_sara_transparent_v2.png' },
+  { name:'かじやのケン', emoji:'🧑‍🔧', image:'./画像/NPC/npc_blacksmith_ken_transparent_v2.png' },
+  { name:'つりびとダン', emoji:'🎣', image:'./画像/NPC/npc_fisherman_dan_transparent_v2.png' },
+];
+
+/* 1クエスト＝1えんざんファミリー（add/sub/mul/div）につき、
+   「はじめに→つぎに→さいごに」と ものがたりが つづく 3問セット。
+   おなじ場面・おなじ人物からの たのみごとが すすんでいく ようす を えがく */
+const STORY_ARCS = {
+  add: [
+    { title:'おまつりの じゅんび', parts: [
+      (a, b) => `「おまつりの やたいを てつだってほしいんだ。はじめに りんごを ${a}こ ならべたよ。あとから ${b}こ ついかしたんだ。りんごは ぜんぶで なんこに なる？」`,
+      (a, b) => `「つぎは おだんごだよ。${a}こ よういしたら、とんやから さらに ${b}こ とどいたんだ。だんごは ぜんぶで なんこに なる？」`,
+      (a, b) => `「さいごに ちょうちんを ${a}こ かざったよ。となりの むらからも ${b}こ とどいたんだ。ちょうちんは ぜんぶで なんこに なる？」`,
+    ]},
+    { title:'ひっこしの てつだい', parts: [
+      (a, b) => `「ひっこしを てつだって！ はじめに 本を ${a}さつ はこにつめたら、たなおくから まだ ${b}さつ 見つかったんだ。本は ぜんぶで なんさつ ある？」`,
+      (a, b) => `「つぎは しょっきだよ。${a}こ つつんだあと、おくの たなから ${b}こ 見つかったんだ。しょっきは ぜんぶで なんこに なる？」`,
+      (a, b) => `「さいごに ふくを ${a}まい たたんだら、せんたくから ${b}まい もどってきたんだ。ふくは ぜんぶで なんまいに なる？」`,
+    ]},
+  ],
+  sub: [
+    { title:'ぼうけんの じゅんびひん', parts: [
+      (a, b) => `「たびの じゅんびを てつだって。かごに りんごが ${a}こ あったけど、あさごはんで ${b}こ たべたんだ。のこりは なんこに なる？」`,
+      (a, b) => `「つぎは ポーションだよ。${a}こ あったけど、テストで ${b}こ つかったんだ。のこりは なんこに なる？」`,
+      (a, b) => `「さいごに たいまつだよ。${a}ぽん あったけど、どうくつの れんしゅうで ${b}ぽん つかいきったんだ。のこりは なんぽんに なる？」`,
+    ]},
+    { title:'とうぞくが でた さわぎ', parts: [
+      (a, b) => `「たいへんだ、とうぞくが でたんだ！ たからばこに きんかが ${a}まい あったのに、${b}まい ぬすまれてしまった。のこりは なんまいに なる？」`,
+      (a, b) => `「つぎは そうこだよ。パンが ${a}こ あったのに、${b}こ もっていかれたんだ。のこりは なんこに なる？」`,
+      (a, b) => `「さいごに ぶきだよ。やが ${a}ぽん あったのに、${b}ぽん もちさられたんだ。のこりは なんぽんに なる？」`,
+    ]},
+  ],
+  mul: [
+    { title:'いちばの しこみ', parts: [
+      (a, b) => `「いちばの しこみを てつだって。はこが ${b}はこ あって、どの はこにも りんごが ${a}こずつ はいっているよ。りんごは ぜんぶで なんこに なる？」`,
+      (a, b) => `「つぎは パンだよ。かごが ${b}こ あって、どの かごにも パンが ${a}こずつ はいっているよ。パンは ぜんぶで なんこに なる？」`,
+      (a, b) => `「さいごに たるだよ。にだいしゃが ${b}だい あって、どの にだいしゃにも たるが ${a}こずつ のっているよ。たるは ぜんぶで なんこに なる？」`,
+    ]},
+    { title:'へいしの しゅつどう', parts: [
+      (a, b) => `「とりでの しらせを つたえたい。ぶたいが ${b}たい あって、どの ぶたいにも へいしが ${a}にんずつ いるよ。へいしは ぜんいんで なんにんに なる？」`,
+      (a, b) => `「つぎは うまだよ。うまやが ${b}とう あって、どの うまやにも うまが ${a}とうずつ いるよ。うまは ぜんぶで なんとうに なる？」`,
+      (a, b) => `「さいごに たてだよ。たなが ${b}だん あって、どの だんにも たてが ${a}まいずつ たてかけてあるよ。たては ぜんぶで なんまいに なる？」`,
+    ]},
+  ],
+  div: [
+    { title:'たからの わけまえ', parts: [
+      (a, b) => `「たからを みんなで わけたいんだ。ほうせきが ${a}こ あって、${b}にんの なかまで きっちり わけると、ひとり なんこ もらえる？」`,
+      (a, b) => `「つぎは きんかだよ。ぜんぶで ${a}まい あって、${b}この チームに おなじ かずずつ わけると、1チームは なんまいに なる？」`,
+      (a, b) => `「さいごに ほうせきばこだよ。ちゅうみが ${a}こ あって、${b}この はこに おなじ かずずつ いれると、1つの はこに なんこ はいる？」`,
+    ]},
+    { title:'えんかいの じゅんび', parts: [
+      (a, b) => `「むらの えんかいを てつだって。たまごが ${a}こ あって、${b}この かごに おなじ かずずつ いれると、1かごに なんこ はいる？」`,
+      (a, b) => `「つぎは おさらだよ。おさらが ${a}まい あって、${b}この テーブルに おなじ かずずつ くばると、1テーブルに なんまい おける？」`,
+      (a, b) => `「さいごに いすだよ。いすが ${a}きゃく あって、${b}この へやに おなじ かずずつ わけると、1つの へやに なんきゃく はいる？」`,
+    ]},
+  ],
+};
+
+/* レベルに おうじて、出題できる えんざん「ファミリー」を ひろげる
+   （ファミリーが かいほうされたら、その5だんかいは ランダムに 出る） */
+function unlockedWordFamilies(){
+  const lvl = G.player.lvl;
+  const families = ['add'];
+  if (lvl >= 5) families.push('sub');
+  if (lvl >= 8) families.push('mul');
+  if (lvl >= 10) families.push('div');
+  return families;
+}
+
+/* 1クエスト＝おなじ人物から、おなじ ものがたりの ながれで 3問。
+   3問とも おなじ えんざんファミリー・おなじ なんいどで そろえる */
+/* サブクエストの 難易度は、クリアしたステージに あわせる。
+   すすんだ子には かんたんすぎる もんだい（かけざんが できるのに 1桁のたしざん など）は 出さない */
+const QUEST_FAMILY_ORDER = ['add', 'sub', 'mul', 'div'];
+const QUEST_FAMILY_AREA = { add:'area1', sub:'area13', mul:'area2', div:'area3' };
+function questFamilyProgress(family){
+  const areaId = QUEST_FAMILY_AREA[family];
+  const counts = (G && G.stageClearCounts && G.stageClearCounts[areaId]) || [];
+  const total = (AREA_STAGES[areaId].stages || []).length || 1;
+  return { cleared: counts.filter(c => (c || 0) >= 1).length, total };
+}
+/* 出して いい もんだいの 一覧：[{ family, tiers:[...] }]
+   ・いちばん すすんだ えんざん（先頭）… クリアした ステージの 数に あわせた 段階（ふたつ ぶん）
+   ・それより まえの えんざん … むずかしい 4〜5だんかい だけ */
+function questAllowedTiers(){
+  let front = 0;
+  QUEST_FAMILY_ORDER.forEach((f, i) => { if (questFamilyProgress(f).cleared > 0) front = i; });
+  const fp = questFamilyProgress(QUEST_FAMILY_ORDER[front]);
+  const maxTier = Math.min(5, Math.max(1, Math.ceil(fp.cleared / fp.total * 5)));
+  return QUEST_FAMILY_ORDER.slice(0, front + 1).map((family, i) => ({
+    family,
+    tiers: i === front
+      ? [Math.max(1, maxTier - 1), maxTier].filter((t, k, a) => a.indexOf(t) === k)
+      : [4, 5],
+    isFront: i === front,
+  }));
+}
+function questTierAllowed(tier){
+  const family = String(tier).replace(/[0-9]/g, '');
+  const n = parseInt(String(tier).slice(-1), 10);
+  return questAllowedTiers().some(e => e.family === family && e.tiers.includes(n));
+}
+
+function generateStoryQuest(){
+  const allowed = questAllowedTiers();
+  const front = allowed.find(e => e.isFront);
+  const earlier = allowed.filter(e => !e.isFront);
+  // 先頭の えんざんを 中心に（のこりは まえの えんざんの むずかしい もんだい）
+  const entry = (earlier.length && Math.random() < 0.4) ? pick(earlier) : front;
+  const family = entry.family;
+  const arc = pick(STORY_ARCS[family]);
+  const npc = pick(QUEST_NPCS);
+  const tier = `${family}${pick(entry.tiers)}`;
+  const parts = Array.from({length:REVIEW_SETTINGS.legacyMathQuestQuestions},(_,index) => {
+    const tpl=arc.parts[index%arc.parts.length];
+    const p = generateProblem(tier);
+    return { ...p, text: tpl(p.a, p.b), isWordProblem: true };
+  });
+  return { uid: G.nextUid++, npc, title: arc.title, tier, parts, partIndex: 0 };
+}
+
+/* サブクエストの ごほうび：1問ごとに クエストメダル2まい（1回目・2回目は アイテムも）。
+   メダルは ためると クエストでしか もらえない ごほうびに かわる（コストプラスのたね・背景スキン など） */
+const QUEST_STEP_ITEMS = [ { id:'potion', count:1 }, { id:'herb', count:1 } ];
+const QUEST_MEDAL_MILESTONES = [
+  { key:'cost_seed',   medals:3,  kind:'item', id:'cost_seed', count:3, label:'コストプラスのたね×3' },
+  { key:'legend_w4',   medals:6,  kind:'equip', id:'w4', rarity:5, label:'レジェンド武器「ほのおの斧」' },
+  { key:'bg_village',  medals:10, kind:'background', id:'quest_village', label:'背景「むらの ひろば」' },
+  { key:'equip_ten',   medals:15, kind:'equip-ticket', count:1, label:'装備ガチャ10連チケット' },
+  { key:'skin_ticket', medals:20, kind:'skin-ticket', count:1, label:'背景スキンガチャチケット' },
+  // 20枚以降は長期目標。1問=2枚なので最初の追加報酬は15問め、最後は700問め。
+  { key:'quest_potion_cache', medals:30, kind:'item', id:'potion', count:3, label:'傷薬×3' },
+  { key:'quest_bg_starlight', medals:45, kind:'background', id:'starlight', label:'背景スキン「星明かり」' },
+  { key:'quest_respec_seed', medals:65, kind:'item', id:'respec_seed', count:1, label:'ふりなおしのたね×1' },
+  { key:'quest_hipotion_pair', medals:90, kind:'item', id:'hipotion', count:2, label:'秘薬×2' },
+  { key:'quest_skin_ticket_2', medals:120, kind:'skin-ticket', count:1, label:'背景スキンガチャチケット×1' },
+  { key:'quest_bg_forest', medals:160, kind:'background', id:'forest', label:'背景スキン「新緑の木もれ日」' },
+  { key:'quest_ether_pair', medals:210, kind:'item', id:'ether', count:2, label:'エーテル×2' },
+  { key:'quest_equip_ten_2', medals:275, kind:'equip-ticket', count:1, label:'装備ガチャ10連チケット×1' },
+  { key:'quest_bg_ocean', medals:350, kind:'background', id:'ocean', label:'背景スキン「きらめく海辺」' },
+  { key:'quest_respec_seed_pair', medals:440, kind:'item', id:'respec_seed', count:2, label:'ふりなおしのたね×2' },
+  { key:'quest_bg_crystal', medals:550, kind:'background', id:'crystal', label:'背景スキン「氷晶の聖域」' },
+  { key:'quest_skin_ticket_3', medals:700, kind:'skin-ticket', count:2, label:'背景スキンガチャチケット×2' },
+  { key:'quest_bg_sky', medals:900, kind:'background', id:'sky', label:'背景スキン「天空の城」' },
+  { key:'quest_equip_ten_3', medals:1100, kind:'equip-ticket', count:1, label:'装備ガチャ10連チケット×1' },
+  { key:'quest_skin_ticket_4', medals:1400, kind:'skin-ticket', count:3, label:'背景スキンガチャチケット×3' },
+  ...QUEST_MEDAL_EXCLUSIVE_PRIZES,
+];
+/* メダルは へらない。あつめた まいすうに とどいたら、じぶんで ボタンを おして うけとる（それぞれ 1回だけ） */
+/* 景品の絵の「パス／絵文字」だけ（トーストなど、iconHtml() に渡す用） */
+function questMedalMilestoneIconSrc(m){
+  const kind = (m.kind === 'equip-ticket' || m.kind === 'skin-ticket') ? 'ticket' : m.kind;
+  const id = m.kind === 'equip-ticket' ? 'equip-ten-ticket' : m.kind === 'skin-ticket' ? 'skin-ticket' : m.id;
+  return rewardIconInfo(kind, id).icon;
+}
+function questMedalMilestoneIcon(m, size){
+  const kind = m.kind === 'equip-ticket' ? 'ticket' : m.kind === 'skin-ticket' ? 'ticket' : m.kind;
+  const id = m.kind === 'equip-ticket' ? 'equip-ten-ticket' : m.kind === 'skin-ticket' ? 'skin-ticket' : m.id;
+  return stageRewardIcon(kind, id, m.rarity || 1, size);
+}
+
+/* 1問こたえるたびの おまけの ごほうび。step＝なんもんめか（1〜3）。
+   かえり値は トーストに出す [{icon, text}]。メダルが たまったら ごほうびも わたす */
+function grantQuestExtras(step, completed){
+  const extras = [];
+  const stepItem = !completed ? QUEST_STEP_ITEMS[step - 1] : null;
+  if (stepItem) {
+    addItem(stepItem.id, stepItem.count);
+    const db = getItemTemplate(stepItem.id);
+    extras.push({ icon: db.emoji, text: `${db.name} ×${stepItem.count}` });
+  }
+  {
+    // メダルは 1問こたえるごとに 2まい
+    G.questMedals = (G.questMedals || 0) + 1;
+    extras.push({ icon: QUEST_MEDAL_IMAGE, text: `クエストメダル +1（${G.questMedals}まい）` });
+  }
+  return extras;
+}
+
+/* ゴールドは「おなじ えんざん・おなじ なんいどの ステージの 3回クリア報酬」＋500 の2倍。
+   1問め20%・2問め30%・クリア50% に わけてわたす */
+const QUEST_GOLD_EXTRA = 500;
+/* あつめた メダルの まいすうに とどいていたら けいひんを わたす（メダルは へらない）。{kind,name,icon,rarity,ability} を かえす（できないときは null） */
+function exchangeQuestMedals(key){
+  if(QUEST_MEDAL_EXCLUSIVE_PRIZES.some(p=>p.key===key))return claimQuestMedalExclusive(G,key);
+  const m = QUEST_MEDAL_MILESTONES.find(x => x.key === key);
+  if (!G || !m) return null;
+  if (!G.questMedalExchanged) G.questMedalExchanged = {};
+  const claims = G.questMedalExchanged;
+  if (!claims || typeof claims !== 'object' || Array.isArray(claims) ||
+      (Object.prototype.hasOwnProperty.call(claims, key) && claims[key]) ||
+      !Number.isSafeInteger(m.medals) || m.medals < 1 ||
+      !Number.isSafeInteger(Number(G.questMedals)) || Number(G.questMedals) < m.medals) return null;
+  // 受取済みキーを先に立てない。定義やセーブ内容が壊れていて報酬を付与できない場合、
+  // 受取だけ済んだ状態を残さないよう、全報酬種の前提を確認してから処理する。
+  if (['item','equip-ticket','skin-ticket'].includes(m.kind) && (!Number.isSafeInteger(m.count) || m.count < 1)) return null;
+  if (m.kind === 'item' && (!Array.isArray(G.items) || !getItemTemplate(m.id))) return null;
+  if (m.kind === 'item' && !G.items.some(item => item?.id === m.id) && (!Number.isSafeInteger(G.nextUid) || G.nextUid >= Number.MAX_SAFE_INTEGER)) return null;
+  if (m.kind === 'item' && G.items.some(item => item?.id === m.id && (!Number.isSafeInteger(item.count) || item.count < 0 || item.count + m.count > Number.MAX_SAFE_INTEGER))) return null;
+  if (m.kind === 'equip' && (!Array.isArray(G.ownedEquips) || !Number.isSafeInteger(G.nextUid) || G.nextUid >= Number.MAX_SAFE_INTEGER || !getEquipTemplate(m.id) || !Number.isInteger(m.rarity) || m.rarity < 1 || m.rarity > RARITY_MAX)) return null;
+  if (m.kind === 'background' && (!AVATAR_BACKGROUNDS.some(background => background.id === m.id) || (G.unlockedAvatarBackgrounds != null && !Array.isArray(G.unlockedAvatarBackgrounds)))) return null;
+  if (m.kind === 'equip-ticket' && G.equipGachaTenPullTickets != null && (!Number.isSafeInteger(G.equipGachaTenPullTickets) || G.equipGachaTenPullTickets < 0 || G.equipGachaTenPullTickets + m.count > Number.MAX_SAFE_INTEGER)) return null;
+  if (m.kind === 'skin-ticket' && G.skinGachaTickets != null && (!Number.isSafeInteger(G.skinGachaTickets) || G.skinGachaTickets < 0 || G.skinGachaTickets + m.count > Number.MAX_SAFE_INTEGER)) return null;
+  if (!['item','equip','background','equip-ticket','skin-ticket'].includes(m.kind)) return null;
+  const iconSrc = questMedalMilestoneIconSrc(m);
+  let reward;
+  if (m.kind === 'item') {
+    addItem(m.id, m.count);
+    reward = { kind:'item', name:m.label, icon:iconSrc };
+  } else if (m.kind === 'equip') {
+    const ability = rollAbility(m.rarity);
+    G.ownedEquips.push({ uid: G.nextUid++, id: m.id, rarity: m.rarity, ability });
+    reward = { kind:'equip', name:getEquipTemplate(m.id).name, icon:iconSrc, rarity:m.rarity, ability };
+  } else if (m.kind === 'background') {
+    G.unlockedAvatarBackgrounds = [...new Set(['default', ...(G.unlockedAvatarBackgrounds || []), m.id])];
+    reward = { kind:'item', name:m.label, icon:iconSrc };
+  } else if (m.kind === 'equip-ticket') {
+    G.equipGachaTenPullTickets = (Number(G.equipGachaTenPullTickets) || 0) + m.count;
+    reward = { kind:'item', name:m.label, icon:iconSrc };
+  } else if (m.kind === 'skin-ticket') {
+    G.skinGachaTickets = (Number(G.skinGachaTickets) || 0) + m.count;
+    reward = { kind:'item', name:m.label, icon:iconSrc };
+  }
+  if (!reward) return null;
+  claims[key] = true;
+  return reward;
+}
+
+function questRewardFor(tier){
+  const family = String(tier).replace(/[0-9]/g, '');
+  const idx = tierStageIndex(tier);
+  const areaId = QUEST_FAMILY_AREA[family] || 'area1';
+  const stageCount = (AREA_STAGES[areaId].stages || []).length || 1;
+  const stageIndex = Math.round(idx / 4 * (stageCount - 1));
+  const total = (stageFirstSuppliesReward(areaId, stageIndex).gold + QUEST_GOLD_EXTRA) * 2;
+  const g1 = Math.round(total * 0.2), g2 = Math.round(total * 0.3);
+  return { golds: [g1, g2, total - g1 - g2], total, exp: (6 + idx * 5) * 2 };
+}
+
+/* ==========================================================
+   敵データ
+   ========================================================== */
+const ENEMIES_TOWER = [
+  { name:'そらとぶスライム', emoji:'assets/artist-monster-samples/flying-slime-handdrawn-v1.png', hp:16, atk:3, def:1, spd:4, gold:[4,9], exp:6 },
+  { name:'コウモリ', emoji:'assets/monsters_refreshed/monster_5.png', hp:14, atk:4, def:1, spd:7, gold:[5,10], exp:7 },
+  { name:'おばけ', emoji:'assets/monsters_refreshed/monster_7.png', hp:18, atk:4, def:2, spd:5, gold:[6,12], exp:8 },
+  { name:'キノコ', emoji:'assets/monsters_refreshed/monster_4.png', hp:22, atk:5, def:2, spd:8, gold:[7,13], exp:10 },
+  { name:'ゴブリン', emoji:'assets/monsters_refreshed/monster_3.png', hp:30, atk:6, def:5, spd:3, gold:[9,16], exp:13 },
+  { name:'ミミック', emoji:'assets/monsters_refreshed/monster_6.png', hp:24, atk:7, def:2, spd:9, gold:[10,17], exp:14 },
+  { name:'スケルトン', emoji:'assets/monsters_refreshed/monster_8.png', hp:34, atk:8, def:5, spd:6, gold:[12,20], exp:17 },
+  { name:'しろいウサギ', emoji:'assets/monsters_refreshed/m3_1.png', hp:15, atk:3, def:1, spd:9, gold:[4,8], exp:6 },
+  { name:'キノコやまあらし', emoji:'assets/artist-monster-samples/mushroom-hedgehog-handdrawn-v1.png', hp:20, atk:4, def:2, spd:4, gold:[5,10], exp:8 },
+  { name:'わたぐも', emoji:'assets/monsters_refreshed/m3_3.png', hp:17, atk:4, def:1, spd:6, gold:[5,9], exp:7 },
+  { name:'じょうろのせいれい', emoji:'assets/monsters_refreshed/m3_4.png', hp:19, atk:3, def:2, spd:5, gold:[5,10], exp:8 },
+  { name:'よつばのてんとうむし', emoji:'assets/monsters_refreshed/m3_5.png', hp:16, atk:5, def:1, spd:7, gold:[5,9], exp:8 },
+  { name:'くさむらいわ', emoji:'assets/monsters_refreshed/m3_6.png', hp:26, atk:4, def:6, spd:2, gold:[7,12], exp:10 },
+  { name:'はたけのすずめ', emoji:'assets/monsters_refreshed/m3_7.png', hp:18, atk:5, def:1, spd:8, gold:[6,10], exp:9 },
+  { name:'どろんこモグラ', emoji:'assets/monsters_refreshed/m3_8.png', hp:24, atk:5, def:3, spd:4, gold:[7,13], exp:11 },
+  { name:'たいようのてんし', emoji:'assets/monsters_refreshed/m1_1.png', hp:17, atk:5, def:2, spd:6, gold:[6,10], exp:9 },
+  { name:'みずばのかえる', emoji:'assets/monsters_refreshed/m1_2.png', hp:19, atk:4, def:2, spd:5, gold:[6,10], exp:9 },
+  { name:'きかいのつかいま', emoji:'assets/monsters_refreshed/m1_3.png', hp:20, atk:6, def:2, spd:5, gold:[7,11], exp:10 },
+  { name:'マカロンモンスター', emoji:'assets/monsters_refreshed/m1_4.png', hp:18, atk:5, def:2, spd:5, gold:[6,10], exp:9 },
+];
+const ENEMIES_DUNGEON = [
+  { name:'どくスライム', emoji:'assets/monsters_refreshed/monster_1.png', hp:16, atk:3, def:1, spd:4, gold:[4,9], exp:6 },
+  { name:'コウモリ', emoji:'assets/monsters_refreshed/monster_5.png', hp:13, atk:4, def:0, spd:8, gold:[3,8], exp:7 },
+  { name:'ゴブリン', emoji:'assets/monsters_refreshed/monster_3.png', hp:19, atk:4, def:2, spd:5, gold:[6,12], exp:8 },
+  { name:'キノコおばけ', emoji:'assets/monsters_refreshed/monster_4.png', hp:24, atk:6, def:3, spd:5, gold:[8,15], exp:11 },
+  { name:'あくりょう', emoji:'assets/monsters_refreshed/monster_7.png', hp:20, atk:7, def:1, spd:9, gold:[9,16], exp:13 },
+  { name:'ミミック', emoji:'assets/monsters_refreshed/monster_6.png', hp:32, atk:7, def:4, spd:4, gold:[10,18], exp:14 },
+  { name:'スケルトンナイト', emoji:'assets/monsters_refreshed/monster_8.png', hp:36, atk:9, def:6, spd:6, gold:[14,22], exp:18 },
+  { name:'きりかぶモンスター', emoji:'assets/monsters_refreshed/m2_1.png', hp:26, atk:5, def:4, spd:3, gold:[7,13], exp:11 },
+  { name:'すいしょうのようせい', emoji:'assets/monsters_refreshed/m2_2.png', hp:18, atk:6, def:1, spd:8, gold:[7,12], exp:11 },
+  { name:'つるのばけもの', emoji:'assets/monsters_refreshed/m2_3.png', hp:28, atk:6, def:4, spd:4, gold:[8,14], exp:12 },
+  { name:'どくとかげ', emoji:'assets/monsters_refreshed/m2_4.png', hp:20, atk:6, def:2, spd:7, gold:[7,12], exp:10 },
+  { name:'こけのせいれい', emoji:'assets/monsters_refreshed/m2_5.png', hp:30, atk:7, def:5, spd:3, gold:[9,15], exp:13 },
+  { name:'ぬまのハチドリ', emoji:'assets/monsters_refreshed/m2_6.png', hp:16, atk:6, def:1, spd:9, gold:[7,11], exp:10 },
+  { name:'こけいわゴーレム', emoji:'assets/monsters_refreshed/m2_7.png', hp:36, atk:8, def:7, spd:2, gold:[11,18], exp:15 },
+  { name:'まじゅうのバラ', emoji:'assets/monsters_refreshed/m2_8.png', hp:22, atk:8, def:2, spd:6, gold:[9,15], exp:13 },
+  { name:'どせいのようせい', emoji:'assets/monsters_refreshed/m1_5.png', hp:19, atk:5, def:2, spd:6, gold:[6,11], exp:9 },
+  { name:'まほうのつぼ', emoji:'assets/monsters_refreshed/m1_6.png', hp:23, atk:6, def:4, spd:3, gold:[8,13], exp:11 },
+  { name:'おとのてんし', emoji:'assets/monsters_refreshed/m1_7.png', hp:17, atk:5, def:1, spd:8, gold:[6,10], exp:9 },
+  { name:'ひかるさかな', emoji:'assets/monsters_refreshed/m1_8.png', hp:20, atk:5, def:2, spd:6, gold:[7,11], exp:10 },
+];
+const ENEMIES_CRYPT = [
+  { name:'どろぬまスライム', emoji:'assets/monsters_refreshed/monster_1.png', hp:18, atk:3, def:2, spd:4, gold:[4,9], exp:6 },
+  { name:'やみコウモリ', emoji:'assets/monsters_refreshed/monster_5.png', hp:15, atk:5, def:1, spd:8, gold:[5,10], exp:7 },
+  { name:'どくキノコ', emoji:'assets/monsters_refreshed/monster_4.png', hp:24, atk:5, def:3, spd:6, gold:[7,13], exp:10 },
+  { name:'ほらあなゴブリン', emoji:'assets/monsters_refreshed/monster_3.png', hp:28, atk:6, def:4, spd:5, gold:[8,14], exp:12 },
+  { name:'のろいのミミック', emoji:'assets/monsters_refreshed/monster_6.png', hp:26, atk:8, def:3, spd:7, gold:[10,17], exp:14 },
+  { name:'さまよえるたましい', emoji:'assets/monsters_refreshed/monster_7.png', hp:22, atk:7, def:2, spd:9, gold:[10,18], exp:15 },
+  { name:'がいこつせんし', emoji:'assets/monsters_refreshed/monster_8.png', hp:38, atk:9, def:6, spd:6, gold:[14,22], exp:19 },
+  { name:'はちうえのぬし', emoji:'assets/monsters_refreshed/m4_1.png', hp:20, atk:5, def:3, spd:4, gold:[7,12], exp:10 },
+  { name:'ほのおのねこ', emoji:'assets/monsters_refreshed/m4_2.png', hp:22, atk:8, def:2, spd:7, gold:[8,14], exp:12 },
+  { name:'あわだこ', emoji:'assets/monsters_refreshed/m4_3.png', hp:19, atk:6, def:2, spd:6, gold:[7,12], exp:10 },
+  { name:'でんきのたま', emoji:'assets/monsters_refreshed/m4_4.png', hp:24, atk:7, def:3, spd:6, gold:[9,14], exp:12 },
+  { name:'すいしょうくらげ', emoji:'assets/monsters_refreshed/m4_5.png', hp:21, atk:6, def:3, spd:5, gold:[8,13], exp:11 },
+  { name:'かぜのわたぼこり', emoji:'assets/monsters_refreshed/m4_6.png', hp:18, atk:5, def:1, spd:9, gold:[7,11], exp:10 },
+  { name:'まがんのひとみ', emoji:'assets/monsters_refreshed/m4_7.png', hp:26, atk:9, def:3, spd:5, gold:[10,16], exp:14 },
+  { name:'ゆきだるまのれいこん', emoji:'assets/monsters_refreshed/m4_8.png', hp:23, atk:6, def:4, spd:4, gold:[8,13], exp:11 },
+  { name:'まもりのてんし', emoji:'assets/monsters_refreshed/m5_1.png', hp:28, atk:7, def:4, spd:5, gold:[9,15], exp:13 },
+  { name:'ほのおのふしちょう', emoji:'assets/monsters_refreshed/m5_2.png', hp:26, atk:9, def:3, spd:7, gold:[10,16], exp:14 },
+  { name:'くものかいじゅう', emoji:'assets/monsters_refreshed/m5_3.png', hp:32, atk:6, def:6, spd:3, gold:[10,16], exp:13 },
+  { name:'たいようのせいれい', emoji:'assets/monsters_refreshed/m5_4.png', hp:24, atk:8, def:3, spd:6, gold:[9,15], exp:13 },
+];
+const ENEMIES_BANDIT = [
+  { name:'みはりの盗賊', emoji:'assets/monsters_refreshed/monster_3.png', hp:15, atk:4, def:1, spd:6, gold:[5,10], exp:7 },
+  { name:'ナイフの盗賊', emoji:'assets/monsters_refreshed/monster_3.png', hp:17, atk:6, def:1, spd:7, gold:[6,11], exp:8 },
+  { name:'ゆみの盗賊', emoji:'assets/monsters_refreshed/monster_3.png', hp:16, atk:5, def:1, spd:9, gold:[6,12], exp:9 },
+  { name:'ばんけんコウモリ', emoji:'assets/monsters_refreshed/monster_5.png', hp:16, atk:5, def:1, spd:8, gold:[6,11], exp:8 },
+  { name:'わなのミミック', emoji:'assets/monsters_refreshed/monster_6.png', hp:27, atk:7, def:3, spd:5, gold:[10,17], exp:13 },
+  { name:'どくつぼスライム', emoji:'assets/monsters_refreshed/monster_1.png', hp:20, atk:5, def:2, spd:4, gold:[7,13], exp:10 },
+  { name:'たいちょうこうほの盗賊', emoji:'assets/monsters_refreshed/monster_3.png', hp:32, atk:9, def:4, spd:8, gold:[13,20], exp:17 },
+  { name:'ほのおのサラマンダー', emoji:'assets/monsters_refreshed/m6_1.png', hp:22, atk:8, def:2, spd:6, gold:[8,14], exp:12 },
+  { name:'こおりのこぎつね', emoji:'assets/monsters_refreshed/m6_2.png', hp:19, atk:6, def:2, spd:8, gold:[7,12], exp:10 },
+  { name:'つばめもどき', emoji:'assets/monsters_refreshed/m6_3.png', hp:16, atk:6, def:1, spd:9, gold:[6,11], exp:9 },
+  { name:'おけがえる', emoji:'assets/monsters_refreshed/m6_4.png', hp:21, atk:5, def:3, spd:5, gold:[7,12], exp:10 },
+  { name:'きのこがえる', emoji:'assets/monsters_refreshed/m6_5.png', hp:23, atk:6, def:3, spd:4, gold:[8,13], exp:11 },
+  { name:'ひまわりのようせい', emoji:'assets/monsters_refreshed/m6_6.png', hp:18, atk:5, def:2, spd:6, gold:[7,11], exp:9 },
+  { name:'まだらのちょう', emoji:'assets/monsters_refreshed/m6_7.png', hp:17, atk:7, def:1, spd:9, gold:[7,12], exp:10 },
+  { name:'きりかぶのぬし', emoji:'assets/monsters_refreshed/m6_8.png', hp:27, atk:6, def:5, spd:3, gold:[9,15], exp:12 },
+  { name:'さまよえるゆうれい', emoji:'assets/monsters_refreshed/m5_5.png', hp:22, atk:7, def:2, spd:7, gold:[8,14], exp:12 },
+  { name:'たからのハチドリ', emoji:'assets/monsters_refreshed/m5_6.png', hp:17, atk:6, def:1, spd:9, gold:[8,13], exp:11 },
+  { name:'にじのはと', emoji:'assets/monsters_refreshed/m5_7.png', hp:19, atk:6, def:2, spd:8, gold:[8,13], exp:11 },
+  { name:'たいようのわ', emoji:'assets/monsters_refreshed/m5_8.png', hp:25, atk:8, def:4, spd:5, gold:[9,15], exp:13 },
+];
+const BOSSES = {
+  tower5:        { name:'くさはらのぬし', emoji:'assets/artist-monster-samples/meadow-lord-handdrawn-v1.png', hp:70, atk:9, def:5, spd:7, gold:[40,60], exp:45 },
+  tower10:       { name:'くさはらの大しゅちょう', emoji:'assets/monsters_refreshed/boss1_1.png', hp:120, atk:13, def:8, spd:9, gold:[90,130], exp:90 },
+  dungeon5:      { name:'ぬまのしはいしゃ', emoji:'assets/monsters_refreshed/boss1_5.png', hp:75, atk:10, def:6, spd:5, gold:[40,60], exp:45 },
+  dungeon10:     { name:'しっこくのぬまおう', emoji:'assets/monsters_refreshed/boss1_5.png', hp:130, atk:14, def:9, spd:8, gold:[90,130], exp:95 },
+  crypt5:        { name:'めいきゅうのぬし', emoji:'assets/monsters_refreshed/boss1_2.png', hp:80, atk:11, def:7, spd:6, gold:[42,62], exp:48 },
+  crypt10:       { name:'くらやみのめいきゅう王', emoji:'assets/monsters_refreshed/boss1_2.png', hp:135, atk:15, def:9, spd:9, gold:[95,135], exp:98 },
+  bandit5:       { name:'とうぞくだんちょう', emoji:'assets/monsters_refreshed/boss1_3.png', hp:78, atk:12, def:5, spd:8, gold:[42,62], exp:47 },
+  bandit10:      { name:'とうぞくの王', emoji:'assets/monsters_refreshed/boss1_3.png', hp:140, atk:16, def:8, spd:8, gold:[95,135], exp:100 },
+  // 各エリア専用ボス（boss1_1〜boss1_8のフル活用）
+  forest_boss:   { name:'かけざんのヌシ', emoji:'assets/monsters_refreshed/boss1_4.png', hp:80, atk:11, def:6, spd:6, gold:[45,65], exp:50 },
+  trial_boss:    { name:'試練のガーディアン', emoji:'assets/monsters_refreshed/boss1_3.png', hp:85, atk:12, def:6, spd:7, gold:[50,70], exp:54 },
+  kanji_boss1:   { name:'もりの まじん', emoji:'assets/monsters_refreshed/boss1_6.png', hp:70, atk:8, def:4, spd:5, gold:[40,60], exp:45 },
+  kanji_boss2:   { name:'ほらあなの まじん', emoji:'assets/monsters_refreshed/boss1_2.png', hp:75, atk:9, def:5, spd:5, gold:[42,62], exp:48 },
+  kanji_boss3:   { name:'すなの まじん', emoji:'assets/monsters_refreshed/boss1_7.png', hp:80, atk:10, def:6, spd:6, gold:[45,65], exp:50 },
+  kanji_boss4:   { name:'うみの まじん', emoji:'assets/monsters_refreshed/boss1_8.png', hp:85, atk:11, def:6, spd:7, gold:[48,68], exp:52 },
+  kanji_boss5:   { name:'えんじょうの まじん', emoji:'assets/monsters_refreshed/boss1_4.png', hp:90, atk:12, def:7, spd:6, gold:[50,70], exp:55 },
+  kanji_boss6:   { name:'かんじの まおう', emoji:'assets/monsters_refreshed/boss1_5.png', hp:100, atk:13, def:8, spd:7, gold:[60,90], exp:65 },
+  sky_boss:      { name:'天空のぬし', emoji:'assets/monsters_refreshed/boss1_7.png', hp:92, atk:13, def:7, spd:8, gold:[55,75], exp:60 },
+  castle_boss:   { name:'さんすうの まおう', emoji:'assets/monsters_refreshed/boss1_8.png', hp:105, atk:14, def:8, spd:8, gold:[70,100], exp:70 },
+};
+
+let customEnemies = { tower: {}, dungeon: {}, crypt: {}, bandit: {}, boss: {} };
+let customEquips = {};
+let customItems = {};
+
+function loadCustomData() {
+  const savedE = storageGet('typing_rpg_custom_enemies');
+  if (savedE) { try { customEnemies = JSON.parse(savedE); } catch(e) {} }
+  const savedEq = storageGet('typing_rpg_custom_equips');
+  if (savedEq) { try { customEquips = JSON.parse(savedEq); } catch(e) {} }
+  const savedI = storageGet('typing_rpg_custom_items');
+  if (savedI) { try { customItems = JSON.parse(savedI); } catch(e) {} }
+}
+loadCustomData();
+
+function saveCustomData() {
+  storageSet('typing_rpg_custom_enemies', JSON.stringify(customEnemies));
+  storageSet('typing_rpg_custom_equips', JSON.stringify(customEquips));
+  storageSet('typing_rpg_custom_items', JSON.stringify(customItems));
+}
+
+/* エリア別難易度倍率の管理（管理者設定で調整可能）
+   基本設定: 算数・国語ともにエリアが進むごとに+1.0倍ずつ増加 */
+function getDefaultAreaDifficultyMultiplier(areaId){
+  const defaults = {
+    // 算数エリア
+    area1: 1.0,
+    area13: 1.5,
+    area2: 2.0,
+    area3: 3.0,
+    area4: 4.0,
+    area11: 5.0,
+    area12: 6.0,
+    // 国語漢字エリア
+    area5: 1.0,
+    area6: 2.0,
+    area7: 3.0,
+    area8: 4.0,
+    area9: 5.0,
+    area10: 6.0,
+
+    area14: 1.0,
+    area15: 1.0,
+
+  };
+  return defaults[areaId] !== undefined ? defaults[areaId] : 1.0;
+}
+
+let areaDifficultyMultipliers = {};
+
+function loadAreaDifficultyMultipliers(){
+  try {
+    const raw = storageGet('typing_rpg_area_difficulty_v3');
+    if (raw) {
+      areaDifficultyMultipliers = JSON.parse(raw);
+    } else {
+      areaDifficultyMultipliers = {};
+      Object.keys(AREA_STAGES).forEach(id => {
+        areaDifficultyMultipliers[id] = getDefaultAreaDifficultyMultiplier(id);
+      });
+      storageSet('typing_rpg_area_difficulty_v3', JSON.stringify(areaDifficultyMultipliers));
+    }
+  } catch(e) {
+    areaDifficultyMultipliers = {};
+  }
+}
+loadAreaDifficultyMultipliers();
+
+function saveAreaDifficultyMultipliers(){
+  storageSet('typing_rpg_area_difficulty_v3', JSON.stringify(areaDifficultyMultipliers));
+}
+
+function getAreaDifficultyMultiplier(areaId){
+  if (!areaDifficultyMultipliers) return getDefaultAreaDifficultyMultiplier(areaId);
+  const m = areaDifficultyMultipliers[areaId];
+  return (typeof m === 'number' && !isNaN(m) && m > 0) ? m : getDefaultAreaDifficultyMultiplier(areaId);
+}
+
+/* ==========================================================
+   報酬・ドロップ設定（管理者メニュー「報酬・ドロップ」で変更。全セーブ共通）
+   ========================================================== */
+const REWARD_SETTINGS_KEY = 'typing_rpg_reward_settings_v1';
+const REWARD_SETTINGS_DEFAULTS = {
+  dropMultItem: 0.5,        // アイテムのドロップ率にかける倍率
+  dropMultEquip: 0.5,       // そうびのドロップ率にかける倍率（レジェンドは落ちない）
+  dropMultBlueprint: 0.1,   // 挑戦状：通常0.15%・ボス0.3%（進行/周回補正前）
+  dropMultTicket: 0.5,      // 背景スキンガチャチケットのドロップ率にかける倍率
+  dropMultRaidTicket: 0,    // レイドチケットのドロップ倍率
+  frontierDropMult: 2,      // 最高クリア難易度を更新できるステージ
+  pastStageDropMult: 0.1,   // 同じ難易度・過去ステージ・復習のドロップ倍率
+  repeatThreshold: 3,       // おなじステージを この回数以上クリアしていたら
+  repeatMult: 0.1,          // ドロップ率にさらにかける倍率（0で まったく出ない）
+  bossEquipDrop: 0,         // ボスの そうびドロップ確率（0〜1。0で なし）
+  bossBlueprintRate: 0.03,  // ボスの 挑戦状ドロップ確率（倍率かける前）
+  zoneClearLegend: 0,       // 1 にすると エリア制覇のたびに レジェンド装備がもらえる（通常 0）
+  firstWeaponRarity: 2,     // 初回クリア報酬の ぶきの レアリティ（1〜4）
+  thirdGoldBase: 100,       // 3回クリア報酬のゴールド（さいしょのステージ）
+  thirdGoldStep: 50,        // ステージが すすむごとに ふえるゴールド
+  thirdItemId: 'hipotion',  // 3回クリア報酬の アイテム
+  thirdItemCount: 3,        // 3回クリア報酬の アイテム個数
+  bossFirstTickets: 1,      // ボス初回クリア報酬：背景スキンガチャチケット枚数
+  bossThirdTickets: 1,      // ボス3回クリア報酬：装備ガチャ10連チケット枚数
+  pickupBonusTickets: 1,    // ピックアップステージを クリアしたときの チャレンジボーナス：装備ガチャ10連チケット枚数
+  pickupBonusRaidTickets: 0, // 同：レイドチケット枚数
+  pickupBonusGold: 1000,    // 同：ゴールド
+  bossLevelUp: 1,           // ボスを たおすたびに あがる 強化レベル
+  bossGrowthPct: 12,        // ステージボスの強化レベル1ごとの ステータス上昇（％）
+};
+let rewardSettings = { ...REWARD_SETTINGS_DEFAULTS };
+function loadRewardSettings(){
+  rewardSettings = { ...REWARD_SETTINGS_DEFAULTS };
+  try {
+    const raw = storageGet(REWARD_SETTINGS_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      for (const k of Object.keys(REWARD_SETTINGS_DEFAULTS)) {
+        if (saved[k] !== undefined && typeof saved[k] === typeof REWARD_SETTINGS_DEFAULTS[k]) rewardSettings[k] = saved[k];
+      }
+      // 以前の標準値8%を保存済みの端末にも、新しい標準値12%を反映する。
+      if (saved.bossGrowthPct === 8) rewardSettings.bossGrowthPct = REWARD_SETTINGS_DEFAULTS.bossGrowthPct;
+      // 以前の標準設定を保存済みの端末にも、挑戦状の新しい半分の倍率を反映する。
+      if ([0.4,0.2].includes(saved.dropMultBlueprint)) rewardSettings.dropMultBlueprint = REWARD_SETTINGS_DEFAULTS.dropMultBlueprint;
+    }
+  } catch(e) {}
+}
+loadRewardSettings();
+function saveRewardSettings(){ storageSet(REWARD_SETTINGS_KEY, JSON.stringify(rewardSettings)); }
+
+const ENEMY_POOLS = { tower: ENEMIES_TOWER, dungeon: ENEMIES_DUNGEON, crypt: ENEMIES_CRYPT, bandit: ENEMIES_BANDIT };
+
+/* エリア別 敵モンスター登場テーブル（全78体のモンスターをテーマ別に最適配分） */
+const AREA_ENEMY_POOLS = {
+  // area1: 始まりの平原（たしざん）- 平原のモンスター
+  area1: [
+    { zone:'tower', key:0 },  // そらとぶスライム
+    { zone:'tower', key:7 },  // しろいウサギ
+    { zone:'tower', key:9 },  // わたぐも
+    { zone:'tower', key:11 }, // よつばのてんとうむし
+    { zone:'tower', key:13 }, // はたけのすずめ
+    { zone:'tower', key:3 },  // キノコ
+  ],
+  // area13: 迷いの沼（ひきざん）- 沼地・湿地のモンスター
+  area13: [
+    { zone:'dungeon', key:0 },  // どくスライム
+    { zone:'dungeon', key:1 },  // コウモリ
+    { zone:'dungeon', key:2 },  // どくキノコ
+    { zone:'crypt', key:0 },    // どろぬまスライム
+    { zone:'dungeon', key:10 }, // どくとかげ
+    { zone:'dungeon', key:12 }, // ぬまのハチドリ
+  ],
+  // area2: かけ算の森（九九・かけざん）- 森の生き物・精霊
+  area2: [
+    { zone:'tower', key:8 },    // キノコやまあらし
+    { zone:'tower', key:10 },   // じょうろのせいれい
+    { zone:'tower', key:14 },   // どろんこモグラ
+    { zone:'dungeon', key:8 },  // すいしょうのようせい
+    { zone:'crypt', key:7 },    // はちうえのぬし
+    { zone:'crypt', key:12 },   // かぜのわたぼこり
+    { zone:'dungeon', key:13 }, // こけいわゴーレム
+  ],
+  // area3: わり算の海（わりざん）- 海・水辺のモンスター
+  area3: [
+    { zone:'dungeon', key:0 },  // どくスライム
+    { zone:'dungeon', key:1 },  // コウモリ
+    { zone:'dungeon', key:7 },  // きりかぶモンスター
+    { zone:'dungeon', key:10 }, // どくとかげ
+    { zone:'dungeon', key:12 }, // ぬまのハチドリ
+    { zone:'dungeon', key:11 }, // こけのせいれい
+    { zone:'dungeon', key:9 },  // つるのばけもの
+  ],
+  // area4: 試練の塔（4年算数）- 機械・天使・高位精霊
+  area4: [
+    { zone:'tower', key:15 },   // たいようのてんし
+    { zone:'tower', key:17 },   // きかいのつかいま
+    { zone:'dungeon', key:16 }, // まほうのつぼ
+    { zone:'tower', key:2 },    // おばけ
+    { zone:'crypt', key:10 },   // でんきのたま
+    { zone:'crypt', key:13 },   // まがんのひとみ
+    { zone:'tower', key:4 },    // ゴブリン
+  ],
+  // area5: 漢字の森（小1漢字）- 愛らしい自然・お菓子のモンスター
+  area5: [
+    { zone:'tower', key:16 },   // みずばのかえる
+    { zone:'tower', key:18 },   // マカロンモンスター
+    { zone:'dungeon', key:17 }, // おとのてんし
+    { zone:'bandit', key:13 },  // ひまわりのようせい
+    { zone:'bandit', key:11 },  // おけがえる
+    { zone:'bandit', key:9 },   // つばめもどき
+  ],
+  // area6: 漢字の洞窟（小2漢字）- 洞窟・地下のモンスター
+  area6: [
+    { zone:'crypt', key:3 },    // ほらあなゴブリン
+    { zone:'crypt', key:1 },    // やみコウモリ
+    { zone:'crypt', key:2 },    // どくキノコ
+    { zone:'crypt', key:5 },    // さまよえるたましい
+    { zone:'crypt', key:11 },   // すいしょうくらげ
+    { zone:'crypt', key:14 },   // ゆきだるまのれいこん
+    { zone:'dungeon', key:3 },  // キノコおばけ
+  ],
+  // area7: 漢字の砂漠（小3漢字）- 砂・岩・幻影のモンスター
+  area7: [
+    { zone:'tower', key:12 },   // くさむらいわ
+    { zone:'dungeon', key:15 }, // どせいのようせい
+    { zone:'crypt', key:17 },   // くものかいじゅう
+    { zone:'bandit', key:14 },  // まだらのちょう
+    { zone:'bandit', key:16 },  // さまよえるゆうれい
+    { zone:'bandit', key:17 },  // たからのハチドリ
+    { zone:'bandit', key:19 },  // たいようのわ
+  ],
+  // area8: 漢字の海（小4漢字）- 水・氷・空のモンスター
+  area8: [
+    { zone:'crypt', key:9 },    // あわだこ
+    { zone:'dungeon', key:18 }, // ひかるさかな
+    { zone:'crypt', key:0 },    // どろぬまスライム
+    { zone:'bandit', key:8 },   // こおりのこぎつね
+    { zone:'bandit', key:18 },  // にじのはと
+    { zone:'dungeon', key:14 }, // まじゅうのバラ
+  ],
+  // area9: 漢字の火山（小5漢字）- 炎・熱帯のモンスター
+  area9: [
+    { zone:'crypt', key:8 },    // ほのおのねこ
+    { zone:'bandit', key:7 },   // ほのおのサラマンダー
+    { zone:'crypt', key:16 },   // ほのおのふしちょう
+    { zone:'bandit', key:12 },  // きのこがえる
+    { zone:'bandit', key:15 },  // きりかぶのぬし
+    { zone:'dungeon', key:4 },  // あくりょう
+  ],
+  // area10: 漢字の魔王城（小6漢字）- 屈強な戦士・アンデッド・盗賊
+  area10: [
+    { zone:'tower', key:6 },    // スケルトン
+    { zone:'dungeon', key:6 },  // スケルトンナイト
+    { zone:'crypt', key:6 },    // がいこつせんし
+    { zone:'bandit', key:6 },   // たいちょうこうほの盗賊
+    { zone:'crypt', key:4 },    // のろいのミミック
+    { zone:'crypt', key:13 },   // まがんのひとみ
+    { zone:'crypt', key:15 },   // まもりのてんし
+  ],
+  // area11: 天空の階段（小5算数）- 聖獣・鳥・空の精霊
+  area11: [
+    { zone:'bandit', key:3 },   // ばんけんコウモリ
+    { zone:'tower', key:15 },   // たいようのてんし
+    { zone:'crypt', key:12 },   // かぜのわたぼこり
+    { zone:'bandit', key:17 },  // たからのハチドリ
+    { zone:'bandit', key:18 },  // にじのはと
+    { zone:'crypt', key:18 },   // たいようのせいれい
+    { zone:'bandit', key:19 },  // たいようのわ
+  ],
+  // area12: 算数の魔王城（小6算数）- 盗賊団と強力な番人たち
+  area12: [
+    { zone:'bandit', key:0 },   // みはりの盗賊
+    { zone:'bandit', key:1 },   // ナイフの盗賊
+    { zone:'bandit', key:2 },   // ゆみの盗賊
+    { zone:'bandit', key:4 },   // わなのミミック
+    { zone:'crypt', key:6 },    // がいこつせんし
+    { zone:'bandit', key:6 },   // たいちょうこうほの盗賊
+    { zone:'crypt', key:15 },   // まもりのてんし
+  ]
+};
+
+function getBaseEnemy(zone, key) {
+  if (zone === 'boss') return BOSSES[key];
+  return ENEMY_POOLS[zone][key];
+}
+
+function getEnemyTemplate(zone, key) {
+  const base = getBaseEnemy(zone, key);
+  const custom = customEnemies[zone] && customEnemies[zone][key];
+  return custom ? { ...base, ...custom } : base;
+}
+
+function generateEnemy(zone, floor){
+  const isBoss = (floor === 5 || floor === 10);
+  let tmpl;
+  if (isBoss) {
+    tmpl = getEnemyTemplate('boss', `${zone}${floor}`);
+  } else {
+    const listLen = ENEMY_POOLS[zone].length;
+    const poolSize = Math.min(listLen, 2 + floor);
+    const idx = Math.floor(Math.random() * poolSize);
+    tmpl = getEnemyTemplate(zone, idx);
+  }
+  const mult = isBoss ? 1 : 1 + (floor-1) * 0.18;
+  const e = {
+    name: isBoss ? `【ボス】${tmpl.name}` : tmpl.name,
+    emoji: tmpl.emoji,
+    maxHp: Math.round(tmpl.hp * mult),
+    atk: Math.round(tmpl.atk * mult),
+    def: Math.round(tmpl.def * mult),
+    spd: tmpl.spd + Math.floor(floor/3),
+    goldMin: Math.round(tmpl.gold[0] * mult),
+    goldMax: Math.round(tmpl.gold[1] * mult),
+    exp: Math.round(tmpl.exp * mult),
+    isBoss,
+  };
+  e.hp = e.maxHp;
+  return applyEnemyAttackStatMultiplier(e);
+}
+
+/* ==========================================================
+   プレイヤー アバター立ち絵データ（男女2パターンずつ）
+   ========================================================== */
+const HERO_AVATARS = [
+  { id: 'hero_female_1', name: '少女の冒険者', gender: 'female', job: '剣士・戦士', desc: '活発なポニーテールと剣技が自慢の少女', image: 'assets/characters/hero_female_1_hd.png' },
+ GHOST_RAID_SKIN,
+ {id:'raid_star_guardian',name:'星界の守護者',gender:'male',image:'assets/artist-skin-samples/star-guardian-handdrawn-v1.png',desc:'レイドの勇者に贈られる星界の騎士',rewardSource:'raid'},
+  { id: 'hero_male_1', name: '青年の騎士', gender: 'male', job: '騎士・勇者', desc: '聖剣をたずさえた誇り高き青年騎士', image: 'assets/characters/hero_male_1_hd.png' },
+  { id: 'hero_male_2', name: '少年の冒険者', gender: 'male', job: '冒険者・シーフ', desc: 'ゴーグルと身軽な動きで挑む元気な少年', image: 'assets/characters/hero_male_2_hd.png' },
+  { id: 'hero_female_2', name: '星詠みの少女', gender: 'female', job: '魔法使い', desc: '星空のローブと水晶の杖を持つ神秘的な少女', image: 'assets/characters/hero_female_2_hd.png' },
+  { id: 'ai_hero_boy', name: '異世界の少年', gender: 'male', job: '冒険者', desc: '不思議な世界から来た少年', image: 'assets/characters/ai_hero_boy_clean.png' },
+  { id: 'ai_hero_youngman', name: '異世界の青年', gender: 'male', job: '剣士', desc: '不思議な世界から来た青年', image: 'assets/characters/ai_hero_youngman_clean.png' },
+  { id: 'ai_hero_girl', name: '異世界の少女', gender: 'female', job: '魔法使い', desc: '不思議な世界から来た少女', image: 'assets/characters/ai_hero_girl_clean.png' },
+  { id: 'ai_hero_woman', name: '異世界の女性', gender: 'female', job: '弓使い', desc: '不思議な世界から来た女性', image: 'assets/characters/ai_hero_woman_clean.png' },
+  { id: 'ai_hero_spellblade', name: '風の魔法剣士', gender: 'male', job: '魔法剣士', desc: '風の魔法をまとったクリスタルレイピアで戦う少年', image: 'assets/characters/ai_hero_spellblade_transparent.png' },
+  { id: 'ai_hero_alchemist', name: '星薬の錬金術師', gender: 'female', job: '錬金術師', desc: '星のきらめきを込めた薬と杖で仲間を導く少女', image: 'assets/artist-skin-samples/star-alchemist-handdrawn-v1.png' },
+  { id: 'skin_fire_lancer_m', name: '炎竜の槍士', gender: 'male', job: '槍士', desc: '黒と赤の鎧で炎竜の力をまとう槍士', image: 'assets/artist-skin-samples/fire-lancer-handdrawn-v1.png', gachaOnly: true },
+  { id: 'skin_fire_lancer_f', name: '炎竜の槍姫', gender: 'female', job: '槍士', desc: '黒と赤の鎧で炎竜の力をまとう槍士', image: 'assets/characters/skin_fire_lancer_f.png', gachaOnly: true },
+  { id: 'skin_tide_cleric_m', name: '潮流の神官', gender: 'male', job: '神官', desc: '水の真珠と波の魔法をあやつる神官', image: 'assets/characters/skin_tide_cleric_m.png', gachaOnly: true },
+  { id: 'skin_tide_cleric_f', name: '潮流の巫女', gender: 'female', job: '神官', desc: '水の真珠と波の魔法をあやつる神官', image: 'assets/artist-skin-samples/tide-cleric-handdrawn-v1.png', gachaOnly: true },
+  { id: 'skin_forest_scout_m', name: '森の斥候', gender: 'male', job: '弓使い', desc: '森の衣をまとい弓で仲間を守る斥候', image: 'assets/artist-skin-samples/forest-scout-handdrawn-v1.png', gachaOnly: true },
+  { id: 'skin_forest_scout_f', name: '森の弓使い', gender: 'female', job: '弓使い', desc: '森の衣をまとい弓で仲間を守る斥候', image: 'assets/characters/skin_forest_scout_f.png', gachaOnly: true },
+  { id: 'skin_astral_dancer_m', name: '星舞の魔法使い', gender: 'male', job: '魔法使い', desc: '紫と金の衣をまとい、星の魔法をあやつる少年', image: 'assets/characters/skin_astral_dancer_m.png', gachaOnly: true },
+  { id: 'skin_astral_dancer_f', name: '星舞の魔法少女', gender: 'female', job: '魔法使い', desc: '紫と金の衣をまとい、星の魔法をあやつる少女', image: 'assets/characters/skin_astral_dancer_f.png', gachaOnly: true },
+  { id:'halloween_pumpkin_knight', name:'かぼちゃの騎士', gender:'male', job:'騎士', desc:'かぼちゃの剣で仲間を守るハロウィン限定の騎士', image:'assets/halloween/skin_pumpkin_knight.png', gachaOnly:true, rewardSource:'halloween' },
+  { id:'halloween_moon_witch', name:'月夜の魔女', gender:'female', job:'魔法使い', desc:'月の杖と紫の帽子が目印のハロウィン限定の魔女', image:'assets/halloween/skin_moon_witch.png', gachaOnly:true, rewardSource:'halloween' },
+  { id:'halloween_vampire_prince', name:'吸血鬼の王子', gender:'male', job:'剣士', desc:'赤いマントで夜を駆けるハロウィン限定の王子', image:'assets/halloween/skin_vampire_prince.png', gachaOnly:true, rewardSource:'halloween' },
+  { id:'halloween_ghost_ranger', name:'おばけの弓使い', gender:'female', job:'弓使い', desc:'淡い光の弓を持つハロウィン限定の弓使い', image:'assets/halloween/skin_ghost_ranger.png', gachaOnly:true, rewardSource:'halloween' },
+  { id:'halloween_festival_king', name:'ハロウィンの王', gender:'male', job:'王', desc:'町を守るハロウィンの王。お菓子交換限定。', image:'assets/halloween/exchange_skin_king.png', gachaOnly:true, rewardSource:'halloween' },
+  { id:'halloween_festival_queen', name:'ハロウィンの女王', gender:'female', job:'女王', desc:'町を守るハロウィンの女王。お菓子交換限定。', image:'assets/artist-skin-samples/halloween-queen-handdrawn-v1.png', gachaOnly:true, rewardSource:'halloween' },
+  { id:'christmas_santa_helper', name:'サンタの護衛', gender:'male', job:'剣士', desc:'おもちゃの国を守る、サンタの頼れる護衛。', image:'assets/christmas/skin_santa_helper.webp', gachaOnly:true, rewardSource:'christmas' },
+  { id:'christmas_snowman_guardian', name:'雪だるまの守り手', gender:'male', job:'守護者', desc:'雪だるまの盾で仲間を守る、雪原のガーディアン。', image:'assets/christmas/skin_snowman_guardian.webp', gachaOnly:true, rewardSource:'christmas' },
+  { id:'christmas_nutcracker_soldier', name:'くるみ割り人形の兵士', gender:'male', job:'兵士', desc:'星の勲章を胸に、サンタの工房を守る兵士。', image:'assets/christmas/skin_nutcracker_soldier.webp', gachaOnly:true, rewardSource:'christmas' },
+  { id:'christmas_aurora_sprite', name:'オーロラの精霊', gender:'female', job:'精霊', desc:'雪の結晶の羽で、冬の夜空を舞う精霊。', image:'assets/christmas/skin_aurora_sprite.webp', gachaOnly:true, rewardSource:'christmas' },
+  { id:'christmas_snowboard_courier', name:'雪原の配達人', gender:'male', job:'冒険者', desc:'スノーボードでプレゼントを届ける雪国の冒険者。', image:'assets/christmas/skin_snowboard_courier.webp', gachaOnly:true, rewardSource:'christmas' },
+  { id:'christmas_star_cartographer', name:'星読みの地図師', gender:'female', job:'地図師', desc:'星の地図をたよりに、サンタの国を旅する地図師。', image:'assets/christmas/skin_star_cartographer.webp', gachaOnly:true, rewardSource:'christmas' },
+  { id:'christmas_toy_inventor', name:'おもちゃの発明家', gender:'female', job:'発明家', desc:'工房で不思議なおもちゃを作る、発明好きな冒険者。', image:'assets/christmas/skin_toy_inventor.webp', gachaOnly:true, rewardSource:'christmas' },
+  QUEST_MEDAL_SKIN,
+];
+
+const INITIAL_AVATAR_IDS = HERO_AVATARS.filter(avatar => !avatar.gachaOnly).map(avatar => avatar.id);
+const SKIN_GACHA_AVATAR_IDS = HERO_AVATARS.filter(avatar => !avatar.rewardSource).map(avatar => avatar.id);
+const SKIN_GACHA_TICKET_ICON = 'assets/items/background_skin_ticket.png';
+
+function getHeroAvatar(avatarId) {
+  return HERO_AVATARS.find(a => a.id === avatarId) || HERO_AVATARS[0];
+}
+
+function getSelectableAvatars(includeUnlockedSkins = true) {
+  return HERO_AVATARS.filter(avatar => avatar.id === G?.avatar || (includeUnlockedSkins && (G?.unlockedSkins || []).includes(avatar.id)));
+}
+
+function getInitialSelectableAvatars() {
+  return HERO_AVATARS.filter(avatar => INITIAL_AVATAR_IDS.includes(avatar.id));
+}
+
+const AVATAR_DECORATIONS = [
+ GHOST_RAID_FRAME,
+ GHOST_RAID_DEFEAT_DECORATION,
+ {id:'raid_starlight',name:'マグマ竜の翼飾り',image:'assets/frames-thin/raid_starlight.png',source:'raid'},
+ {id:'rank_gold',name:'ハロウィン覇者の黄金冠',image:'assets/frames-thin/rank_gold.png',source:'rank'},
+ {id:'rank_silver',name:'月夜の銀冠',image:'assets/frames-thin/rank_silver.png',source:'rank'},
+ {id:'rank_bronze',name:'おばけの銅冠',image:'assets/frames-thin/rank_bronze.png',source:'rank'},
+ {id:'candy_spark',name:'キャンディのきらめき',image:'assets/frames-thin/candy_spark.png',source:'gacha'},
+ {id:'moon_ribbon',name:'ちいさな月のリボン',image:'assets/frames-thin/moon_ribbon.png',source:'gacha'},
+ {id:'christmas_holly_star',name:'聖夜のヒイラギ飾り',image:'assets/christmas/christmas_holly_star.webp',source:'christmas'},
+  QUEST_MEDAL_FRAME,
+];
+function applyAvatarDecoration(element,id=G?.avatarDecoration) {
+ if(!element)return;
+ element.querySelector(':scope > .avatar-decoration')?.remove();
+ const decoration=AVATAR_DECORATIONS.find(entry=>entry.id===id);
+ if(!decoration)return;
+ const image=document.createElement('img');image.className='avatar-decoration';image.src=av(decoration.image);image.alt=decoration.name;element.appendChild(image);
+}
+// The same portrait geometry and layer order are used in every avatar surface.
+function applyAvatarComposition(frame, image, appearance = G) {
+  if(!frame || !image)return;
+  const look=appearance || {};
+  const hero=getHeroAvatar(look.avatar);
+  frame.classList.add('avatar-composite-stage');
+  image.classList.add('avatar-composite-character');
+  let background=frame.querySelector(':scope > .avatar-bg, :scope > .avatar-composite-bg, :scope > .save-slot-avatar-bg, :scope > .avatar-composite-background');
+  if(!background){background=document.createElement('div');frame.insertBefore(background,frame.firstChild);}
+  background.classList.add('avatar-composite-background');
+  background.classList.remove('hidden');
+  frame.classList.remove('holo-surface','holo-character-stage');
+  applyAvatarBackground(background,look.avatarBackground || 'default',!!look.avatarBackgroundHolographic);
+  const characterLayer=image.parentElement===frame?null:image.parentElement;
+  if(characterLayer)characterLayer.classList.add('avatar-composite-character-layer');
+  const foilLayer=characterLayer || frame;
+  foilLayer.classList.toggle('holo-character-prism',!!look.avatarHolographic);
+  if(hero?.image){image.src=av(hero.image);image.alt=hero.name;image.style.display='block';foilLayer.style.setProperty('--character-foil-mask',`url("${av(hero.image)}")`);}
+  image.classList.toggle('avatar-holographic',!!look.avatarHolographic);
+  applyAvatarDecoration(frame,look.avatarDecoration || '');
+}
+
+function cosmeticPreviewAppearance(kind,id) {
+  if(!['skin','background','decoration'].includes(kind))return null;
+  return {avatar:G?.avatar || HERO_AVATARS[0].id,avatarBackground:G?.avatarBackground || 'default',avatarDecoration:G?.avatarDecoration || '',avatarHolographic:!!G?.avatarHolographic,avatarBackgroundHolographic:!!G?.avatarBackgroundHolographic,
+    ...(kind==='skin'?{avatar:id,avatarHolographic:false}:kind==='background'?{avatarBackground:id,avatarBackgroundHolographic:false}:{avatarDecoration:id})};
+}
+
+const AVATAR_BACKGROUNDS = [
+
+  { id: 'default', name: 'いつもの背景', image: null, color: '#35274f' },
+ GHOST_RAID_BACKGROUND,
+ {id:'raid_observatory',name:'星界の天空神殿',image:'assets/raid/raid_observatory.png',color:'#152748',rewardSource:'raid'},
+  { id: 'starlight', name: '星明かり', image: 'assets/characters/bg_skin_starlight.png', color: '#19152f' },
+  { id: 'forest', name: '新緑の木もれ日', image: 'assets/characters/bg_skin_forest.png', color: '#173b31' },
+  { id: 'sakura', name: '桜の庭園', image: 'assets/characters/bg_skin_sakura.png', color: '#f1b6cf' },
+  { id: 'ocean', name: 'きらめく海辺', image: 'assets/characters/bg_skin_ocean.png', color: '#43c5d3' },
+  { id: 'sky', name: '天空の城', image: 'assets/characters/bg_skin_sky.png', color: '#90cce8' },
+  { id: 'crystal', name: '氷晶の聖域', image: 'assets/characters/bg_skin_crystal.png', color: '#8bd9e9' },
+  { id: 'raid_magma', name: 'マグマの火山', image: 'assets/raid/raid_bg_magma_pixel.jpg', color: '#651a16', rewardSource: 'raid' },
+  { id: 'quest_village', name: 'むらの ひろば', image: 'assets/artist-stage-samples/komorebi-village-aerial-v2.png', color: '#7a5a33', rewardSource: 'quest' },
+  { id:'halloween_ballroom', name:'月夜のおばけ舞踏会', image:'assets/halloween/background_haunted_ballroom.png', color:'#352043', rewardSource:'halloween' },
+  { id:'halloween_moon_garden', name:'月灯りのハロウィン庭園', image:'assets/halloween/exchange_background_moon_garden.png', color:'#593347', rewardSource:'halloween' },
+  { id:'halloween_candy_village', name:'ハロウィンのお菓子村', image:'assets/halloween/background_candy_village.png', color:'#593347', rewardSource:'halloween' },
+  { id:'christmas_aurora_lapland', name:'オーロラのラップランド', image:'assets/christmas/background_aurora_lapland.webp', color:'#142f45', rewardSource:'christmas' },
+  { id:'christmas_santa_workshop', name:'サンタの工房', image:'assets/christmas/background_santa_workshop.webp', color:'#55351e', rewardSource:'christmas' },
+  { id:'christmas_north_star_sanctuary', name:'北極星の聖域', image:'assets/christmas/background_north_star_sanctuary.webp', color:'#274a70', rewardSource:'christmas' },
+  { id:'christmas_frozen_lake', name:'月明かりの凍った湖', image:'assets/christmas/background_frozen_lake.webp', color:'#263c67', rewardSource:'christmas' },
+  QUEST_MEDAL_BACKGROUND,
+];
+
+function getAvatarBackground(backgroundId) {
+  return AVATAR_BACKGROUNDS.find(background => background.id === backgroundId) || AVATAR_BACKGROUNDS[0];
+}
+
+function getSelectableAvatarBackgrounds() {
+  const unlocked = G?.unlockedAvatarBackgrounds || ['default'];
+  return AVATAR_BACKGROUNDS.filter(background => unlocked.includes(background.id));
+}
+
+function applyAvatarBackground(element, backgroundId, holographic) {
+  if (!element) return;
+  const background = getAvatarBackground(backgroundId);
+  const useHolographic = holographic ?? (!!G?.avatarBackgroundHolographic && background.id === G.avatarBackground);
+  element.style.backgroundColor = background.color;
+  element.style.backgroundImage = background.image ? `url("${av(background.image)}")` : '';
+  element.style.backgroundSize = 'cover';
+  element.style.backgroundPosition = 'center';
+  element.classList.toggle('holo-background-surface', !!useHolographic);
+}
+
+let pendingAvatarId = null;
+let pendingAvatarBackgroundId = null;
+let pendingAvatarFrameId = null;
+let pendingAvatarHolographic = false;
+let pendingBackgroundHolographic = false;
+let avatarSelectorTab = 'characters';
+
+// 既存のセーブデータに対して、ランダムにAIアバターを割り当てるマイグレーション
+try {
+  for (let i = 0; i < 4; i++) {
+    const saveKey = 'typing_rpg_save_slot_' + i;
+    let s = localStorage.getItem(saveKey);
+    if (s) {
+      let d = JSON.parse(s);
+      if (!d.migratedToAiAvatar) {
+        d.migratedToAiAvatar = true;
+        const aiAvatars = ['ai_hero_boy', 'ai_hero_youngman', 'ai_hero_girl', 'ai_hero_woman'];
+        d.avatar = aiAvatars[Math.floor(Math.random() * aiAvatars.length)];
+        localStorage.setItem(saveKey, JSON.stringify(d));
+      }
+    }
+  }
+} catch(e) {}
+
+/* ==========================================================
+   装備データ（ベース）
+   ========================================================== */
+const EQUIP_DB = [
+  {id:'shop_light_sword',name:'旅人の軽い剣',slot:'weapon',opTier:'add2',stat:{atk:5},price:45,cost:3,emoji:'assets/event-pixel/traveler_sword.png'},
+  {id:'shop_guard_vest',name:'旅人のベスト',slot:'armor',opTier:'add2',stat:{def:4,hp:6},price:65,cost:3,emoji:'assets/items/a2.png'},
+  {id:'shop_mana_charm',name:'小さな魔力のお守り',slot:'accessory',opTier:'add1',stat:{mp:8,spd:1},price:75,cost:4,emoji:'assets/halloween/equip_moon_charm.png'},
+  // 武器
+  { id:'w1', name:'木の剣', slot:'weapon', opTier:'add1', stat:{atk:2}, price:20, cost:1, emoji:'assets/artist-weapon-samples/wood-sword-handdrawn-v1.png' },
+  { id:'w2', name:'どうの剣', slot:'weapon', opTier:'add2', stat:{atk:4}, price:35, cost:2, emoji:'assets/event-pixel/copper_sword.png' },
+  { id:'w3', name:'はがねの剣', slot:'weapon', opTier:'add3', stat:{atk:7}, price:60, cost:3, emoji:'assets/items/w3.png' },
+  { id:'w4', name:'ほのおの斧', slot:'weapon', opTier:'add4', stat:{atk:9}, price:80, cost:4, emoji:'assets/items/w4.png' },
+  { id:'w5', name:'いなずまの太刀', slot:'weapon', opTier:'sub3', stat:{atk:13}, price:120, cost:6, emoji:'assets/event-pixel/thunder_katana.png' },
+  { id:'w6', name:'まけんグラム', slot:'weapon', opTier:'sub4', stat:{atk:15}, price:140, cost:7, emoji:'assets/items/w6_right.png' },
+  { id:'w7', name:'せいけんエクスカリバー', slot:'weapon', opTier:'mul3', stat:{atk:22}, price:200, cost:10, emoji:'assets/event-pixel/excalibur.png' },
+  { id:'w8', name:'りゅうごろしの槍', slot:'weapon', opTier:'div3', stat:{atk:25}, price:230, cost:12, emoji:'assets/items/w8.png' },
+  // 防具
+  { id:'a1', name:'布の服', slot:'armor', opTier:'add1', stat:{def:2}, price:20, cost:1, emoji:'assets/items/a1.png' },
+  { id:'a2', name:'かわの鎧', slot:'armor', opTier:'add2', stat:{def:4}, price:35, cost:2, emoji:'assets/items/a2.png' },
+  { id:'a3', name:'くさりかたびら', slot:'armor', opTier:'add3', stat:{def:7}, price:60, cost:3, emoji:'assets/items/a3.png' },
+  { id:'a4', name:'てつの鎧', slot:'armor', opTier:'sub3', stat:{def:9}, price:80, cost:4, emoji:'assets/items/a4.png' },
+  { id:'a5', name:'ミスリルの鎧', slot:'armor', opTier:'sub4', stat:{def:13}, price:120, cost:6, emoji:'assets/items/a5.png' },
+  { id:'a6', name:'せいきしの鎧', slot:'armor', opTier:'mul3', stat:{def:15}, price:140, cost:7, emoji:'assets/items/a6.png' },
+  { id:'a7', name:'りゅうりんの鎧', slot:'armor', opTier:'div3', stat:{def:22}, price:200, cost:10, emoji:'assets/items/a7.png' },
+  // アクセサリー
+  { id:'c1', name:'はやての靴', slot:'accessory', opTier:'add1', stat:{spd:2}, price:20, cost:1, emoji:'assets/items/c1.png' },
+  { id:'c2', name:'ぎんの指輪', slot:'accessory', opTier:'add3', stat:{spd:4}, price:35, cost:2, emoji:'assets/items/c2.png' },
+  { id:'c3', name:'けんじゃのお守り', slot:'accessory', opTier:'sub3', stat:{mp:8}, price:45, cost:3, emoji:'assets/items/c3.png' },
+  { id:'c4', name:'しんそくの首かざり', slot:'accessory', opTier:'mul3', stat:{spd:6, mp:5}, price:90, cost:5, emoji:'assets/items/c4.png' },
+  /* おたすけ（ステータスは無いが、けいさん中に まるの絵で もんだいを かしかできる）。
+     ぶきスロットに おく ことで、そうびすると こうげき力ボーナスを あきらめる トレードオフに なる */
+  { id:'ast1', name:'かぞえだま', slot:'weapon', opTier:'add1', stat:{}, price:30, cost:1, assist:true, emoji:'🧮' },
+];
+
+/* 古代装備：共通の設計図を印刷し、暗号を解くと未所持品を優先して★6で完成 */
+const ANCIENT_EQUIP_DB = [
+  { id:'anc_w1', name:'古代の双剣', slot:'weapon', opTier:'div5', stat:{atk:10}, cost:8, emoji:'assets/artist-weapon-samples/ancient-dual-handdrawn-v1.png' },
+  { id:'anc_w3', name:'古代の大剣', slot:'weapon', opTier:'div5', stat:{atk:10}, cost:8, emoji:'assets/items/ancient_greatsword_v2.png' },
+  { id:'anc_a1', name:'古代の鎧', slot:'armor', opTier:'div5', stat:{def:35, hp:20}, cost:7, emoji:'assets/items/ancient_armor_v2.png' },
+  { id:'anc_c1', name:'古代の指輪', slot:'accessory', opTier:'div5', stat:{spd:12}, cost:8, emoji:'assets/items/ancient_ring_v2.png' },
+  { id:'anc_w2', name:'古代の槍', slot:'weapon', opTier:'div5', stat:{atk:8.5, spd:8}, cost:7, emoji:'assets/items/ancient_spear_v2.png' },
+  { id:'anc_a2', name:'古代の盾', slot:'armor', opTier:'div5', stat:{def:29, hp:20}, cost:7, emoji:'assets/items/ancient_shield_v2.png' },
+  { id:'demon_sword', name:'魔王の覇剣', slot:'weapon', opTier:'elem6', stat:{atk:50}, cost:20, emoji:'assets/items/w6_right.png' },
+];
+
+/* そうびスロットは この3つだけ（ぶき・よろい・アクセサリー） */
+const EQUIP_SLOTS = ['weapon', 'armor', 'accessory'];
+
+// Separate pool keeps gacha-exclusive equipment out of shops and adventure drops.
+const LIMITED_EQUIP_DB = [
+  { id:'limited_star_sword', name:'星晶の剣', slot:'weapon', opTier:'add3', stat:{atk:8}, cost:3, emoji:'assets/items/limited_star_sword_right.png' },
+  { id:'limited_phoenix_armor', name:'鳳凰の鎧', slot:'armor', opTier:'add3', stat:{def:7, hp:5}, cost:3, emoji:'assets/items/limited_phoenix_armor.png' },
+  { id:'limited_moon_charm', name:'月光のお守り', slot:'accessory', opTier:'add3', stat:{spd:3, mp:6}, cost:3, emoji:'assets/items/limited_moon_charm.png' },
+];
+
+const HALLOWEEN_EQUIP_DB = [
+ ...GHOST_RAID_EQUIPMENT,
+  {id:'halloween_bat_buckler',name:'コウモリの小盾',slot:'armor',opTier:'add1',stat:{def:2},cost:3,fixedCost:true,emoji:'assets/event-pixel/bat_buckler.png'},
+  {id:'halloween_pumpkin_bell',name:'かぼちゃの小鈴',slot:'accessory',opTier:'add1',stat:{hp:2,mp:2},cost:3,fixedCost:true,emoji:'assets/event-pixel/pumpkin_bell.png'},
+  {id:'halloween_rank_blade',name:'月影の短剣',slot:'weapon',opTier:'add2',stat:{atk:8,spd:2},cost:5,fixedCost:true,emoji:'assets/event-pixel/rank_blade.png'},
+  {id:'halloween_candy_saber',name:'お菓子のサーベル',slot:'weapon',opTier:'add1',stat:{atk:3},cost:3,fixedCost:true,emoji:'assets/event-pixel/candy_saber.png'},
+  {id:'halloween_light_cape',name:'こあくまの軽いケープ',slot:'armor',opTier:'add1',stat:{def:3,hp:4},cost:4,fixedCost:true,emoji:'assets/event-pixel/light_cape.png'},
+  {id:'halloween_moon_pin',name:'小さな月のピン',slot:'accessory',opTier:'add1',stat:{mp:3,spd:1},cost:3,fixedCost:true,emoji:'assets/event-pixel/moon_pin.png'},
+  {id:'raid_star_blade',name:'マグマの剣',slot:'weapon',opTier:'add3',stat:{atk:5,spd:1},cost:5,fixedCost:true,emoji:'assets/event-pixel/magma_blade.png'},
+  {id:'raid_ward_armor',name:'マグマの鎧',slot:'armor',opTier:'add3',stat:{def:5,hp:8},cost:5,fixedCost:true,emoji:'assets/event-pixel/magma_armor.png'},
+  {id:'raid_focus_charm',name:'マグマの護符',slot:'accessory',opTier:'add2',stat:{mp:6,spd:2},cost:4,fixedCost:true,emoji:'assets/event-pixel/magma_charm.png'},
+  { id:'halloween_lantern_staff', name:'月灯りのランタン杖', slot:'weapon', opTier:'add3', stat:{atk:7}, cost:4, emoji:'assets/artist-weapon-samples/lantern-staff-handdrawn-v1.png' },
+  { id:'halloween_pumpkin_blade', name:'かぼちゃの魔剣', slot:'weapon', opTier:'add3', stat:{atk:6}, cost:3, emoji:'assets/artist-weapon-samples/pumpkin-blade-handdrawn-v1.png' },
+  { id:'halloween_witch_mantle', name:'魔女のマント', slot:'armor', opTier:'add3', stat:{def:5,hp:8}, cost:3, emoji:'assets/halloween/equip_witch_mantle.png' },
+  { id:'halloween_moon_charm', name:'おばけ月のお守り', slot:'accessory', opTier:'add3', stat:{spd:2,mp:4}, cost:3, emoji:'assets/halloween/equip_moon_charm.png' }
+];
+
+const CHRISTMAS_EQUIP_DB = [
+  { id:'christmas_candy_cane_blade', name:'キャンディケインブレード', slot:'weapon', opTier:'add3', stat:{atk:6,spd:1}, cost:4, emoji:'assets/christmas/equip_candy_cane_blade.webp' },
+  { id:'christmas_aurora_mantle', name:'オーロラのマント', slot:'armor', opTier:'add3', stat:{def:6,hp:8}, cost:4, emoji:'assets/christmas/equip_aurora_mantle.webp' },
+  { id:'christmas_winter_star_charm', name:'冬星のお守り', slot:'accessory', opTier:'add3', stat:{mp:5,spd:2}, cost:4, emoji:'assets/christmas/equip_winter_star_charm.webp' },
+];
+
+function getEquipTemplate(id) {
+  const base = EQUIP_DB.find(d => d.id === id) || ANCIENT_EQUIP_DB.find(d => d.id === id) || LIMITED_EQUIP_DB.find(d => d.id === id) || HALLOWEEN_EQUIP_DB.find(d => d.id === id) || CHRISTMAS_EQUIP_DB.find(d => d.id === id) || QUEST_MEDAL_EQUIPMENT.find(d=>d.id===id);
+  const custom = customEquips[id];
+  const definition=custom ? { ...base, ...custom, stat: { ...base.stat, ...(custom.stat||{}) } } : base;
+  return definition ? {...definition,ability:definition.ability || eventEquipmentAbility(id)} : definition;
+}
+
+const ITEM_DB = [
+  {id:'small_tonic',name:'旅人の回復薬',opTier:'add',effect:'heal',value:35,price:25,desc:'手ごろな値段でHPを35回復',emoji:'assets/items/potion.png',tags:['戦闘用']},
+  {id:'mana_tonic',name:'月色の魔力薬',opTier:'add',effect:'mana',value:20,price:28,desc:'MPを20回復する青い薬',emoji:'assets/items/ether.png',tags:['戦闘用']},
+  { id:'potion', name:'傷薬', opTier:'add', effect:'heal', value:20, price:15, desc:'HPを回復', emoji:'assets/items/potion.png', tags:['戦闘用'] },
+  { id:'hipotion', name:'秘薬', opTier:'sub', effect:'heal', value:60, price:50, desc:'HPを大きく回復', emoji:'assets/items/hipotion.png', tags:['戦闘用'] },
+  { id:'herb', name:'魔力の草', opTier:'add', effect:'mana', value:10, price:12, desc:'MPを回復', emoji:'assets/items/herb.png', tags:['戦闘用'] },
+  { id:'ether', name:'エーテル', opTier:'addCarry', effect:'mana', value:30, price:40, desc:'MPを大きく回復', emoji:'assets/items/ether.png', tags:['戦闘用'] },
+  { id:'cost_seed', name:'コストプラスのたね', opTier:'mul1', effect:'cost', value:1, price:1000, shopAvailable:false, desc:'使うとそうびコストの上限が 1 あがる 不思議なたね。', emoji:'assets/items/cost_seed_pixel.png', tags:['部屋用'] },
+  { id:'respec_seed', name:'ふりなおしのたね', opTier:'mul1', effect:'respec', value:0, price:500, desc:'使うと わりふったスキルポイントを 全てリセットして 振り直せる 不思議なたね。', emoji:'assets/items/respec_seed_pixel.png', tags:['部屋用'] }
+];
+
+/* 古代装備の共通設計図。旧IDはセーブ移行だけに使用 */
+const BLUEPRINT_DB = [
+  { id:'bp_ancient', name:'古代からの挑戦状', blueprint:true, tier:'div5', emoji:'assets/items/ancient_blueprint_v2.png', tags:['挑戦状'] },
+];
+const LEGACY_BLUEPRINT_EQUIP = { bp_anc_w1:'anc_w1', bp_anc_a1:'anc_a1', bp_anc_c1:'anc_c1' };
+
+function isBattleItem(db) {
+  if (!db) return false;
+  if (Array.isArray(db.tags)) return db.tags.includes('戦闘用');
+  if (typeof db.tags === 'string') return db.tags.includes('戦闘用');
+  if (db.tag === '戦闘用') return true;
+  return false;
+}
+
+function getItemTemplate(id) {
+  const base = ITEM_DB.find(d => d.id === id) || BLUEPRINT_DB.find(d => d.id === id);
+  const custom = customItems[id];
+  return custom ? { ...base, ...custom } : base;
+}
+function isBlueprintItem(db) { return !!(db && (db.blueprint || db.equipId)); }
+
+/* 通常装備は★5まで。古代装備だけは制作時に★6になる */
+const RARITY_MULTI = { 1: 1.0, 2: 1.5, 3: 2.0, 4: 3.0, 5: 4.2, 6: 5.5 };
+const RARITY_NAME = { 1: 'ノーマル', 2: 'レア', 3: '激レア', 4: '超激レア', 5: 'レジェンド', 6: 'エンシェントレア ★6' };
+const RARITY_MAX = 5;
+
+function calcEquipStat(baseStat, rarity, owned = null) {
+  const r = (RARITY_MULTI[rarity] || 1.0) * awakeningScale(owned || {rarity});
+  const res = {};
+  for(let k in baseStat) res[k] = Math.max(1, Math.floor(baseStat[k] * r));
+  return res;
+}
+function rarityLabelHtml(rarity){
+  return `<span class="rarity-label">${RARITY_NAME[rarity] || rarity}</span>`;
+}
+
+/* ==========================================================
+   そうびの 特殊能力（★3以上で 確率／確定で 付与）
+   ========================================================== */
+const SPECIAL_ABILITIES = [
+  { id:'crit_up', name:'会心のちから', desc:'会心率+10%' },
+  { id:'lifesteal', name:'きゅうけつ', desc:'あたえたダメージの15%をHP吸収' },
+  { id:'guard', name:'てっぺき', desc:'うけるダメージ-5%（重ねがけなし）' },
+  { id:'power', name:'ちからのかご', desc:'こうげき力+15%' },
+  { id:'mp_save', name:'せつやくの心得', desc:'とくぎのMPしょうひ-1' },
+];
+function getAbility(id){ return SPECIAL_ABILITIES.find(a => a.id === id); }
+function rollAbility(rarity){
+  if (rarity < 3) return null;
+  if (rarity === 3 && Math.random() >= 0.5) return null;
+  return pick(SPECIAL_ABILITIES).id;
+}
+/* 現在そうび中の 特殊能力ID の集合 */
+function equippedAbilities(){
+  const set = new Set();
+  for (const slot of EQUIP_SLOTS){
+    const eq = G.equipment[slot];
+    if (!eq) continue;
+    const owned = G.ownedEquips.find(o => o.uid === eq.uid);
+    if (owned) { const ability=owned.ability || eventEquipmentAbility(owned.id);if(ability)set.add(ability); }
+  }
+  return set;
+}
+
+/* ==========================================================
+   スキルデータ
+   ・しゅぎょう ＝ スキルごとの えんざん（skillTier）を trainReq回 せいかいで しゅうとく
+   ・せんとう   ＝ その ステージの もんだいが でる（ステージの むずかしさは よけられない）
+   ・スキルは MPを つかうので、ダメージは かならず ふつうの こうげきを うわまわる
+     （useSkill の「さいていほしょう」を みること）
+   ========================================================== */
+const SKILL_DB = [
+  { id:'renzoku', name:'れんぞく斬り', emoji:'画像/スキル/skill_renzoku.jpg', zone:'tower', mp:3, trainReq:10, reqLvl:1, dmgMult:2.0,
+    desc:'すばやく きりつける。こうげき力×2.0' },
+  { id:'heal_song', name:'いやしのうた', emoji:'画像/スキル/skill_heal.jpg', zone:'tower', mp:5, trainReq:10, reqLvl:3, healPct:0.35,
+    desc:'HPを さいだいHPの35% かいふくする' },
+  { id:'honoo', name:'ほのおの剣', emoji:'画像/スキル/skill_honoo.jpg', zone:'dungeon', mp:5, trainReq:10, reqLvl:5, dmgMult:2.6,
+    desc:'ほのおを まとった 一げき。こうげき力×2.6' },
+  { id:'inazuma', name:'いなずま斬り', emoji:'画像/スキル/skill_inazuma.jpg', zone:'crypt', mp:7, trainReq:10, reqLvl:8, dmgMult:3.2,
+    desc:'かみなりの ざんげき。こうげき力×3.2' },
+  { id:'gale', name:'しっぷう斬り', emoji:'画像/スキル/skill_gale.jpg', zone:'bandit', mp:4, trainReq:10, reqLvl:10, dmgMult:2.4, ignoreDef:true,
+    desc:'かぜの 一げき。こうげき力×2.4＋ぼうぎょむし' },
+
+  /* --- 上位互換スキル（Ⅱ）。おなじジャンルの けいさんだが、
+     さいしょから いちばん むずかしい tier（fixedTier）で しゅぎょうする。
+     とくてい キャラレベルに 到達すると かいほうされる */
+  { id:'renzoku2', name:'れんぞく斬りⅡ', emoji:'画像/スキル/skill_renzoku.jpg', zone:'tower', mp:6, trainReq:10, reqLvl:15, dmgMult:4.0, fixedTier:'add5',
+    desc:'れんぞく斬りの じょうい。こうげき力×4.0' },
+  { id:'heal_song2', name:'いやしのうたⅡ', emoji:'画像/スキル/skill_heal.jpg', zone:'tower', mp:9, trainReq:10, reqLvl:18, healPct:0.70, fixedTier:'add5',
+    desc:'HPを さいだいHPの70% かいふくする' },
+  { id:'honoo2', name:'ほのおの剣Ⅱ', emoji:'画像/スキル/skill_honoo.jpg', zone:'dungeon', mp:9, trainReq:10, reqLvl:20, dmgMult:5.0, fixedTier:'sub5',
+    desc:'ほのおの剣の じょうい。こうげき力×5.0' },
+  { id:'inazuma2', name:'いなずま斬りⅡ', emoji:'画像/スキル/skill_inazuma.jpg', zone:'crypt', mp:11, trainReq:10, reqLvl:23, dmgMult:6.4, fixedTier:'add4',
+    desc:'いなずま斬りの じょうい。こうげき力×6.4' },
+  { id:'gale2', name:'しっぷう斬りⅡ', emoji:'画像/スキル/skill_gale.jpg', zone:'bandit', mp:8, trainReq:10, reqLvl:25, dmgMult:5.0, ignoreDef:true, fixedTier:'add5',
+    desc:'しっぷう斬りの じょうい。こうげき力×5.0＋ぼうぎょむし' },
+];
+/* スキルに「練度」は ない：しゅぎょうで trainReq回 せいかいすれば そのまま しゅうとく（つかえる状態）に なる。
+   G.skills[id].level は 0（未習得）／1（習得ずみ）の 2値だけを つかう（セーブ形式は そのまま流用） */
+
+/* スキルはっどう／しゅぎょうで つかう tier をかえす。
+   s.fixedTier が あれば それ（上位互換スキルは そのゾーンで いちばん むずかしい tier）、
+   なければ そのゾーンの いちばん やさしい tier（きほんスキル） */
+function skillTier(s){
+  if (s.fixedTier) return s.fixedTier;
+  return ZONE_TIERS[s.zone][0];
+}
+/* しゅぎょう／プリント／あんごう で つかう tier。
+   ふつうのスキル（zoneあり）は skillTier()、
+   LEVEL_UP_TRAINING の ような とくべつあつかいは 固定の s.tier を そのまま つかう */
+function resolveTrainingTier(s){
+  return s.zone ? skillTier(s) : s.tier;
+}
+function skillIsLearned(s){
+  const st = G.skills[s.id];
+  return !!(st && st.level >= 1);
+}
+
+/* プリントのみの とくべつな しゅぎょう（あんごうが せいかいすると レベルが 5 あがる） */
+
+/* ==========================================================
+   ゲーム状態
+   ========================================================== */
+/* ==========================================================
+   セーブデータ（なまえつき・ふくすう枠）
+   いまは localStorage に保存しているが、save()/loadSlot()/
+   listSaveSlots() の中身だけ差し替えれば、将来 Firestore など
+   クラウドの保存先に移行できるように まどぐち関数を分けてある。
+   ========================================================== */
+const SAVE_PREFIX = 'typing_rpg_save_v3::';
+const TEST_SLOT_KEY = SAVE_PREFIX + 'admin_test_mode';
+const LEGACY_SAVE_KEY = 'typing_rpg_save_v3';
+const LEGACY_OLD_SAVE_KEY = 'typing_rpg_save_v2';
+
+let G = null;
+let currentSlotKey = null; // いま えらんでいる セーブ枠の localStorage キー
+
+function newGameState(name, avatarId){
+  return {
+    playerName: (name && name.trim()) || 'ぼうけんしゃ',
+    avatar: avatarId || HERO_AVATARS[0].id,
+    avatarBackground: 'default',
+    skinInventoryVersion: 1,
+    unlockedSkins: [avatarId || HERO_AVATARS[0].id],
+    unlockedAvatarBackgrounds: ['default'],
+    updatedAt: Date.now(),
+    lastPlayedAt: Date.now(),
+    player: {
+      lvl:1, exp:0, points:0,
+      maxHp:30, hp:30, maxMp:10, mp:10,
+      atk:5, def:3, spd:6, gold:0,
+    },
+    equipment: { weapon:null, armor:{ uid:1 }, accessory:null },
+    ownedEquips: [ { uid:1, id:'a1', rarity:1, ability:null } ],
+    nextUid: 2,
+    items: [], // [{uid, id, rarity, count}] に変更
+    skills: {}, // id → {progress, mastered}
+    clears: { tower:false, dungeon:false, crypt:false, bandit:false },
+    clearCounts: { tower:0, dungeon:0, crypt:0, bandit:0 }, // ステージの クリアかいすう（0〜3、★の数）
+    stageClearCounts: {}, // 新ステージ制（1-1など個別ステージ）ごとの クリアかいすう（areaId → [0〜3, ...]）
+    stageRewardClaims: {},
+    kanaStagesVersion: 2,
+    areaBossClearCounts: {},
+    skinGachaTickets: 0,
+    equipGachaTenPullTickets: 0,
+    raidTickets: 0,
+    halloweenCandy: 0,
+    halloweenTickets: 0,
+    raidTicketBossId: null,
+    questMedals: 0,
+    questMedalExchanged: {},
+    stageTotalClears: {},
+    stageDropOpportunities: {}, // 未クリア途中の反復でも増加抽選を使い切る
+    areaBossTotalClears: {},
+    areaBossLevel: {},
+    skinGachaTenPullTickets: 0,
+    skinGachaGender: 'female',
+    skinGachaCategory: 'female',
+    rescued: [],
+    printSheetCodes: {}, // skillId → プリントした もんだいの こたえから つくった あんごう
+    questBoard: [], // サブクエストボードに ならんでいる ぶんしょうだい
+    failTracking: { gameOvers: {}, mistakes: {} }, // 失敗の記録
+    raidLearning: {}, // レイド問題のステージ別正誤（このセーブデータ専用）
+  };
+}
+
+function addItem(id, count = 1) {
+  let it = G.items.find(i => i.id === id);
+  if (it) {
+    it.count += count;
+  } else {
+    G.items.push({ uid: G.nextUid++, id, count });
+  }
+}
+function removeItem(uid, count = 1) {
+  let idx = G.items.findIndex(i => i.uid === uid);
+  if (idx >= 0) {
+    G.items[idx].count -= count;
+    if (G.items[idx].count <= 0) G.items.splice(idx, 1);
+  }
+}
+
+/* ---- 保存まわりの まどぐち関数 ---- */
+function save(immediate = false){
+  if (!currentSlotKey || !G) return;
+  if (G.isTestMode) return; // テストモード中は一切セーブしない
+  if (!currentSlotKey.startsWith(SAVE_PREFIX)) return;
+  G.updatedAt = Date.now();
+  if (typeof getTimeLimitForSlot === 'function') {
+    G.timeLimitSettings = getTimeLimitForSlot(currentSlotKey);
+  }
+  storageSet(currentSlotKey, JSON.stringify(G));
+
+  // Firestore クラウドセーブ（端末間共有）
+  if (window.CloudSave && typeof window.CloudSave.saveSlot === 'function') {
+    window.CloudSave.saveSlot(currentSlotKey, G, immediate).catch(err => {
+      console.warn("Cloud save failed:", err);
+    });
+  }
+}
+
+function updateContinueButtonVisibility(){
+  const continueBtn = $('btn-continue');
+  if (!continueBtn) return;
+  if (listSaveSlots().length > 0) continueBtn.classList.remove('hidden');
+  else continueBtn.classList.add('hidden');
+}
+
+function newSlotId(){
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function createSaveSlot(name, avatarId){
+  cancelRaidBossIntro();
+  ancientToastV2.sceneChanged();damageFloatsV2.clear();
+  currentSlotKey = SAVE_PREFIX + newSlotId();
+  G = newGameState(name, avatarId);
+  save(true);
+  return currentSlotKey;
+}
+
+/* 旧バージョンの N/R/SR/SSR（文字列）レアリティを ★1〜4（数値）に へんかんする */
+const RARITY_LETTER_MAP = { N:1, R:2, SR:3, SSR:4 };
+function migrateKanaStages(data) {
+  if (!data || data.kanaStagesVersion === 2) return data;
+  const indices = [0,2,4,5,6];
+  for (const field of ['stageClearCounts','stageTotalClears']) {
+    for (const areaId of ['area14','area15']) {
+      const old = data[field]?.[areaId];
+      if (!old) continue;
+      const next = Array(7).fill(0);
+      indices.forEach((target,index)=>{next[target]=old[index] || 0;});
+      data[field][areaId] = next;
+    }
+  }
+  for (const [container,separator] of [[data.stageRewardClaims,':'],[data.stageDropOpportunities,':'],[data.raidLearning,'_'],[data.studyStats?.stageHistory,'_']]) {
+    if (!container) continue;
+    const moved = Object.entries(container).map(([key,value])=>{
+      const match = key.match(new RegExp(`^(area14|area15)${separator}([0-4])$`));
+      return [match ? `${match[1]}${separator}${indices[Number(match[2])]}` : key,value];
+    });
+    Object.keys(container).forEach(key=>delete container[key]);
+    moved.forEach(([key,value])=>{container[key]=value;});
+  }
+  const moveSource = source => {
+    if (source && ['area14','area15'].includes(source.areaId) && indices[source.stageIndex] !== undefined) {
+      source.stageIndex = indices[source.stageIndex];
+      if (source.learningKey) source.learningKey = `${source.areaId}_${source.stageIndex}`;
+    }
+  };
+  moveSource(data.pickup);
+  Object.values(data.halloweenEvent || {}).forEach(event=>moveSource(event?.baseSource));
+  data.kanaStagesVersion = 2;
+  return data;
+}
+
+function normalizeRarityData(data){
+  migrateKanaStages(data);
+  const legacyBlueprintUidMap = new Map();
+  if (data.items){
+    // アイテム（どうぐ）は レアリティ廃止。ふるいセーブに のこっていたら 消す
+    for (const it of data.items){
+      delete it.rarity;
+    }
+    const legacyBlueprints = data.items.filter(it => LEGACY_BLUEPRINT_EQUIP[it.id]);
+    if (legacyBlueprints.length) {
+      let common = data.items.find(it => it.id === 'bp_ancient');
+      if (!common) {
+        common = { ...legacyBlueprints[0], id:'bp_ancient', count:0 };
+        data.items.push(common);
+      }
+      for (const old of legacyBlueprints) legacyBlueprintUidMap.set(old.uid, common.uid);
+      common.count += legacyBlueprints.reduce((sum, it) => sum + (Number(it.count) || 0), 0);
+      data.items = data.items.filter(it => !LEGACY_BLUEPRINT_EQUIP[it.id]);
+    }
+  }
+  if (data.activePrints && legacyBlueprintUidMap.size) {
+    for (const print of Object.values(data.activePrints)) {
+      if (print?.type === 'blueprint' && legacyBlueprintUidMap.has(print.uid)) {
+        print.uid = legacyBlueprintUidMap.get(print.uid);
+      }
+    }
+  }
+  if (data.ownedEquips){
+    for (const eq of data.ownedEquips){
+      if (typeof eq.rarity === 'string') eq.rarity = RARITY_LETTER_MAP[eq.rarity] || 1;
+      if (eq.ability === undefined) eq.ability = null;
+    }
+  }
+  // そうびスロットを ぶき・よろい・アクセサリーの3つに統一。
+  // ふるいセーブの head/leg は accessory に ひっこす（両方ついていたら headを優先）
+  if (data.equipment){
+    if (data.equipment.head || data.equipment.leg){
+      if (!data.equipment.accessory){
+        data.equipment.accessory = data.equipment.head || data.equipment.leg;
+      }
+      delete data.equipment.head;
+      delete data.equipment.leg;
+    }
+  }
+  // レアリティの 数値正規化（★1〜5）
+  if (data.ownedEquips){
+    for (const eq of data.ownedEquips){
+      const maxRarity = String(eq.id || '').startsWith('anc_') ? 6 : RARITY_MAX;
+      eq.rarity = Math.max(1, Math.min(maxRarity, Math.round(Number(eq.rarity) || 1)));
+    }
+  }
+  // スキルの状態を {progress, mastered} から {level, progress} に統一。
+  // マスター済みだった スキルは Lv1（せんとうで つかえる状態）として ひきつぐ
+  if (data.skills){
+    for (const id in data.skills){
+      const st = data.skills[id];
+      if (st && typeof st.level !== 'number'){
+        st.level = st.mastered ? 1 : 0;
+        st.progress = 0;
+        delete st.mastered;
+      }
+    }
+  }
+  return data;
+}
+
+function loadSlot(key, options = {}){
+  cancelRaidBossIntro();
+  ancientToastV2.sceneChanged();damageFloatsV2.clear();
+  if (window.AccountSession && !window.AccountSession.owns(key)) return false;
+  const raw = storageGet(key);
+  if (!raw) return false;
+  try {
+    G = JSON.parse(raw);
+    if (G.archived && !options.allowArchived) {
+      G = null;
+      if (currentSlotKey === key) currentSlotKey = null;
+      return false;
+    }
+    G = normalizeRarityData(G);
+    if (!G.avatar) {
+      G.avatar = (G.player && G.player.avatar) ? G.player.avatar : HERO_AVATARS[0].id;
+    }
+    if (!AVATAR_BACKGROUNDS.some(background => background.id === G.avatarBackground)) G.avatarBackground = 'default';
+    if (!G.completedAreaStages) G.completedAreaStages = {};
+    if (!G.stageRewardClaims) G.stageRewardClaims = {};
+    if (!G.areaBossClearCounts) G.areaBossClearCounts = {};
+    if (!Number.isFinite(G.skinGachaTickets)) G.skinGachaTickets = 0;
+    if (!Number.isFinite(G.equipGachaTenPullTickets)) G.equipGachaTenPullTickets = 0;
+    if (!Number.isFinite(G.raidTickets)) G.raidTickets = 0;
+    G.halloweenCandy = halloweenCandyBalance(G);
+    G.halloweenTickets = halloweenTicketBalance(G);
+    if (G.raidTicketBossId === undefined) G.raidTicketBossId = null;
+    if (!Number.isFinite(G.questMedals)) G.questMedals = 0;
+    if (!G.questMedalExchanged) G.questMedalExchanged = {};
+    if (!G.stageTotalClears) G.stageTotalClears = {};
+    if (!G.stageDropOpportunities) G.stageDropOpportunities = {};
+    if (!G.areaBossTotalClears) G.areaBossTotalClears = {};
+    if (!G.areaBossLevel) G.areaBossLevel = {};
+    if (!Number.isFinite(G.skinGachaTenPullTickets)) G.skinGachaTenPullTickets = 0;
+    if (G.skinGachaTenPullTickets > 0) { // スキンの10連チケットは廃止。持っていた分は 単発チケット10枚ぶんに交換
+      G.skinGachaTickets += G.skinGachaTenPullTickets * 10;
+      G.skinGachaTenPullTickets = 0;
+    }
+    if (!Array.isArray(G.holographicSkins)) G.holographicSkins = [];
+    if (!Array.isArray(G.holographicAvatarBackgrounds)) G.holographicAvatarBackgrounds = [];
+    G.avatarHolographic = !!G.avatarHolographic && G.holographicSkins.includes(G.avatar);
+    G.avatarBackgroundHolographic = !!G.avatarBackgroundHolographic && G.holographicAvatarBackgrounds.includes(G.avatarBackground);
+    const hadSkinInventory = G.skinInventoryVersion === 1;
+    if (!Array.isArray(G.unlockedSkins)) G.unlockedSkins = [];
+    G.unlockedSkins = [...new Set([
+      ...G.unlockedSkins.filter(id => HERO_AVATARS.some(avatar => avatar.id === id) && (hadSkinInventory || getHeroAvatar(id).gachaOnly || getHeroAvatar(id).rewardSource === 'raid')),
+      G.avatar,
+    ])];
+    if (!Array.isArray(G.unlockedAvatarBackgrounds)) G.unlockedAvatarBackgrounds = ['default'];
+    G.unlockedAvatarBackgrounds = [...new Set([
+      'default', G.avatarBackground,
+      ...G.unlockedAvatarBackgrounds.filter(id => hadSkinInventory || AVATAR_BACKGROUNDS.find(background => background.id === id)?.rewardSource === 'raid'),
+    ].filter(id => AVATAR_BACKGROUNDS.some(background => background.id === id)))];
+    G.skinInventoryVersion = 1;
+    if (G.skinGachaGender !== 'male' && G.skinGachaGender !== 'female') G.skinGachaGender = 'female';
+    if (!['female', 'male', 'background'].includes(G.skinGachaCategory)) G.skinGachaCategory = G.skinGachaGender;
+    if (!G.printSheetCodes) G.printSheetCodes = {};
+    if (!G.usedPrintCodes) G.usedPrintCodes = [];
+    if (!G.studyStats) G.studyStats = { totalAnswers: 0, totalCorrect: 0, units: {}, stageHistory: {} };
+    if (!G.studyStats.stageHistory) G.studyStats.stageHistory = {};
+    if (G.player.costPlus === undefined) G.player.costPlus = 0;
+    currentSlotKey = key;
+    return true;
+  } catch(e){ return false; }
+}
+
+function resolveSaveSlotEquip(data, ref){
+  if (!ref) return null;
+  const owned = (data.ownedEquips || []).find(o => o.uid === ref.uid);
+  if (!owned) return null;
+  const db = getEquipTemplate(owned.id);
+  if (!db) return null;
+  return {
+    id: db.id,
+    name: db.name,
+    rarity: owned.rarity || 1,
+    emoji: db.emoji,
+    slot: db.slot,
+    stat: db.stat || {},
+    desc: db.desc || '',
+  };
+}
+
+function listSaveSlots(options = {}){
+  const includeArchived = !!options.includeArchived;
+  const slots = [];
+  for (let i = 0; i < storageLen(); i++){
+    const key = storageK(i);
+    if (!key || !key.startsWith(SAVE_PREFIX)) continue;
+    if (window.AccountSession && !window.AccountSession.owns(key)) continue;
+    try {
+      const data = JSON.parse(storageGet(key));
+      if (!data) continue;
+      if (data.archived && !includeArchived) continue;
+      // テストモードやテストアカウントはセーブスロットから除外＆クリーンアップ
+      if (data.isTestMode || data.playerName === 'テスト勇者' || (data.playerName && data.playerName.includes('[テスト]'))) {
+        storageRemove(key);
+        continue;
+      }
+
+      const p = data.player || { lvl:1, hp:30, maxHp:30, mp:10, maxMp:10, atk:5, def:3, spd:6, gold:0 };
+      const eqWeapon = data.equipment ? resolveSaveSlotEquip(data, data.equipment.weapon) : null;
+      const eqArmor = data.equipment ? resolveSaveSlotEquip(data, data.equipment.armor) : null;
+      const eqAccessory = data.equipment ? resolveSaveSlotEquip(data, data.equipment.accessory) : null;
+
+      // 装備補正の合算
+      const eqList = [eqWeapon, eqArmor, eqAccessory].filter(Boolean);
+      let boostAtk = 0, boostDef = 0, boostSpd = 0, boostHp = 0, boostMp = 0;
+      for (const eq of eqList) {
+        if (eq.stat) {
+          if (eq.stat.atk) boostAtk += eq.stat.atk;
+          if (eq.stat.def) boostDef += eq.stat.def;
+          if (eq.stat.spd) boostSpd += eq.stat.spd;
+          if (eq.stat.hp) boostHp += eq.stat.hp;
+          if (eq.stat.mp) boostMp += eq.stat.mp;
+        }
+      }
+
+      // 所持アイテム（dbから情報補完）
+      const items = (data.items || []).map(it => {
+        const itemDb = ITEM_DB.find(d => d.id === it.id);
+        return itemDb ? { ...it, name: itemDb.name, emoji: itemDb.emoji, desc: itemDb.desc } : null;
+      }).filter(Boolean);
+
+      // 到達エリアとスター合計の集計
+      let currentAreaName = '始まりの平原';
+      let totalStars = 0;
+      if (data.stageClearCounts && typeof data.stageClearCounts === 'object') {
+        for (const aKey in data.stageClearCounts) {
+          const list = data.stageClearCounts[aKey];
+          if (Array.isArray(list)) {
+            list.forEach(c => totalStars += (c || 0));
+            if (list.some(c => c > 0) && typeof AREA_STAGES !== 'undefined' && AREA_STAGES[aKey]) {
+              currentAreaName = AREA_STAGES[aKey].name;
+            }
+          }
+        }
+      }
+      const rescuedCount = (data.rescued && Array.isArray(data.rescued)) ? data.rescued.length : 0;
+
+      slots.push({
+        key,
+        name: data.playerName || 'ぼうけんしゃ',
+        avatar: data.avatar || (data.player && data.player.avatar) || HERO_AVATARS[0].id,
+        avatarBackground: data.avatarBackground || 'default',
+        avatarHolographic: !!data.avatarHolographic,
+        avatarBackgroundHolographic: !!data.avatarBackgroundHolographic,
+        avatarDecoration:data.avatarDecoration || '',
+        lvl: p.lvl || 1,
+        gold: p.gold || 0,
+        baseStats: {
+          hp: p.hp !== undefined ? p.hp : 30,
+          maxHp: p.maxHp || 30,
+          mp: p.mp !== undefined ? p.mp : 10,
+          maxMp: p.maxMp || 10,
+          atk: p.atk || 5,
+          def: p.def || 3,
+          spd: p.spd || 6,
+        },
+        totalStats: {
+          maxHp: (p.maxHp || 30) + boostHp,
+          maxMp: (p.maxMp || 10) + boostMp,
+          atk: (p.atk || 5) + boostAtk,
+          def: (p.def || 3) + boostDef,
+          spd: (p.spd || 6) + boostSpd,
+        },
+        boostStats: {
+          hp: boostHp,
+          mp: boostMp,
+          atk: boostAtk,
+          def: boostDef,
+          spd: boostSpd,
+        },
+        equippedWeapon: eqWeapon,
+        equippedArmor: eqArmor,
+        equippedAccessory: eqAccessory,
+        items,
+        progress: {
+          areaName: currentAreaName,
+          stars: totalStars,
+          rescuedCount: rescuedCount,
+        },
+        archived: !!data.archived,
+        archivedAt: data.archivedAt || 0,
+        lastPlayedAt: data.lastPlayedAt || data.updatedAt || 0,
+        updatedAt: data.updatedAt || 0,
+      });
+    } catch(e){}
+  }
+  slots.sort((a, b) => b.updatedAt - a.updatedAt);
+  return slots;
+}
+
+function setSaveSlotArchived(key, archived){
+  if (!key || !key.startsWith(SAVE_PREFIX)) return false;
+  const raw = storageGet(key);
+  if (!raw) return false;
+  try {
+    const data = JSON.parse(raw);
+    data.archived = !!archived;
+    if (archived) data.archivedAt = Date.now();
+    else delete data.archivedAt;
+    data.updatedAt = Date.now();
+    if (typeof getTimeLimitForSlot === 'function') {
+      data.timeLimitSettings = getTimeLimitForSlot(key);
+    }
+    storageSet(key, JSON.stringify(data));
+    if (window.CloudSave && typeof window.CloudSave.saveSlot === 'function') {
+      window.CloudSave.saveSlot(key, data, true).catch(err => {
+        console.warn("Cloud archive save failed:", err);
+      });
+    }
+    if (key === currentSlotKey && archived) {
+      G = null;
+      currentSlotKey = null;
+    }
+    updateContinueButtonVisibility();
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+let isCloudSyncing = false;
+
+function applyCloudSlots(cloudSlots) {
+  if (!Array.isArray(cloudSlots)) return false;
+  let hasChanges = false;
+  const cloudMap = {};
+
+  for (const cs of cloudSlots) {
+    if (!cs.slotKey) continue;
+    if (window.AccountSession) {
+      if (!window.AccountSession.owns(cs.slotKey) || !cs.gameState) continue;
+      const previous=storageGet(cs.slotKey),next=JSON.stringify(cs.gameState);
+      if (previous && previous!==next) storageSet(`legend-account-backup::${window.AccountSession.accountId}::${cs.slotKey}::${Date.now()}`,previous);
+      storageSet(cs.slotKey,next);
+      if (currentSlotKey===cs.slotKey && G) loadSlot(cs.slotKey);
+      cloudMap[cs.slotKey]=cs;hasChanges=true;
+      continue;
+    }
+    // テストモードのアカウントがクラウドに届いた場合は保存せず即座に削除
+    if (cs.gameState && (cs.gameState.isTestMode || cs.gameState.playerName === 'テスト勇者' || (cs.gameState.playerName && cs.gameState.playerName.includes('[テスト]')))) {
+      if (storageGet(cs.slotKey)) storageRemove(cs.slotKey);
+      continue;
+    }
+    cloudMap[cs.slotKey] = cs;
+
+    const rawLocal = storageGet(cs.slotKey);
+    if (cs.deleted) {
+      if (rawLocal) {
+        storageRemove(cs.slotKey);
+        hasChanges = true;
+        if (currentSlotKey === cs.slotKey) {
+          currentSlotKey = null;
+          G = null;
+        }
+      }
+      continue;
+    }
+
+    if (!rawLocal) {
+      // 他端末で作成された新しいセーブデータを保存
+      if (cs.gameState) {
+        storageSet(cs.slotKey, JSON.stringify(cs.gameState));
+        if (cs.gameState.timeLimitSettings && typeof setTimeLimitForSlot === 'function') {
+          setTimeLimitForSlot(cs.slotKey, cs.gameState.timeLimitSettings);
+        }
+        hasChanges = true;
+      }
+    } else {
+      // 既存データの更新比較
+      try {
+        const localData = JSON.parse(rawLocal);
+        const localTime = localData.updatedAt || 0;
+        const cloudTime = cs.updatedAt || (cs.gameState && cs.gameState.updatedAt) || 0;
+        if (cloudTime > localTime && cs.gameState) {
+          storageSet(cs.slotKey, JSON.stringify(cs.gameState));
+          if (cs.gameState.timeLimitSettings && typeof setTimeLimitForSlot === 'function') {
+            setTimeLimitForSlot(cs.slotKey, cs.gameState.timeLimitSettings);
+          }
+          if (currentSlotKey === cs.slotKey) {
+            loadSlot(cs.slotKey);
+          }
+          hasChanges = true;
+        } else if (localTime > cloudTime) {
+          if (typeof getTimeLimitForSlot === 'function') {
+            localData.timeLimitSettings = getTimeLimitForSlot(cs.slotKey);
+          }
+          if (window.CloudSave && typeof window.CloudSave.saveSlot === 'function') {
+            window.CloudSave.saveSlot(cs.slotKey, localData, true);
+          }
+        }
+      } catch(e) {}
+    }
+  }
+
+  // ローカルにしか存在しないセーブ枠をクラウドへ即時アップロード
+  for (let i = 0; i < storageLen(); i++) {
+    const key = storageK(i);
+    if (!key || !key.startsWith(SAVE_PREFIX)) continue;
+    if (window.AccountSession) continue;
+    if (!cloudMap[key]) {
+      try {
+        const localData = JSON.parse(storageGet(key));
+        if (localData) {
+          if (typeof getTimeLimitForSlot === 'function') {
+            localData.timeLimitSettings = getTimeLimitForSlot(key);
+          }
+          if (window.CloudSave && typeof window.CloudSave.saveSlot === 'function') {
+            window.CloudSave.saveSlot(key, localData, true);
+          }
+        }
+      } catch(e) {}
+    }
+  }
+
+  const currentSlots = listSaveSlots();
+  const continueBtn = $('btn-continue');
+  if (continueBtn) {
+    if (currentSlots.length > 0) {
+      continueBtn.classList.remove('hidden');
+    } else {
+      continueBtn.classList.add('hidden');
+    }
+  }
+
+  const activeScreen = document.querySelector('.screen.active');
+  if (activeScreen && activeScreen.id === 'screen-load-save') {
+    renderLoadSaveSlots();
+  }
+
+  return hasChanges;
+}
+
+async function syncCloudSaves(onComplete){
+  if (isCloudSyncing) {
+    if (typeof onComplete === 'function') onComplete(false, false);
+    return;
+  }
+  if (!window.CloudSave || typeof window.CloudSave.fetchAllSlots !== 'function') {
+    if (typeof onComplete === 'function') onComplete(false, false);
+    return;
+  }
+  isCloudSyncing = true;
+  try {
+    const cloudSlots = await window.CloudSave.fetchAllSlots();
+    const hasChanges = applyCloudSlots(cloudSlots);
+    if (typeof onComplete === 'function') onComplete(true, hasChanges);
+  } catch(err) {
+    console.warn('[CloudSave] Sync error:', err);
+    if (typeof onComplete === 'function') onComplete(false, false);
+  } finally {
+    isCloudSyncing = false;
+  }
+}
+
+/* 旧バージョン（単一セーブ枠）からの ひっこし */
+function migrateLegacySaveIfNeeded(){
+  let legacyRaw = storageGet(LEGACY_SAVE_KEY);
+  let migratingFromV2 = false;
+  if (!legacyRaw) {
+    legacyRaw = storageGet(LEGACY_OLD_SAVE_KEY);
+    migratingFromV2 = true;
+  }
+  if (!legacyRaw) return;
+
+  try {
+    const data = JSON.parse(legacyRaw);
+    if (migratingFromV2) {
+      let newItems = [];
+      for (let k in data.items) {
+        if (data.items[k] > 0) {
+          newItems.push({ uid: data.nextUid++, id: k, count: data.items[k] });
+        }
+      }
+      data.items = newItems;
+      for (let eq of data.ownedEquips) {
+        let base = EQUIP_DB.find(d => d.id === eq.id);
+        eq.rarity = eq.rarity || (base ? base.rarity : 'N') || 'N';
+      }
+    }
+    if (!data.printSheetCodes) data.printSheetCodes = {};
+    if (!data.playerName) data.playerName = 'ぼうけんしゃ';
+    if (!data.updatedAt) data.updatedAt = Date.now();
+    normalizeRarityData(data);
+    const newKey = SAVE_PREFIX + newSlotId();
+    storageSet(newKey, JSON.stringify(data));
+    storageRemove(LEGACY_SAVE_KEY);
+    storageRemove(LEGACY_OLD_SAVE_KEY);
+    if (window.CloudSave && typeof window.CloudSave.saveSlot === 'function') {
+      window.CloudSave.saveSlot(newKey, data, true);
+    }
+  } catch(e){}
+}
+
+/* 装備込みの実効ステータス */
+function equipBonus(){
+  const b = { atk:0, def:0, spd:0, mp:0, hp:0 };
+  for (const slot of EQUIP_SLOTS){
+    const eq = G.equipment[slot];
+    if (!eq) continue;
+    const owned = G.ownedEquips.find(o => o.uid === eq.uid);
+    if (!owned) continue;
+    const db = getEquipTemplate(owned.id);
+    if (!db) continue;
+    const stat = calcEquipStat(db.stat, owned.rarity, owned);
+    for (const k in stat) b[k] += stat[k];
+    if (owned.id === 'anc_c1') b.mp += Math.floor(100 * awakeningScale(owned));
+    if (owned.id === 'anc_w2') b.spd += Math.floor(30 * awakeningScale(owned));
+  }
+  return b;
+}
+
+/* ==========================================================
+   そうびコスト（レベル＝そうびできる合計コスト上限）
+   ========================================================== */
+function equipCost(db, rarity){
+  if(db?.fixedCost)return Math.max(1,db.cost || 1);
+  if (db && db.id && db.id.startsWith('anc_')) return Math.max(1, db.cost || 1);
+  return Math.max(1, Math.ceil((db.cost || 1) * (RARITY_MULTI[rarity] || 1)));
+}
+
+function equippedAncientIds(){
+  const ids = new Set();
+  for (const slot of EQUIP_SLOTS){
+    const eq = G.equipment[slot];
+    const owned = eq && G.ownedEquips.find(o => o.uid === eq.uid);
+    if (owned && owned.id.startsWith('anc_')) ids.add(owned.id);
+  }
+  return ids;
+}
+function equippedAncientScale(id){
+  const owned = equippedAncients(G).find(equip => equip.id === id);
+  return owned ? awakeningScale(owned) : 0;
+}
+function ancientCritBonus(){ return 0.3 * equippedAncientScale('anc_w3'); }
+function ancientDamageReduction(dmg){
+  const scale = equippedAncientScale('anc_a2');
+  return scale ? Math.max(1, Math.round(dmg * (1 - 0.3 * scale))) : dmg;
+}
+
+function rollAncientBlueprintReward(){
+  const pool = ANCIENT_EQUIP_DB.filter(eq => eq.id.startsWith('anc_'));
+  const ownedIds = new Set(G.ownedEquips.filter(o => pool.some(eq => eq.id === o.id)).map(o => o.id));
+  const unowned = pool.filter(eq => !ownedIds.has(eq.id));
+  return pick(unowned.length ? unowned : pool);
+}
+function costCap(){
+  if (G.isTestMode) return 999;
+  return Math.max(1, G.player.lvl) + (G.player.costPlus || 0);
+}
+/* 現在そうび中の合計コスト。excludeSlot を指定すると そのスロットぶんを除いて計算する
+   （＝そのスロットに 別のそうびへ 付け替える時の判定に使う） */
+function usedCost(excludeSlot){
+  let total = 0;
+  for (const slot of EQUIP_SLOTS){
+    if (slot === excludeSlot) continue;
+    const eq = G.equipment[slot];
+    if (!eq) continue;
+    const owned = G.ownedEquips.find(o => o.uid === eq.uid);
+    if (!owned) continue;
+    const db = getEquipTemplate(owned.id);
+    if (!db) continue;
+    total += equipCost(db, owned.rarity);
+  }
+  return total;
+}
+function totalStat(key){ return (G.player[key] || 0) + (equipBonus()[key] || 0); }
+function totalMaxHp(){ return G.player.maxHp + equipBonus().hp; }
+function totalMaxMp(){ return G.player.maxMp + equipBonus().mp; }
+
+/* ==========================================================
+   画面管理
+   ========================================================== */
+function showScreen(id){
+  if(id!=='screen-raid-boss')cancelRaidBossIntro();
+  damageFloatsV2.clear();
+  if(id!=='screen-battle')ancientToastV2.sceneChanged();
+  closeKukuTraining();
+  if (explore?.isEventRaid && id !== 'screen-battle') endEventRaidBattle(false);
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+  updateHud();
+
+  // セーブデータを読み込んでいない間はメニューを隠す（「きょてんに もどる」がGを前提とするため）
+  const menuContainer = $('menu-container');
+  if (menuContainer) {
+    menuContainer.classList.toggle('hidden', id === 'screen-title' || !G);
+    $('menu-dropdown').classList.add('hidden');
+  }
+
+  // 背景は常に単色（画像なし）
+  document.body.style.backgroundImage = 'none';
+  document.body.style.background = 'linear-gradient(135deg, #1a1626 0%, #2b2140 100%)';
+  document.body.style.backgroundAttachment = 'fixed';
+
+  // 画面ごとのBGM。バトルはステージBGM、自分の部屋は専用BGM、
+  // それいがいは（個別に BGM 設定していない画面もふくめ）ぜんぶ 拠点BGMを流す
+  if (SM.initialized) SM.playBGM(bgmKeyForScreen(id));
+
+  if (typeof checkTimeLimit === 'function') checkTimeLimit();
+}
+
+function bgmKeyForScreen(id){
+  if (id === 'screen-battle' && explore?.isHalloween) return explore.halloweenBossSpawned || battle?.enemy?.isBoss ? 'bgm_halloween_boss' : 'bgm_halloween_normal';
+  if (id === 'screen-raid-boss' && raidIntroBgm.active) return 'bgm_raid_boss';
+  /* タイトルと、そこから ひらく「あたらしく はじめる」「セーブデータ せんたく」は タイトル専用BGM
+     （セーブえらびや 名前入力の とちゅうで きょくが きりかわらないように、タイトルのBGMを流しっぱなしにする） */
+  if (id === 'screen-title' || id === 'screen-new-save' || id === 'screen-load-save') return 'bgm_title';
+  if (id === 'screen-admin' && (!currentSlotKey || !G)) return 'bgm_title';
+  if (id === 'screen-status' || id === 'screen-equipment') return 'bgm_room';
+  if (id === 'screen-battle') {
+    if (battle?.enemy?.isRaid) return 'bgm_raid_boss';
+    if (explore?.isBoss || battle?.enemy?.isBoss) return 'bgm_area_boss';
+    return 'bgm_stage1';
+  }
+  if (id === 'screen-training') return 'bgm_training';
+  return 'bgm_home';
+}
+
+function updateHud(){
+  if (!G) return;
+  if (G.isTestMode && typeof ensureTestModeSupplies === 'function') {
+    ensureTestModeSupplies();
+  }
+  renderAwakeningHud();
+  const town = $('town-map');
+  if (town) {
+    const background = getAvatarBackground(G.avatarBackground);
+    const image = handdrawnTownUrl + (handdrawnTownUrl.includes('?') ? '&' : '?') + 'v=20261110-handdrawn-town';
+    const townImage = town.querySelector(':scope > .town-map-img');
+    if (townImage && townImage.getAttribute('src') !== image) townImage.src = image;
+    town.style.setProperty('--mobile-home-background',image ? `url("${av(image)}")` : 'none');
+    town.style.setProperty('--mobile-home-color',background.color);
+    town.dataset.mobileBackground = 'handdrawn-town';
+  }
+  const p = G.player;
+
+  // バトル画面、拠点、自分の部屋のステータスウィンドウ（およびアバター等）更新
+  ['battle', 'home', 'room'].forEach(prefix => {
+    const nameEl = $(`${prefix}-player-name`);
+    const lvEl = $(`${prefix}-player-lv`);
+    const goldEl = $(`${prefix}-player-gold`);
+    const hpEl = $(`${prefix}-player-hp`);
+    const hpGhostEl = $(`${prefix}-player-hp-ghost`);
+    const mpEl = $(`${prefix}-player-mp`);
+    const mpGhostEl = $(`${prefix}-player-mp-ghost`);
+    const expEl = $(`${prefix}-player-exp`);
+    const atbEl = $(`${prefix}-player-atb`);
+    const hpContainer = $(`${prefix}-player-window`) ? $(`${prefix}-player-window`).querySelector('.hp-bar-container') : null;
+    const mpContainer = $(`${prefix}-player-window`) ? $(`${prefix}-player-window`).querySelector('.mp-bar-container') : null;
+    const hpNumEl = $(`${prefix}-player-hp-num`);
+    const hpMaxEl = $(`${prefix}-player-hp-max`);
+    const mpNumEl = $(`${prefix}-player-mp-num`);
+    const mpMaxEl = $(`${prefix}-player-mp-max`);
+    const expNumEl = $(`${prefix}-player-exp-num`);
+    const expMaxEl = $(`${prefix}-player-exp-max`);
+    const avatarEl = $(`${prefix}-player-avatar`);
+
+    if (avatarEl) {
+      const frame=prefix==='home'?$('home-avatar-window'):avatarEl.parentElement;
+      applyAvatarComposition(frame,avatarEl,G);
+      if(prefix==='battle'&&frame)applyBattleAvatarCrop(frame,avatarEl,G.avatar);
+    }
+
+    if (nameEl) nameEl.textContent = (G.playerName || 'ゆうしゃ') + (G.isTestMode ? ' [テスト]' : '');
+    if (lvEl) lvEl.textContent = 'Lv' + p.lvl;
+    if (goldEl) goldEl.textContent = p.gold;
+
+    // HP is divided into 100-point layers so high-HP characters stay readable.
+    const hpMax = totalMaxHp();
+    if (hpNumEl) hpNumEl.textContent = p.hp;
+    if (hpMaxEl) hpMaxEl.textContent = hpMax;
+    if (hpContainer) updatePlayerHpGauge(hpContainer, hpEl, hpGhostEl, p.hp, hpMax);
+
+    // MP: バーの長さを数値に比例させる（スケール係数: 2px per 1 MP）
+    const mpScale = 2;
+    if (mpNumEl) mpNumEl.textContent = p.mp;
+    if (mpMaxEl) mpMaxEl.textContent = p.maxMp;
+    if (mpContainer) mpContainer.style.width = (p.maxMp * mpScale) + 'px';
+    if (mpEl) mpEl.style.width = (p.mp * mpScale) + 'px';
+    if (mpGhostEl) mpGhostEl.style.width = (p.mp * mpScale) + 'px';
+
+    // けいけんち: 次のレベルまでに必要な量に対する割合（%）で表示
+    const expNeed = expNext(p.lvl);
+    if (expNumEl) expNumEl.textContent = p.exp;
+    if (expMaxEl) expMaxEl.textContent = expNeed;
+    if (expEl) expEl.style.width = `${Math.min(100, p.exp / expNeed * 100)}%`;
+
+    // ATB: パーセンテージで表示（0-100）
+    if (atbEl) atbEl.style.width = (p.atb / 100 * 100) + '%';
+  });
+
+  renderHomeEquipIcons();
+  renderHomeTickets();
+  trackHpRecovery(G.player);
+}
+
+function updatePlayerHpGauge(container, firstFill, firstGhost, hp, maxHp){
+  if (!container || !firstFill || !firstGhost) return;
+  const safeMax = Math.max(1, Number(maxHp) || 1);
+  const layerCount = Math.max(1, Math.ceil(safeMax / 100));
+  let stack = container.querySelector('.hp-gauge-stack');
+  if (!stack) {
+    stack = document.createElement('div');
+    stack.className = 'hp-gauge-stack';
+    container.insertBefore(stack, firstGhost);
+  }
+
+  if (stack.children.length !== layerCount) {
+    stack.replaceChildren();
+    for (let i = 0; i < layerCount; i++) {
+      const layer = document.createElement('div');
+      layer.className = 'hp-gauge-layer';
+      const ghost = i === 0 ? firstGhost : document.createElement('div');
+      const fill = i === 0 ? firstFill : document.createElement('div');
+      ghost.classList.add('hp-gauge-ghost');
+      fill.classList.add('hp-gauge-fill');
+      if (i > 0) {
+        ghost.className = 'stat-bar-fill ghost-fill hp-gauge-ghost';
+        fill.className = 'stat-bar-fill hp hp-gauge-fill';
+      }
+      layer.append(ghost, fill);
+      stack.appendChild(layer);
+    }
+  }
+
+  container.style.width = `${Math.min(100, safeMax) * 2}px`;
+  container.style.maxWidth = '100%';
+  Array.from(stack.children).forEach((layer, index) => {
+    const layerMax = Math.min(100, Math.max(0, safeMax - index * 100));
+    const layerHp = Math.min(layerMax, Math.max(0, (Number(hp) || 0) - index * 100));
+    const width = layerMax > 0 ? `${layerHp / layerMax * 100}%` : '0%';
+    layer.querySelector('.hp-gauge-fill').style.width = width;
+    layer.querySelector('.hp-gauge-ghost').style.width = width;
+  });
+}
+
+/* 拠点ステータスウィンドウの よこに そうび中アイテムを アイコン表示 */
+const HOME_EQUIP_SLOT_ORDER = EQUIP_SLOTS;
+const HOME_EQUIP_SLOT_EMPTY_ICON = { weapon:'⚔️', armor:'🛡️', accessory:'💍' };
+function renderHomeEquipIcons(){
+  const box = $('home-equip-icons');
+  if (!box) return;
+  box.innerHTML = '';
+  for (const slot of HOME_EQUIP_SLOT_ORDER){
+    const el = document.createElement('div');
+    el.className = 'town-equip-icon-slot';
+    const eq = G.equipment[slot];
+    const owned = eq ? G.ownedEquips.find(o => o.uid === eq.uid) : null;
+    const db = owned ? getEquipTemplate(owned.id) : null;
+    if (db){
+      el.classList.add(`rarity-${owned.rarity}`);
+      el.innerHTML = db.emoji && db.emoji.indexOf('/') >= 0
+        ? `<img src="${av(db.emoji)}" alt="">`
+        : `<span class="town-equip-icon-emoji">${db.emoji || '🎁'}</span>`;
+      el.title = `${SLOT_LABELS[slot] || slot}: ${db.name}`;
+      bindEquipDetailTooltip(el, db, { rarity: owned.rarity, ability: owned.ability, owned });
+    } else {
+      el.innerHTML = `<span class="town-equip-icon-empty">${HOME_EQUIP_SLOT_EMPTY_ICON[slot] || '？'}</span>`;
+      el.title = `${SLOT_LABELS[slot] || slot}: 未装備`;
+    }
+    box.appendChild(el);
+  }
+}
+
+function logTo(id, html){
+  const box = $(id);
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  if(id==='battle-log')box.innerHTML='';
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+/* ==========================================================
+   おたすけ（アシスト）：どれかの そうびスロットに assist:true の そうびを
+   つけていると、けいさんの もんだいを まるの絵で かしかする
+   ========================================================== */
+function hasAssist(){
+  for (const slot of EQUIP_SLOTS){
+    const eq = G.equipment[slot];
+    if (!eq) continue;
+    const owned = G.ownedEquips.find(o => o.uid === eq.uid);
+    if (!owned) continue;
+    const db = getEquipTemplate(owned.id);
+    if (db && db.assist) return true;
+  }
+  return false;
+}
+
+function assistVisualHtml(problem){
+  const { a, b, op } = problem;
+  
+  const groupedDots = (n, crossFromIndex = 999) => {
+    let res = '';
+    let currentBlock = '';
+    for (let i = 0; i < n; i++) {
+      currentBlock += `<span class="assist-dot${i >= crossFromIndex ? ' assist-dot-remove' : ''}"></span>`;
+      if ((i + 1) % 5 === 0) {
+        res += `<span class="assist-dot-group">${currentBlock}</span>`;
+        currentBlock = '';
+      }
+    }
+    if (currentBlock) res += `<span class="assist-dot-group">${currentBlock}</span>`;
+    return res;
+  };
+
+  if (op === '+') {
+    return `<div class="assist-visual" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px;">
+      <span class="assist-group" style="display:inline-flex; flex-wrap:wrap; justify-content:center;">${groupedDots(a)}</span>
+      <span class="assist-op">+</span>
+      <span class="assist-group" style="display:inline-flex; flex-wrap:wrap; justify-content:center;">${groupedDots(b)}</span>
+    </div>`;
+  }
+  if (op === '-') {
+    return `<div class="assist-visual" style="display:flex; flex-wrap:wrap; justify-content:center;">
+      <span class="assist-group" style="display:inline-flex; flex-wrap:wrap; justify-content:center;">${groupedDots(a, a - b)}</span>
+    </div>`;
+  }
+  if (op === '×') {
+    let rows = '';
+    for (let i = 0; i < a; i++) rows += `<div class="assist-row" style="display:flex; justify-content:center;">${groupedDots(b)}</div>`;
+    return `<div class="assist-visual assist-grid">${rows}</div>`;
+  }
+  if (op === '÷') {
+    let groups = '';
+    for (let i = 0; i < a; i += b) {
+      groups += `<span class="assist-group" style="margin:4px; padding:4px; border:2px dashed rgba(255,255,255,0.3); border-radius:8px; display:inline-flex;">${groupedDots(Math.min(b, a - i))}</span>`;
+    }
+    return `<div class="assist-visual" style="display:flex; flex-wrap:wrap; justify-content:center;">${groups}</div>`;
+  }
+  return '';
+}
+
+/* ==========================================================
+   けいさんチャレンジエンジン
+   opts: { problem:{a,b,op,answer,text,tier}, timeLimit(ms), prompt }
+   cb(result): { success, timeFrac }
+   ========================================================== */
+let currentChallenge = null;
+
+
+function isKanjiProblem(problem) {
+  if (!problem) return false;
+  if (problem.tier && (String(problem.tier).startsWith('kanji') || String(problem.tier).startsWith('kana'))) return true;
+  if (explore && explore.areaId && ['area5','area6','area7','area8','area9','area10','area14','area15'].includes(explore.areaId)) return true;
+  return false;
+}
+
+const READING_HINT_WORDS = {
+  '文章問題': 'ぶんしょうもんだい',
+  '文章': 'ぶんしょう',
+  '問題': 'もんだい',
+  '勇者': 'ゆうしゃ',
+  '世界': 'せかい',
+  '強大': 'きょうだい',
+  '暗黒竜': 'あんこくりゅう',
+  '討伐': 'とうばつ',
+  '完了': 'かんりょう',
+  '報酬': 'ほうしゅう',
+  '経験値': 'けいけんち',
+  '漢字': 'かんじ',
+  '読み方': 'よみかた',
+  '入力': 'にゅうりょく',
+  '修練場': 'しゅうれんじょう',
+  '自分': 'じぶん',
+  '部屋': 'へや',
+  '道具屋': 'どうぐや',
+  '武器屋': 'ぶきや',
+  '防具': 'ぼうぐ',
+  '装備': 'そうび',
+  '商店': 'しょうてん',
+  '本': 'ほん',
+  '見つかった': 'みつかった',
+  '見つかる': 'みつかる',
+  '見': 'み',
+  '大きさ': 'おおきさ',
+  '大': 'おお',
+  '小': 'しょう',
+  '上': 'うえ',
+  '下': 'した',
+  '左': 'ひだり',
+  '右': 'みぎ',
+  '中': 'なか',
+  '外': 'そと',
+  '前': 'まえ',
+  '後': 'あと',
+  '先': 'さき',
+  '生': 'せい',
+  '年': 'ねん',
+  '月': 'がつ',
+  '日': 'にち',
+  '曜日': 'ようび',
+  '時': 'じ',
+  '分': 'ふん',
+  '人': 'ひと',
+  '子': 'こ',
+  '男': 'おとこ',
+  '女': 'おんな',
+  '母': 'はは',
+  '父': 'ちち',
+  '友': 'とも',
+  '学校': 'がっこう',
+  '学': 'がく',
+  '校': 'こう',
+  '先生': 'せんせい',
+  '先': 'せん',
+  '名': 'な',
+  '町': 'まち',
+  '村': 'むら',
+  '森': 'もり',
+  '山': 'やま',
+  '川': 'かわ',
+  '海': 'うみ',
+  '空': 'そら',
+  '雨': 'あめ',
+  '天気': 'てんき',
+  '天': 'てん',
+  '気': 'き',
+  '花': 'はな',
+  '草': 'くさ',
+  '木': 'き',
+  '林': 'はやし',
+  '石': 'いし',
+  '水': 'みず',
+  '火': 'ひ',
+  '土': 'つち',
+  '金': 'きん',
+  '玉': 'たま',
+  '音': 'おと',
+  '力': 'ちから',
+  '手': 'て',
+  '足': 'あし',
+  '目': 'め',
+  '口': 'くち',
+  '耳': 'みみ',
+  '食': 'しょく',
+  '飲': 'の',
+  '買': 'か',
+  '売': 'う',
+  '作': 'つく',
+  '使': 'つか',
+  '来': 'く',
+  '行': 'い',
+  '帰': 'かえ',
+  '入': 'はい',
+  '出': 'で',
+  '立': 'た',
+  '正': 'ただ',
+  '正解': 'せいかい',
+  '不正解': 'ふせいかい',
+};
+
+const READING_HINT_CHARS = {
+  一:'いち', 二:'に', 三:'さん', 四:'よん', 五:'ご', 六:'ろく', 七:'なな', 八:'はち', 九:'きゅう', 十:'じゅう', 百:'ひゃく', 千:'せん',
+  上:'うえ', 下:'した', 左:'ひだり', 右:'みぎ', 中:'なか', 大:'おお', 小:'ちい', 月:'つき', 日:'ひ', 年:'とし',
+  人:'ひと', 子:'こ', 女:'おんな', 男:'おとこ', 母:'はは', 父:'ちち', 友:'とも', 手:'て', 足:'あし', 目:'め', 口:'くち', 耳:'みみ',
+  山:'やま', 川:'かわ', 田:'た', 水:'みず', 火:'ひ', 木:'き', 林:'はやし', 森:'もり', 石:'いし', 土:'つち', 空:'そら', 雨:'あめ', 花:'はな', 草:'くさ',
+  学:'がく', 校:'こう', 先:'せん', 生:'せい', 本:'ほん', 文:'ぶん', 字:'じ', 名:'な', 町:'まち', 村:'むら', 音:'おと', 力:'ちから',
+  見:'み', 買:'か', 売:'う', 作:'つく', 使:'つか', 来:'く', 行:'い', 帰:'かえ', 入:'はい', 出:'で', 立:'た', 読:'よ', 書:'か',
+  問:'もん', 題:'だい', 答:'こた', 勇:'ゆう', 者:'しゃ', 世:'せ', 界:'かい', 強:'きょう', 暗:'あん', 黒:'こく', 竜:'りゅう',
+  討:'とう', 伐:'ばつ', 完:'かん', 了:'りょう', 報:'ほう', 酬:'しゅう', 経:'けい', 験:'けん', 値:'ち',
+};
+
+initializeUiReadingTooltips({words:READING_HINT_WORDS,chars:READING_HINT_CHARS});
+
+let readingHintWordCache = null;
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[ch]));
+}
+
+function getReadingHintWords(extraReadings = null) {
+  if (!readingHintWordCache) {
+    readingHintWordCache = { ...READING_HINT_WORDS };
+  }
+  return extraReadings ? { ...readingHintWordCache, ...extraReadings } : readingHintWordCache;
+}
+
+function renderReadingHints(text, extraReadings = null) {
+  const source = String(text ?? '');
+  const wordMap = getReadingHintWords(extraReadings);
+  const words = Object.keys(wordMap)
+    .filter(w => w && /[\u3400-\u9fff]/.test(w))
+    .sort((a, b) => b.length - a.length);
+  let out = '';
+  for (let i = 0; i < source.length;) {
+    let matched = '';
+    for (const word of words) {
+      if (source.startsWith(word, i)) {
+        matched = word;
+        break;
+      }
+    }
+    if (matched) {
+      out += `<span class="reading-hint" tabindex="0" data-yomi="${escapeHtml(wordMap[matched])}">${escapeHtml(matched)}</span>`;
+      i += matched.length;
+      continue;
+    }
+    const ch = source[i];
+    if (/[\u3400-\u9fff]/.test(ch) && READING_HINT_CHARS[ch]) {
+      out += `<span class="reading-hint" tabindex="0" data-yomi="${escapeHtml(READING_HINT_CHARS[ch])}">${escapeHtml(ch)}</span>`;
+    } else {
+      out += escapeHtml(ch);
+    }
+    i += 1;
+  }
+  return out;
+}
+if (typeof window !== 'undefined') window.renderReadingHints = renderReadingHints;
+
+
+
+/* プリントの こたえ らん。分数の こたえは たて書き（うえ ぶんし／した ぶんぼ）の 2つの らんに する */
+function printBlankHtml(p){
+  if (p?.remainder != null) return '<span class="p-remainder-blank"><span class="p-blank"></span><span>あまり</span><span class="p-blank"></span></span>';
+  if (p && /^\d+\/\d+$/.test(String(p.answer))) return '<span class="p-frac-blank"><i></i><i class="p-frac-bar"></i><i></i></span>';
+  return '<span class="p-blank"></span>';
+}
+
+/* もんだいの ぶんすう「1/5」を、たてに ならべた 分数（うえ ぶんし／した ぶんぼ）で 見せる */
+function fractionTextHtml(escaped){
+  return String(escaped).replace(/(\d+)\/(\d+)/g, (m, n, d) => `<span class="frac"><span class="frac-n">${n}</span><span class="frac-d">${d}</span></span>`);
+}
+
+function getChallengePrompt(problem, isAttack = false) {
+  if (isKanjiProblem(problem)) {
+    const tierStr = String(problem.tier || '');
+    if (tierStr.startsWith('kana')) {
+      return isAttack ? 'こうげき！ ただしい かきかたを えらぼう！' : 'ただしい かきかたを えらぼう！';
+    }
+    return isAttack ? 'こうげき！ よみかたを ひとつ にゅうりょく！' : 'かんじの よみかたを ひとつ にゅうりょく！';
+  }
+  return isAttack ? 'こうげき！ けいさんの こたえを にゅうりょく！' : 'けいさんの こたえを にゅうりょく！';
+}
+
+
+// 促音・長音などの「場所当て問題」用データを生成する
+// 促音・長音などの「場所当て問題」用データを生成する
+// problemData は kanji_data.js の { answer: '...', text: '...', special: '...' } の形式
+// 促音・長音などの「場所当て問題」用データを生成する
+// problemData は { text, answer, special?, tier? } または文字列
+function createKanaLocationProblem(problemData) {
+  // 特殊文字リスト（長音あいうえおは data.special で指定される）
+  const autoDetectChars = ['っ', 'ッ', 'ー', 'ゃ', 'ゅ', 'ょ', 'ャ', 'ュ', 'ョ'];
+  
+  const word = typeof problemData === 'string' ? problemData : (problemData && problemData.text ? problemData.text : '');
+  if (!word) return null;
+  
+  // special プロパティがあればそれを使う（長音あいうえおも含む）
+  let special = (typeof problemData === 'object' && problemData && problemData.special) ? problemData.special : '';
+  let specialIndex = -1;
+  
+  if (special) {
+    // 指定された特殊文字の位置を探す
+    specialIndex = word.indexOf(special);
+  }
+  
+  // specialが未設定か見つからなければ自動検出
+  if (!special || specialIndex === -1) {
+    for (let i = 0; i < word.length; i++) {
+      if (autoDetectChars.includes(word[i])) {
+        special = word[i];
+        specialIndex = i;
+        break;
+      }
+    }
+  }
+  
+  if (!special || specialIndex === -1) return null;
+  
+  const chars = word.split('');
+  chars.splice(specialIndex, 1);
+  return {
+    original: word,
+    specialChar: special,
+    baseChars: chars,
+    correctIndex: specialIndex
+  };
+}
+// グローバルに登録（kanji_input_ui.js からも参照できるようにする）
+window.createKanaLocationProblem = createKanaLocationProblem;
+// 促音の2択問題を生成する（正しい書き方はどっち？A/B形式）
+// 不正解選択肢: っ/ッ を末尾に移動した文字列
+function createSokuonChoiceProblem(problemData) {
+  const word = typeof problemData === 'string' ? problemData : (problemData && problemData.text ? problemData.text : '');
+  if (!word) return null;
+
+  const sokuonChar = (typeof problemData === 'object' && problemData && problemData.special) ? problemData.special : null;
+  // 促音(っ/ッ)のみ対象
+  const targetChars = ['っ', 'ッ'];
+  const char = sokuonChar || targetChars.find(c => word.includes(c));
+  if (!char) return null;
+
+  const idx = word.indexOf(char);
+  if (idx === -1) return null;
+
+  // 不正解: っを末尾に移動
+  const chars = word.split('');
+  chars.splice(idx, 1);
+  if (idx === chars.length) {
+    chars.unshift(char); // 既に末尾なら先頭に
+  } else {
+    chars.push(char);
+  }
+  const wrongAnswer = chars.join('');
+
+  // A/B どちらが正解かランダム
+  const correctIsA = Math.random() < 0.5;
+  return {
+    correctWord: word,
+    optionA: correctIsA ? word : wrongAnswer,
+    optionB: correctIsA ? wrongAnswer : word,
+    correctOption: correctIsA ? 'A' : 'B'
+  };
+}
+window.createSokuonChoiceProblem = createSokuonChoiceProblem;
+
+function createKanaChoiceProblem(problemData) {
+  const tier = String(problemData?.tier || '');
+  if (!tier.startsWith('kana')) return null;
+  const word = problemData.answer;
+  const fallback = (tier === 'kana_hira_2' || tier === 'kana_kata_2') ? createSokuonChoiceProblem(problemData) : null;
+  const wrongs = problemData.wrongAnswers || [problemData.wrongAnswer || (fallback && [fallback.optionA,fallback.optionB].find(option=>option !== word))];
+  const count = problemData.choiceCount === 4 ? 4 : 2;
+  const distractors = [...new Set(wrongs)].filter(value=>value && value !== word).slice(0,count-1);
+  if (!word || distractors.length !== count-1) return null;
+  const options = [word,...distractors];
+  for (let i=options.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [options[i],options[j]]=[options[j],options[i]]; }
+  const correctIndex = options.indexOf(word);
+  return {
+    correctWord:word, options, correctIndex, optionA:options[0], optionB:options[1], correctOption:'ABCD'[correctIndex],
+    prompt: problemData.prompt || 'ただしい かきかたは どっち？',
+    explanation: problemData.explanation || ''
+  };
+}
+window.createKanaChoiceProblem = createKanaChoiceProblem;
+
+
+
+function startChallenge(container, opts, cb){
+  destroyChallenge();
+  const timeLimit = opts.timeLimit || 8000;
+  const problem = opts.problem;
+
+  // --- 漢字問題の場合 ---
+  if (isKanjiProblem(problem)) {
+    if (container) container.classList.add('hidden');
+    const calcCenter = $('calc-problem-center');
+    if (calcCenter) calcCenter.classList.add('hidden');
+
+    const kanjiCenter = $('kanji-problem-center');
+    const kanjiChallenge = $('kanji-challenge');
+    if (kanjiCenter) kanjiCenter.classList.remove('hidden');
+    if (kanjiChallenge) kanjiChallenge.classList.remove('hidden');
+
+    const promptEl = $('kanji-prompt');
+    if (promptEl) {
+      if (opts.prompt) {
+        promptEl.textContent = opts.prompt;
+        promptEl.classList.remove('hidden');
+      } else {
+        promptEl.classList.add('hidden');
+      }
+    }
+
+    const kanjiCmds = $('kanji-battle-commands');
+    if (kanjiCmds) {
+      if (opts.showBattleCommands) {
+        kanjiCmds.classList.remove('hidden');
+        const kSkill = $('btn-kanji-skill');
+        const kItem = $('btn-kanji-item');
+        if (kSkill) kSkill.onclick = (e) => { if(e) e.preventDefault(); openSkillMenu(); };
+        if (kItem) kItem.onclick = (e) => { if(e) e.preventDefault(); openItemMenu(); };
+        const kGiveup = $('btn-kanji-giveup');
+        if (kGiveup) {
+          const isRaidBattle = !!(battle && battle.enemy && battle.enemy.isRaid);
+          kGiveup.classList.toggle('hidden', !isRaidBattle);
+          kGiveup.onclick = (e) => { if (e) e.preventDefault(); confirmRaidRetreat(); };
+        }
+      } else {
+        kanjiCmds.classList.add('hidden');
+      }
+    }
+
+    const start = Date.now();
+    let done = false;
+
+    // 漢字入力UIを初期化＆問題セット
+    if (typeof initKanjiInputUI === 'function') {
+      initKanjiInputUI((isCorrect) => {
+
+        if (done) return;
+        done = true;
+        const elapsed = Date.now() - start;
+        opts.onAnswered?.(elapsed,isCorrect);
+        recordStudyAnswer(problem, isCorrect, elapsed, false, timeLimit);
+        recordRaidLearningAnswer(problem, isCorrect);
+        const timeFrac = Math.max(0, 1 - elapsed / timeLimit);
+        if (isCorrect) {
+          SM.playCorrectAnswer();
+        } else {
+          SM.playBeep('error');
+        }
+        currentChallenge = null;
+        setTimeout(() => {
+          if (opts.isActive && !opts.isActive()) return;
+          if (kanjiCenter) kanjiCenter.classList.add('hidden');
+          if (kanjiChallenge) kanjiChallenge.classList.add('hidden');
+          cb({ success: isCorrect, timeFrac, elapsedMs: elapsed });
+        }, 450);
+      });
+    }
+
+    if (typeof setupKanjiChallenge === 'function') {
+      setupKanjiChallenge(problem);
+    }
+
+    currentChallenge = {
+      destroy() {
+        done = true;
+        if (kanjiCenter) kanjiCenter.classList.add('hidden');
+        if (kanjiChallenge) kanjiChallenge.classList.add('hidden');
+      }
+    };
+    return;
+  }
+
+  // --- 算数問題の場合 ---
+  const kanjiCenter = $('kanji-problem-center');
+  const kanjiChallenge = $('kanji-challenge');
+  if (kanjiCenter) kanjiCenter.classList.add('hidden');
+  if (kanjiChallenge) kanjiChallenge.classList.add('hidden');
+  const calcCenter = $('calc-problem-center');
+  if (calcCenter) calcCenter.classList.add('hidden');
+
+  const hasRem = problem.remainder !== undefined && problem.remainder !== null; // あまりのある わり算：しょう → あまり の じゅんに こたえる
+  const isFrac = !hasRem && /^\d+\/\d+$/.test(String(problem.answer)); // 分数の こたえ：ぶんし（うえ）→ぶんぼ（した）の じゅんに こたえる
+  const isRatio = !hasRem && /^\d+:\d+$/.test(String(problem.answer)); // 比の こたえ：ひだり → みぎ の じゅんに こたえる
+  const slotted = hasRem || isFrac || isRatio;
+  const slotCaps = hasRem ? ['しょう', 'あまり'] : isRatio ? ['ひだり', 'みぎ'] : ['ぶんし', 'ぶんぼ'];
+  const slotExpect = hasRem ? [String(problem.answer), String(problem.remainder)] : isFrac ? String(problem.answer).split('/') : isRatio ? String(problem.answer).split(':') : null;
+  const answerStr = hasRem ? `${problem.answer} あまり ${problem.remainder}` : isFrac ? `${slotExpect[1]}ぶんの${slotExpect[0]}` : isRatio ? `${slotExpect[0]} : ${slotExpect[1]}` : String(problem.answer);
+  const assistHtml = hasAssist() ? assistVisualHtml(problem) : '';
+  const missingOperand = problem.raidMissingOperand;
+  const equationJoin = problem.isWordProblem ? '<br><span class="challenge-answer-arrow">こたえ→</span> ' : ' = ';
+  const problemTextHtml = fractionTextHtml(escapeHtml(problem.text ?? ''));
+  const equationHtml = missingOperand
+    ? `${problemTextHtml.replace('□', '<span class="challenge-word raid-ice-word" id="ch-word" aria-label="氷に閉ざされた数。？に入る数を答えてください">？<i class="raid-ice-shard shard-left" aria-hidden="true"></i><i class="raid-ice-shard shard-right" aria-hidden="true"></i><i class="raid-ice-shard shard-top" aria-hidden="true"></i></span>')} = ${escapeHtml(String(missingOperand.knownAnswer))}`
+    : `${problemTextHtml}${equationJoin}<span class="challenge-word" id="ch-word">？</span>`;
+  const challengePrompt = missingOperand
+    ? '幽霊王の呪い！ ？に入る数を答えよう！'
+    : (opts.prompt || getChallengePrompt(opts.problem, false));
+
+  const challengeMainHTML = `
+    <div class="challenge-main">
+      <div class=\"challenge-prompt\">${challengePrompt}</div>
+      <div class="challenge-problem${problem.isWordProblem ? ' challenge-problem-word' : ''}">${equationHtml}</div>
+      ${assistHtml}
+      <form id="ch-form" autocomplete="off">
+        <input type="text" inputmode="numeric" id="ch-input" class="challenge-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" autofocus>
+        <button type="submit" id="ch-submit" class="btn btn-primary challenge-submit-btn">けってい</button>
+        ${G?.isTestMode ? '<button type="button" id="ch-test-correct" class="btn challenge-test-correct">正解としてスキップ</button>' : ''}
+      </form>
+      <p class="result-text"></p>
+    </div>
+  `;
+
+  if (opts.showBattleCommands) {
+    container.innerHTML = `
+      <div class="challenge-body">
+        ${challengeMainHTML}
+        <div class="battle-inline-commands">
+          <button type="button" id="btn-inline-skill" class="btn">✨ とくぎ</button>
+          <button type="button" id="btn-inline-item" class="btn">🧪 どうぐ</button>
+          ${battle?.enemy?.isRaid ? '<button type="button" id="btn-inline-giveup" class="btn btn-giveup">🏳 わからない</button>' : ''}
+        </div>
+      </div>
+    `;
+  } else {
+    container.innerHTML = challengeMainHTML;
+  }
+  container.classList.remove('hidden');
+
+  if (opts.showBattleCommands) {
+    const skillBtn = $('btn-inline-skill');
+    const itemBtn = $('btn-inline-item');
+    const giveupBtn = $('btn-inline-giveup');
+    if (giveupBtn) giveupBtn.onclick = (e) => { if (e) e.preventDefault(); confirmRaidRetreat(); };
+    if (skillBtn) {
+      skillBtn.disabled = false;
+      skillBtn.onclick = (e) => {
+        if (e) e.preventDefault();
+        openSkillMenu();
+      };
+    }
+    if (itemBtn) {
+      itemBtn.disabled = false;
+      itemBtn.onclick = (e) => {
+        if (e) e.preventDefault();
+        openItemMenu();
+      };
+    }
+  }
+
+  const input = container.querySelector('#ch-input') || $('ch-input');
+  const wordEl = container.querySelector('#ch-word') || $('ch-word');
+  const stopIceSound = missingOperand ? SM.playIceFreeze() : null;
+  const resultEl = container.querySelector('.result-text');
+  const submitBtn = container.querySelector('#ch-submit') || $('ch-submit');
+
+  let slotStage = 0;   // 2つの こたえ枠（しょう／あまり、ぶんし／ぶんぼ）の どちらを いれているか。-1=おわり
+  const slotVals = ['', ''];
+  const promptEl = container.querySelector('.challenge-prompt');
+  const slotPrompts = hasRem
+    ? ['まず「しょう」を いれてね！（あまりは そのあと）', 'つぎは「あまり」を いれてね！']
+    : isRatio
+      ? ['まず「：」の ひだりがわの かずを いれてね！', 'つぎは「：」の みぎがわの かずを いれてね！']
+      : ['まず「ぶんし」（うえの かず）を いれてね！', 'つぎは「ぶんぼ」（したの かず）を いれてね！'];
+  function slotHtml(i){
+    const typed = i === slotStage ? input.value : slotVals[i];
+    const cls = 'rem-slot' + (i === slotStage ? ' active' : typed ? ' fixed' : '');
+    return `<span class="${cls}" data-slot="${i}" role="button" tabindex="0" aria-label="${slotCaps[i]}を いれる"><small>${slotCaps[i]}</small><b>${escapeHtml(typed || '？')}</b></span>`;
+  }
+  function renderTyped(){
+    if (wordEl) {
+      if(missingOperand)return; // Keep the unknown frozen while typing in the separate input.
+      if (!slotted) wordEl.textContent = input && input.value.length ? input.value : '？';
+      else if (hasRem) wordEl.innerHTML = `${slotHtml(0)}<span class="rem-amari">あまり</span>${slotHtml(1)}`;
+      else if (isRatio) wordEl.innerHTML = `${slotHtml(0)}<span class="rem-amari">：</span>${slotHtml(1)}`;
+      else wordEl.innerHTML = `<span class="frac-answer">${slotHtml(0)}<span class="frac-bar"></span>${slotHtml(1)}</span>`;
+      wordEl.className = 'challenge-word';
+    }
+  }
+  function applySlotUi(){
+    if (promptEl && slotStage >= 0) promptEl.textContent = slotPrompts[slotStage];
+    if (submitBtn) submitBtn.textContent = slotStage === 0 && !slotVals[1] ? 'つぎへ' : 'けってい';
+    renderTyped();
+  }
+  /* 「しょう」「あまり」「ぶんし」「ぶんぼ」の わくを おして、いれる ほうを きりかえる */
+  function switchSlot(i){
+    if (!slotted || done || i === slotStage || slotStage < 0) return;
+    slotVals[slotStage] = input.value;
+    slotStage = i;
+    input.value = slotVals[i];
+    lastLen = input.value.length;
+    applySlotUi();
+    input.focus();
+  }
+  if (slotted) {
+    applySlotUi();
+    if (wordEl) {
+      wordEl.addEventListener('click', e => {
+        const t = e.target.closest('[data-slot]');
+        if (t) switchSlot(Number(t.dataset.slot));
+      });
+    }
+  } else renderTyped();
+  if (input) {
+    input.dataset.calcSymbols = slotted ? '' : [...new Set(answerStr.replace(/[0-9]/g, ''))].filter(symbol => './:%-'.includes(symbol)).join('');
+    syncPortraitCalcPad();
+  }
+  if (input) setTimeout(() => input.focus(), 50);
+
+  const start = Date.now();
+  let done = false;
+  let cancelled = false;
+  let lastLen = 0;
+
+  function finish(success){
+    if (done) return;
+    done = true;
+    stopIceSound?.();
+    const elapsed = Date.now() - start;
+    opts.onAnswered?.(elapsed,success);
+    recordStudyAnswer(problem, success, elapsed, (typeof hasAssist === 'function' ? hasAssist() : false), timeLimit);
+    recordRaidLearningAnswer(problem, success);
+    if (slotted) {
+      if (slotStage >= 0) slotVals[slotStage] = input.value;
+      slotStage = -1;
+      if (success) { slotVals[0] = slotExpect[0]; slotVals[1] = slotExpect[1]; }
+      renderTyped();
+    }
+    if (input) input.disabled = true;
+    if (submitBtn) submitBtn.disabled = true;
+    const testCorrectButton = container.querySelector('#ch-test-correct');
+    if (testCorrectButton) testCorrectButton.disabled = true;
+    const timeFrac = Math.max(0, 1 - elapsed / timeLimit);
+    if (success) {
+      if (wordEl) {
+        if (!slotted) wordEl.textContent = answerStr;
+        wordEl.className = missingOperand ? 'challenge-word raid-ice-word is-shattered done' : 'challenge-word done';
+        if(missingOperand)wordEl.setAttribute('aria-label',`氷が割れた答え：${answerStr}`);
+      }
+      if (resultEl) {
+        // Leave the inner result empty so the window doesn't resize.
+        // We rely on the floating showResultOverlay for "正解！！"
+        resultEl.textContent = '';
+        resultEl.className = 'result-text';
+      }
+      SM.playCorrectAnswer();
+    } else {
+      if (wordEl) wordEl.className = missingOperand ? 'challenge-word raid-ice-word wrong' : 'challenge-word wrong';
+      if (resultEl) {
+        resultEl.textContent = `ちがう…（こたえは ${answerStr}）`;
+        resultEl.className = 'result-text bad';
+      }
+      SM.playBeep('error');
+    }
+    if (typeof window.showResultOverlay === 'function') window.showResultOverlay(success);
+    setTimeout(() => {
+      if (cancelled) return;
+      if (opts.isActive && !opts.isActive()) return;
+      if (calcCenter) calcCenter.classList.add('hidden');
+      cb({ success, timeFrac, elapsedMs: elapsed });
+    }, 450);
+  }
+
+  function trySubmit(){
+    if (done) return;
+    if (input.value.length === 0){
+      input.classList.remove('flash-ng'); void input.offsetWidth;
+      input.classList.add('flash-ng');
+      return;
+    }
+    if (slotted) {
+      slotVals[slotStage] = input.value.trim();
+      if (slotStage === 0 && !slotVals[1]) { SM.playBeep('type'); switchSlot(1); return; }
+      const empty = slotVals[0] ? (slotVals[1] ? -1 : 1) : 0;
+      if (empty >= 0) { switchSlot(empty); input.classList.remove('flash-ng'); void input.offsetWidth; input.classList.add('flash-ng'); return; }
+      const values = slotVals.map(v => toHalfWidth(v).trim());
+      const joined = hasRem ? `${values[0]}あまり${values[1]}` : values.join(isFrac ? '/' : ':');
+      finish(values.every(v => /^\d+$/.test(v)) && isPrintAnswerCorrect(problem, joined));
+      return;
+    }
+    finish(isPrintAnswerCorrect(problem, input.value));
+  }
+
+  function remBack(){ if (slotted && slotStage === 1) switchSlot(0); }
+
+  if (input) {
+    input.addEventListener('input', () => {
+      if (done) return;
+      const before = input.value;
+      const v = toHalfWidth(before);
+      if (v !== before){
+        input.value = v;
+      }
+      if (v.length > lastLen) SM.playBeep('type');
+      lastLen = v.length;
+      renderTyped();
+    });
+
+    input.addEventListener('calc-back', remBack);
+    input.addEventListener('keydown', (e) => {
+      if (e.isComposing || e.keyCode === 229) return;
+      if (e.key === 'Backspace' && input.value === '' && slotted && slotStage === 1) { e.preventDefault(); remBack(); return; }
+      if (e.key === 'Enter' || e.keyCode === 13 || e.which === 13){
+        e.preventDefault();
+        trySubmit();
+      }
+    });
+  }
+
+  const form = container.querySelector('#ch-form') || $('ch-form');
+  const testCorrectButton = container.querySelector('#ch-test-correct');
+  if (testCorrectButton) testCorrectButton.onclick = () => {
+    if (!G?.isTestMode || done || cancelled) return;
+    finish(true);
+  };
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      trySubmit();
+    });
+  }
+
+  currentChallenge = {
+    destroy(){
+      done = true;
+      cancelled = true;
+      stopIceSound?.();
+      if (calcCenter) calcCenter.classList.add('hidden');
+      container.innerHTML = '';
+      container.classList.add('hidden');
+    }
+  };
+}
+
+function destroyChallenge(){
+  if (currentChallenge){ currentChallenge.destroy(); currentChallenge = null; }
+}
+
+function syncPortraitCalcPad() {
+  const input = $('ch-input');
+  if (!input) return;
+  input.readOnly = false;
+  const symbols = input.dataset.calcSymbols || '';
+  input.inputMode = /[\/:%-]/.test(symbols) ? 'text' : symbols.includes('.') ? 'decimal' : 'numeric';
+  input.enterKeyHint = 'done';
+  input.closest('.challenge-main')?.querySelector('.portrait-calc-pad')?.remove();
+}
+window.matchMedia('(orientation: portrait)').addEventListener('change', syncPortraitCalcPad);
+
+/* ==========================================================
+   探索（草原・沼地）：入ったら即バトル、倒したら次の階へ
+   ========================================================== */
+let explore = null; // {zone, floor}
+
+const ZONE_NAMES = { tower:'草原', dungeon:'沼地', crypt:'地下ダンジョン', bandit:'盗賊のアジト' };
+function zoneName(zone){ return ZONE_NAMES[zone] || zone; }
+function floorLabel(zone, floor){ return `${floor}かい`; }
+function floorLabelHTML(zone, floor){ return `<span id="floor-num">${floor}</span>かい`; }
+
+/* 戦闘背景（画像/ステージ/戦闘背景）。ゾーンとフロアに応じて切り替える */
+const BATTLE_BG_DIR = '画像/ステージ/戦闘背景/';
+const DUNGEON_BG_BY_FLOOR = { 1:'沼地１', 2:'沼地１', 3:'沼地２', 4:'沼地２', 6:'沼地４', 7:'沼地４', 8:'沼地５', 9:'沼地５' };
+function battleBgFor(zone, floor){
+  if (zone === 'tower') return HANDDRAWN_GRASS_BG;
+  if (zone === 'crypt') return `${BATTLE_BG_DIR}洞窟.png`;
+  if (zone === 'bandit') return `${BATTLE_BG_DIR}${'盗賊のアジト'.normalize('NFD')}.png`;
+  if (zone === 'dungeon') {
+    if (floor === 5) return `${BATTLE_BG_DIR}${'沼地ボス'.normalize('NFD')}.png`;
+    if (floor === 10) return `${BATTLE_BG_DIR}沼地裏.png`;
+    return `${BATTLE_BG_DIR}${DUNGEON_BG_BY_FLOOR[floor] || '沼地１'}.png`;
+  }
+  return null;
+}
+
+/* 草原エリア内の じゅんばん：草原 → 地下ダンジョン → 盗賊のアジト。
+   まえの ステージを クリアしないと つぎには すすめない */
+const GRASS_AREA_ORDER = ['tower', 'crypt', 'bandit'];
+const STAGE_STARS_TO_UNLOCK_NEXT = 3;
+function isGrassStageUnlocked(zone){
+  const idx = GRASS_AREA_ORDER.indexOf(zone);
+  if (idx <= 0) return true;
+  if (!G || !G.clearCounts) return false;
+  return (G.clearCounts[GRASS_AREA_ORDER[idx - 1]] || 0) >= STAGE_STARS_TO_UNLOCK_NEXT;
+}
+function zoneStarsHtml(zone){
+  if (!G || !G.clearCounts) return '☆'.repeat(STAGE_STARS_TO_UNLOCK_NEXT);
+  const count = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, G.clearCounts[zone] || 0);
+  return '★'.repeat(count) + '☆'.repeat(STAGE_STARS_TO_UNLOCK_NEXT - count);
+}
+
+function enterZone(zone){
+  if (!isGrassStageUnlocked(zone)) return;
+  explore = { zone, floor:1, sessionDrops: [], sessionGold: 0 };
+  startBattle(false);
+}
+
+/* ==========================================================
+   バトル（素早さバー / ATB）
+   ========================================================== */
+let battle = null;
+
+function startBattle(animateFloor){
+  const isStageMode = !!explore.stageMode;
+  const enemy = isStageMode
+    ? generateStageEnemy(explore.areaId, explore.stageIndex, explore.isBoss)
+    : generateEnemy(explore.zone, explore.floor);
+  if(explore.readingQuest) Object.assign(enemy,{name:explore.readingQuest.enemy.name,emoji:explore.readingQuest.enemy.image});
+  battle = {
+    enemy,
+    pGauge: rnd(0, 30), eGauge: rnd(0, 30),
+    running: false,
+    tickId: null,
+    over: false,
+    currentTurnProblem: null,
+  };
+  if (explore.isHalloween) {
+    const party = explore.isEventRaid ? explore.eventRaid.enemies : generateHalloweenParty(explore);
+    if (party) { battle.enemies = party; battle.enemy = party[0]; }
+  }
+  showScreen('screen-battle');
+  $('screen-battle').classList.remove('raid-battle-screen');
+  const bg = isStageMode
+    ? stageBattleBg(explore.areaId, explore.stageIndex, explore.isBoss)
+    : battleBgFor(explore.zone, explore.floor);
+  const battleBg = explore.isHalloween ? 'assets/halloween/battle_background.png' : bg;
+  $('screen-battle').style.backgroundImage = battleBg ? `url("${av(battleBg)}")` : 'none';
+  $('battle-floor-title').innerHTML = isStageMode
+    ? stageBattleTitleHtml(explore.areaId, explore.stageIndex, explore.isBoss, explore.bossPhase, explore.stageKillCount)
+    : `${zoneName(explore.zone)} ${floorLabelHTML(explore.zone, explore.floor)}／10（${OP_LABELS[opTierForZoneFloor(explore.zone, explore.floor)]}）`;
+  $('screen-battle').classList.toggle('halloween-battle-screen', !!explore.isHalloween);
+  $('screen-battle').classList.toggle('event-raid-battle', !!explore.isEventRaid);
+  $('screen-battle').classList.toggle('event-raid-kanji', explore.eventRaid?.mode==='kanji');
+  if (explore.isHalloween) $('battle-floor-title').textContent = `🎃 ハロウィンの森${explore.halloweenSeason === 2 ? ' S2' : ''} ${explore.halloweenIndex + 1}／${halloweenEncounterTotal(explore)}たいめ・${halloweenSeason2Stage(explore)?.name || AREA_STAGES[explore.areaId].stages[explore.stageIndex].name}${explore.halloweenCandyMultiplier === 2 ? '・🍬お菓子2倍' : ''}${explore.halloweenTest ? '（テスト）' : ''}`;
+  if (explore.halloweenSeason === 2) $('battle-floor-title').textContent = halloweenSeason2Title(explore);
+  if (explore.isEventRaid) $('battle-floor-title').textContent = '🎃 イベント専用レイド・討伐数チャレンジ';
+  renderBattleProgressStars();
+  if (animateFloor){
+    const numEl = $('floor-num');
+    if (numEl){ numEl.classList.remove('floor-num-pop'); void numEl.offsetWidth; numEl.classList.add('floor-num-pop'); }
+  }
+  $('battle-log').innerHTML = '';
+  $('battle-enemy-name').textContent = battleEnemyDisplayName(enemy);
+  $('atb-compare-player-name').textContent = G.playerName || 'ゆうしゃ';
+  $('atb-compare-enemy-name').textContent = battleEnemyDisplayName(enemy);
+  const sprite = $('battle-enemy-emoji');
+  sprite.className = 'enemy-sprite'; // 初期化
+  sprite.classList.toggle('rare-monster-sprite', !!enemy.isRare);
+  if (enemy.emoji.startsWith('http') || enemy.emoji.startsWith('data:') || enemy.emoji.includes('.png')) {
+    sprite.innerHTML = `<img src="${av(enemy.emoji)}" alt="enemy">`;
+  } else {
+    sprite.textContent = enemy.emoji;
+  }
+  renderHalloweenParty();
+  $('battle-player-lv').textContent = `Lv${G.player.lvl}`;
+  hideBattleMenus();
+  blog(`<span class="bad">${battle.enemies ? battle.enemies.map(e => battleEnemyDisplayName(e)).join('、') : battleEnemyDisplayName(enemy)}</span>が あらわれた！`);
+  updateBattleBars();
+  battle.running = true;
+  // ATBループの代わりに、開始後すぐにプレイヤーの行動選択へ移行する
+  const battleOwner = battle;
+  setTimeout(() => {
+    if (battle !== battleOwner || battleOwner.over) return;
+    openActionMenu();
+  }, 1000); // メッセージを少し見せるために1秒待つ
+  CM.start();
+  if (explore && explore.stageMode && !explore.readingQuest && !explore.isHalloween && !explore.isBoss && explore.stageKillCount === 0) {
+    // ステージ突入時に「1 / 10」を表示
+    showKillProgressPopup(1, 1, ENEMIES_PER_STAGE);
+  }
+}
+
+function activeEnemySprite() {
+  const enemy = battle?.attackingEnemy || battle?.enemy;
+  return battle?.enemies ? document.querySelector(`[data-party-id="${enemy?.partyId}"] .enemy-sprite`) : $('battle-enemy-emoji');
+}
+
+function renderHalloweenParty() {
+  const group = $('halloween-enemy-party');
+  if (!group) return;
+  const party = battle?.enemies;
+  $('screen-battle').classList.toggle('halloween-party-battle', !!party);
+  group.classList.toggle('hidden', !party);
+  if (!party) { group.innerHTML = ''; return; }
+  // Preserve sprite elements while attacks animate.
+  if (group._battle !== battle) {
+    group._battle = battle;
+    group.innerHTML = `<p class="halloween-target-hint">数字のついた おばけを選ぼう・倒すと仲間が補充されるよ</p><div class="halloween-party-grid">${party.map(e => `<button type="button" class="halloween-party-target" data-party-id="${e.partyId}"><span class="halloween-party-number hidden"></span><span class="halloween-party-level hidden"></span><span class="enemy-sprite">${iconHtml(e.emoji,110)}</span><b>${escapeHtml(e.name)}</b><span class="halloween-party-health"><i></i></span><small></small></button>`).join('')}</div>`;
+    group.querySelectorAll('[data-party-id]').forEach(button => {
+      button.onclick = () => selectHalloweenTarget(Number(button.dataset.partyId));
+    });
+  }
+  for (const enemy of party) {
+    const button = group.querySelector(`[data-party-id="${enemy.partyId}"]`);
+    button.disabled = enemy.hp <= 0 || !!battle.targetLocked || !!explore?.isEventRaid;
+    button.classList.toggle('is-defeated', enemy.hp <= 0);
+    button.classList.toggle('is-boss', !!enemy.isBoss);
+    const image = button.querySelector('.enemy-sprite img');
+    if (image && image.getAttribute('src') !== av(enemy.emoji)) image.src = av(enemy.emoji);
+    if(explore?.isEventRaid) {
+      const spawnId=String(enemy.spawnId), previous=button.dataset.spawnId;
+      button.dataset.spawnId=spawnId;
+      if(previous!==undefined && previous!==spawnId) {
+        const frame=button.querySelector('.enemy-sprite'), owner=battle;
+        frame.classList.remove('halloween-enemy-arrive','enemy-damage-hit','event-raid-special-hit');
+        void frame.offsetWidth; frame.classList.add('halloween-enemy-arrive');
+        setTimeout(()=>{if(battle===owner && button.dataset.spawnId===spawnId)frame.classList.remove('halloween-enemy-arrive');},750);
+      }
+    }
+    button.querySelector('b').textContent = enemy.isBoss ? `👑 ${enemy.name}` : enemy.name;
+    const level=button.querySelector('.halloween-party-level');
+    level.classList.toggle('hidden',!explore?.isEventRaid);
+    level.textContent=explore?.isEventRaid?`Lv.${enemy.level}`:'';
+    button.setAttribute('aria-pressed', String(battle.season2Question ? battle.season2Question.selected.includes(enemy.partyId) : enemy === battle.enemy));
+    const number = button.querySelector('.halloween-party-number');
+    number.classList.toggle('hidden', !battle.season2Question || enemy.hp <= 0);
+    number.textContent = battle.season2Question?.values[enemy.partyId] ?? '';
+    button.setAttribute('aria-label', `${enemy.name}${explore?.isEventRaid?` Lv.${enemy.level}`:''}${battle.season2Question ? ` 数字 ${battle.season2Question.values[enemy.partyId]}` : ''} ${enemy.hp <= 0 ? '撃破' : `HP ${enemy.hp}/${enemy.maxHp}・攻撃対象に選ぶ`}`);
+    button.querySelector('i').style.width = `${Math.max(0,enemy.hp/enemy.maxHp*100)}%`;
+    button.querySelector('small').textContent = enemy.hp <= 0 ? '撃破！' : `${enemy === battle.enemy ? '▶ ' : ''}HP ${enemy.hp}/${enemy.maxHp}`;
+  }
+  if(explore?.isEventRaid) group.querySelector('.halloween-target-hint').textContent='正解するとランダムなおばけを順番に攻撃！';
+}
+
+function selectHalloweenTarget(partyId) {
+  const enemy = battle?.enemies?.find(e => e.partyId === partyId && e.hp > 0);
+  if (!enemy || battle.over || battle.targetLocked) return false;
+  if (battle.season2Question) { answerHalloweenEnemy(partyId); return true; }
+  battle.enemy = enemy;
+  $('battle-enemy-name').textContent = battleEnemyDisplayName(enemy);
+  $('atb-compare-enemy-name').textContent = battleEnemyDisplayName(enemy);
+  updateBattleBars();
+  return true;
+}
+
+function blog(html){ logTo('battle-log', html); }
+
+function updateBattleBars(){
+  const p = G.player, e = battle.enemy;
+  $('battle-player-mp').style.width = `${Math.max(0, p.mp / totalMaxMp() * 100)}%`;
+  $('battle-player-atb').style.width = `${battle.pGauge}%`;
+  const enemyHpPct = `${Math.max(0, e.hp / e.maxHp * 100)}%`;
+  $('battle-enemy-hp').style.width = enemyHpPct;
+  $('battle-enemy-hp-ghost').style.width = enemyHpPct;
+  $('battle-enemy-atb').style.width = `${battle.eGauge}%`;
+  renderHalloweenParty();
+  updateHud();
+}
+
+function battleTick(){
+  // ターン制になったためATB更新は行わない
+}
+
+function hideBattleMenus(){
+  const am = $('battle-action-menu');
+  if (am) am.classList.add('hidden');
+  $('battle-sub-menu').classList.add('hidden');
+  $('battle-sub-menu').innerHTML = '';
+  destroyChallenge();
+  $('battle-challenge').classList.add('hidden');
+  if ($('calc-problem-center')) $('calc-problem-center').classList.add('hidden');
+  if ($('kanji-problem-center')) $('kanji-problem-center').classList.add('hidden');
+  if ($('kanji-challenge')) $('kanji-challenge').classList.add('hidden');
+}
+
+function openActionMenu(){
+  if (explore?.isEventRaid) { startEventRaidQuestion(); return; }
+  if (battle?.enemies) { battle.targetLocked = false; renderHalloweenParty(); }
+  hideBattleMenus();
+  doAttack();
+}
+
+function resumeBattle(actor){
+  if (battle.over) return;
+  // ターン制なので、常にプレイヤーのメニューを開き直す
+  battle.pGauge = 100;
+  battle.eGauge = 0;
+  battle.currentTurnProblem = null;
+  updateBattleBars();
+  setTimeout(() => {
+    openActionMenu();
+  }, 100);
+}
+
+/* --- 戦う：即けいさん --- */
+/* そうびの特殊能力「ちからのかご」ぶんの こうげき力ブースト込みATK */
+function effectiveAtk(){
+  const mult = equippedAbilities().has('power') ? 1.15 : 1;
+  return Math.round(totalStat('atk') * mult);
+}
+/* そうびの特殊能力「せつやくの心得」ぶん MPしょうひを1へらす（最低1） */
+function skillMpCost(s){
+  return Math.max(1, s.mp - (equippedAbilities().has('mp_save') ? 1 : 0));
+}
+
+/* こたえを まちがえた時の「ちょっとのダメージ」の わりあい（通常ダメージの20%・さいてい1） */
+const MISS_DAMAGE_RATIO = 0.2;
+const ENEMY_ATTACK_STAT_MULTIPLIER = 2;
+const enemiesWithScaledAttackStat = new WeakSet();
+function applyEnemyAttackStatMultiplier(enemy) {
+  if (!enemy || enemiesWithScaledAttackStat.has(enemy)) return enemy;
+  const attack = Number(enemy.atk);
+  if (Number.isFinite(attack)) enemy.atk = Math.max(0, Math.round(attack * ENEMY_ATTACK_STAT_MULTIPLIER));
+  enemiesWithScaledAttackStat.add(enemy);
+  return enemy;
+}
+
+/* ==========================================================
+   せんとうバランスの すうち（ここだけ さわれば つよさを ちょうせいできる）
+   ※ スキルは「MPを つかう」ぶん、かならず ふつうの こうげきより つよく なるように している
+   ========================================================== */
+const BALANCE = {
+  atkMinRatio:     0.3,   // ぼうぎょが かたい あいてでも これだけは とおる（こうげき力に たいする わりあい）
+  missDamageRatio: MISS_DAMAGE_RATIO,
+  critRate:        0.15,  // ふつうの こうげきの かいしんりつ（予備）
+  skillCritRate:   0.18,  // スキルの かいしんりつ（予備）
+  critMult:        2.0,
+  missGaugePenalty: 15,   // しっぱいすると てきの すばやさバーが すこし すすむ
+};
+
+/**
+ * すばやさ（SPD）から計算される確率（0.0〜1.0）
+ * ・すばやさ10ポイントで5%（1ptあたり0.5%）上昇
+ * ・30%（60pt）を超えると10ポイントで1%（1ptあたり0.1%）上昇
+ */
+function calcSpdRate(spd) {
+  const s = Math.max(0, Number(spd) || 0);
+  if (s <= 60) {
+    return (s * 0.5) / 100;
+  }
+  return (30 + (s - 60) * 0.1) / 100;
+}
+
+/* ふつうの こうげきの きほんダメージ。スキルの「さいていほしょう」にも つかう */
+function basicAttackDamage(atk, eDef){
+  return Math.max(1, Math.round(Math.max(atk * BALANCE.atkMinRatio, atk - eDef)));
+}
+
+/* こたえを まちがえた ときの ペナルティ：てきの すばやさバーが すこし すすむ */
+function applyMissPenalty(){
+  if (!battle || battle.over) return;
+  battle.eGauge = Math.min(100, battle.eGauge + BALANCE.missGaugePenalty);
+  updateBattleBars();
+}
+
+/* 月影の幽霊王は、式の2つ目の数を隠して答えさせる */
+function applyMoonWraithMissingOperand(problem, monsterId){
+  if (monsterId !== 'moonWraith' || !problem || problem.remainder != null) return problem;
+  const { a, b, c, op } = problem;
+  const answer = Number(problem.answer);
+  if (![a, b, answer].every(Number.isInteger) || (c !== undefined && !Number.isInteger(c))) return problem;
+
+  let operators;
+  if (op === '+') operators = c === undefined ? ['+'] : ['+', '+'];
+  else if (op === '-') operators = c === undefined ? ['-'] : ['-', '-'];
+  else if (op === '+-' && c !== undefined) operators = ['+', '-'];
+  else if (op === '×') operators = ['×'];
+  else if (op === '÷' && b > 0) operators = ['÷'];
+  else return problem;
+
+  let calculated;
+  if (operators[0] === '+') calculated = a + b;
+  else if (operators[0] === '-') calculated = a - b;
+  else if (operators[0] === '×') calculated = a * b;
+  else if (operators[0] === '÷') calculated = a / b;
+  if (c !== undefined) calculated = operators[1] === '-' ? calculated - c : calculated + c;
+  if (!Number.isInteger(calculated) || calculated !== answer) return problem;
+
+  const equationText = `${a} ${operators[0]} □${c !== undefined ? ` ${operators[1]} ${c}` : ''}`;
+  return {
+    ...problem,
+    text: equationText,
+    answer: b,
+    raidMissingOperand: { knownAnswer: answer }
+  };
+}
+
+/* 新ステージモードなら エリア／ステージ（またはボスのフェーズ）に ひもづく もんだいを、
+   きゅうシステム（ゾーン／フロア）なら これまでどおり opTierForZoneFloor から もんだいを つくる。
+   ステージ攻略中は同じ問題が重複して出ないように制御する */
+function currentAttackProblem(){
+  if (!explore) {
+    return { problem: generateProblem('add1'), timeLimit: 5000 };
+  }
+  if (!explore.usedProblems) {
+    explore.usedProblems = new Set();
+  }
+
+  if (explore.isRaid) {
+    // 最終決戦は1問ごとに2ステージ進行。それ以外は1ステージずつ進行。
+    if (explore.raidProbCount >= 1) {
+      explore.raidProbCount = 0;
+      const stagesToAdvance = battle?.raidMonsterId === 'darkBahamutFinal' ? 2 : 1;
+      for (let step = 0; step < stagesToAdvance; step++) {
+        explore.raidStageIdx++;
+        const area = AREA_STAGES[explore.raidAreaKeys[explore.raidAreaIdx]];
+
+        // エリア末尾を越えたら、次のエリアへ移動する。
+        if (explore.raidStageIdx >= area.stages.length) {
+          explore.raidStageIdx = 0;
+          explore.raidAreaIdx = (explore.raidAreaIdx + 1) % explore.raidAreaKeys.length;
+        }
+      }
+      explore.areaId = explore.raidAreaKeys[explore.raidAreaIdx];
+      explore.stageIndex = explore.raidStageIdx;
+      explore.usedProblems.clear(); // 新ステージなので履歴リセット
+      
+      const newArea = AREA_STAGES[explore.areaId];
+      const stageName = newArea.stages[explore.stageIndex].name;
+      const advanceLabel = stagesToAdvance === 2 ? '2ステージ進行！ ' : '';
+      blog(`<span class="heal">【レイド進行】${advanceLabel}${newArea.name} - ${stageName} の問題へ！</span>`);
+    }
+    explore.raidProbCount++;
+  }
+
+  const generateRaw = () => {
+    const eventStage = explore.isHalloween && explore.halloweenSeason === 2 ? halloweenSeason2Stage(explore) : null;
+    if (eventStage) return {problem:generateProblem(halloweenSeason2Tier(eventStage,explore.halloweenOperation)),timeLimit:30000};
+    if (explore.stageMode){
+      const area = AREA_STAGES[explore.areaId];
+      if (explore.isBoss){
+        const problem = explore.bossPhase === 2 ? area.bossPhase2Problem() : area.bossPhase1Problem();
+        const timeLimit = explore.bossPhase === 2 ? area.bossTimeLimit2 : area.bossTimeLimit1;
+        return { problem, timeLimit };
+      }
+      const stage = area.stages[explore.stageIndex];
+      return { problem: stage.generateProblem(), timeLimit: explore.isHalloween ? 30000 : stage.timeLimit };
+    }
+    const tier = opTierForZoneFloor(explore.zone, explore.floor);
+    return { problem: generateProblem(tier), timeLimit: problemTimeLimit(tier) };
+  };
+
+  const getSig = (p) => {
+    if (!p) return '';
+    const txt = p.text || (p.a !== undefined ? `${p.a} ${p.op} ${p.b}` : '');
+    return `${txt} => ${p.answer}`;
+  };
+
+  let candidate = generateRaw();
+  let sig = getSig(candidate.problem);
+  let attempts = 0;
+  // ステージ攻略中は算数・漢字とも同じ問題が出ないように再抽選
+  while (explore.usedProblems.has(sig) && attempts < 50) {
+    candidate = generateRaw();
+    sig = getSig(candidate.problem);
+    attempts++;
+  }
+
+  // もしプールの問題（例: 10+〇の9問など）をすべて出し切った場合はクリアして再循環
+  if (explore.usedProblems.has(sig)) {
+    explore.usedProblems.clear();
+  }
+  explore.usedProblems.add(sig);
+
+  if (explore.isRaid && candidate.problem) {
+    candidate.problem = applyMoonWraithMissingOperand(candidate.problem, battle?.raidMonsterId);
+    const area = AREA_STAGES[explore.areaId];
+    const stage = area?.stages?.[explore.stageIndex];
+    candidate.problem.raidLearningKey = `${explore.areaId}_${explore.stageIndex}`;
+    candidate.problem.raidLearningLabel = `${area?.name || explore.areaId}・${stage?.name || `ステージ${explore.stageIndex + 1}`}`;
+  }
+
+  return candidate;
+}
+
+/* ターン中の問題キャッシュ：特技や道具のメニューを開いて戻っても同じ問題を維持する */
+function getOrGenerateTurnProblem(){
+  if (battle && battle.currentTurnProblem) {
+    return battle.currentTurnProblem;
+  }
+  const probObj = currentAttackProblem();
+  if (battle) {
+    battle.currentTurnProblem = probObj;
+  }
+  return probObj;
+}
+
+function doAttack(){
+  if (explore?.isEventRaid) { startEventRaidQuestion(); return; }
+  if (battle?.enemies && halloweenSeason2Stage(explore)?.mathMode) { startHalloweenMathChallenge(); return; }
+  const { problem, timeLimit } = getOrGenerateTurnProblem();
+  startChallenge($('battle-challenge'),
+    { problem, timeLimit, prompt: getChallengePrompt(problem, true), showBattleCommands: true },
+    (res) => {
+      destroyChallenge();
+      const atk = effectiveAtk();
+      const eDef = battle.enemy.def || 0;
+      const base = basicAttackDamage(atk, eDef);
+      if (res.success){
+        let dmg = base;
+        
+        // レイドボス戦時は進行度（エリア・ステージ）に応じてダメージにボーナス倍率！
+        if (explore && explore.isRaid) {
+          const areaBonus = (explore.raidAreaIdx || 0) * 0.5; // エリアが進むごとに +50%
+          const stageBonus = (explore.raidStageIdx || 0) * 0.1; // ステージが進むごとに +10%
+          const raidMult = 1.0 + areaBonus + stageBonus;
+          dmg = Math.round(dmg * raidMult);
+        }
+        
+        const critChance = Math.min(0.95, calcSpdRate(totalStat('spd')) + (equippedAbilities().has('crit_up') ? 0.10 : 0) + ancientCritBonus());
+        if (equippedAncientIds().has('anc_w1')) {
+          dealAncientDoubleStrike(atk, () => afterPlayerAction());
+          return;
+        }
+        const isCrit = Math.random() < critChance;
+        if (isCrit) dmg = Math.floor(dmg * BALANCE.critMult);
+        dealToEnemy(dmg, 'こうげき', isCrit, () => afterPlayerAction());
+      } else {
+        // 不正解の場合は敵の攻撃（ターン制）
+        if (battle.enemies) { battle.targetLocked = true; renderHalloweenParty(); }
+        blog(`<span class="bad">まちがえた！ てきの ターン！</span>`);
+        const owner = battle;
+        setTimeout(() => {
+          if (battle !== owner || owner.over) return;
+          turnBasedEnemyAct(() => {
+            if (battle === owner && !owner.over) afterPlayerAction();
+          }, null, true);
+        }, 500);
+      }
+    });
+}
+
+function startHalloweenMathChallenge() {
+  destroyChallenge();
+  const owner = battle;
+  const stage = halloweenSeason2Stage(explore);
+  const mode = stage.mathMode === 'mixed' ? ((explore.halloweenAnswers || 0) % 2 ? 'combine' : 'answer') : stage.mathMode;
+  const question = battle.halloweenTurnQuestion ||= createHalloweenMathQuestion(battle.enemies.filter(e => e.hp > 0), explore.halloweenOperation, mode);
+  battle.season2Question = question;
+  battle.targetLocked = false;
+  const container = $('battle-challenge');
+  container.classList.remove('hidden');
+  container.innerHTML = `<div class="challenge-main halloween-math-challenge"><p class="challenge-prompt">${question.mode === 'combine' ? '数字のついた敵を2体選ぼう！ 選んだ順に計算します。' : '答えの数字を持つ敵をタップ！'}</p><div class="challenge-problem">${question.mode === 'combine' ? `□ ${question.symbol} □ ＝ ${question.target}` : `${question.a} ${question.symbol} ${question.b} ＝ ？`}</div><p id="halloween-math-selection" role="status">${question.mode === 'combine' ? '1体目 → 2体目の順に選ぶ。もう一度タップで選び直せます。' : '敵に表示された数字から答えを選ぼう。'}</p><div class="halloween-math-tools"><button type="button" class="btn" data-skill>✨ とくぎ</button><button type="button" class="btn" data-item>🧪 どうぐ</button></div><p class="halloween-math-timer" id="halloween-math-timer"></p></div>`;
+  container.querySelector('[data-skill]').onclick = openSkillMenu;
+  if (owner.halloweenPendingSkill) container.querySelector('.challenge-prompt').textContent = `✨ ${owner.halloweenPendingSkill.name}（MP${skillMpCost(owner.halloweenPendingSkill)}）・正解すると全体攻撃！`;
+  container.querySelector('[data-item]').onclick = openItemMenu;
+  container.querySelector('.halloween-math-challenge').insertAdjacentHTML('beforeend','<div class="halloween-attack-gauge" role="progressbar" aria-label="敵の反撃までの残り時間" aria-valuemin="0" aria-valuemax="30"><i></i></div>');
+  const gauge = container.querySelector('.halloween-attack-gauge');
+  const deadline = question.deadline ||= Date.now()+30000;
+  let finished = false;
+  const updateTimer = () => {
+    if (battle !== owner || battle.over) { destroyChallenge(); return; }
+    const remainingMs = Math.max(0,deadline-Date.now());
+    const remaining = Math.ceil(remainingMs/1000);
+    $('halloween-math-timer').textContent = `反撃まで あと ${remaining}秒`;
+    gauge.setAttribute('aria-valuenow',String(remaining));
+    gauge.classList.toggle('is-urgent',remaining <= 5);
+    gauge.querySelector('i').style.width = `${remainingMs / 30000 * 100}%`;
+    if (!remaining) finish(false,[],false);
+  };
+  const timer = setInterval(updateTimer,100);
+  function finish(correct, selected, submitted = true) {
+    if (finished || battle !== owner || battle.over) return;
+    finished = true;
+    const skill = owner.halloweenPendingSkill;
+    owner.halloweenPendingSkill = null;
+    if (skill) G.player.mp = Math.max(0,G.player.mp-skillMpCost(skill));
+    owner.halloweenAnswerOutcome = {correct,submitted};
+    destroyChallenge();
+    battle.targetLocked = true;
+    renderHalloweenParty();
+    if (!correct) {
+      blog('<span class="bad">まちがえた！ 残った敵が反撃！</span>');
+      turnBasedEnemyAct(() => afterPlayerAction()); return;
+    }
+    const finalBoss = explore?.halloweenBossSpawned && owner.enemies.find(enemy => enemy.isBoss && enemy.hp > 0);
+    if (skill?.targetAll) selected = owner.enemies.filter(enemy=>enemy.hp>0).map(enemy=>enemy.partyId);
+    else if (finalBoss) selected = [finalBoss.partyId];
+    blog(`<span class="good">正解！ ${finalBoss ? 'ボスへとどめの攻撃！' : `${selected.length}体に攻撃！`}</span>`);
+    let index=0;
+    const strike = () => {
+      if (battle !== owner || battle.over) return;
+      if (index >= selected.length) { afterPlayerAction(); return; }
+      const targetId = selected[index++];
+      const enemy = battle.enemies.find(e => e.partyId === targetId && e.hp > 0);
+      if (!enemy) { strike(); return; }
+      battle.enemy = enemy;
+      const damage = finalBoss && enemy.isBoss ? enemy.hp : basicAttackDamage(Math.round(effectiveAtk()*(skill?.dmgMult || 1)),enemy.def || 0);
+      dealToEnemy(damage,skill?.name || '数字の攻撃',false,strike);
+    };
+    strike();
+  }
+  question.finish = finish;
+  currentChallenge = {destroy() { clearInterval(timer); if (battle === owner) { battle.season2Question = null; renderHalloweenParty(); } }};
+  renderHalloweenParty();
+  updateTimer();
+}
+
+function answerHalloweenEnemy(partyId) {
+  const question = battle?.season2Question;
+  if (!question || battle.over || battle.targetLocked) return;
+  if (question.mode === 'answer') { question.finish(halloweenMathSelectionCorrect(question,[partyId]),[partyId]); return; }
+  const index=question.selected.indexOf(partyId);
+  if (index >= 0) question.selected.splice(index,1); else question.selected.push(partyId);
+  renderHalloweenParty();
+  $('halloween-math-selection').textContent = `${question.selected.map(id=>question.values[id]).join(` ${question.symbol} `)}${question.selected.length === 1 ? ` ${question.symbol} □` : ''} ＝ ${question.target}`;
+  if (question.selected.length === 2) question.finish(halloweenMathSelectionCorrect(question,question.selected),[...question.selected]);
+}
+
+/* --- スキル --- */
+function openSkillMenu(){
+  if (explore?.isEventRaid) return;
+  destroyChallenge();
+  const sub = $('battle-sub-menu');
+  sub.innerHTML = '';
+  const title = document.createElement('h3');
+  title.style.margin = '0 0 10px';
+  title.style.color = 'var(--accent)';
+  title.style.fontSize = '17px';
+  title.textContent = '✨ つかう とくぎを えらぼう';
+  sub.appendChild(title);
+
+  const usable = explore?.halloweenSeason === 2 ? HALLOWEEN_PARTY_SKILLS : SKILL_DB.filter(s => G.skills[s.id] && G.skills[s.id].level >= 1);
+  if (usable.length === 0){
+    const d = document.createElement('div');
+    d.className = 'flavor';
+    d.style.margin = '10px 0';
+    d.textContent = 'つかえる とくぎが ない。きょてんの「修練場」で しゅぎょうしよう！';
+    sub.appendChild(d);
+  } else {
+    const list = document.createElement('div');
+    list.className = 'battle-menu-list';
+    list.style.display = 'flex';
+    list.style.flexDirection = 'column';
+    list.style.gap = '8px';
+    for (const s of usable){
+      const cost = skillMpCost(s);
+      const b = document.createElement('button');
+      b.className = 'btn battle-skill-option';
+      b.style.display = 'flex';
+      b.style.justifyContent = 'space-between';
+      b.style.alignItems = 'center';
+      b.style.padding = '10px 16px';
+      b.innerHTML = `<span class="battle-skill-art">${renderIconCellV2(s,{kind:'skill',size:48,assetUrl:av})}</span><span class="battle-skill-copy"><span class="battle-skill-heading"><strong>${s.name}</strong><span class="battle-skill-mp">MP ${cost}</span></span><small>${s.desc}</small></span>`;
+      b.disabled = G.player.mp < cost;
+      b.onclick = () => useSkill(s);
+      list.appendChild(b);
+    }
+    sub.appendChild(list);
+  }
+  const bBack = document.createElement('button');
+  bBack.className = 'btn battle-menu-back';
+  bBack.style.marginTop = '12px';
+  bBack.textContent = 'もどる';
+  bBack.onclick = openActionMenu;
+  sub.prepend(bBack);
+  sub.classList.remove('hidden');
+}
+
+function useSkill(s){
+  if (explore?.halloweenSeason === 2) {
+    const skill = HALLOWEEN_PARTY_SKILLS.find(entry=>entry.id === s.id);
+    if (!skill || !battle || battle.over || G.player.mp < skillMpCost(skill)) return;
+    battle.halloweenPendingSkill = skill;
+    $('battle-sub-menu').classList.add('hidden');
+    startHalloweenMathChallenge();
+    return;
+  }
+  const skillBattle = battle;
+  $('battle-sub-menu').classList.add('hidden');
+  const cost = skillMpCost(s);
+  G.player.mp -= cost;
+  updateBattleBars();
+  
+  const { problem, timeLimit } = getOrGenerateTurnProblem();
+  startChallenge($('battle-challenge'),
+    { problem, timeLimit,
+      showBattleCommands: false,
+      promptInKanji: true,
+      prompt:`✨ ${s.name}！ こたえて はつどう！` },
+    (res) => {
+      if (battle !== skillBattle || battle.over) return;
+      if (explore?.halloweenSeason === 2) battle.halloweenAnswerOutcome = {correct:!!res.success,submitted:!!res.success || res.timeFrac > 0};
+      destroyChallenge();
+      if (s.healPct){
+        if (!res.success){
+          const selfDamage = Math.max(1, Math.round(effectiveAtk() * BALANCE.missDamageRatio));
+          G.player.hp = Math.max(0, G.player.hp - selfDamage);
+          blog(`<span class="bad">${s.name}は はつどうしなかった！ ゆうしゃは ${selfDamage}ダメージ！（MP${cost}）</span>`);
+          applyMissPenalty();
+          SM.playBeep('damage');
+          spawnFloatingDamage($('battle-player-hp'), selfDamage, 'player-dmg');
+          updateBattleBars();
+          if (G.player.hp <= 0){endBattleLoop();showPlayerDownOverlay();setTimeout(loseBattle,1400);return;}
+          turnBasedEnemyAct(() => afterPlayerAction(), null, true);
+          return;
+        }
+        const heal = Math.round(totalMaxHp() * s.healPct);
+        G.player.hp = Math.min(totalMaxHp(), G.player.hp + heal);
+        blog(`<span class="good">${s.name}！ HPが ${heal} かいふくした！</span>`);
+        SM.playBeep('heal');
+        updateBattleBars();
+        afterPlayerAction();
+        return;
+      }
+      const atk = effectiveAtk();
+      const eDef = s.ignoreDef ? 0 : (battle.enemy.def || 0);
+      const raw = atk * (s.dmgMult || 1);
+      let dmg = Math.max(1, Math.round(Math.max(raw * BALANCE.atkMinRatio, raw - eDef)));
+      /* ★MPを つかう スキルが ふつうの こうげきより よわく なる ことは ぜったいに ない ようにする
+         （ぼうぎょの たかい てきに あたっても スキルの ほうが かならず うわまわる） */
+      dmg = Math.max(dmg, basicAttackDamage(atk, battle.enemy.def || 0) + 1);
+      if (!res.success){
+        const selfDamage = Math.max(1, Math.round(atk * BALANCE.missDamageRatio));
+        G.player.hp = Math.max(0, G.player.hp - selfDamage);
+        blog(`<span class="bad">${s.name}は はつどうしなかった！ ゆうしゃは ${selfDamage}ダメージ！（MP${cost}）</span>`);
+        applyMissPenalty();
+        SM.playBeep('damage');
+        spawnFloatingDamage($('battle-player-hp'), selfDamage, 'player-dmg');
+        updateBattleBars();
+        if (G.player.hp <= 0){endBattleLoop();showPlayerDownOverlay();setTimeout(loseBattle,1400);return;}
+        if (explore?.isRaid && battle?.raidMonsterId === 'darkBahamutFinal') {
+          turnBasedEnemyAct(() => afterPlayerAction(), null, true);
+          return;
+        }
+        afterPlayerAction();
+        return;
+      }
+      // スキルでもクリティカル（すばやさ確率＋スキルボーナス3%）
+      const critChance = Math.min(0.95, calcSpdRate(totalStat('spd')) + 0.03 + (equippedAbilities().has('crit_up') ? 0.08 : 0) + ancientCritBonus());
+      const isCrit = Math.random() < critChance;
+      if (isCrit) dmg = Math.floor(dmg * BALANCE.critMult);
+      dealToEnemy(dmg, s.name, isCrit, () => afterPlayerAction(), s.id);
+    });
+}
+
+/* --- アイテム --- */
+function openItemMenu(){
+  if (explore?.isEventRaid) return;
+  destroyChallenge();
+  const sub = $('battle-sub-menu');
+  if (!sub) return;
+  sub.innerHTML = '';
+  const title = document.createElement('h3');
+  title.style.margin = '0 0 10px';
+  title.style.color = 'var(--accent)';
+  title.style.fontSize = '17px';
+  title.textContent = '🧪 つかう どうぐを えらぼう';
+  sub.appendChild(title);
+
+  let any = false;
+  const list = document.createElement('div');
+    list.className = 'battle-menu-list';
+  list.style.display = 'flex';
+  list.style.flexDirection = 'column';
+  list.style.gap = '8px';
+  list.style.maxHeight = '240px';
+  list.style.overflowY = 'auto';
+
+  for (const it of G.items){
+    const db = getItemTemplate(it.id);
+    if (!db || it.count <= 0 || !isBattleItem(db)) continue;
+    any = true;
+    const b = document.createElement('button');
+    b.className = 'btn';
+    b.style.display = 'flex';
+    b.style.justifyContent = 'space-between';
+    b.style.alignItems = 'center';
+    b.style.padding = '10px 16px';
+    b.innerHTML = `<strong>${iconHtml(db.emoji, 20)} ${renderReadingHints(db.name)} ×${it.count} <span class="tag" style="background:rgba(231,76,60,0.2); border-color:#e74c3c; color:#ff7675; font-size:11px; margin-left:4px; padding:1px 6px; border-radius:4px;">⚔️ 戦闘用</span></strong> <small style="color:var(--text-light);">${renderReadingHints(db.desc)} (効果:${db.value})</small>`;
+    b.onmouseover = (e) => showTooltip(e, generateItemDetailHtml(db, { count: it.count, inBattle: true }));
+    b.onmouseout = () => hideTooltip();
+    b.onclick = () => {
+      hideTooltip();
+      const res = useItem(it.uid, db, true);
+      if (!res.success) {
+        blog(`<span class="bad">${res.message}</span>`);
+        SM.playBeep('error');
+        return;
+      }
+      sub.classList.add('hidden');
+      blog(`<span class="good">ゆうしゃは ${db.name}を つかった！ ${res.message}</span>`);
+      SM.playBeep('heal');
+      const pEl = $('battle-player-window') || $('battle-player-hp');
+      if (pEl && res.amount && db.effect !== 'heal') {
+        spawnFloatingDamage(pEl, `+${res.amount}`, db.effect === 'mana' ? 'mana' : 'heal');
+      }
+      updateBattleBars();
+      turnBasedEnemyAct(() => afterPlayerAction());
+    };
+    list.appendChild(b);
+  }
+  if (!any){
+    const d = document.createElement('div');
+    d.className = 'flavor';
+    d.style.margin = '10px 0';
+    d.textContent = 'どうぐを もっていない…';
+    sub.appendChild(d);
+  } else {
+    sub.appendChild(list);
+  }
+  const bBack = document.createElement('button');
+  bBack.className = 'btn battle-menu-back';
+  bBack.style.marginTop = '12px';
+  bBack.textContent = 'もどる';
+  bBack.onclick = openActionMenu;
+  sub.prepend(bBack);
+  sub.classList.remove('hidden');
+}
+
+function showSeedUseEffect(db, change) {
+  hideTooltip();
+  const previousFocus=document.activeElement;
+  const reset=change.kind==='respec';
+  const overlay=document.createElement('div');
+  overlay.className=`confirm-overlay seed-use-effect ${reset?'seed-use-respec':'seed-use-cost'}`;
+  overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-labelledby','seed-use-title');
+  overlay.innerHTML=`<section class="panel seed-use-card">
+    <div class="seed-use-stage" aria-hidden="true"><div class="seed-use-halo"></div>${iconHtml(db.emoji,112)}${Array.from({length:12},(_,i)=>`<i class="seed-use-particle" style="--angle:${i*30}deg;--delay:${i*35}ms"></i>`).join('')}</div>
+    <h2 id="seed-use-title">${reset?'スキルポイント回収！':'コスト上限アップ！'}</h2>
+    <p>${escapeHtml(db.name)}をつかった</p>
+    ${reset?'<div class="seed-return-stats" aria-hidden="true"><span>❤️</span><span>💧</span><span>⚔️</span><span>🛡️</span><span>⚡</span></div>':''}
+    <div class="seed-use-values"><span>${change.before}</span><span aria-hidden="true">→</span><strong data-value>${change.before}</strong><small>${reset?'pt':'コスト'}</small></div>
+    <b class="seed-use-gain">＋${change.amount}${reset?'pt を回収':' アップ'}</b>
+    <p class="seed-use-description">${reset?'ステータスを元に戻したよ。スキルポイントをもう一度わりふろう！':'もっと強い装備を組み合わせられるようになったよ！'}</p>
+    <span class="sr-only" role="status">${reset?'スキルポイント':'そうびコストの上限'}が${change.before}から${change.after}へ。${change.amount}増えました。</span>
+    <button type="button" class="btn btn-primary" data-close>つづける</button>
+  </section>`;
+  let animation=0,closed=false;
+  const start=performance.now(),value=overlay.querySelector('[data-value]');
+  const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const tick=now=>{if(closed)return;const progress=reduced?1:Math.min(1,(now-start)/1000);value.textContent=String(Math.round(change.before+(change.after-change.before)*(1-Math.pow(1-progress,3))));if(progress<1)animation=requestAnimationFrame(tick);else overlay.classList.add('is-complete');};
+  const close=()=>{closed=true;cancelAnimationFrame(animation);overlay.remove();const target=$(reset?'status-points':'equip-cost-bar');if(target){target.classList.remove('seed-stat-pulse');void target.offsetWidth;target.classList.add('seed-stat-pulse');}if(previousFocus?.isConnected)previousFocus.focus({preventScroll:true});};
+  overlay.querySelector('[data-close]').onclick=close;
+  overlay.onkeydown=event=>{event.stopPropagation();if(event.key==='Escape')close();if(event.key==='Tab'){event.preventDefault();overlay.querySelector('[data-close]').focus();}};
+  document.body.appendChild(overlay);overlay.querySelector('[data-close]').focus();animation=requestAnimationFrame(tick);
+}
+
+function useItem(uid, db, inBattle = false){
+  if (!db) return { success: false, message: 'アイテムの データが ありません。' };
+
+  if (inBattle && !isBattleItem(db)) {
+    return { success: false, message: 'このアイテムは 戦闘中には つかえない！' };
+  }
+  if (!inBattle && isBattleItem(db)) {
+    const msg = '「戦闘用」アイテムは バトル中に つかおう！\n（部屋で使えるのは 古代からの挑戦状 や コストの種 のみです）';
+    alert(msg);
+    SM.playBeep('error');
+    return { success: false, message: msg };
+  }
+
+  if (db.effect === 'heal') {
+    if (G.player.hp >= totalMaxHp()) {
+      const msg = 'HPは すでに まんたんだ！';
+      return { success: false, message: msg };
+    }
+    const healed = Math.min(totalMaxHp() - G.player.hp, db.value || 0);
+    G.player.hp += healed;
+    removeItem(uid, 1);
+    return { success: true, amount: healed, message: `HPが ${healed} かいふく！` };
+  }
+
+  if (db.effect === 'mana') {
+    if (G.player.mp >= totalMaxMp()) {
+      const msg = 'MPは すでに まんたんだ！';
+      return { success: false, message: msg };
+    }
+    const healed = Math.min(totalMaxMp() - G.player.mp, db.value || 0);
+    G.player.mp += healed;
+    removeItem(uid, 1);
+    return { success: true, amount: healed, message: `MPが ${healed} かいふく！` };
+  }
+
+  if (db.effect === 'cost' || db.effect === 'respec') {
+    const owned=G.items.find(item=>item.uid===uid && item.id===db.id && item.count>0);
+    if(!owned || document.querySelector('.seed-use-effect'))return {success:false,message:'このたねは今つかえません。'};
+  }
+
+  if (db.effect === 'cost') {
+    const before=costCap();
+    G.player.costPlus = (G.player.costPlus || 0) + (db.value || 1);
+    removeItem(uid, 1);
+    const msg = `${db.name}を つかった！ そうびコストの じょうげんが ${db.value || 1} あがった！（現在: ${costCap()}）`;
+    if (!inBattle) {
+      if (typeof renderEquipmentSlots === 'function') renderEquipmentSlots();
+      if (typeof renderRoomInventory === 'function') renderRoomInventory();
+      SM.playBeep('heal');
+      showSeedUseEffect(db,{kind:'cost',before,after:costCap(),amount:db.value || 1});
+    }
+    return { success: true, amount: db.value || 1, message: msg };
+  }
+
+  if (db.effect === 'respec') {
+    // 割り振られているステータスポイントを逆算
+    const baseMaxHp = 30 + LEVEL_UP_HP_GAIN * (G.player.lvl - 1);
+    const baseMaxMp = 10 + LEVEL_UP_MP_GAIN * (G.player.lvl - 1);
+    const baseAtk = 5;
+    const baseDef = 3;
+    const baseSpd = 6;
+
+    const hpPts = Math.max(0, Math.floor((G.player.maxHp - baseMaxHp) / 6));
+    const mpPts = Math.max(0, Math.floor((G.player.maxMp - baseMaxMp) / 4));
+    const atkPts = Math.max(0, G.player.atk - baseAtk);
+    const defPts = Math.max(0, G.player.def - baseDef);
+    const spdPts = Math.max(0, G.player.spd - baseSpd);
+
+    const totalAllocated = hpPts + mpPts + atkPts + defPts + spdPts;
+
+    if (totalAllocated <= 0) {
+      const msg = '割り振られているスキルポイントがありません。（消費されませんでした）';
+      if (!inBattle) {
+        SM.playBeep('error');
+        showConfirmModal('スキルポイントはそのままだよ',msg,null);
+      }
+      return { success: false, message: msg };
+    }
+
+    const beforePoints=G.player.points || 0;
+    // ステータスを基礎値にリセット
+    G.player.maxHp = baseMaxHp;
+    G.player.maxMp = baseMaxMp;
+    G.player.atk = baseAtk;
+    G.player.def = baseDef;
+    G.player.spd = baseSpd;
+    G.player.hp = totalMaxHp();
+    G.player.mp = totalMaxMp();
+    G.player.points = beforePoints + totalAllocated;
+
+    removeItem(uid, 1);
+    statusPending = {}; // 保留中の割り振りもクリア
+
+    const msg = `✨「${db.name}」を つかった！\nわりふったスキルポイント ${totalAllocated}pt が 全て戻ってきたよ！`;
+    if (!inBattle) {
+      SM.playBeep('heal');
+      showSeedUseEffect(db,{kind:'respec',before:beforePoints,after:G.player.points,amount:totalAllocated});
+      if (typeof renderStatus === 'function') renderStatus();
+      if (typeof renderRoomInventory === 'function') renderRoomInventory();
+      if (typeof updateHud === 'function') updateHud();
+    }
+    return { success: true, amount: totalAllocated, message: msg };
+  }
+
+  return { success: false, message: 'このアイテムは つかえない。' };
+}
+
+/* --- ダメージ・ミス表示処理 --- */
+function spawnFloatingDamage(targetEl, text, typeClass, manager = CM) {
+  if (String(typeClass).includes('player-dmg')) {
+    const playerWindow = $('battle-player-window');
+    if (playerWindow) {
+      playerWindow.classList.remove('player-damage-hit');
+      void playerWindow.offsetWidth;
+      playerWindow.classList.add('player-damage-hit');
+    }
+  }
+  const mgr = manager || CM;
+  const playerText=String(typeClass).includes('player-dmg')||String(typeClass).includes('player-miss')||text==='ミス！';
+  if(!targetEl||(!playerText&&(!mgr||!mgr.running||!mgr.canvas)))return;
+  const anchor=String(typeClass).includes('player-dmg')?($('battle-player-window')||targetEl):targetEl;
+  damageFloatsV2.enqueue(anchor,text,typeClass);
+}
+
+// 互換性・安全対策: spawnFloatingText のエイリアス
+function spawnFloatingText(targetEl, text, typeClass, manager = CM) {
+  if (text === 'MISS!' || text === 'ミス！') {
+    spawnFloatingDamage(targetEl, 'ミス！', 'player-miss', manager);
+  } else {
+    spawnFloatingDamage(targetEl, text, typeClass, manager);
+  }
+}
+if (typeof window !== 'undefined') window.spawnFloatingText = spawnFloatingText;
+
+function flashScreenRed() {
+  const el = document.createElement('div');
+  el.className = 'damage-flash-overlay';
+  document.body.appendChild(el);
+  setTimeout(() => {
+    if (el.parentNode) el.parentNode.removeChild(el);
+  }, 400);
+}
+
+/* HP0で ゆうしゃが たおれた しゅんかん：画面を はんとうめいの グレーに して
+   なにが おきたか わかるように いちどまを つくってから ゲームオーバー画面へ */
+function showPlayerDownOverlay() {
+  const el = document.createElement('div');
+  el.className = 'player-down-overlay';
+  document.body.appendChild(el);
+  return el;
+}
+
+const enemyArtworkBounds = new Map();
+
+function enemyArtworkRect(frame) {
+  const rect = frame.getBoundingClientRect();
+  const img = frame.querySelector?.('img');
+  if (!img?.complete || !img.naturalWidth || !img.naturalHeight) return rect;
+  const key = img.currentSrc || img.src;
+  if (!enemyArtworkBounds.has(key)) {
+    let bounds = null;
+    try {
+      const sample = document.createElement('canvas');
+      sample.width = sample.height = 128;
+      const ctx = sample.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0, 128, 128);
+      const pixels = ctx.getImageData(0, 0, 128, 128).data;
+      let left = 128, top = 128, right = 0, bottom = 0;
+      for (let y = 0; y < 128; y++) for (let x = 0; x < 128; x++) {
+        if (pixels[(y * 128 + x) * 4 + 3] < 16) continue;
+        left = Math.min(left, x); top = Math.min(top, y);
+        right = Math.max(right, x + 1); bottom = Math.max(bottom, y + 1);
+      }
+      if (right > left && bottom > top) bounds = { left: left / 128, top: top / 128, width: (right - left) / 128, height: (bottom - top) / 128 };
+    } catch (_) { /* 外部画像などは画像枠を基準にする */ }
+    enemyArtworkBounds.set(key, bounds);
+  }
+  const bounds = enemyArtworkBounds.get(key);
+  if (!bounds) return rect;
+  const imageRect = img.getBoundingClientRect();
+  const scale = Math.min(imageRect.width / img.naturalWidth, imageRect.height / img.naturalHeight);
+  const width = img.naturalWidth * scale, height = img.naturalHeight * scale;
+  return {
+    left: imageRect.left + (imageRect.width - width) / 2 + bounds.left * width,
+    top: imageRect.top + (imageRect.height - height) / 2 + bounds.top * height,
+    width: bounds.width * width, height: bounds.height * height
+  };
+}
+
+function positionBattleProgressStars() {
+  const stars = $('battle-enemy-progress');
+  const frame = battle?.enemies ? $('halloween-enemy-party') : $('battle-enemy-emoji');
+  const figure = frame?.parentElement;
+  if (!stars || stars.classList.contains('hidden') || !figure) return;
+  const rect = enemyArtworkRect(frame);
+  const figureRect = figure.getBoundingClientRect();
+  const top = `${rect.top - figureRect.top - stars.offsetHeight - 8}px`;
+  const left = `${rect.left + rect.width / 2 - figureRect.left}px`;
+  if (stars.style.top !== top) stars.style.top = top;
+  if (stars.style.left !== left) stars.style.left = left;
+}
+
+function canvasTargetPoint(manager, target) {
+  manager.syncSize();
+  const canvasRect = manager.canvas.getBoundingClientRect();
+  const rect = target.id === 'battle-enemy-emoji' ? enemyArtworkRect(target) : target.getBoundingClientRect();
+  return {
+    x: (rect.left + rect.width / 2 - canvasRect.left) * manager.canvas.width / (canvasRect.width || 1),
+    y: (rect.top + rect.height / 2 - canvasRect.top) * manager.canvas.height / (canvasRect.height || 1)
+  };
+}
+
+function getEnemyCanvasCoords() {
+  const frame = activeEnemySprite();
+  if (frame && CM?.canvas) return { ...canvasTargetPoint(CM, frame), frame };
+  return { x: (CM?.canvas?.width || 400) / 2, y: (CM?.canvas?.height || 300) / 2, frame };
+}
+
+function playPlayerAttackAnim() {
+  if (!CM.running) return;
+  const coords = getEnemyCanvasCoords();
+  CM.addEffect(new SlashEffect(coords.x, coords.y), coords.frame);
+}
+
+let stopEnemyIceBreath = null;
+function playEnemyAttackAnim() {
+  const frame = activeEnemySprite();
+  if (!frame) return;
+  const attacker = battle?.attackingEnemy || battle?.enemy;
+  if (attacker?.attackEffect === 'ice' || (attacker?.isRaid && battle?.raidMonsterId === 'moonWraith')) {
+    stopEnemyIceBreath?.();
+    stopEnemyIceBreath = playIceBreath(frame, $('battle-player-avatar') || $('battle-player-window'));
+  }
+  frame.classList.remove('enemy-attack-lean', 'enemy-damage-hit', 'event-raid-special-hit');
+  void frame.offsetWidth;
+  frame.classList.add('enemy-attack-lean');
+  const reactionId = (frame._attackReactionId || 0) + 1;
+  frame._attackReactionId = reactionId;
+  setTimeout(() => {
+    if (frame._attackReactionId === reactionId) frame.classList.remove('enemy-attack-lean');
+  }, frame.classList.contains('ghost-boss-motion') ? 600 : 350);
+}
+
+function handlePostDamageEffects(dmg, cb) {
+  // そうびの特殊能力「きゅうけつ」：あたえたダメージの15%をHP吸収
+  if (equippedAbilities().has('lifesteal')){
+    const heal = Math.max(1, Math.round(dmg * 0.15));
+    G.player.hp = Math.min(totalMaxHp(), G.player.hp + heal);
+    blog(`<span class="good">きゅうけつ！ HPを ${heal} きゅうしゅうした！</span>`);
+    updateBattleBars();
+  }
+
+  // 新ステージのボス戦：HP50%を きったら フェーズ2（限界突破）へ ステートいこう
+  if (explore && explore.stageMode && explore.isBoss && explore.bossPhase === 1 &&
+      battle && battle.enemy && battle.enemy.hp > 0 && battle.enemy.hp <= battle.enemy.maxHp * 0.5){
+    triggerBossPhase2();
+  }
+
+  setTimeout(() => {
+    if (cb) cb();
+  }, 400);
+}
+
+function dealAncientDoubleStrike(atk, cb){
+  if (!battle || !battle.enemy) return;
+  if (battle.enemies) { battle.targetLocked = true; renderHalloweenParty(); }
+  const enemy = battle.enemy;
+  const frame = getEnemyCanvasCoords().frame || activeEnemySprite();
+  const eDef = enemy.def || 0;
+  const raidMult = explore && explore.isRaid
+    ? 1 + (explore.raidAreaIdx || 0) * 0.5 + (explore.raidStageIdx || 0) * 0.1
+    : 1;
+  const hitBase = Math.max(1, Math.round(Math.max(atk * 0.8 * BALANCE.atkMinRatio, atk * 0.8 - eDef)));
+  const hitDamage = Math.max(1, Math.round(hitBase * raidMult));
+  playPlayerAttackAnim();
+  blog('<span class="good">古代の双剣が連続斬り！ 0.8倍の攻撃を2回！</span>');
+  let total = 0;
+  const strike = index => {
+    if (!battle || !battle.enemy || battle.over) return;
+    const crit = Math.random() < Math.min(0.95, calcSpdRate(totalStat('spd')) + (equippedAbilities().has('crit_up') ? 0.10 : 0) + ancientCritBonus());
+    const dealt = Math.min(battle.enemy.hp, Math.max(1, crit ? Math.floor(hitDamage * BALANCE.critMult) : hitDamage));
+    battle.enemy.hp = Math.max(0, battle.enemy.hp - dealt);
+    total += dealt;
+    if (battle.enemy.isRaid) battle.raidDamageDealt = (battle.raidDamageDealt || 0) + dealt;
+    if (frame){
+      frame.classList.remove('enemy-damage-hit');
+      void frame.offsetWidth;
+      frame.classList.add('enemy-damage-hit');
+      spawnFloatingDamage(frame, dealt, crit ? 'enemy-dmg crit' : 'enemy-dmg');
+    }
+    if (crit) SM.play('se_crit'); else SM.play('se_slash');
+    blog(`<span class="good">${index + 1}回目${crit ? 'の会心！' : ''} ${battle.enemy.name}に <b>${dealt}</b>ダメージ</span>`);
+    updateBattleBars();
+    if (index === 0 && battle.enemy.hp > 0){
+      setTimeout(() => strike(1), 180);
+    } else {
+      handlePostDamageEffects(total, cb);
+    }
+  };
+  setTimeout(() => strike(0), 220);
+}
+
+function dealToEnemy(dmg, label, isCrit, cb, skillId){
+  if (battle?.enemies) { battle.targetLocked = true; renderHalloweenParty(); }
+  if (battle && battle.enemy && battle.enemy.isRaid) {
+    battle.raidDamageDealt = (battle.raidDamageDealt || 0) + dmg;
+  }
+  const coords = getEnemyCanvasCoords();
+  const frame = coords.frame || activeEnemySprite();
+
+  // れんぞく斬り（renzoku / renzoku2）: 専用スプライトアニメーション＆多段ヒットダメージ
+  if (skillId === 'renzoku' || skillId === 'renzoku2') {
+    const isLevel2 = (skillId === 'renzoku2');
+    if (CM.running) {
+      CM.addEffect(new RenzokuSlashEffect(coords.x, coords.y, isLevel2), coords.frame);
+    }
+    
+    // 多段ヒットスケジュール
+    const hitDelays = isLevel2 ? [0, 120, 240, 360, 480] : [0, 140, 280];
+    const hitRatios = isLevel2 ? [0.18, 0.18, 0.18, 0.18, 0.28] : [0.30, 0.30, 0.40];
+    let dealtTotal = 0;
+    
+    blog(`<span class="good" style="color:#00d2d3; font-weight:bold;">${isCrit ? 'かいしんのいちげき！！ ' : ''}ゆうしゃの ${label}！ 疾風怒濤のれんぞく攻撃！</span>`);
+
+    hitDelays.forEach((delay, idx) => {
+      setTimeout(() => {
+        if (!battle || !battle.enemy) return;
+        const isLast = (idx === hitDelays.length - 1);
+        const thisHitDmg = isLast ? Math.max(1, dmg - dealtTotal) : Math.max(1, Math.round(dmg * hitRatios[idx]));
+        dealtTotal += thisHitDmg;
+
+        battle.enemy.hp = Math.max(0, battle.enemy.hp - thisHitDmg);
+        if (frame) {
+          frame.classList.remove('enemy-damage-hit');
+          void frame.offsetWidth;
+          frame.classList.add('enemy-damage-hit');
+          spawnFloatingDamage(frame, thisHitDmg, isCrit ? 'enemy-dmg crit skill-dmg' : 'enemy-dmg skill-dmg');
+        }
+        updateBattleBars();
+
+        if (isLast) {
+          blog(`<span class="good">${label}により ${battle.enemy.name}に ごうけい <b>${dmg}</b>の ダメージ！</span>`);
+          handlePostDamageEffects(dmg, cb);
+        }
+      }, delay);
+    });
+    return;
+  }
+
+  // ほのおの剣
+  if (skillId === 'honoo' || skillId === 'honoo2') {
+    if (CM.running) {
+      CM.addEffect(new FlameSlashEffect(coords.x, coords.y, skillId === 'honoo2'), coords.frame);
+    }
+    blog(`<span class="good" style="color:#ff6b6b; font-weight:bold;">${isCrit ? 'かいしんのいちげき！！ ' : ''}ゆうしゃの ${label}！ 烈火の一閃！</span>`);
+  } else if (skillId === 'inazuma' || skillId === 'inazuma2') {
+    if (CM.running) {
+      CM.addEffect(new InazumaSlashEffect(coords.x, coords.y, skillId === 'inazuma2'), coords.frame);
+    }
+    blog(`<span class="good" style="color:#ffd32a; font-weight:bold;">${isCrit ? 'かいしんのいちげき！！ ' : ''}ゆうしゃの ${label}！ 迅雷の一閃！</span>`);
+  } else if (skillId === 'gale' || skillId === 'gale2') {
+    if (CM.running) {
+      CM.addEffect(new GaleSlashEffect(coords.x, coords.y, skillId === 'gale2'), coords.frame);
+    }
+    blog(`<span class="good" style="color:#1dd1a1; font-weight:bold;">${isCrit ? 'かいしんのいちげき！！ ' : ''}ゆうしゃの ${label}！ 旋風乱舞！</span>`);
+  } else {
+    // 通常こうげき
+    playPlayerAttackAnim();
+  }
+
+  setTimeout(() => {
+    if (!battle || !battle.enemy) return;
+    battle.enemy.hp = Math.max(0, battle.enemy.hp - dmg);
+    
+    if (isCrit) {
+      SM.play('se_crit');
+      blog(`<span class="good" style="color:#ffcc00; font-size:1.1em;">かいしんのいちげき！！ ゆうしゃの ${label}！ ${battle.enemy.name}に <b>${dmg}</b>の ダメージ！</span>`);
+    } else {
+      if (!skillId) SM.play('se_slash');
+      blog(`<span class="good">ゆうしゃの ${label}！ ${battle.enemy.name}に <b>${dmg}</b>の ダメージ！</span>`);
+    }
+    
+    if (frame) {
+      frame.classList.remove('enemy-damage-hit'); 
+      void frame.offsetWidth; 
+      frame.classList.add('enemy-damage-hit');
+      spawnFloatingDamage(frame, dmg, isCrit ? 'enemy-dmg crit skill-dmg' : (skillId ? 'enemy-dmg skill-dmg' : 'enemy-dmg'));
+    }
+    
+    updateBattleBars();
+    handlePostDamageEffects(dmg, cb);
+  }, 220);
+}
+
+/* ボスが フェーズ2（限界突破）へ いこうする演出：オーラを つけて もんだいの なんいどを あげる */
+function triggerBossPhase2(){
+  explore.bossPhase = 2;
+  const frame = activeEnemySprite();
+  if (frame) frame.classList.add('boss-phase2-aura');
+  blog(`<span class="accent">${battle.enemy.name}が ちからを かいほうした…！【フェーズ2：限界突破】</span>`);
+  $('battle-floor-title').innerHTML = stageBattleTitleHtml(explore.areaId, explore.stageIndex, true, 2);
+  renderBattleProgressStars();
+}
+
+
+function scaleOrdinaryStageWrongAnswerDamage(damage, isWrongAnswer, state = explore){
+  const isOrdinaryStage = !!isWrongAnswer && !!state?.stageMode && !state.isBoss &&
+    !state.isRaid && !state.isEventRaid && !state.isHalloween && !state.readingQuest &&
+    Number.isInteger(state.stageIndex) && !!AREA_STAGES[state.areaId];
+  // ふつうのステージでは一度の誤答で一撃敗北しないようにし、連続ミスは累積させる。
+  return isOrdinaryStage ? Math.max(1, Math.round(damage * 0.5)) : damage;
+}
+
+function turnBasedEnemyAct(callback, attacker = null, isWrongAnswer = false){
+  if (!battle || battle.over) return;
+  if (battle.enemies && !attacker) {
+    const owner = battle;
+    const living = battle.enemies.filter(enemy => enemy.hp > 0);
+    let index = 0;
+    const next = () => {
+      if (battle !== owner || battle.over) return;
+      battle.attackingEnemy = null;
+      if (index >= living.length) { if (callback) callback(); return; }
+      const enemy = living[index++];
+      battle.attackingEnemy = enemy;
+      turnBasedEnemyAct(next, enemy, isWrongAnswer);
+    };
+    next(); return;
+  }
+  
+  // 回避判定（すばやさから計算: 10ptで5%、30%を超えると10ptで1%）
+  const evadeChance = calcSpdRate(totalStat('spd')) + (equippedAbilities().has('dodge_up') ? 0.08 : 0);
+  const isFinalPushRaid = isWrongAnswer && !!explore?.isRaid && battle?.raidMonsterId === 'darkBahamutFinal';
+  const isEvaded = !isFinalPushRaid && Math.random() < evadeChance;
+  const e = attacker || battle.enemy;
+
+  if (isEvaded) {
+    playEnemyAttackAnim();
+    blog(`<span class="good">ゆうしゃは ${e.name}の こうげきを ひらりと かわした！（ミス！）</span>`);
+    spawnFloatingDamage($('battle-player-hp'), 'ミス！', 'player-miss');
+    SM.playBeep('miss');
+    if (callback) setTimeout(callback, 800);
+    return;
+  }
+
+  playEnemyAttackAnim();
+  let dmg = isFinalPushRaid ? 9999 : Math.max(1, Math.round(e.atk * 2.25) - totalStat('def'));
+  if (!isFinalPushRaid && equippedAbilities().has('guard')) dmg = Math.max(1, Math.round(dmg * 0.95));
+  if (!isFinalPushRaid) dmg = ancientDamageReduction(dmg);
+  dmg = scaleOrdinaryStageWrongAnswerDamage(dmg, isWrongAnswer);
+  G.player.hp -= dmg;
+  SM.playBeep('damage');
+  flashScreenRed();
+  spawnFloatingDamage($('battle-player-hp'), dmg, 'player-dmg');
+  blog(`<span class="bad">${e.name}の こうげき！ ゆうしゃは <b>${dmg}</b>の ダメージを うけた！</span>`);
+  const frame = $('battle-player-window');
+  frame.classList.remove('shake'); void frame.offsetWidth; frame.classList.add('shake');
+  updateBattleBars();
+  
+  if (G.player.hp <= 0){
+    endBattleLoop();
+    showPlayerDownOverlay();
+    setTimeout(loseBattle, 1400);
+    return;
+  }
+  
+  if (callback) setTimeout(callback, 800);
+}
+
+function afterPlayerAction(){
+  if (explore?.halloweenSeason === 2 && battle?.enemies) { finishHalloweenSeason2Action(); return; }
+  if (battle) battle.halloweenTurnQuestion = null;
+  if (battle?.enemies && battle.enemy.hp <= 0) {
+    const next = battle.enemies.find(enemy => enemy.hp > 0);
+    if (next) {
+      blog(`${battle.enemy.name}を たおした！`);
+      battle.enemy = next;
+      battle.attackingEnemy = null;
+      $('battle-enemy-name').textContent = next.name;
+      updateBattleBars();
+      resumeBattle('player'); return;
+    }
+  }
+  if (battle) battle.currentTurnProblem = null;
+  if (battle.enemy.hp <= 0){
+    const frame = activeEnemySprite();
+    if (frame) {
+      frame.classList.remove('enemy-damage-hit');
+      void frame.offsetWidth;
+      if (battle.enemy.isRaid) {
+        frame.classList.add('enemy-raid-defeat-sink');
+        showRaidDefeatRumble();
+      } else {
+        frame.classList.add('enemy-blow-away');
+      }
+    }
+    
+    setTimeout(() => {
+      winBattle();
+    }, battle.enemy.isRaid ? 2300 : 800);
+    return;
+  }
+  resumeBattle('player');
+}
+
+function showRaidDefeatRumble() {
+  SM.playRumble(2200);
+  const el = document.createElement('div');
+  el.className = 'raid-defeat-rumble-text';
+  el.textContent = 'ゴゴゴゴゴゴ…';
+  document.body.appendChild(el);
+  setTimeout(() => {
+    if (el.parentNode) el.parentNode.removeChild(el);
+  }, 2300);
+}
+
+function enemyAct(){
+  if (!battle || battle.over) return;
+  const e = battle.enemy;
+  
+  // 回避判定（すばやさから計算: 10ptで5%、30%を超えると10ptで1%）
+  const evadeChance = calcSpdRate(totalStat('spd')) + (equippedAbilities().has('dodge_up') ? 0.08 : 0);
+  const isEvaded = Math.random() < evadeChance;
+  if (isEvaded) {
+    playEnemyAttackAnim();
+    blog(`<span class="good">ゆうしゃは ${e.name}の こうげきを ひらりと かわした！（ミス！）</span>`);
+    spawnFloatingDamage($('battle-player-hp'), 'ミス！', 'player-miss');
+    SM.playBeep('miss');
+    resumeBattle('enemy');
+    return;
+  }
+
+  playEnemyAttackAnim();
+  let dmg = Math.max(1, Math.round(e.atk * 2.25) - totalStat('def'));
+  // そうびの特殊能力「てっぺき」：うけるダメージ-5%（同じ能力は重複しない）
+  if (equippedAbilities().has('guard')) dmg = Math.max(1, Math.round(dmg * 0.95));
+  dmg = ancientDamageReduction(dmg);
+  G.player.hp -= dmg;
+  SM.playBeep('damage');
+  flashScreenRed();
+  spawnFloatingDamage($('battle-player-hp'), dmg, 'player-dmg');
+  blog(`<span class="bad">${e.name}の こうげき！ ゆうしゃは <b>${dmg}</b>の ダメージを うけた！</span>`);
+  const frame = $('battle-player-window');
+  frame.classList.remove('shake'); void frame.offsetWidth; frame.classList.add('shake');
+  updateBattleBars();
+  flashScreenRed();
+  if (G.player.hp <= 0){
+    endBattleLoop();
+    showPlayerDownOverlay();
+    setTimeout(loseBattle, 1400);
+    return;
+  }
+  resumeBattle('enemy');
+}
+
+function endBattleLoop(){
+  damageFloatsV2.clear();
+  stopEnemyIceBreath?.();
+  stopEnemyIceBreath = null;
+  if (explore?.isEventRaid) { endEventRaidBattle(false); return; }
+  if (!battle) return;
+  battle.over = true;
+  battle.running = false;
+  clearInterval(battle.tickId);
+  battle.currentTurnProblem = null;
+  destroyChallenge();
+}
+
+function expNext(lvl){ return Math.round(18 * Math.pow(lvl, 1.4)); }
+function awakeningDetailHtml(owned, db){
+  const state = awakeningState(owned);
+  const nextOwned = {...owned, rarity:6, awakeningLevel:Math.min(50,state.level+1), awakeningExp:0};
+  const now = calcEquipStat(db.stat,6,owned), next = calcEquipStat(db.stat,6,nextOwned);
+  return `<div class="awakening-detail"><b>覚醒 Lv${state.level}${state.level===50?'・完全覚醒':''}</b>
+    <progress max="${state.next || 1}" value="${state.next ? state.exp : 1}" aria-label="覚醒経験値"></progress>
+    <small>${state.next ? `${state.exp} / ${state.next} EXP` : 'MAX'}</small>
+    ${state.next ? `<small>次のLv：${Object.keys(now).map(key=>`${EQUIP_STAT_INFOS[key]?.name || key} ${now[key]} → ${next[key]}`).join(' ／ ')}</small>` : ''}</div>`;
+}
+function renderAwakeningHud(){}
+function awardAncientBattleExp(amount){
+  const changes = grantAwakeningExp(G,amount);
+  if (!changes.length) return;
+  ancientToastV2.notify(changes);
+  const messages = changes.map(change=>{
+    const db = getEquipTemplate(change.id);
+    const leveled = change.after.level>change.before.level;
+    const beforeStat = db && calcEquipStat(db.stat,6,{rarity:6,awakeningLevel:change.before.level});
+    const afterStat = db && calcEquipStat(db.stat,6,{rarity:6,awakeningLevel:change.after.level});
+    const growth = db ? Object.keys(afterStat).filter(key=>afterStat[key]>beforeStat[key]).map(key=>`${EQUIP_STAT_INFOS[key]?.name || key}+${afterStat[key]-beforeStat[key]}`).join(' ／ ') : '';
+    return `${escapeHtml(db?.name || change.id)} ${leveled ? `覚醒Lv${change.before.level} → ${change.after.level}${change.after.level===50?' 完全覚醒！':''}${growth?`（${growth}）`:''}` : `+${change.amount} EXP`}`;
+  });
+  changes.forEach((change,index)=>blog(`<span class="accent">${messages[index]}</span>`));
+  if (changes.some(change=>change.after.level>change.before.level)) SM.playBeep('heal');
+  return messages;
+}
+const LEVEL_UP_HP_GAIN = 4; // レベルアップ1回ごとの さいだいHP 増加量
+const LEVEL_UP_MP_GAIN = 2; // レベルアップ1回ごとの さいだいMP 増加量
+
+/* けいけんちを あたえて、必要ならレベルアップさせる（バトル勝利／サブクエストなど 共通） */
+function grantExp(amount, options = {}){
+  const awakeningRewards = options.fromEnemy ? (awardAncientBattleExp(amount) || []) : [];
+  G.player.exp += amount;
+  const lvlBefore = G.player.lvl;
+  const maxHpBefore = totalMaxHp();
+  const maxMpBefore = totalMaxMp();
+  let pointsGained = 0;
+  while (G.player.exp >= expNext(G.player.lvl)){
+    G.player.exp -= expNext(G.player.lvl);
+    G.player.lvl++;
+    G.player.points += 3;
+    pointsGained += 3;
+    G.player.maxHp += LEVEL_UP_HP_GAIN;
+    G.player.maxMp += LEVEL_UP_MP_GAIN;
+    G.player.hp = totalMaxHp();
+    G.player.mp = totalMaxMp();
+  }
+  return { leveledUp: G.player.lvl > lvlBefore, lvlBefore, pointsGained, maxHpBefore, maxMpBefore, awakeningRewards };
+}
+
+/* 戦闘に勝ったときの ドロップ抽選。ドロップ率 = 基本率 × 全体倍率 ×（くりかえし低下）。
+   引数 rewards（ログ配列）に メッセージを つけたし、獲得物の配列を かえす */
+function rollBattleDrops(e, rewards){
+  const drops = [];
+  /* ドロップ率 = 基本率 × 全体倍率 ×（おなじステージを 規定回数以上クリア済みなら さらに大きく低下）。
+     レジェンド（★5）は ドロップでは出さない。ボスの そうびドロップも なし（設定で変更可） */
+  const repeatM = stageRepeatDropMult();
+  const dropChance = (base, mult) => Math.min(1, Math.max(0, base * mult * repeatM));
+  if (explore && Math.random() < dropChance(e.isBoss ? 0.075 : 0.025, rewardSettings.dropMultTicket)) {
+    G.skinGachaTickets = (G.skinGachaTickets || 0) + 1;
+    drops.push({ kind:'skin-ticket', name:'背景スキンガチャチケット ×1', icon:SKIN_GACHA_TICKET_ICON, count:1 });
+    rewards.push('背景スキンガチャチケットを 1枚ひろった！');
+  }
+  const candyDrop = rollHalloweenCandyDrop(e);
+  if (candyDrop) { drops.push(candyDrop); rewards.push(`ハロウィンのお菓子 ×${candyDrop.count}を ひろった！`); }
+  const halloweenTicket = rollHalloweenTicketDrop(e);
+  if (halloweenTicket) { drops.push(halloweenTicket); rewards.push('ハロウィンチケットを ひろった！'); }
+  if (Math.random() < dropChance(0.12, rewardSettings.dropMultItem)){
+    const it = pick(ITEM_DB);
+    const count = it.id === 'hipotion' ? 3 : 1;
+    addItem(it.id, count);
+    drops.push({ kind:'item', id:it.id, name:it.name, icon:it.emoji, count });
+    rewards.push(`${it.name}${count > 1 ? `×${count}` : ''}を ひろった！`);
+  }
+  if (Math.random() < dropChance(e.isBoss ? rewardSettings.bossEquipDrop : 0.04, e.isBoss ? 1 : rewardSettings.dropMultEquip)){
+    const db = pick(EQUIP_DB);
+    const rarity = pick(e.isBoss ? [2, 3, 3, 4] : [1, 2, 2]);
+    const ability = rollAbility(rarity);
+    G.ownedEquips.push({ uid: G.nextUid++, id: db.id, rarity, ability });
+    drops.push({ kind:'equip', id:db.id, name:db.name, rarity, icon:db.emoji, ability });
+    rewards.push(`そうび「<span class="rarity-${rarity}">${db.name}</span>」を てにいれた！`);
+  }
+  // 古代装備の せっけいず（レア・ドロップ）
+  if (Math.random() < dropChance(e.isBoss ? rewardSettings.bossBlueprintRate : 0.015, rewardSettings.dropMultBlueprint)){
+    const bp = BLUEPRINT_DB[0];
+    addItem(bp.id, 1);
+    drops.push({ kind:'blueprint', id:bp.id, name:bp.name, icon:bp.emoji });
+    rewards.push(`「${bp.name}」を ひろった！`);
+  }
+  recordBattleDropOpportunity();
+  return drops;
+}
+
+/* いま挑んでいる ステージ／ボスを すでに何回クリアしているか（★は3で止まるので、数えなおし用の別カウント） */
+function stageTotalClearCount(areaId, stageIndex, game = G){
+  if (!game || !areaId) return 0;
+  if (stageIndex === null || stageIndex === undefined) {
+    return Math.max((game.areaBossTotalClears && game.areaBossTotalClears[areaId]) || 0, (game.areaBossClearCounts && game.areaBossClearCounts[areaId]) || 0);
+  }
+  const total = (game.stageTotalClears && game.stageTotalClears[areaId] && game.stageTotalClears[areaId][stageIndex]) || 0;
+  const stars = (game.stageClearCounts && game.stageClearCounts[areaId] && game.stageClearCounts[areaId][stageIndex]) || 0;
+  return Math.max(total, stars);
+}
+function stageDropDifficulty(areaId, stageIndex = null) {
+  const area = AREA_STAGES[areaId];
+  if (!area) return 0;
+  // 算数・国語とも同じ学習段階で比較。かなは最初の算数エリア相当。
+  const grade = getDefaultAreaDifficultyMultiplier(areaId);
+  return Math.round(grade * 100) + (stageIndex === null ? area.stages.length : stageIndex);
+}
+
+function highestClearedDropDifficulty() {
+  let highest = 0;
+  for (const [areaId, area] of Object.entries(AREA_STAGES)) {
+    area.stages.forEach((_, index) => {
+      if (stageTotalClearCount(areaId, index) > 0) highest = Math.max(highest, stageDropDifficulty(areaId, index));
+    });
+    if (stageTotalClearCount(areaId, null) > 0) highest = Math.max(highest, stageDropDifficulty(areaId));
+  }
+  return highest;
+}
+
+function stageDropProfile(areaId, stageIndex = null) {
+  const key = `${areaId}:${stageIndex === null ? 'boss' : stageIndex}`;
+  const opportunities = Number(G?.stageDropOpportunities?.[key]) || 0;
+  const limit = stageIndex === null ? 1 : ENEMIES_PER_STAGE;
+  const frontier = stageDropDifficulty(areaId, stageIndex) > highestClearedDropDifficulty() && opportunities < limit;
+  const count = stageTotalClearCount(areaId, stageIndex);
+  const repeat = count >= rewardSettings.repeatThreshold ? rewardSettings.repeatMult : 1;
+  return { key, frontier, multiplier: (frontier ? rewardSettings.frontierDropMult : rewardSettings.pastStageDropMult) * repeat };
+}
+
+function recordBattleDropOpportunity() {
+  if (!G || !explore?.stageMode || explore.isRaid || explore.isHalloween) return;
+  const profile = stageDropProfile(explore.areaId, explore.isBoss ? null : explore.stageIndex);
+  G.stageDropOpportunities ||= {};
+  G.stageDropOpportunities[profile.key] = (Number(G.stageDropOpportunities[profile.key]) || 0) + 1;
+}
+
+function stageRepeatDropMult(){
+  if (!explore || !explore.stageMode) return rewardSettings.pastStageDropMult;
+  if (explore.isHalloween) {
+    const count = Number(G?.halloweenEvent?.[HALLOWEEN_EVENT.id]?.clears) || 0;
+    return rewardSettings.pastStageDropMult * (count >= rewardSettings.repeatThreshold ? rewardSettings.repeatMult : 1);
+  }
+  return stageDropProfile(explore.areaId, explore.isBoss ? null : explore.stageIndex).multiplier;
+}
+
+function winBattle(){
+  if(explore?.readingQuest){finishReadingQuestBattle(true);return;}
+  if (battle?.enemies) { if (battle.rewardsGranted) return; battle.rewardsGranted = true; }
+  endBattleLoop();
+  if (battle && battle.enemy && battle.enemy.isRaid) {
+    // 見事倒した場合の処理
+    const dmg = battle.raidDamageDealt || 0;
+    G.player.hp = totalMaxHp();
+    showHome();
+    const eqW = G.ownedEquips.find(o=>o.uid===G.equipment.weapon?.uid); const eqA = G.ownedEquips.find(o=>o.uid===G.equipment.armor?.uid); const eqAcc = G.ownedEquips.find(o=>o.uid===G.equipment.accessory?.uid); recordRaidDamage(currentSlotKey, G.playerName || '勇者', dmg, G.avatar, G.player.lvl, { weaponId: eqW?.id, armorId: eqA?.id, accessoryId: eqAcc?.id }, G.avatarBackground);
+    explore = null;
+    showRaidBattleResult(dmg, true);
+    return;
+  }
+  const defeated = explore?.halloweenSeason === 2 ? [battle.enemy] : battle.enemies || [battle.enemy];
+  const e = {...battle.enemy, exp:defeated.reduce((sum,enemy) => sum + enemy.exp,0), name:defeated.map(enemy => enemy.name).join('、')};
+  const gold = defeated.reduce((sum,enemy) => sum + rnd(enemy.goldMin,enemy.goldMax),0);
+  G.player.gold += gold;
+  const rewards = [
+    `${e.name}を たおした！`,
+    `けいけんち ${e.exp}ポイントを かくとく！`,
+    `${gold}ゴールドを てにいれた！`,
+  ];
+  if (e.isRare) rewards.splice(2, 0, `レアモンスターボーナス ×${e.expMultiplier.toFixed(1)}（ステージ難易度）`);
+
+  const drops = defeated.flatMap(enemy => rollBattleDrops(enemy, rewards));
+  
+  if (explore) {
+    if (!explore.sessionDrops) explore.sessionDrops = [];
+    if (!explore.sessionGold) explore.sessionGold = 0;
+    explore.sessionDrops.push(...drops);
+    explore.sessionGold += gold;
+    if (explore.stageMode){
+      if (!explore.stageDrops) explore.stageDrops = [];
+      if (!explore.stageGold) explore.stageGold = 0;
+      if (!explore.stageExp) explore.stageExp = 0;
+      explore.stageDrops.push(...drops);
+      explore.stageGold += gold;
+      explore.stageExp += e.exp;
+    }
+  }
+
+  // レベルアップ
+  const { leveledUp, lvlBefore, pointsGained, maxHpBefore, maxMpBefore, awakeningRewards = [] } = grantExp(e.exp, {fromEnemy:true});
+  rewards.push(...awakeningRewards);
+  if (leveledUp){
+    rewards.push(`<span class="accent">ゆうしゃは レベル${G.player.lvl}に あがった！ さいだいHP+${totalMaxHp() - maxHpBefore}／さいだいMP+${totalMaxMp() - maxMpBefore}／スキルポイント+${pointsGained}</span>`);
+  }
+
+  save();
+
+  const proceed = () => {
+    if (explore.isHalloween) { proceedHalloweenBattle(); return; }
+    if (explore.stageMode){
+      // 新ステージ：ボスを たおしたら エリア制覇（救助イベント）へ
+      if (explore.isBoss){
+        stageAreaCleared(explore.areaId, rewards);
+        return;
+      }
+      for (const r of rewards) blog(r);
+      // いまの ステージで なんたい たおしたかを 画面いっぱいに 1回 表示してから すすむ。
+      // ちょうど ENEMIES_PER_STAGE たいめなら、そのまま つぎの ステージへは いかず
+      // 「ステージクリア」がめんで えらばせる
+      const fromCount = (explore.stageKillCount || 0) + 1;
+      const toCount = fromCount + 1;
+        const stageCleared = fromCount >= ENEMIES_PER_STAGE;
+      const areaId = explore.areaId;
+      const stageIndex = explore.stageIndex;
+      showKillProgressPopup(fromCount, toCount, ENEMIES_PER_STAGE, () => {
+        if (stageCleared){
+          const { milestoneRewards } = recordStageClear(areaId, stageIndex);
+          const stageRewards = { drops: explore.stageDrops || [], gold: explore.stageGold || 0, exp: explore.stageExp || 0, milestoneRewards };
+          
+          // ステージクリア時にHP/MPを全回復させる
+          if (G && G.player) {
+            G.player.hp = totalMaxHp();
+            G.player.mp = totalMaxMp();
+          }
+          save();
+          showStageClearOverlay(AREA_STAGES[areaId], stageIndex, stageRewards,
+            () => nextStage(),
+            () => { explore = null; showStageSelectNew(areaId); });
+        } else {
+          nextStage();
+        }
+      });
+      return;
+    }
+    // 10階制覇なら救助イベントへ
+    if (explore.floor >= 10){
+      zoneCleared(explore.zone, rewards);
+      return;
+    }
+    for (const r of rewards) blog(r);
+    setTimeout(nextFloor, 1200);
+  };
+
+  const afterDrops = () => {
+    if (leveledUp){
+      const unlockedSkills = SKILL_DB.filter(s => (s.reqLvl || 1) > lvlBefore && (s.reqLvl || 1) <= G.player.lvl);
+      showLevelUpModal({
+        fromLvl: lvlBefore, toLvl: G.player.lvl,
+        hpBefore: maxHpBefore, hpAfter: totalMaxHp(),
+        mpBefore: maxMpBefore, mpAfter: totalMaxMp(),
+        pointsGained, unlockedSkills,
+      }, proceed);
+    } else {
+      proceed();
+    }
+  };
+
+  playItemRevealSequence(drops, { badge:'🎁 アイテム ゲット！', onDone: afterDrops });
+}
+
+/* db.emoji は そうび/アイテムの がぞうパス。画像パスなら<img>、
+   ただの絵文字文字なら そのまま表示する */
+function iconHtml(icon, sizePx){
+  const size = sizePx || 48;
+  if (!icon) return `<span style="font-size:${size}px;line-height:1;">🎁</span>`;
+  if (icon.indexOf('/') >= 0) return `<img src="${av(icon)}" style="width:${size}px;height:${size}px;object-fit:contain;" alt="">`;
+  return `<span style="font-size:${size}px;line-height:1;">${icon}</span>`;
+}
+
+/* item-card: そうび/アイテム 1個ぶんの表示（アイコン＋名前＋レアリティ＋能力）。
+   1個演出のカードと、けっか一覧のミニカードで きょうつうして つかう */
+function itemCardBodyHtml(res, iconSize){
+  const ability = res.ability ? getAbility(res.ability) : null;
+  const rarityClass = res.rarity ? ` rarity-${res.rarity}` : '';
+  return `
+    <div class="item-card-icon${rarityClass}">${iconHtml(res.icon, iconSize)}</div>
+    <div class="item-card-name${rarityClass}">${res.count ? res.name.replace(/\s*[×✕]\s*\d+\s*$/, '') : res.name}${res.count > 1 ? ` ×${res.count}` : ''}</div>
+    ${res.rarity ? `<div class="item-card-stars${rarityClass}">${RARITY_NAME[res.rarity] || res.rarity}</div>` : ''}
+    ${ability ? `<div class="item-card-ability">✨ ${ability.name}</div>` : ''}
+  `;
+}
+
+/* ==========================================================
+   アイテム/そうび の 入手演出（ガチャ・ドロップ 共通）
+   items: [{ kind, name, rarity(そうびのみ), icon, ability }]
+   opts: { badge, title, showSummary, onDone }
+   ========================================================== */
+function playItemRevealSequence(items, opts){
+  opts = opts || {};
+  if (!items || items.length === 0){ if (opts.onDone) opts.onDone(); return; }
+
+  document.querySelector('.gacha-reveal-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'gacha-reveal-overlay';
+  const card = document.createElement('div');
+  card.className = 'gacha-reveal-card';
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+
+  let idx = 0;
+  let timer = null;
+
+  function renderCard(res){
+    card.className = `gacha-reveal-card${res.rarity ? ' rarity-' + res.rarity : ''}`;
+    card.innerHTML = `
+      <div class="gacha-reveal-badge">${opts.badge || 'GET!'}</div>
+      ${itemCardBodyHtml(res, 72)}
+      <div class="gacha-reveal-tap">タップで つぎへ</div>
+    `;
+    void card.offsetWidth;
+    card.classList.add('gacha-reveal-flip');
+    if (res.kind === 'equip') {
+      const db = getDropItemDb(res);
+      if (db) bindEquipDetailTooltip(card.querySelector('.item-card-icon'), db, { rarity: res.rarity, ability: res.ability });
+    }
+    SM.play((res.rarity || 0) >= 4 ? 'se_gacha_result2' : 'se_gacha_result');
+  }
+
+  function showNext(){
+    if (idx >= items.length){ finish(); return; }
+    renderCard(items[idx]);
+    idx++;
+    clearTimeout(timer);
+    timer = setTimeout(showNext, 1300);
+  }
+  card.onclick = () => { clearTimeout(timer); showNext(); };
+
+  function finish(){
+    clearTimeout(timer);
+    if (opts.showSummary){
+      const cardsHtml = items.map(r => `<div class="item-card${r.rarity ? ' rarity-' + r.rarity : ''}">${itemCardBodyHtml(r, 40)}</div>`).join('');
+      overlay.innerHTML = `<div class="panel gacha-reveal-summary">
+        <h2>${opts.title || 'けっか'}</h2>
+        <div class="item-card-grid">${cardsHtml}</div>
+        <button class="btn btn-primary" id="btn-gacha-reveal-close">とじる</button>
+      </div>`;
+      overlay.querySelectorAll('.item-card').forEach((element, index) => {
+        const res = items[index];
+        if (res.kind === 'equip') {
+          const db = getDropItemDb(res);
+          if (db) bindEquipDetailTooltip(element, db, { rarity: res.rarity, ability: res.ability });
+        }
+      });
+      $('btn-gacha-reveal-close').onclick = () => { overlay.remove(); if (opts.onDone) opts.onDone(); };
+    } else {
+      overlay.remove();
+      if (opts.onDone) opts.onDone();
+    }
+  }
+
+  showNext();
+}
+
+/* ぶきや で こうにゅうした ときの えんしゅつ。探索の アイテム獲得と おなじ カード表示だが、
+   1個だけ・自動では すすまず、そのまま そうび画面へ とべる ボタンを つける */
+function showEquipPurchaseReveal(res){
+  document.querySelector('.gacha-reveal-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'gacha-reveal-overlay';
+  const card = document.createElement('div');
+  card.className = `gacha-reveal-card${res.rarity ? ' rarity-' + res.rarity : ''}`;
+  card.innerHTML = `
+    <div class="gacha-reveal-badge">🎁 てにいれました！</div>
+    ${itemCardBodyHtml(res, 72)}
+    <div class="gacha-reveal-actions">
+      <button class="btn" id="btn-purchase-reveal-close">とじる</button>
+      <button class="btn btn-primary" id="btn-purchase-reveal-equip">そうび画面へ</button>
+    </div>
+  `;
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+  void card.offsetWidth;
+  card.classList.add('gacha-reveal-flip');
+  SM.play((res.rarity || 0) >= 4 ? 'se_gacha_result2' : 'se_gacha_result');
+
+  $('btn-purchase-reveal-close').onclick = () => { overlay.remove(); showWeaponShop(); };
+  $('btn-purchase-reveal-equip').onclick = () => { overlay.remove(); showStatus(); };
+}
+
+function showLevelUpModal(data, onClose){
+  document.querySelector('.levelup-overlay')?.remove();
+  SM.play('se_clear');
+
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay';
+
+  const flow = document.createElement('div');
+  flow.className = 'levelup-flow-overlay';
+  flow.textContent = 'LEVEL UP!';
+  overlay.appendChild(flow);
+
+  const skillsHtml = data.unlockedSkills.length
+    ? `<div class="levelup-section levelup-skills">
+        <h3>✨ あたらしい しゅぎょうが かいほう！</h3>
+        ${data.unlockedSkills.map(s => `<div class="levelup-skill-row"><span class="mastered">★</span>${s.name}<span class="tag">🧮${ZONE_OP_LABELS[s.zone]}</span></div>`).join('')}
+      </div>`
+    : '';
+
+  const panel = document.createElement('div');
+  panel.className = 'panel levelup-panel';
+  panel.innerHTML = `
+    <h2>Lv.${data.fromLvl} → Lv.${data.toLvl} に あがった！</h2>
+    <div class="levelup-section">
+      <div class="levelup-stat-row">${statName('hp')}さいだいHP <span>${data.hpBefore} → <b>${data.hpAfter}</b></span><span class="tag mastered">+${data.hpAfter - data.hpBefore}</span></div>
+      <div class="hp-bar-container"><div class="stat-bar-fill hp levelup-fill" style="width:0%"></div></div>
+      <div class="levelup-stat-row">${statName('mp')}さいだいMP <span>${data.mpBefore} → <b>${data.mpAfter}</b></span><span class="tag mastered">+${data.mpAfter - data.mpBefore}</span></div>
+      <div class="mp-bar-container"><div class="stat-bar-fill mp levelup-fill" style="width:0%"></div></div>
+    </div>
+    <div class="levelup-section levelup-points">⭐ スキルポイント <b>+${data.pointsGained}</b> かくとく！</div>
+    ${skillsHtml}
+    <button class="btn btn-primary" id="btn-levelup-close">とじる</button>
+  `;
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+
+  requestAnimationFrame(() => {
+    overlay.querySelectorAll('.levelup-fill').forEach(el => { el.style.width = '100%'; });
+  });
+
+  $('btn-levelup-close').onclick = () => {
+    overlay.remove();
+    if (onClose) onClose();
+  };
+}
+
+function loseBattle(){
+  if(explore?.readingQuest){finishReadingQuestBattle(false);return;}
+  endBattleLoop();
+  document.querySelector('.player-down-overlay')?.remove();
+  
+  if (battle && battle.enemy && battle.enemy.isRaid) {
+    const dmg = battle.raidDamageDealt || 0;
+    G.player.hp = totalMaxHp(); // 拠点で回復
+    showHome();
+    
+    // Submitting damage to Raid Boss API
+    const eqW = G.ownedEquips.find(o=>o.uid===G.equipment.weapon?.uid); const eqA = G.ownedEquips.find(o=>o.uid===G.equipment.armor?.uid); const eqAcc = G.ownedEquips.find(o=>o.uid===G.equipment.accessory?.uid); recordRaidDamage(currentSlotKey, G.playerName || '勇者', dmg, G.avatar, G.player.lvl, { weaponId: eqW?.id, armorId: eqA?.id, accessoryId: eqAcc?.id }, G.avatarBackground);
+    explore = null;
+    showRaidBattleResult(dmg, false);
+    return;
+  }
+  G.player.hp = 1;
+  const zone = explore ? explore.zone : null;
+  if (zone && G.failTracking) {
+    G.failTracking.gameOvers[zone] = (G.failTracking.gameOvers[zone] || 0) + 1;
+  }
+  
+  let adviceMode = null;
+  let adviceText = '';
+  if (zone && G.failTracking) {
+    const hasAssistEq = Object.values(G.equipment).some(eq => {
+      if (!eq) return false;
+      const owned = G.ownedEquips.find(o => o.uid === eq.uid);
+      if (!owned) return false;
+      const db = getEquipTemplate(owned.id);
+      return db && db.assist;
+    });
+    
+    let struggledOp = null;
+    const ops = ['add', 'sub', 'mul', 'div'];
+    for (const op of ops) {
+      if ((G.failTracking.mistakes[zone + '_' + op] || 0) >= 5) {
+        struggledOp = op;
+        break;
+      }
+    }
+    
+    if (struggledOp && !hasAssistEq) {
+      adviceMode = 'assist';
+      adviceText = 'けいさんが むずかしければ、「かぞえだま」などの アシストアイテムを そうびしてみよう！';
+    } else if (G.failTracking.gameOvers[zone] >= 3 && G.failTracking.gameOvers[zone] % 3 === 0) {
+      adviceMode = 'equip';
+      adviceText = 'てきが つよいときは、ステータスを あげたり そうびを みなおしてみよう！';
+    }
+  }
+
+  let dropsHtml = '';
+  if (explore) {
+    dropsHtml = generateDropsSummaryHtml(explore.sessionDrops, explore.sessionGold);
+  }
+
+  explore = null;
+  save();
+  $('gameover-text').innerHTML = 'めのまえが まっくらに なった…。きがつくと きょてんに もどっていた。（たんさくは やりなおし）' + (dropsHtml ? '<br>' + dropsHtml : '');
+  bindDropItemTooltips($('gameover-text'));
+  
+  if (adviceMode) {
+    setTimeout(() => showGameoverAdvice(adviceText), 2000);
+  }
+  document.body.style.background = 'rgba(80, 80, 100, 0.5)';
+  document.body.style.backgroundImage = 'none';
+  // ゲームオーバーフローテキストを表示
+  const existingFlow = document.querySelector('.gameover-flow-overlay');
+  if (existingFlow) existingFlow.remove();
+  const gameoverFlow = document.createElement('div');
+  gameoverFlow.className = 'gameover-flow-overlay';
+  gameoverFlow.textContent = 'GAMEOVER';
+  document.body.appendChild(gameoverFlow);
+  showScreen('screen-gameover');
+  SM.stopBGM();
+  if (SM.initialized) SM.play('se_gameover');
+}
+
+function showGameoverAdvice(adviceText) {
+  const overlay = document.createElement('div');
+  overlay.className = 'gameover-advice-overlay modal-overlay';
+  overlay.style.zIndex = '1000'; // gameover-flowより上に表示するため
+  overlay.innerHTML = `
+    <div class="modal-panel" style="text-align:center;">
+      <h3 style="color:var(--accent);">★ アドバイス ★</h3>
+      <p style="margin:20px 0; font-size:1.1em; line-height:1.5;">${adviceText}</p>
+      <button class="btn btn-primary" id="btn-advice-goto-room">自分の部屋へ行く</button>
+      <button class="btn" id="btn-advice-close" style="margin-top:10px; display:block; width:100%;">とじる</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  
+  document.getElementById('btn-advice-goto-room').onclick = () => {
+    overlay.remove();
+    document.querySelector('.gameover-flow-overlay')?.remove();
+    showStatus();
+  };
+  
+  document.getElementById('btn-advice-close').onclick = () => {
+    overlay.remove();
+  };
+}
+
+const ZONE_CLEAR_REWARDS = {
+  tower:   { rescueId:'fairy', rescueText:'草原の おくふかくに とらわれていた <span class="accent">ようせいリーン</span>を きゅうじょした！', equipId:'c4' },
+  dungeon: { rescueId:'sage', rescueText:'沼地の おくに とじこめられていた <span class="accent">ろうけんじゃモルド</span>を きゅうじょした！', equipId:'w7' },
+  crypt:   { rescueId:'alchemist', rescueText:'地下ダンジョンの おくに とじこめられていた <span class="accent">れんきんじゅつしファナ</span>を きゅうじょした！', equipId:'a7' },
+  bandit:  { rescueId:'merchant', rescueText:'盗賊のアジトに とらわれていた <span class="accent">しょうにんダロン</span>を きゅうじょした！', equipId:'w8' },
+};
+
+/* ドロップされたアイテム/装備のDBデータを安全に取得 */
+function getDropItemDb(d) {
+  if (!d) return null;
+  if (d.kind === 'equip') {
+    if (d.id) return getEquipTemplate(d.id);
+    return EQUIP_DB.find(eq => eq.name === d.name) || null;
+  }
+  if (d.kind === 'blueprint') {
+    if (d.id) return BLUEPRINT_DB.find(bp => bp.id === d.id);
+    return BLUEPRINT_DB.find(bp => bp.name === d.name) || null;
+  }
+  if (d.id) return getItemTemplate(d.id);
+  return ITEM_DB.find(it => it.name === d.name) || null;
+}
+
+/* 共通ホバー詳細ウィンドウHTMLの取得 */
+function getDropTooltipHtml(d) {
+  if (d?.kind === 'halloween-ticket') return rewardTooltipHtml('ticket','halloween-ticket');
+  if (d?.kind === 'halloween-candy') return '<strong>ハロウィンのお菓子</strong><p>ハロウィンの森で交換限定品と交換するためのお菓子。交換時に消費します。</p>';
+  if (d?.kind === 'equip-ticket') {
+    return '<strong>装備ガチャ10連チケット</strong><p>装備ガチャを10回まとめて引けます。</p>';
+  }
+  if (d?.kind === 'raid-ticket') {
+    return '<strong>レイドチケット</strong><p>レイドボスに1回挑戦できます。</p>';
+  }
+  if (d?.kind === 'skin-ticket') {
+    return '<strong>背景スキンガチャチケット</strong><p>キャラクターや背景が手に入るガチャを1回引けます。</p>';
+  }
+  const db = getDropItemDb(d);
+  if (!db) return '';
+  if (d.kind === 'equip') {
+    return generateEquipDetailHtml(db, { rarity: d.rarity || 1, ability: d.ability || null });
+  } else {
+    return generateItemDetailHtml(db, { count: d.count || 1 });
+  }
+}
+
+/* 獲得報酬を順番にポップイン（ポッポぽっぽ）表示し、共通ホバーカード化するHTML生成 */
+/* 表示用にまとめる。能力・レアリティの違う装備は別のままにする。 */
+function aggregateRewardDrops(drops = []) {
+  const grouped = new Map();
+  for (const drop of drops || []) {
+    const name = drop.name.replace(/\s*[×✕]\s*\d+\s*$/, '');
+    const key = JSON.stringify([drop.kind, drop.id || name, drop.rarity || 0, drop.ability || null]);
+    const count = Math.max(1, Number(drop.count) || 1);
+    if (grouped.has(key)) grouped.get(key).count += count;
+    else grouped.set(key, { ...drop, name, count });
+  }
+  return [...grouped.values()];
+}
+
+function generateDropsSummaryHtml(drops, gold, opts = {}) {
+  const hasDrops = drops && drops.length > 0;
+  const hasGold = typeof gold === 'number' && gold > 0;
+  const hasExp = typeof opts.exp === 'number' && opts.exp > 0;
+  if (!hasDrops && !hasGold && !hasExp) return '';
+
+  let animIndex = 0;
+  let html = '<div class="run-drops-summary">';
+  html += `<h4 style="margin-bottom:12px; color:var(--accent); text-align:center;">${opts.title || '【今回のたんさくで てにいれたもの】'}</h4>`;
+  html += '<div class="rewards-grid">';
+
+  // けいけんちバッジ
+  if (hasExp) {
+    const delay = (animIndex * 0.12).toFixed(2);
+    animIndex++;
+    html += `<div class="reward-stat-badge reward-stat-exp reward-pop-item" style="animation-delay:${delay}s;">✨ けいけんち +${opts.exp}</div>`;
+  }
+
+  // ゴールドバッジ
+  if (hasGold) {
+    const delay = (animIndex * 0.12).toFixed(2);
+    animIndex++;
+    html += `<div class="reward-stat-badge reward-stat-gold reward-pop-item" style="animation-delay:${delay}s;">🪙 +${gold} ゴールド</div>`;
+  }
+
+  // ドロップアイテム・装備
+  if (hasDrops) {
+    aggregateRewardDrops(drops).forEach(d => {
+      const delay = (animIndex++ * 0.12).toFixed(2);
+      const jsonStr = encodeURIComponent(JSON.stringify(d));
+      html += `<button type="button" class="drop-reward-card reward-icon-card reward-pop-item${d.kind === 'equip' ? ` rarity-${d.rarity || 1}` : ''}" data-drop-json="${jsonStr}" style="animation-delay:${delay}s;" aria-label="${escapeHtml(d.name)} ×${d.count}の詳細">
+        ${iconHtml(d.icon, 56)}<b class="reward-icon-count">×${d.count}</b>
+        ${d.rarity ? `<small>${rarityLabelHtml(d.rarity)}</small>` : ''}
+      </button>`;
+    });
+  }
+
+  html += '</div></div>';
+  return html;
+}
+
+/* 獲得報酬アイテムにポッポぽっぽ音＆共通ホバーウィンドウを紐付け */
+function bindDropItemTooltips(container) {
+  if (!container) return;
+  const items = container.querySelectorAll('.reward-pop-item');
+  items.forEach((itemEl, idx) => {
+    // 順番にポッポぽっぽと音を鳴らす演出
+    setTimeout(() => {
+      if (document.body.contains(itemEl)) {
+        SM.playBeep('type');
+      }
+    }, (idx + 1) * 120);
+
+    const dropDataStr = itemEl.dataset.dropJson;
+    if (!dropDataStr) return;
+    try {
+      const d = JSON.parse(decodeURIComponent(dropDataStr));
+      const tooltipHtml = getDropTooltipHtml(d);
+      if (tooltipHtml) {
+        itemEl.onmouseover = (e) => showTooltip(e, tooltipHtml);
+        itemEl.onfocus = () => { const rect = itemEl.getBoundingClientRect(); showTooltip({clientX:rect.left, clientY:rect.bottom}, tooltipHtml); };
+        itemEl.onblur = hideTooltip;
+        itemEl.onkeydown = event => { if (event.key === 'Escape') hideTooltip(); };
+        itemEl.onmousemove = (e) => updateTooltipPos(e);
+        itemEl.onmouseout = () => hideTooltip();
+        itemEl.onclick = (e) => {
+          e.stopPropagation();
+          showRewardArtworkPreview({name:d.name, icon:d.icon}, tooltipHtml);
+        };
+      }
+    } catch(err) {}
+  });
+}
+
+/* エリア制覇の「状態の更新」だけ（画面は出さない）。戦闘でのクリアも プリントでのクリアも これを通す。
+   かえり値は 表示用ログ */
+function applyZoneClearState(zone, extraRewards, opts){
+  opts = opts || {};
+  const dispName = opts.displayName || zoneName(zone);
+  const first = !G.clears[zone];
+  G.clears[zone] = true;
+
+  const prevStars = G.clearCounts[zone] || 0;
+  const newStars = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, prevStars + 1);
+  G.clearCounts[zone] = newStars;
+
+  const logs = [...(extraRewards || []), `<span class="accent">＊${dispName}を せいはした！＊</span>`];
+  logs.push(`<span class="accent">${zoneStarsHtml(zone)}（${newStars}かいめの クリア）</span>`);
+
+  if (!opts.suppressNextUnlock && newStars >= STAGE_STARS_TO_UNLOCK_NEXT && prevStars < STAGE_STARS_TO_UNLOCK_NEXT){
+    const nextZone = GRASS_AREA_ORDER[GRASS_AREA_ORDER.indexOf(zone) + 1];
+    if (nextZone){
+      logs.push(`<span class="good">⭐⭐⭐ ★3つ たっせい！ つぎのステージ「${zoneName(nextZone)}」が かいほうされた！</span>`);
+    }
+  }
+
+  const reward = ZONE_CLEAR_REWARDS[zone];
+  if (reward){
+    if (!G.rescued.includes(reward.rescueId)){
+      G.rescued.push(reward.rescueId);
+      logs.push(reward.rescueText);
+    }
+    /* レジェンド装備は 出すぎていたので、設定（zoneClearLegend=1）のときだけ わたす */
+    if (rewardSettings.zoneClearLegend) {
+      const db = EQUIP_DB.find(d => d.id === reward.equipId);
+      const ability = rollAbility(5);
+      G.ownedEquips.push({ uid: G.nextUid++, id: db.id, rarity: 5, ability });
+      const abilityInfo = ability ? getAbility(ability) : null;
+      logs.push(`おれいに「<span class="rarity-5">${rarityLabelHtml(5)} ${db.name}</span>」を もらった！${abilityInfo ? `<br><span class="tag ability">✨ ${abilityInfo.name}（${abilityInfo.desc}）</span>` : ''}`);
+    }
+  }
+  if (first){
+    addItem('hipotion', 3);
+    addItem('ether', 2);
+    logs.push('<span class="good">はつせいは ボーナス！ 秘薬×3 と エーテル×2 を てにいれた！</span>');
+  }
+  return logs;
+}
+
+function zoneCleared(zone, extraRewards, opts){
+  opts = opts || {};
+  const dispName = opts.displayName || zoneName(zone);
+  const logs = applyZoneClearState(zone, extraRewards, opts);
+
+  if (explore) {
+    const dropsHtml = generateDropsSummaryHtml(explore.sessionDrops, explore.sessionGold);
+    if (dropsHtml) {
+      logs.push(dropsHtml);
+    }
+  }
+
+  explore = null;
+  save();
+  $('clear-title').textContent = `＊${dispName} せいは＊`;
+  // generateDropsSummaryHtmlはそのままHTMLとして結合するため、一部エスケープ処理を調整
+  $('clear-log').innerHTML = logs.map(l => l.startsWith('<div class="run-drops-summary"') ? l : `<div>${l}</div>`).join('');
+  showScreen('screen-clear');
+  bindDropItemTooltips($('clear-log'));
+}
+
+/* 1たい たおすたびに、いまの ステージの とうばつ数を 画面いっぱいに 1回 表示する。
+   まえの 数字（fromCount）を いちど 見せてから、あたらしい 数字（toCount）に
+   かわる えんしゅつで、すすんでいることが わかるようにする */
+function showKillProgressPopup(fromCount, toCount, total, onDone){
+  document.querySelector('.kill-progress-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'kill-progress-overlay';
+  const num = document.createElement('div');
+  num.className = 'kill-progress-num';
+  num.textContent = `${fromCount} ／ ${total}`;
+  overlay.appendChild(num);
+  document.body.appendChild(overlay);
+
+  setTimeout(() => {
+    num.textContent = toCount > total ? 'CLEAR!' : `${toCount} ／ ${total}`;
+    if (fromCount !== toCount) {
+      num.classList.remove('kill-progress-tick');
+      void num.offsetWidth;
+      num.classList.add('kill-progress-tick');
+    }
+  }, 500);
+
+  setTimeout(() => {
+    overlay.remove();
+    if (onDone) onDone();
+  }, 1300);
+}
+
+/* 1ステージぶん（ENEMIES_PER_STAGE たい）を たおしたら、そのまま つぎの ステージへ
+   すすまず、ここで いったん 止めて えらばせる：ステージせんたくに もどるか、
+   すぐ つぎの ステージへ すすむか */
+function showStageClearOverlay(area, stageIndex, stageRewards, onNext, onBackToSelect){
+  document.querySelector('.stage-clear-overlay')?.remove();
+  if (SM.initialized) SM.play('se_clear');
+
+  const overlay = document.createElement('div');
+  overlay.className = 'stage-clear-overlay';
+
+  const flow = document.createElement('div');
+  flow.className = 'stage-clear-flow-overlay';
+  flow.textContent = 'ステージクリア';
+  overlay.appendChild(flow);
+
+  const panel = document.createElement('div');
+  panel.className = 'panel stage-clear-panel';
+  panel.innerHTML = `
+    <h2>${area.name} ステージ${stageIndex + 1}／${area.stages.length} クリア！</h2>
+    ${stageClearRewardsHtml(stageRewards)}
+    <p class="flavor">つぎの ステージへ すすみますか？　それとも ステージせんたくに もどりますか？</p>
+    <div class="stage-clear-actions">
+      <button class="btn" id="btn-stage-clear-back">ステージせんたくへ もどる</button>
+      <button class="btn btn-primary" id="btn-stage-clear-next">➡ つぎの ステージへ</button>
+    </div>
+  `;
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+
+  // 獲得アイテムのポッポぽっぽ音＆統一ホバーウィンドウバインド
+  bindDropItemTooltips(panel);
+
+  $('btn-stage-clear-back').onclick = () => { hideTooltip(); overlay.remove(); onBackToSelect(); };
+  $('btn-stage-clear-next').onclick = () => { hideTooltip(); overlay.remove(); onNext(); };
+}
+
+/* ステージクリア画面で見せる、そのステージで てにいれた けいけんち／ゴールド／アイテムの一覧 */
+function stageClearRewardsHtml(rewards){
+  if (!rewards) return '';
+  const { drops, gold, exp } = rewards;
+  const normal = generateDropsSummaryHtml(drops, gold, { exp, title: '【このステージで てにいれたもの】' });
+  const bonuses = (rewards.milestoneRewards || []).map(entry => {
+    const html = generateDropsSummaryHtml(entry.drops, entry.gold, { title: `${entry.luxury ? '🌟' : '🎁'} ${entry.title}${entry.luxury ? ' 🌟' : ''}` });
+    return entry.luxury ? `<div class="pickup-bonus-luxury">${html}</div>` : html;
+  }).join('');
+  return normal + bonuses;
+}
+
+/* 新ステージシステムの エリア制覇。報酬・救助イベントは 既存の zoneCleared() を
+   そのまま流用する（rewardZone＝tower/dungeon の クリア処理に のる） */
+/* ボスを1回たおした（クリアした）ときの 共通の状態更新。戦闘でも プリントでも これを通す。
+   ★・累計回数・ボスの強化レベル・初回／3回クリアの 装備ガチャチケットを 処理して、表示用ログを かえす */
+function grantBossClearState(areaId){
+  const area = AREA_STAGES[areaId];
+  if (!G.areaBossClearCounts) G.areaBossClearCounts = {};
+  if (!G.areaBossTotalClears) G.areaBossTotalClears = {};
+  if (!G.areaBossLevel) G.areaBossLevel = {};
+  const previousStars = G.areaBossClearCounts[areaId] ?? Math.min(STAGE_STARS_TO_UNLOCK_NEXT, G.clearCounts[area.rewardZone] || 0);
+  const currentStars = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, previousStars + 1);
+  G.areaBossClearCounts[areaId] = currentStars;
+  G.areaBossTotalClears[areaId] = Math.max(G.areaBossTotalClears[areaId] || 0, previousStars) + 1;
+  const claims = getStageRewardClaims(areaId, 'boss');
+  const entries = [];
+  const notes = [];
+  if (!claims.rewardFirst) {
+    const n = Math.max(0, Math.round(rewardSettings.bossFirstTickets));
+    G.skinGachaTickets = (G.skinGachaTickets || 0) + n;
+    claims.rewardFirst = true;
+    claims.first = true;
+    if (n > 0) entries.push({ title:'初回クリア報酬', gold:0, drops:[{ kind:'skin-ticket', name:`背景スキンガチャチケット ×${n}`, icon:SKIN_GACHA_TICKET_ICON, count:n }] });
+  }
+  if (currentStars >= STAGE_STARS_TO_UNLOCK_NEXT && !claims.rewardThird) {
+    const n = Math.max(0, Math.round(rewardSettings.bossThirdTickets));
+    G.equipGachaTenPullTickets = (G.equipGachaTenPullTickets || 0) + n;
+    claims.rewardThird = true;
+    claims.star3 = true;
+    if (n > 0) entries.push({ title:'3回クリア報酬', gold:0, drops:[{ kind:'equip-ticket', name:`装備ガチャ10連チケット ×${n}`, icon:'🎫', count:n }] });
+  }
+  /* たおすたびに ボスが 強くなる */
+  const up = Math.max(0, Math.round(rewardSettings.bossLevelUp));
+  if (up > 0) {
+    G.areaBossLevel[areaId] = (G.areaBossLevel[areaId] || 0) + up;
+    notes.push(`ボスが つよくなった！（強化Lv.${G.areaBossLevel[areaId]}）`);
+  }
+  return { entries, notes };
+}
+
+/* ボスを たおしたあとの ウィンドウ（通常ステージと同じ見た目：アイコンカードで ごほうびを表示） */
+function showBossClearOverlay(area, rewards, storyLines, onBackToSelect){
+  document.querySelector('.stage-clear-overlay')?.remove();
+  if (SM.initialized) SM.play('se_clear');
+  const overlay = document.createElement('div');
+  overlay.className = 'stage-clear-overlay';
+  const flow = document.createElement('div');
+  flow.className = 'stage-clear-flow-overlay';
+  flow.textContent = 'エリア せいは';
+  overlay.appendChild(flow);
+  const panel = document.createElement('div');
+  panel.className = 'panel stage-clear-panel';
+  const story = (storyLines || []).map(l => `<div class="flavor" style="margin:4px 0;">${l}</div>`).join('');
+  panel.innerHTML = `
+    <h2>${area.name} ボスを たおした！</h2>
+    ${stageClearRewardsHtml(rewards)}
+    ${story}
+    <div class="stage-clear-actions">
+      <button class="btn" id="btn-boss-clear-home">きょてんへ もどる</button>
+      <button class="btn btn-primary" id="btn-boss-clear-back">ステージせんたくへ</button>
+    </div>
+  `;
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+  bindDropItemTooltips(panel);
+  $('btn-boss-clear-home').onclick = () => { hideTooltip(); overlay.remove(); showHome(); };
+  $('btn-boss-clear-back').onclick = () => { hideTooltip(); overlay.remove(); onBackToSelect(); };
+}
+
+function stageAreaCleared(areaId, extraRewards){
+  const area = AREA_STAGES[areaId];
+  const bossState = grantBossClearState(areaId);
+  const zoneLogs = applyZoneClearState(area.rewardZone, [], { suppressNextUnlock:true, displayName:area.name });
+  const rewards = {
+    drops: explore ? (explore.sessionDrops || []) : [],
+    gold: explore ? (explore.sessionGold || 0) : 0,
+    exp: explore ? (explore.stageExp || 0) : 0,
+    milestoneRewards: bossState.entries,
+  };
+  // 救助・はつせいボーナスなどの 文章（アイコン化できない ストーリーの行）は ウィンドウの下に まとめて出す
+  const story = [...zoneLogs.map(l => l.replace(/<div[\s\S]*$/, '')), ...bossState.notes.map(t => `<span class="accent">${t}</span>`)];
+  if (G.player) { G.player.hp = totalMaxHp(); G.player.mp = totalMaxMp(); }
+  explore = null;
+  save();
+  showBossClearOverlay(area, rewards, story, () => showStageSelectNew(areaId));
+}
+
+/* 勝利後：おなじ ステージの もんだいタイプで つぎの 敵へ（テンポ重視で即戦闘）。
+   ENEMIES_PER_STAGE たい たおしたら つぎの ステージへ すすみ、7ステージを こえたら ボスへ。 */
+function nextStage(){
+  const area = AREA_STAGES[explore.areaId];
+  explore.stageKillCount = (explore.stageKillCount || 0) + 1;
+  if (explore.stageKillCount >= ENEMIES_PER_STAGE){
+    explore.stageIndex++;
+    explore.stageKillCount = 0;
+    explore.stageDrops = [];
+    explore.stageGold = 0;
+    explore.stageExp = 0;
+    explore.usedProblems = new Set();
+    if (explore.stageIndex >= area.stages.length){
+      explore.isBoss = true;
+      explore.stageIndex = null;
+      explore.bossPhase = 1;
+    }
+  }
+  startBattle(true);
+}
+
+/* 勝利後：次の階のバトルへ（テンポ重視で即戦闘） */
+function nextFloor(){
+  explore.floor++;
+  startBattle(true);
+}
+
+/* ==========================================================
+   セーブデータ せんたく画面
+   ========================================================== */
+let loadSaveSelectCallback = null;
+
+function renderLoadSaveSlots(onSelectCb){
+  const list = $('save-slot-list');
+  if (!list) return;
+  list.innerHTML = '';
+  const searchText = ($('load-save-search')?.value || '').trim().toLocaleLowerCase('ja');
+  const sortMode = $('load-save-sort')?.value || 'recent';
+  let slots = listSaveSlots().filter(slot => slot.name.toLocaleLowerCase('ja').includes(searchText));
+  if (sortMode === 'name') {
+    const collator = new Intl.Collator('ja', { numeric: true, sensitivity: 'base' });
+    slots.sort((a, b) => collator.compare(a.name, b.name));
+  } else {
+    slots.sort((a, b) => b.lastPlayedAt - a.lastPlayedAt);
+  }
+  if (slots.length === 0){
+    list.innerHTML = `<div class="flavor" style="text-align:center; padding:30px;">${searchText ? 'あてはまる セーブデータが ありません。' : 'セーブデータが ありません。<br>「あたらしく はじめる」から ぼうけんを はじめよう！'}</div>`;
+    return;
+  }
+
+  for (const slot of slots){
+    const avatar = getHeroAvatar(slot.avatar);
+    const card = document.createElement('div');
+    card.className = 'save-slot-card';
+
+    // 装備スロット情報
+    const weapon = slot.equippedWeapon;
+    const armor = slot.equippedArmor;
+    const accessory = slot.equippedAccessory;
+
+    // 装備ツールチップHTML生成
+    function makeEquipTooltipHtml(eq, defaultName) {
+      if (!eq) {
+        return `
+          <div class="save-equip-tooltip">
+            <div class="tooltip-header"><span class="tooltip-title">${defaultName}</span></div>
+            <div class="tooltip-desc">そうびしていません</div>
+          </div>
+        `;
+      }
+      let statHtml = '';
+      if (eq.stat) {
+        if (eq.stat.atk) statHtml += `<div class="tooltip-stat stat-atk">⚔️ こうげき +${eq.stat.atk}</div>`;
+        if (eq.stat.def) statHtml += `<div class="tooltip-stat stat-def">🛡️ ぼうぎょ +${eq.stat.def}</div>`;
+        if (eq.stat.spd) statHtml += `<div class="tooltip-stat stat-spd">💨 すばやさ +${eq.stat.spd}</div>`;
+        if (eq.stat.hp) statHtml += `<div class="tooltip-stat stat-hp">❤️ HP +${eq.stat.hp}</div>`;
+        if (eq.stat.mp) statHtml += `<div class="tooltip-stat stat-mp">💧 MP +${eq.stat.mp}</div>`;
+      }
+      return `
+        <div class="save-equip-tooltip">
+          <div class="tooltip-header">
+            <span class="tooltip-title">${eq.name}</span>
+            <span class="tooltip-rarity">${'★'.repeat(eq.rarity || 1)}</span>
+          </div>
+          ${statHtml}
+          ${eq.desc ? `<div class="tooltip-desc">${eq.desc}</div>` : ''}
+        </div>
+      `;
+    }
+
+    const weaponTooltipHtml = makeEquipTooltipHtml(weapon, '（武器なし）');
+    const armorTooltipHtml = makeEquipTooltipHtml(armor, '（防具なし）');
+    const accessoryTooltipHtml = makeEquipTooltipHtml(accessory, '（装飾品なし）');
+
+    // ステータス表示（カッコ書き不要、最終的な数値のみ）
+    const atkHtml = `<span class="${slot.boostStats.atk > 0 ? 'stat-boosted' : 'stat-normal'}">${slot.totalStats.atk}</span>`;
+    const defHtml = `<span class="${slot.boostStats.def > 0 ? 'stat-boosted' : 'stat-normal'}">${slot.totalStats.def}</span>`;
+    const spdHtml = `<span class="${slot.boostStats.spd > 0 ? 'stat-boosted' : 'stat-normal'}">${slot.totalStats.spd}</span>`;
+
+    const weaponTooltip = weapon ? `${weapon.name}${weapon.stat && weapon.stat.atk ? ` (+${weapon.stat.atk})` : ''}` : '（武器なし）';
+    const armorTooltip = armor ? `${armor.name}${armor.stat && armor.stat.def ? ` (+${armor.stat.def})` : ''}` : '（防具なし）';
+    const accessoryTooltip = accessory ? accessory.name : '（装飾品なし）';
+
+    // 最終セーブ日時のフォーマット
+    let dateStr = '';
+    if (slot.updatedAt) {
+      const d = new Date(slot.updatedAt);
+      if (!isNaN(d.getTime())) {
+        const m = d.getMonth() + 1;
+        const day = d.getDate();
+        const h = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        dateStr = `${m}/${day} ${h}:${min}`;
+      }
+    }
+
+    // HP/MPゲージの計算（数値分の長さを出す。上限100%でクランプしレイアウトを超えない）
+    const hpGaugePct = Math.min(100, Math.max(8, Math.round(slot.totalStats.maxHp)));
+    const mpGaugePct = Math.min(100, Math.max(8, Math.round(slot.totalStats.maxMp * 2)));
+
+    card.innerHTML = `
+      <!-- 1段目: プレイヤー名 ＆ レベル ＆ 所持金 -->
+      <div class="save-slot-card-header">
+        <div class="save-slot-name-row">
+          <span class="save-slot-player-name">${slot.name}</span>
+          <span class="save-slot-lv-badge">Lv.${slot.lvl}</span>
+        </div>
+        <div class="save-slot-gold-badge">
+          💰 <span class="save-gold-num">${slot.gold.toLocaleString()}</span> G
+        </div>
+      </div>
+
+      <!-- 2段目: 立ち絵エリア -->
+      <div class="save-slot-avatar-frame">
+        <div class="save-slot-avatar-bg"></div>
+        <div class="save-slot-avatar-character${slot.avatarHolographic ? ' holo-character-prism' : ''}" style="${slot.avatarHolographic ? characterFoilMaskStyle(avatar.image) : ''}">
+          <img src="${av(avatar.image)}" class="save-slot-avatar-img${slot.avatarHolographic ? ' avatar-holographic' : ''}" alt="キャラクター">
+        </div>
+      </div>
+
+      <!-- 3段目: ステータス縦並び ＆ 装備アイコン縦並び -->
+      <div class="save-slot-mid-row">
+        <!-- ステータス縦並びリスト -->
+        <div class="save-slot-stats-col">
+          <div class="save-stat-line stat-line-hp">
+            <span class="stat-name"><span class="stat-icon">❤️</span>HP</span>
+            <div class="save-gauge-track">
+              <div class="save-gauge-fill hp" style="width: ${hpGaugePct}%;"></div>
+            </div>
+            <span class="stat-val stat-hp">${slot.totalStats.maxHp}</span>
+          </div>
+          <div class="save-stat-line stat-line-mp">
+            <span class="stat-name"><span class="stat-icon">💧</span>MP</span>
+            <div class="save-gauge-track">
+              <div class="save-gauge-fill mp" style="width: ${mpGaugePct}%;"></div>
+            </div>
+            <span class="stat-val stat-mp">${slot.totalStats.maxMp}</span>
+          </div>
+          <div class="save-stat-line"><span class="stat-name"><span class="stat-icon">⚔️</span>こうげき</span><span class="stat-val stat-atk">${atkHtml}</span></div>
+          <div class="save-stat-line"><span class="stat-name"><span class="stat-icon">🛡️</span>ぼうぎょ</span><span class="stat-val stat-def">${defHtml}</span></div>
+          <div class="save-stat-line"><span class="stat-name"><span class="stat-icon">💨</span>すばやさ</span><span class="stat-val stat-spd">${spdHtml}</span></div>
+        </div>
+
+        <!-- 装備アイコンのみ縦並び（名前なし・アイコンのみ・ホバーで即座にツールチップ） -->
+        <div class="save-slot-equips-col">
+          <div class="save-equip-icon-btn ${weapon ? 'has-equip' : 'no-equip'}" title="${weaponTooltip}">
+            <span class="equip-tag">武器</span>
+            <div class="save-equip-icon-wrap rarity-${weapon ? weapon.rarity : 1}">
+              ${weapon ? iconHtml(weapon.emoji, 22) : '<span class="empty-dash">ー</span>'}
+            </div>
+            ${weaponTooltipHtml}
+          </div>
+
+          <div class="save-equip-icon-btn ${armor ? 'has-equip' : 'no-equip'}" title="${armorTooltip}">
+            <span class="equip-tag">防具</span>
+            <div class="save-equip-icon-wrap rarity-${armor ? armor.rarity : 1}">
+              ${armor ? iconHtml(armor.emoji, 22) : '<span class="empty-dash">ー</span>'}
+            </div>
+            ${armorTooltipHtml}
+          </div>
+
+          <div class="save-equip-icon-btn ${accessory ? 'has-equip' : 'no-equip'}" title="${accessoryTooltip}">
+            <span class="equip-tag">アクセ</span>
+            <div class="save-equip-icon-wrap rarity-${accessory ? accessory.rarity : 1}">
+              ${accessory ? iconHtml(accessory.emoji, 22) : '<span class="empty-dash">ー</span>'}
+            </div>
+            ${accessoryTooltipHtml}
+          </div>
+        </div>
+      </div>
+
+      <!-- 4段目: つづけるボタン -->
+      <div class="save-slot-action-row">
+        <button class="btn btn-primary btn-save-select">
+          ${typeof onSelectCb === 'function' ? 'これでちょうせん！' : 'つづける ⚔️'}
+        </button>
+      </div>
+    `;
+
+    applyAvatarComposition(card.querySelector('.save-slot-avatar-frame'),card.querySelector('.save-slot-avatar-img'),slot);
+    const btn = card.querySelector('.btn-save-select');
+    if (btn) {
+      btn.onclick = () => {
+        if (loadSlot(slot.key)) {
+          G.lastPlayedAt = Date.now();
+          save(true);
+          startTimeLimitSession(slot.key);
+          if (typeof onSelectCb === 'function') {
+            onSelectCb();
+          } else {
+            showHome();
+          }
+        }
+      };
+    }
+
+    list.appendChild(card);
+  }
+}
+
+function showLoadSaveScreen(onSelectCb){
+  loadSaveSelectCallback = onSelectCb || null;
+  showScreen('screen-load-save');
+  renderLoadSaveSlots(onSelectCb);
+
+  const statusEl = $('save-sync-status');
+  if (statusEl) {
+    statusEl.textContent = '☁️ クラウドと同期中...';
+    statusEl.style.color = '#3498db';
+  }
+
+  syncCloudSaves((success, hasChanges) => {
+    const activeScreen = document.querySelector('.screen.active');
+    if (activeScreen && activeScreen.id === 'screen-load-save') {
+      renderLoadSaveSlots(onSelectCb);
+    }
+    if (statusEl) {
+      if (success) {
+        statusEl.textContent = '☁️ クラウド同期完了';
+        statusEl.style.color = '#2ecc71';
+        setTimeout(() => {
+          if (statusEl.textContent === '☁️ クラウド同期完了') {
+            statusEl.textContent = '';
+          }
+        }, 2500);
+      } else {
+        statusEl.textContent = '⚠️ クラウド同期失敗（オフライン）';
+        statusEl.style.color = '#e67e22';
+      }
+    }
+  });
+}
+
+/* ==========================================================
+   拠点・ステータス
+   ========================================================== */
+/* 拠点の ステータスに、もっている チケット・メダルを ならべる（アイコンは ホバーで詳細） */
+function renderHomeTickets(){
+  const el = $('home-tickets');
+  if (!el || !G) return;
+  const key = [G.isTestMode ? 'T' : '', G.equipGachaTenPullTickets, G.skinGachaTickets, G.raidTickets, G.questMedals, G.halloweenCandy, G.halloweenTickets, isHalloweenActive()].join(',');
+  if (el.dataset.key === key && el.childElementCount) return; // 数が変わらないときは 作りなおさない（ホバー中のちらつき防止）
+  el.dataset.key = key;
+  const t = G.isTestMode ? '∞' : null;
+  const cell = (icon, n) => `<span class="home-ticket-cell">${icon}<b>×${t ?? n}</b></span>`;
+  el.innerHTML =
+    cell(stageRewardIcon('ticket', 'equip-ten-ticket', 1, 26), G.equipGachaTenPullTickets || 0) +
+    cell(stageRewardIcon('ticket', 'skin-ticket', 1, 26), G.skinGachaTickets || 0) +
+    `<span class="home-ticket-cell">${stageRewardIcon('medal', 'quest-medal', 1, 26)}<b>×${G.questMedals || 0}</b></span>` +
+    (isHalloweenActive() || halloweenCandyBalance() > 0 ? `<span class="home-ticket-cell">${stageRewardIcon('halloween-candy', 'halloween-candy', 1, 26)}<b>×${halloweenCandyBalance()}</b></span>` : '') +
+    (isHalloweenActive() || halloweenTicketBalance() > 0 ? `<span class="home-ticket-cell">${stageRewardIcon('ticket', 'halloween-ticket', 1, 26)}<b>×${halloweenTicketBalance()}</b></span>` : '');
+  bindStageRewardTooltips(el);
+}
+
+function showHome(){
+  ensureEventEquipmentAbilities(G);
+  setTimeout(()=>{checkAdminGifts(true);checkEventRaidFinalReward();},0);
+  showScreen('screen-home');
+  const hr = $('home-rescued');
+  if (hr) hr.classList.add('hidden'); // クリア後の上部表示を常に消す
+  // 拠点では全回復
+  G.player.hp = totalMaxHp();
+  G.player.mp = totalMaxMp();
+  if (G.isTestMode && typeof ensureTestModeSupplies === 'function') {
+    ensureTestModeSupplies();
+  }
+  updateHud();
+  save();
+  checkDemonCastleReward();
+  checkRaidLevelTicket();
+  renderHalloweenEntry();
+}
+
+function checkDemonCastleReward() {
+  if (storageGet('guest_demon_castle_cleared') === '1' && G) {
+    storageSet('guest_demon_castle_cleared', null);
+    G.player.exp += 1000;
+    G.player.gold += 10000;
+    const ability = rollAbility(5);
+    const equip = {
+      uid: G.nextUid++,
+      id: 'demon_sword',
+      rarity: 5,
+      ability
+    };
+    G.ownedEquips.push(equip);
+    save();
+
+    playItemRevealSequence([
+      { kind:'item', name:'ゴールド 10,000 G', icon:'💰' },
+      { kind:'item', name:'経験値 1,000 EXP', icon:'✨' },
+      { kind:'equip', name:'魔王の覇剣 (★5 レジェンド)', icon:'⚔️', rarity:5, ability }
+    ], {
+      badge: '👑 試練突破ボーナス！',
+      title: '魔王の秘宝 解放！！',
+      showSummary: true
+    });
+  }
+}
+
+function stageStatusText(zone){
+  return `10かい／${ZONE_OP_LABELS[zone]}／${zoneStarsHtml(zone)}`;
+}
+function stageStatusShort(zone){
+  return `${ZONE_OP_LABELS[zone]}・${zoneStarsHtml(zone)}`;
+}
+
+let currentSubject = 'math';
+function setSubjectTab(subject){
+  currentSubject = subject;
+  storageSet('stage_select_subject', subject);
+  const mathTab = $('subject-tab-math');
+  const kanjiTab = $('subject-tab-kanji');
+  const mathGroup = $('stage-group-math');
+  const kanjiGroup = $('stage-group-kanji');
+  if (mathTab) mathTab.classList.toggle('is-active', subject === 'math');
+  if (kanjiTab) kanjiTab.classList.toggle('is-active', subject === 'kanji');
+  if (mathGroup) mathGroup.classList.toggle('is-active', subject === 'math');
+  if (kanjiGroup) kanjiGroup.classList.toggle('is-active', subject === 'kanji');
+}
+
+function showStageSelect(){
+  showScreen('screen-stage-select');
+  const savedSubject = storageGet('stage_select_subject') || 'math';
+  setSubjectTab(savedSubject);
+
+  // さんすうエリア
+  if ($('stage-status-area1')) $('stage-status-area1').innerHTML = `推奨Lv:1 / たしざん　${zoneStarsHtml('tower')}`;
+  if ($('stage-status-area13')) $('stage-status-area13').innerHTML = `推奨Lv:3 / ひきざん　${zoneStarsHtml('dungeon')}`;
+  if ($('stage-status-area2')) $('stage-status-area2').innerHTML = `推奨Lv:6 / 九九・かけざん　${zoneStarsHtml('forest')}`;
+  if ($('stage-status-area3')) $('stage-status-area3').innerHTML = `推奨Lv:10 / わりざん　${zoneStarsHtml('dungeon')}`;
+  if ($('stage-status-area4')) $('stage-status-area4').innerHTML = `推奨Lv:15 / 4年生の算数　${zoneStarsHtml('cave')}`;
+  if ($('stage-status-area11')) $('stage-status-area11').innerHTML = `推奨Lv:20 / 小5算数（小数・分数）　${zoneStarsHtml('sky')}`;
+  if ($('stage-status-area12')) $('stage-status-area12').innerHTML = `推奨Lv:25 / 小6算数（比・速さ）　${zoneStarsHtml('castle')}`;
+
+  // こくご（漢字）エリア
+
+  if ($('stage-status-area14')) {
+    const area = AREA_STAGES['area14'];
+    $('stage-status-area14').innerHTML = `推奨Lv:${area ? area.recLv : 1} / ひらがな　${zoneStarsHtml('kanji1')}`;
+  }
+  if ($('stage-status-area15')) {
+    const area = AREA_STAGES['area15'];
+    $('stage-status-area15').innerHTML = `推奨Lv:${area ? area.recLv : 1} / カタカナ　${zoneStarsHtml('kanji2')}`;
+  }
+
+  for (let i = 5; i <= 10; i++) {
+    const el = $(`stage-status-area${i}`);
+    if (el) {
+      const area = AREA_STAGES[`area${i}`];
+      el.innerHTML = `推奨Lv:${area ? area.recLv : 1} / 漢字　${zoneStarsHtml('kanji' + (i - 4))}`;
+    }
+  }
+}
+
+/* エリアIDから、そのエリアの 各ステージ（1-1など）の クリアかいすう配列（0〜3、★の数）を とりだす。
+   まだ 記録が なければ、ステージ数ぶんの 0で うめて つくる */
+function getStageClearCounts(areaId){
+  if (!G) return (AREA_STAGES[areaId]?.stages || []).map(() => 0);
+  if (!G.stageClearCounts) G.stageClearCounts = {};
+  if (!G.stageClearCounts[areaId]){
+    const area = AREA_STAGES[areaId];
+    G.stageClearCounts[areaId] = (area && area.stages ? area.stages.map(() => 0) : []);
+  }
+  return G.stageClearCounts[areaId];
+}
+
+function getStageRewardClaims(areaId, stageKey){
+  if (!G.stageRewardClaims) G.stageRewardClaims = {};
+  const key = `${areaId}:${stageKey}`;
+  if (!G.stageRewardClaims[key]) G.stageRewardClaims[key] = { first: false, star3: false };
+  const c = G.stageRewardClaims[key];
+  // 旧仕様（初回＝ゴールド＋アイテム／3回＝ぶき）で もらいずみの記録を 新しい記録に引きつぐ
+  if (c.rewardFirst === undefined) c.rewardFirst = !!(c.first || c.firstSupplies);
+  if (c.rewardThird === undefined) c.rewardThird = !!(c.star3 || c.thirdWeapon);
+  return c;
+}
+
+function stageRewardBadge(label, reward, claimed){
+  return `<span class="stage-reward-badge${claimed ? ' is-claimed' : ''}"><b>${label}</b><span class="stage-reward-icons">${reward}</span>${claimed ? '<strong>獲得済み</strong>' : ''}</span>`;
+}
+
+function stageWeaponReward(areaId, stageIndex){
+  const recLv = AREA_STAGES[areaId].recLv || 1;
+  const budget = Math.max(1, recLv + stageIndex);
+  const targetAtk = 2 + recLv + stageIndex * 2;
+  const initial = getEquipTemplate('w1');
+  const wRarity = areaId === 'area14' || areaId === 'area15' ? 1 : Math.min(4, Math.max(1, Math.round(rewardSettings.firstWeaponRarity) || 2));
+  let reward = { db: initial, rarity: wRarity, atk: calcEquipStat(initial.stat, wRarity).atk };
+  for (const base of EQUIP_DB.filter(db => db.slot === 'weapon' && !db.assist)) {
+    const db = getEquipTemplate(base.id);
+    const rarity = wRarity;
+    const atk = calcEquipStat(db.stat, rarity).atk;
+    if (equipCost(db, rarity) <= budget && atk <= targetAtk && atk > reward.atk) reward = { db, rarity, atk };
+  }
+  return reward;
+}
+
+const STAGE_REWARD_MATH_ORDER = ['area1', 'area13', 'area2', 'area3', 'area4', 'area11', 'area12'];
+const STAGE_REWARD_LANG_ORDER = ['area14', 'area15', 'area5', 'area6', 'area7', 'area8', 'area9', 'area10'];
+function stageRewardOrdinal(areaId, stageIndex){
+  let ordinal = 0;
+  const order = STAGE_REWARD_LANG_ORDER.includes(areaId) ? STAGE_REWARD_LANG_ORDER : STAGE_REWARD_MATH_ORDER;
+  for (const id of order) {
+    if (id === areaId) return ordinal + stageIndex;
+    ordinal += AREA_STAGES[id]?.stages?.length || 0;
+  }
+  return stageIndex;
+}
+
+function stageFirstSuppliesReward(areaId, stageIndex){
+  if (areaId === 'area14' || areaId === 'area15') {
+    return {
+      gold: Math.max(0, Math.round((rewardSettings.thirdGoldBase + stageIndex * rewardSettings.thirdGoldStep) * 0.5)),
+      itemId: 'potion', count: Math.min(1, Math.max(0, Math.round(rewardSettings.thirdItemCount)))
+    };
+  }
+  return {
+    gold: Math.max(0, Math.round(rewardSettings.thirdGoldBase + stageRewardOrdinal(areaId, stageIndex) * rewardSettings.thirdGoldStep)),
+    itemId: getItemTemplate(rewardSettings.thirdItemId) ? rewardSettings.thirdItemId : 'hipotion',
+    count: Math.max(0, Math.round(rewardSettings.thirdItemCount)),
+  };
+}
+
+/* ごほうびアイコンの 見た目の情報（名前・アイコン）。ホバーの 詳細ウィンドウは rewardTooltipHtml() */
+function rewardIconInfo(kind, id){
+  if (id === 'halloween-ticket' || kind === 'halloween-ticket') return {name:'ハロウィンチケット',icon:'assets/halloween/ticket_icon.png'};
+  if (kind === 'halloween-candy') return { name:'ハロウィンのお菓子', icon:'assets/halloween/candy_token.png' };
+  if(kind==='decoration'){const item=AVATAR_DECORATIONS.find(entry=>entry.id===id);return {name:item?.name || 'フレーム',icon:item?.image || '✨'};}
+  if (kind === 'skin') { const hero = getHeroAvatar(id); return { name:hero.name, icon:hero.image }; }
+  if (kind === 'equip') { const db = getEquipTemplate(id); return { name: db.name, icon: db.emoji }; }
+  if (kind === 'item') { const db = getItemTemplate(id); return { name: db.name, icon: db.emoji }; }
+  if (kind === 'medal') return { name: 'クエストメダル', icon: QUEST_MEDAL_IMAGE };
+  if (kind === 'background') { const bg = getAvatarBackground(id); return { name: `背景「${bg.name}」`, icon: bg.image }; }
+  if (id === 'equip-ten-ticket') return { name: '装備ガチャ10連チケット', icon: '🎫' };
+  if (id === 'raid-ticket') return { name: 'レイドチケット', icon: 'assets/raid/raid_ticket_pixel.png' };
+  return { name: '背景スキンガチャチケット', icon: SKIN_GACHA_TICKET_ICON };
+}
+
+/* ごほうびの 詳細（ホバーで 出す ウィンドウの 中身）。ごほうびの アイコンは かならず これを つかう */
+function rewardTooltipHtml(kind, id, rarity = 1, count = 1){
+  if (id === 'halloween-ticket' || kind === 'halloween-ticket') return '<b>ハロウィンチケット</b><p>ハロウィンガチャを1回引くチケット。イベントステージの通常敵5%・ボス25%で1枚ドロップ。</p>';
+  if (kind === 'halloween-candy') return '<b>ハロウィンのお菓子</b><p>交換限定品と交換するためのお菓子。交換時に消費します。</p>';
+  if(kind==='decoration')return '<b>フレーム</b><p>背景・キャラを囲むフレームです。見た目の変更の「フレーム」タブから選べます。</p>';
+  if (kind === 'skin') { const hero = getHeroAvatar(id); return `<b>${escapeHtml(hero.name)}</b><p>${escapeHtml(hero.desc)}</p>`; }
+  if (kind === 'equip') return generateEquipDetailHtml(getEquipTemplate(id), { rarity: Number(rarity) });
+  if (kind === 'item') return generateItemDetailHtml(getItemTemplate(id), { count: count || (id === 'hipotion' ? 3 : 1) });
+  if (kind === 'medal') {
+    return `<b>🏅 クエストメダル</b><p>村の人たちを助けた証。<br>集めて豪華景品と交換しよう！</p>`;
+  }
+  if (kind === 'background') {
+    const bg = getAvatarBackground(id);
+    return `<b>背景「${bg.name}」</b><p>プレイヤーの 背景スキン。${bg.rewardSource === 'quest' ? 'サブクエストでしか 手に入らないよ！' : ''}</p>`;
+  }
+  if (id === 'equip-ten-ticket') return '<b>装備ガチャ10連チケット</b><p>装備ガチャを 10回まとめて 引けるチケット。</p>';
+  if (id === 'raid-ticket') return '<b>レイドチケット</b><p>レイドボスに 1回 挑戦できるチケット。<br>ボスの レベルが あがると 1まい もらえるよ。</p>';
+  return '<b>背景スキンガチャチケット</b><p>背景スキンガチャを 1回 引けるチケット。</p>';
+}
+
+function stageRewardIcon(kind, id, rarity = 1, size = 56){
+  const info = rewardIconInfo(kind, id);
+  return `<button type="button" class="stage-reward-icon${kind === 'equip' ? ` equip-icon rarity-${rarity}` : ''}" data-reward-kind="${kind}" data-reward-id="${id}" data-reward-rarity="${rarity}" aria-label="${info.name}${kind === 'equip' ? `・${RARITY_NAME[rarity]}` : ''}を拡大表示">${iconHtml(info.icon, size)}</button>`;
+}
+
+/* 入手前でも、限定品の絵と性能をクリックで確認できる。 */
+function showRewardArtworkPreview(info, detail = '') {
+  if (!info?.icon) return;
+  document.querySelector('.reward-artwork-preview')?.remove();
+  hideTooltip();
+  const previousFocus = document.activeElement;
+  const overlay = document.createElement('div');
+  overlay.className = 'reward-artwork-preview';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'reward-artwork-title');
+  overlay.innerHTML = `<section class="reward-artwork-panel">
+    <button type="button" class="btn reward-artwork-close" aria-label="拡大表示を閉じる">とじる ×</button>
+    <h2 id="reward-artwork-title">${escapeHtml(info.name)}</h2>
+    <div class="reward-artwork-image">${iconHtml(info.icon, 420)}</div>
+    <div class="reward-artwork-detail">${detail}</div>
+  </section>`;
+  const close = () => { hideTooltip(); overlay.remove(); if (previousFocus?.isConnected) previousFocus.focus({preventScroll:true}); };
+  overlay.querySelector('.reward-artwork-close').onclick = close;
+  overlay.onclick = event => { if (event.target === overlay) close(); };
+  overlay.onkeydown = event => {
+    event.stopPropagation();
+    if (event.key === 'Escape') { event.preventDefault(); close(); }
+    if (event.key === 'Tab') { event.preventDefault(); overlay.querySelector('.reward-artwork-close').focus(); }
+  };
+  document.body.appendChild(overlay);
+  overlay.querySelector('.reward-artwork-close').focus({preventScroll:true});
+}
+
+function bindStageRewardTooltips(container){
+  container.querySelectorAll('.stage-reward-icon').forEach(button => {
+    const { rewardKind: kind, rewardId: id, rewardRarity: rarity } = button.dataset;
+
+    const detail = rewardTooltipHtml(kind, id, rarity);
+    button.onmouseover = event => showTooltip(event, detail);
+    button.onmousemove = updateTooltipPos;
+    button.onmouseout = hideTooltip;
+    button.onfocus = () => { const rect = button.getBoundingClientRect(); showTooltip({ clientX: rect.left, clientY: rect.bottom }, detail); };
+    button.onblur = hideTooltip;
+    button.onclick = event => { event.stopPropagation(); showRewardArtworkPreview(rewardIconInfo(kind, id), detail); };
+    button.onkeydown = event => { if (event.key === 'Escape') hideTooltip(); };
+  });
+}
+
+function stageRewardPairHtml(areaId, stageIndex, isBoss, stars){
+  const claims = getStageRewardClaims(areaId, isBoss ? 'boss' : stageIndex);
+  const area = AREA_STAGES[areaId];
+  if (isBoss) {
+    return `<span class="stage-reward-pair">${stageRewardBadge('初回クリア', stageRewardIcon('ticket', 'skin-ticket'), !!claims.rewardFirst)}${stageRewardBadge('3回クリア', stageRewardIcon('ticket', 'equip-ten-ticket'), !!claims.rewardThird)}</span>`;
+  }
+  /* 初回クリア＝ぶき ／ 3回クリア＝ゴールド＋アイテム（4回目いこうは ごほうびなし） */
+  const supplies = stageFirstSuppliesReward(areaId, stageIndex);
+  const weapon = stageWeaponReward(areaId, stageIndex);
+  const priorWeapon = claims.firstWeapon;
+  const weaponId = priorWeapon?.id || weapon.db.id;
+  const rarity = priorWeapon?.rarity || weapon.rarity;
+  return `<span class="stage-reward-pair">${stageRewardBadge('初回クリア', stageRewardIcon('equip', weaponId, rarity), !!claims.rewardFirst)}${stageRewardBadge('3回クリア', `${stageRewardIcon('item', supplies.itemId)}<span class="stage-reward-gold" aria-label="${supplies.gold}ゴールド"><span aria-hidden="true">💰</span><b>${supplies.gold}</b></span>`, !!claims.rewardThird)}</span>`;
+}
+
+function grantStageMilestone(areaId, stageIndex, previousStars, currentStars){
+  const claims = getStageRewardClaims(areaId, stageIndex);
+  /* 各ごほうびは { title, gold, drops:[ドロップ形式] }。画面では アイコンカードで表示する */
+  const received = [];
+  /* 初回クリア：ぶき */
+  if (currentStars >= 1 && !claims.rewardFirst) {
+    const reward = stageWeaponReward(areaId, stageIndex);
+    const equip = { uid: G.nextUid++, id: reward.db.id, rarity: reward.rarity, ability: null };
+    G.ownedEquips.push(equip);
+    claims.firstWeapon = { uid: equip.uid, id: equip.id, rarity: equip.rarity };
+    claims.rewardFirst = true;
+    claims.first = true;
+    received.push({ title:'初回クリア報酬', gold:0, drops:[{ kind:'equip', id:reward.db.id, name:reward.db.name, rarity:reward.rarity, icon:reward.db.emoji, ability:null }] });
+  }
+  /* 3回クリア：ゴールド＋アイテム（これ以降のクリアは ごほうびなし） */
+  if (currentStars >= STAGE_STARS_TO_UNLOCK_NEXT && !claims.rewardThird) {
+    const supplies = stageFirstSuppliesReward(areaId, stageIndex);
+    G.player.gold += supplies.gold;
+    const drops = [];
+    if (supplies.count > 0) {
+      addItem(supplies.itemId, supplies.count);
+      const it = getItemTemplate(supplies.itemId);
+      drops.push({ kind:'item', id:supplies.itemId, name:it.name, icon:it.emoji, count:supplies.count });
+    }
+    claims.rewardThird = true;
+    claims.star3 = true;
+    received.push({ title:'3回クリア報酬', gold:supplies.gold, drops });
+  }
+  return received;
+}
+
+/* ごほうび（{title, gold, drops}）を、報酬ポップイン用のカード配列に つけたす */
+function pushMilestoneRewardCards(rewards, entry){
+  if (entry.gold > 0) rewards.push({ kind:'item', name:`${entry.title}：${entry.gold} G`, icon:'💰' });
+  for (const d of entry.drops || []) {
+    rewards.push({ kind: d.kind === 'equip' ? 'equip' : 'item', name:`${entry.title}：${d.name}${d.count > 1 && !/×\d/.test(d.name) ? ` ×${d.count}` : ''}`, icon:d.icon, rarity:d.rarity, ability:d.ability || null });
+  }
+}
+
+/* ステージを1回クリアしたときの 共通処理（戦闘クリアでも プリントでも これを通す）。
+   ★（上限3）と ほんとうの累計クリア回数を 数え、初回／3回クリアの報酬を わたす */
+function recordStageClear(areaId, stageIndex){
+  const counts = getStageClearCounts(areaId);
+  const previousStars = counts[stageIndex] || 0;
+  counts[stageIndex] = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, previousStars + 1);
+  if (!G.stageTotalClears) G.stageTotalClears = {};
+  if (!G.stageTotalClears[areaId]) G.stageTotalClears[areaId] = [];
+  G.stageTotalClears[areaId][stageIndex] = (G.stageTotalClears[areaId][stageIndex] || 0) + 1;
+  const milestoneRewards = grantStageMilestone(areaId, stageIndex, previousStars, counts[stageIndex]);
+  const pickupBonus = grantPickupBonusIfAny(areaId, stageIndex);
+  if (pickupBonus) milestoneRewards.unshift(pickupBonus);
+  return { previousStars, currentStars: counts[stageIndex], milestoneRewards };
+}
+
+/* 新ステージ選択（エリアの背景に よこならびで ステージボタンを ひょうじ） */
+function showStageSelectNew(areaId){
+  try {
+    if (!isAreaUnlocked(areaId)){
+      alert('まえの エリアを クリアすると ちょうせんできるよ！');
+      return;
+    }
+    const area = AREA_STAGES[areaId];
+    if (!area) {
+      console.error('AREA_STAGES not found for:', areaId);
+      return;
+    }
+    const numPrefix = area.displayNum || areaId.replace('area', '');
+    showScreen('screen-stage-select-new');
+    const bgImg = $('stage-select-area-bg');
+    if (bgImg && area.bgImage) {
+      bgImg.src = av(area.bgImage);
+    }
+    const container = $('stage-button-container');
+    if (!container) return;
+    container.innerHTML = '';
+    const title = document.createElement('div');
+    title.className = 'hotspot-tag stage-vertical-title';
+    title.style.lineHeight = '1.4';
+    
+    const playerLv = (G && G.player) ? G.player.lvl : 1;
+    const recLv = area.recLv || 1;
+    let lvColor = '#ffffff';
+    if (playerLv < recLv) {
+      lvColor = '#ff6b6b';
+    } else if (playerLv >= recLv + 5) {
+      lvColor = '#4cd137';
+    }
+    
+    title.innerHTML = `＊${area.name}（${area.opLabel}）＊<br><span style="font-size: 13px; color: ${lvColor};">推奨Lv: ${recLv}（現在Lv: ${playerLv}）</span>`;
+    container.appendChild(title);
+    
+    const stageCounts = getStageClearCounts(areaId);
+    const pickup = getActivePickup();
+    const pickupIndex = pickup?.status !== 'claimed' && pickup?.areaId === areaId ? pickup.stageIndex : -1;
+    const recommendedIndex = pickupIndex >= 0 && area.stages?.[pickupIndex]
+      ? pickupIndex
+      : Math.max(0, stageCounts.findIndex(count => count < STAGE_STARS_TO_UNLOCK_NEXT));
+    const stageOrder = (area.stages || []).map((_, idx) => idx);
+    if (stageOrder.length > 1 && recommendedIndex >= 0 && recommendedIndex < stageOrder.length) {
+      stageOrder.splice(stageOrder.indexOf(recommendedIndex), 1);
+      stageOrder.unshift(recommendedIndex);
+    }
+    stageOrder.forEach(idx => {
+      const stage = area.stages[idx];
+      const isRecommended = idx === recommendedIndex;
+      const row = document.createElement('button');
+      row.className = 'stage-select-row';
+      row.innerHTML = `<span class="stage-select-num">${numPrefix}-${idx + 1}</span><span class="stage-select-name">${stage.name}</span>${stageClearStatusHtml(stageCounts[idx] || 0)}${stageDropProfile(areaId, idx).frontier ? '<span class="frontier-drop-tag">ドロップUP!</span>' : ''}`;
+      row.onclick = () => enterAreaStage(areaId, idx);
+      if (isRecommended) {
+        row.classList.add('is-pickup');
+        row.insertAdjacentHTML('afterbegin', `<span class="pickup-tag">${pickupIndex === idx ? '復習ボーナスおすすめ！' : 'おすすめ！'}</span>`);
+      }
+      const line = document.createElement('div');
+      line.className = 'stage-select-line';
+      line.innerHTML = stageRewardPairHtml(areaId, idx, false, stageCounts[idx] || 0);
+      line.prepend(row);
+      const printBtn = document.createElement('button');
+      printBtn.type = 'button'; printBtn.className = 'stage-print-btn';
+      printBtn.textContent = '🖨️'; printBtn.setAttribute('aria-label', `${numPrefix}-${idx + 1}のプリント`);
+      printBtn.onclick = () => printAreaStage(areaId, idx);
+      line.appendChild(printBtn);
+      container.appendChild(line);
+    });
+    
+    const savedBossStars = G.areaBossClearCounts && G.areaBossClearCounts[areaId];
+    const bossStars = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, savedBossStars ?? ((G.clearCounts && G.clearCounts[area.rewardZone]) || 0));
+    const bossRow = document.createElement('button');
+    bossRow.className = 'stage-select-row stage-select-boss-row';
+    bossRow.innerHTML = `<span class="stage-select-num">${numPrefix}-B</span><span class="stage-select-name">👹 ${area.bossName}</span>${stageClearStatusHtml(bossStars)}`;
+    bossRow.onclick = () => enterAreaBoss(areaId);
+    const bossLine = document.createElement('div');
+    bossLine.className = 'stage-select-line';
+    bossLine.innerHTML = stageRewardPairHtml(areaId, null, true, bossStars);
+    bossLine.prepend(bossRow);
+    const bossPrint = document.createElement('button');
+    bossPrint.type = 'button'; bossPrint.className = 'stage-print-btn'; bossPrint.textContent = '🖨️';
+    bossPrint.setAttribute('aria-label', 'ボス戦のプリント');
+    bossPrint.onclick = () => printAreaBoss(areaId);
+    bossLine.appendChild(bossPrint);
+    container.appendChild(bossLine);
+    bindStageRewardTooltips(container);
+
+  } catch (err) {
+    console.error('showStageSelectNew error:', err);
+  }
+}
+
+/* ステージ一覧の1行ぶんに つける、クリア状況の表示。
+   1回でも クリアしていれば「CLEAR!」（きいろ）を、くりかえしクリアで ★が たまり、
+   ★★★（さいだい）に なったら「CLEAR!」が にじ色に かがやく */
+function stageClearStatusHtml(stars){
+  const cleared = stars > 0;
+  const maxed = stars >= STAGE_STARS_TO_UNLOCK_NEXT;
+  const starsHtml = '★'.repeat(stars) + '☆'.repeat(STAGE_STARS_TO_UNLOCK_NEXT - stars);
+  return `
+    <span class="stage-select-status">
+      ${cleared ? `<span class="stage-clear-tag${maxed ? ' stage-clear-tag-rainbow' : ''}">CLEAR!</span>` : ''}
+      <span class="stage-select-stars">${starsHtml}</span>
+    </span>
+  `;
+}
+
+function showGrassSubstage(){
+  showScreen('screen-grass-substage');
+  const cryptUnlocked = isGrassStageUnlocked('crypt');
+  const banditUnlocked = isGrassStageUnlocked('bandit');
+  $('substage-status-tower-tag').innerHTML = `🌿 草原<br><small>${stageStatusShort('tower')}</small>`;
+  $('substage-status-crypt-tag').innerHTML = cryptUnlocked
+    ? `🏚️ 地下ダンジョン<br><small>${stageStatusShort('crypt')}</small>`
+    : `🔒 地下ダンジョン<br><small>草原をクリアしてね</small>`;
+  $('substage-status-bandit-tag').innerHTML = banditUnlocked
+    ? `🏕️ 盗賊のアジト<br><small>${stageStatusShort('bandit')}</small>`
+    : `🔒 盗賊のアジト<br><small>地下ダンジョンをクリアしてね</small>`;
+  $('substage-card-crypt').disabled = !cryptUnlocked;
+  $('substage-card-bandit').disabled = !banditUnlocked;
+  $('substage-card-crypt').classList.toggle('town-hotspot-locked', !cryptUnlocked);
+  $('substage-card-bandit').classList.toggle('town-hotspot-locked', !banditUnlocked);
+}
+
+/* ==========================================================
+   サブクエストボード（拠点で NPCの ぶんしょうだいに こたえる）
+   ========================================================== */
+const QUEST_BOARD_SIZE = 6;
+
+function ensureQuestBoard(){
+  if (!G.questBoard) G.questBoard = [];
+  // ふるいセーブに のこった 1問だけの クエスト（parts が ない）は はきかえる
+  G.questBoard = G.questBoard.filter(q => q && Array.isArray(q.parts));
+  for(const q of G.questBoard){
+    const family=String(q.tier).replace(/[0-9]/g,''),arc=STORY_ARCS[family]?.find(arc=>arc.title===q.title);
+    if(arc)while(q.parts.length<REVIEW_SETTINGS.legacyMathQuestQuestions){const tpl=arc.parts[q.parts.length%arc.parts.length],p=generateProblem(q.tier);q.parts.push({...p,text:tpl(p.a,p.b),isWordProblem:true});}
+  }
+  // いまの 進み具合に 合わない かんたんすぎる クエスト（まだ 手をつけていないもの）は 入れかえる
+  G.questBoard = G.questBoard.map(q => (q.partIndex > 0 || questTierAllowed(q.tier)) ? q : generateStoryQuest());
+  while (G.questBoard.length < QUEST_BOARD_SIZE) G.questBoard.push(generateStoryQuest());
+}
+
+/* カードの中に出す、1回目・2回目・3回目の ごほうび（ちいさい版。アイコンはホバーで詳細） */
+function questCardRewardsHtml(q){
+  const r=questRewardFor(q.tier),gold=q.parts.reduce((sum,_,i)=>sum+r.golds[Math.min(i,r.golds.length-1)],0);
+  return `<div class="quest-card-rewards"><div class="qc-reward"><span class="qc-icons">${stageRewardIcon('medal','quest-medal',1,20)}<small>最大${q.parts.length}枚</small></span><span class="qc-gold">最大 💰${gold.toLocaleString()}・🎁</span></div></div><div class="reading-quest-card-actions"><span class="btn">依頼を見る</span></div>`;
+}
+
+/* 1回目・2回目・3回目の ごほうびを、ステージ選択と おなじ バッジで 見せる */
+function questRewardStripHtml(q){
+  const r = questRewardFor(q.tier);
+  const goldChip = g => `<span class="stage-reward-gold"><span aria-hidden="true">💰</span><b>${g}</b></span>`;
+  const itemIcon = it => stageRewardIcon('item', it.id, 1, 40);
+  const medalIcon = stageRewardIcon('medal', 'quest-medal', 1, 40) + '<small>×1</small>';
+  return `<div class="quest-reward-strip">${q.parts.map((_,i)=>stageRewardBadge(`${i+1}回目`,(QUEST_STEP_ITEMS[i]?itemIcon(QUEST_STEP_ITEMS[i]):'')+medalIcon+goldChip(r.golds[Math.min(i,r.golds.length-1)]),q.partIndex>i)).join('')}</div>`;
+}
+
+/* クエストメダルの ためた数と、もらえる ごほうびの 一覧 */
+function questMedalTrackHtml(){
+  const medals = G.questMedals || 0;
+  const done = G.questMedalExchanged || {};
+  return `<div class="quest-medal-rewards">${[...QUEST_MEDAL_MILESTONES].sort((a,b)=>Number(!!b.exclusive)-Number(!!a.exclusive)||a.medals-b.medals).map(m => {
+    const got = !!done[m.key];
+    const can = !got && medals >= m.medals;
+    return `<div class="quest-medal-reward${got ? ' is-claimed' : ''}">${questMedalMilestoneIcon(m, 64)}<b class="quest-medal-prize-name">${escapeHtml(m.label)}</b>${m.exclusive?'<span class="quest-medal-exclusive-badge">交換所限定</span>':''}${m.rarity===5?'<span class="quest-medal-legend-label">★★★★★ レジェンド</span>':''}<small>🏅 ${m.medals}まい</small>${got
+      ? '<strong>うけとりずみ</strong>'
+      : `<button type="button" class="btn quest-exchange-btn" data-exchange="${m.key}"${can ? '' : ' disabled'}>${can ? 'うけとる' : `あと${m.medals - medals}まい`}</button>`}</div>`;
+  }).join('')}</div>`;
+}
+
+/* うけとりの かくにん → わたす → ごほうび表示 */
+function confirmMedalExchange(key){
+  const m = QUEST_MEDAL_MILESTONES.find(x => x.key === key);
+  if (!m || (G.questMedalExchanged || {})[key] || (G.questMedals || 0) < m.medals) return;
+  document.querySelector('.quest-detail-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'quest-detail-overlay';
+  overlay.innerHTML = `<div class="quest-detail-panel quest-exchange-confirm" role="alertdialog" aria-modal="true">
+    <h3>うけとりますか？</h3>
+    <div class="quest-exchange-item">${questMedalMilestoneIcon(m, 56)}<b>${m.label}</b></div>
+    <p>メダルが <b>${m.medals}まい</b> あつまったので うけとれるよ！<br><small>（メダルは へりません）</small></p>
+    <div class="quest-detail-actions">
+      <button type="button" class="btn" id="btn-exchange-cancel">あとで</button>
+      <button type="button" class="btn btn-primary" id="btn-exchange-ok">うけとる！</button>
+    </div></div>`;
+  document.body.appendChild(overlay);
+  bindStageRewardTooltips(overlay);
+  const close = () => { hideTooltip(); overlay.remove(); };
+  $('btn-exchange-cancel').onclick = () => { close(); openQuestMedalShop(); };
+  $('btn-exchange-ok').onclick = () => {
+    close();
+    const reward = exchangeQuestMedals(key);
+    if (!reward) { showQuestBoard(); return; }
+    save();
+    playItemRevealSequence([reward], { badge:'🏅 メダルの ごほうび', title:'ごうかな けいひん！', showSummary:true, onDone: showQuestBoard });
+  };
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+}
+
+/* ボードの右上：交換所アイコンとメダル数 */
+function renderQuestMedalCount(){
+  const el = $('quest-medal-count');
+  if (!el) return;
+  const medals = G.questMedals || 0;
+  el.innerHTML = `<img class="quest-medal-exchange-icon" src="${av('assets/quest-medal-exchange-shop.png')}" alt=""><b class="quest-medal-count-badge">${medals}</b>`;
+  el.setAttribute('aria-label', `クエストメダル交換所をひらく。メダル ${medals}まい`);
+  el.title = `クエストメダル交換所（${medals}まい）`;
+  el.onclick = openQuestMedalShop;
+}
+
+/* クエストメダル交換所はボード右上のアイコンから開く */
+function renderQuestMedalShop(){
+  const el = document.querySelector('.quest-medal-shop-dialog .quest-medal-rewards');
+  if (!el) return;
+  el.outerHTML = questMedalTrackHtml();
+  const list = document.querySelector('.quest-medal-shop-dialog');
+  bindQuestMedalExchangeButtons(list);
+  bindStageRewardTooltips(list);
+}
+
+function bindQuestMedalExchangeButtons(root){
+  root?.querySelectorAll('[data-exchange]').forEach(btn => { btn.onclick = () => confirmMedalExchange(btn.dataset.exchange); });
+}
+
+function openQuestMedalShop(){
+  document.querySelector('.quest-detail-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'quest-detail-overlay quest-medal-shop-overlay';
+  overlay.innerHTML = `<section class="quest-detail-panel quest-medal-shop-dialog" role="dialog" aria-modal="true" aria-labelledby="quest-medal-shop-title">
+    <header class="quest-medal-shop-dialog-head"><h2 id="quest-medal-shop-title">クエストメダル交換所</h2><button type="button" class="btn quest-medal-shop-close" aria-label="交換所をとじる">×</button></header>
+    <p class="quest-medal-shop-note">「星読みの図書館」シリーズはメダル交換所だけの限定品！ 必要数に達すると一度ずつ受け取れます。メダルはへりません。</p>
+    ${questMedalTrackHtml()}
+  </section>`;
+  document.body.appendChild(overlay);
+  bindQuestMedalExchangeButtons(overlay);
+  bindStageRewardTooltips(overlay);
+  const close = () => { hideTooltip(); overlay.remove(); $('quest-medal-count')?.focus(); };
+  overlay.querySelector('.quest-medal-shop-close').onclick = close;
+  overlay.addEventListener('click', event => { if (event.target === overlay) close(); });
+  overlay.addEventListener('keydown', event => { if (event.key === 'Escape') close(); });
+  overlay.querySelector('.quest-medal-shop-close').focus();
+}
+
+function startReadingQuestBattle(q,onDone){
+  if(G.player.hp<=0)G.player.hp=1;
+  const allowed=questAllowedTiers(),front=allowed.find(e=>e.isFront);
+  const areaId=QUEST_FAMILY_AREA[front.family],stages=AREA_STAGES[areaId].stages;
+  const stageIndex=Math.min(stages.length-1,Math.max(0,questFamilyProgress(front.family).cleared-1));
+  $('screen-quest-board').classList.add('hidden');
+  explore={zone:'tower',floor:1,stageMode:true,areaId,stageIndex,isBoss:false,stageKillCount:0,sessionDrops:[],sessionGold:0,readingQuest:q,readingDone:onDone};
+  startBattle(false);
+  $('battle-floor-title').textContent='五つの挑戦状を解読！ 怪盗ヒルルと対決';
+}
+function finishReadingQuestBattle(won){
+  const done=explore?.readingDone;if(!done)return;
+  explore.readingDone=null;endBattleLoop();destroyChallenge();
+  G.player.hp=Math.max(1,G.player.hp);save();explore=null;showQuestBoard();done(won);
+}
+
+let questSubject = 'math';
+function showQuestBoard(){
+  showHome();
+  document.querySelector('.quest-detail-overlay')?.remove();
+  $('screen-quest-board').classList.remove('hidden');
+  ensureQuestBoard();
+  const list = $('quest-board-list');
+  list.innerHTML = '';
+  const tabs = $('quest-subject-tabs');
+  if(tabs) tabs.querySelectorAll('button').forEach(btn=>{btn.setAttribute('aria-selected',String(btn.dataset.subject===questSubject));btn.onclick=()=>{questSubject=btn.dataset.subject;showQuestBoard();};});
+  if(questSubject==='reading'){
+    const root=document.createElement('div');root.className='reading-subquests';list.append(root);
+    renderReadingSubquests(root,{game:()=>G,save:()=>save(),exp:amount=>grantExp(amount),refresh:()=>{renderQuestMedalShop();renderQuestMedalCount();},answerFeedback:success=>{if(success)SM.playCorrectAnswer();else SM.playBeep('error');window.showResultOverlay?.(success);},fight:startReadingQuestBattle,asset:av,rewardIcon:stageRewardIcon,bindRewards:bindStageRewardTooltips,printJapanese:record=>openMaterialPrintChoices('japanese',record)});
+    renderQuestMedalShop();renderQuestMedalCount();return;
+  }
+  const mathWordRoot=document.createElement('section');mathWordRoot.className='math-word-subquests';list.append(mathWordRoot);
+
+  const cards=[];
+  for (const q of G.questBoard){
+    // 中に ごほうびアイコン（ホバーで詳細）の ボタンが 入るので、カードは button ではなく div にする
+    const card = document.createElement('div');
+    card.setAttribute('role', 'button');
+    card.tabIndex = 0;
+    card.className = 'quest-card';card.dataset.questNoticeKey='math-story:'+q.uid;
+    card.setAttribute('aria-label', `${q.npc.name}「${q.title}」 ${q.partIndex}／${q.parts.length}問 クリア`);
+    const stars = Array.from({ length: q.parts.length }, (_, i) => `<span class="${i < q.partIndex ? 'on' : ''}">★</span>`).join('');
+    const starsCompleteClass = q.partIndex >= q.parts.length ? ' is-complete' : '';
+    card.innerHTML = `
+      <div class="quest-card-ribbon"><span class="quest-card-stars${starsCompleteClass}" aria-label="${q.partIndex}問中${q.parts.length}問クリア">${stars}</span></div>
+      <div class="quest-card-art"><img src="${getNPCImage(q.npc)}" alt=""></div>
+      <div class="quest-card-name">${renderReadingHints(q.npc.name)}</div>
+      <div class="quest-card-title">${renderReadingHints(q.title)}</div>
+      <div class="quest-card-tag">🧮 ${OP_LABELS[q.tier]}</div>
+      ${questCardRewardsHtml(q)}`;
+    card.onclick = () => showQuestDetail(q);
+    card.onkeydown = e => { if (e.target === card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); showQuestDetail(q); } };
+    cards.push(card);
+  }
+  renderMathWordSubquests(mathWordRoot,{extraCards:cards,game:()=>G,save:()=>save(),exp:amount=>grantExp(amount),refresh:()=>{renderQuestMedalShop();renderQuestMedalCount();},answerFeedback:success=>{if(success)SM.playCorrectAnswer();else SM.playBeep('error');window.showResultOverlay?.(success);},asset:av,rewardIcon:stageRewardIcon,bindRewards:bindStageRewardTooltips,print:record=>openMaterialPrintChoices('math',record)});
+  renderQuestMedalShop();
+  renderQuestMedalCount();
+}
+
+let questBoardResizeFrame=0;
+window.addEventListener('resize',()=>{
+  const board=$('screen-quest-board');
+  if(!board||board.classList.contains('hidden')||document.querySelector('.quest-detail-overlay,.reading-subquest-overlay'))return;
+  if(questBoardResizeFrame)cancelAnimationFrame(questBoardResizeFrame);
+  questBoardResizeFrame=requestAnimationFrame(()=>{questBoardResizeFrame=0;showQuestBoard();});
+});
+
+/* カードを えらんだあとの 詳細：もんだい・ごほうび（1〜3回目）・こたえる／プリント */
+function showQuestDetail(q){
+  document.querySelector('.quest-detail-overlay')?.remove();
+  const part = q.parts[q.partIndex];
+  const overlay = document.createElement('div');
+  overlay.className = 'quest-detail-overlay';
+  overlay.innerHTML = `
+    <div class="quest-detail-panel" role="dialog" aria-modal="true" aria-labelledby="quest-detail-title">
+      <div class="quest-detail-head">
+        <img class="quest-detail-npc" src="${getNPCImage(q.npc)}" alt="">
+        <div>
+          <div class="quest-npc-line"><span class="quest-npc-name">${renderReadingHints(q.npc.name)}</span>
+            <span class="tag">🧮${OP_LABELS[q.tier]}</span>
+            <span class="tag quest-progress-tag">${q.partIndex + 1}／${q.parts.length}問め</span></div>
+          <h3 id="quest-detail-title" class="quest-title">＊${renderReadingHints(q.title)}＊</h3>
+        </div>
+      </div>
+      <div class="quest-detail-text">${part.text}</div>
+      ${questRewardStripHtml(q)}
+      <div class="quest-detail-actions">
+        <button type="button" class="btn" id="btn-quest-detail-close">とじる</button>
+        <button type="button" class="btn" id="btn-quest-detail-print">🖨️ プリント</button>
+        <button type="button" class="btn btn-primary" id="btn-quest-detail-answer">こたえる</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  bindStageRewardTooltips(overlay);
+  const close = () => { hideTooltip(); overlay.remove(); };
+  $('btn-quest-detail-close').onclick = close;
+  $('btn-quest-detail-print').onclick = () => printQuestSheet(q);
+  $('btn-quest-detail-answer').onclick = () => { close(); startQuestChallenge(q); };
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+}
+
+
+/* クエスト依頼者からの お礼のセリフ（3問すべて こたえおわった とき） */
+const QUEST_THANKS_LINES = [
+  'たすかったよ、ほんとうに ありがとう！',
+  'さすが ぼうけんしゃだ！ たすかった！',
+  'きみの けいさんの ちからに かんしゃするよ！',
+  'これで あんしんして くらせるよ。ありがとう！',
+  'おかげで たすかった！ おれい するね！',
+];
+/* まだ とちゅうの ときの セリフ（1〜2問め こたえた とき） */
+const QUEST_CONTINUE_LINES = [
+  'ありがとう！ でも まだ たのみたいことが あるんだ…',
+  'たすかったよ。じつは もうひとつ おねがいが あって…',
+  'いいちょうしだね！ つぎも たのめるかな？',
+  'その ちょうしで、もうすこし てつだってほしいんだ。',
+];
+
+/* サブクエストの クリア演出：NPCの おれいセリフ＋ごほうび
+   （ゴールド・けいけんちが じっさいの HUDの ばしょへ とんでいく） */
+function showQuestRewardToast(gold, exp, npc, completed, extras, onDone){
+  showHome();
+  document.querySelector('.quest-reward-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'quest-reward-overlay';
+  const line = completed ? pick(QUEST_THANKS_LINES) : pick(QUEST_CONTINUE_LINES);
+  overlay.innerHTML = `
+    <div class="quest-reward-card" role="dialog" aria-modal="true" aria-labelledby="quest-reward-title">
+      <div class="quest-reward-badge">${completed ? '✅ クエストクリア！' : '📖 つづく…'}</div>
+      <div class="quest-reward-conversation">
+        <img class="quest-reward-portrait" src="${getNPCImage(npc)}" alt="${npc.name}">
+        <div class="quest-reward-dialogue"><b>${npc.name}</b><p class="quest-reward-line" id="quest-reward-title">${line}</p></div>
+      </div>
+      <div class="quest-reward-chips">
+        <div class="quest-reward-chip gold" id="quest-reward-chip-gold">💰 +${gold}</div>
+        <div class="quest-reward-chip exp" id="quest-reward-chip-exp">✨ +${exp}</div>
+      </div>
+      ${(extras && extras.length) ? `<div class="quest-reward-extras">${extras.map(x => `<div class="quest-reward-extra${x.big ? ' is-big' : ''}">${iconHtml(x.icon, 26)}<span>${x.text}</span></div>`).join('')}</div>` : ''}
+      <button type="button" class="btn btn-primary quest-reward-continue">${completed ? '依頼一覧へ' : 'つぎの依頼をえらぶ'}</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelector('.quest-reward-portrait').addEventListener('error', event => { event.currentTarget.hidden = true; }, { once:true });
+  SM.play('se_gacha_result');
+
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    overlay.remove();
+    onDone?.();
+  };
+  overlay.querySelector('.quest-reward-continue').addEventListener('click', finish);
+  overlay.addEventListener('keydown', event => {
+    if (event.key === 'Escape') { event.preventDefault(); finish(); }
+  });
+  overlay.querySelector('.quest-reward-continue').focus({preventScroll:true});
+
+  setTimeout(() => {
+    flyRewardChip($('quest-reward-chip-gold'), $('home-player-gold'));
+    flyRewardChip($('quest-reward-chip-exp'), $('home-player-exp-num'));
+  }, 900);
+
+}
+
+/* fromEl の見た目のコピーを、toEl の位置まで とばして きえさせる。
+   とうちゃくした toEl は ひかって パルスする */
+function flyRewardChip(fromEl, toEl){
+  if (!fromEl || !toEl) return;
+  const fromRect = fromEl.getBoundingClientRect();
+  const toRect = toEl.getBoundingClientRect();
+  const clone = fromEl.cloneNode(true);
+  clone.removeAttribute('id');
+  clone.className = 'quest-reward-flying';
+  clone.style.left = fromRect.left + 'px';
+  clone.style.top = fromRect.top + 'px';
+  clone.style.width = fromRect.width + 'px';
+  document.body.appendChild(clone);
+  fromEl.style.visibility = 'hidden';
+
+  const dx = (toRect.left + toRect.width / 2) - (fromRect.left + fromRect.width / 2);
+  const dy = (toRect.top + toRect.height / 2) - (fromRect.top + fromRect.height / 2);
+  requestAnimationFrame(() => {
+    clone.style.transform = `translate(${dx}px, ${dy}px) scale(0.3)`;
+    clone.style.opacity = '0';
+  });
+  setTimeout(() => {
+    clone.remove();
+    fromEl.style.visibility = '';
+    toEl.classList.remove('reward-pulse'); void toEl.offsetWidth; toEl.classList.add('reward-pulse');
+  }, 650);
+}
+
+function getNPCImage(npc) {
+  const definedNpc = QUEST_NPCS.find(n => n.name === npc.name);
+  if (definedNpc && definedNpc.image) return av(definedNpc.image);
+  if (npc.image) return av(npc.image);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">${npc.emoji}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+let isTrainingSubquest = false;
+function startQuestChallenge(q) {
+  $('screen-quest-board').classList.add('hidden');
+  const part = q.parts[q.partIndex];
+  
+  const events = [];
+  if (q.partIndex === 0) {
+    events.push({
+      id: Math.random().toString(),
+      name: q.npc.name,
+      text: `おや、ぼうけんしゃさん！\nちょっと おねがい しても いいかな？`,
+      image: getNPCImage(q.npc),
+      position: 'right',
+      animation: 'fade',
+      emotion: 'jump'
+    });
+  }
+  
+  events.push({
+    id: Math.random().toString(),
+    name: q.npc.name,
+    text: part.text, 
+    image: getNPCImage(q.npc),
+    position: 'right',
+    animation: q.partIndex === 0 ? 'none' : 'pop',
+    emotion: q.partIndex === 0 ? 'nod' : 'bounce'
+  });
+
+  const eventData = {
+    title: `サブクエスト：${q.title}（${q.partIndex + 1}／${q.parts.length}問め）`,
+    events: events,
+    preventClose: true,
+    onLastEvent: (overlay) => {
+      const dialogBox = overlay.querySelector('.event-player-dialog');
+      
+      const challengeWindow = document.createElement('section');
+      challengeWindow.className = 'quest-answer-window quest-answer-window-math';
+      challengeWindow.setAttribute('aria-label','算数クエストの問題と答え');
+      const closeChallenge = document.createElement('button');
+      closeChallenge.type='button';closeChallenge.className='btn quest-answer-close';closeChallenge.textContent='✕ とじる';
+      closeChallenge.onclick=()=>{destroyChallenge();overlay.remove();showQuestBoard();};
+      const challengeContainer = document.createElement('div');challengeContainer.className='quest-answer-challenge';
+      challengeWindow.append(closeChallenge,challengeContainer);
+      overlay.appendChild(challengeWindow);
+      
+      startChallenge(challengeContainer, {
+        problem: part,
+        timeLimit: problemTimeLimit(q.tier) + 6000
+      }, (res) => {
+        destroyChallenge();
+        if (res.success) {
+          hitTrainingDummy();
+          const reward = questRewardFor(q.tier);
+          const stepIdx = q.partIndex;
+          q.partIndex++;
+          const completed = q.partIndex >= q.parts.length;
+          const totalGold = reward.golds[Math.min(stepIdx, reward.golds.length - 1)];
+          const totalExp = reward.exp + (completed ? Math.round(reward.exp * 0.5) : 0);
+          G.player.gold += totalGold;
+          const questExtras = grantQuestExtras(q.partIndex, completed);
+          const { leveledUp, lvlBefore, pointsGained, maxHpBefore, maxMpBefore } = grantExp(totalExp);
+          if (completed){
+            const idx = G.questBoard.findIndex(x => x.uid === q.uid);
+            if (idx >= 0) G.questBoard[idx] = generateStoryQuest();
+          }
+          save();
+          
+          overlay.remove();
+          
+          const playReward = () => {
+            showQuestRewardToast(totalGold, totalExp, q.npc, completed, questExtras, () => {
+              // 1問おわるごとに サブクエストボードへ もどる（つづきは ボードから えらぶ）
+              const nextStep = () => showQuestBoard();
+              if (leveledUp){
+                const unlockedSkills = SKILL_DB.filter(s => (s.reqLvl || 1) > lvlBefore && (s.reqLvl || 1) <= G.player.lvl);
+                showLevelUpModal({
+                  fromLvl: lvlBefore, toLvl: G.player.lvl,
+                  hpBefore: maxHpBefore, hpAfter: totalMaxHp(),
+                  mpBefore: maxMpBefore, mpAfter: totalMaxMp(),
+                  pointsGained, unlockedSkills,
+                }, nextStep);
+              } else {
+                nextStep();
+              }
+            });
+          };
+
+          playReward();
+          
+        } else {
+          challengeContainer.innerHTML = '';
+          challengeContainer.style.display = 'none';
+          if (dialogBox) {
+            dialogBox.style.display = 'block';
+            const tEl = dialogBox.querySelector('.event-player-text');
+            if (tEl) {
+              tEl.style.display = 'block';
+              tEl.innerHTML = `ざんねん…こたえが ちがったみたい（せいかいは ${part.answer}）。<br>もういちど ちょうせんしてね。`;
+            }
+          }
+          const skipBtn = overlay.querySelector('#event-skip-btn');
+          if (skipBtn) skipBtn.style.display = 'block';
+          
+          overlay.querySelector('#event-screen').addEventListener('click', () => {
+             overlay.remove();
+             showQuestBoard();
+          }, { once: true });
+        }
+      });
+      
+    }
+  };
+  
+  if (window.playEventScene) {
+    window.playEventScene(eventData, showQuestBoard);
+  }
+}
+
+/* プリントの上部にいれる「なまえ／にちづけ」らん。
+   なまえの空らんは 長めにして 書きやすく、にちづけは「＿＿月＿＿日（＿＿ようび）」の
+   べつべつの空らんにし、幼い子でも読めるよう 月・日・曜日に ルビをふる */
+function printMetaHtml(){
+  return `
+    <div class="p-meta">
+      <span class="p-meta-name">なまえ：</span>
+      <span class="p-meta-date">
+        <span class="p-meta-blank-sm"></span><ruby>月<rt>がつ</rt></ruby>
+        <span class="p-meta-blank-sm"></span><ruby>日<rt>にち</rt></ruby>
+        （<span class="p-meta-blank-sm"></span><ruby>曜日<rt>ようび</rt></ruby>）
+      </span>
+    </div>
+  `;
+}
+
+/* サブクエストは 3問セットぶん まとめて 1まいの A4に おさまるよう、
+   1問ずつを コンパクトな もんだい行＋こたえ欄で ならべる */
+function printQuestSheet(q){
+  const rows = q.parts.map((part, i) => `
+    <div class="quest-print-block">
+      <div class="p-row quest-print-question">
+        <span class="p-num quest-print-num">${i + 1}</span>
+        <span class="p-expr" style="white-space:normal;">${part.text}</span>
+      </div>
+      <div class="p-row quest-print-answer"><span class="p-num">こたえ</span><span class="p-blank"></span></div>
+    </div>
+  `).join('');
+  openPrintWindow(`
+    ${renderPrintRewardIcons([{icon:"💰",label:"クエストのゴールド報酬"},{icon:"✨",label:"経験値"},{icon:"🏅",label:"1問メダル1枚（ゲーム内でクリア）"}])}
+    <h1 style="font-size:34px;">サブクエスト：${q.npc.name}の たのみごと</h1>
+    <div class="p-sub" style="font-size:19px; margin-bottom:26px;">＊${q.title}＊／えんざん：${OP_LABELS[q.tier]}</div>
+    <div class="p-sheet" style="grid-template-columns:1fr; margin-top:12px;">
+      ${rows}
+    </div>
+  `, av('画像/ステージ/かけ算の森.jpg'));
+}
+
+const STAT_DEFS = [
+  { key:'maxHp', name:'<img src="assets/ui_icons/ui_icon_4.png" class="stat-inline-icon"> HP', per:6, desc:'1スキルポイントで さいだいHP+6' },
+  { key:'maxMp', name:'<img src="assets/ui_icons/ui_icon_6.png" class="stat-inline-icon"> MP', per:4, desc:'1スキルポイントで さいだいMP+4' },
+  { key:'atk', name:'<img src="assets/ui_icons/ui_icon_2.png" class="stat-inline-icon"> こうげき力', per:1, desc:'1スキルポイントで こうげき力+1' },
+  { key:'def', name:'<img src="assets/ui_icons/ui_icon_3.png" class="stat-inline-icon"> しゅび力', per:1, desc:'1スキルポイントで しゅび力+1' },
+  { key:'spd', name:'<img src="assets/ui_icons/ui_icon_1.png" class="stat-inline-icon"> すばやさ', per:1, desc:'1スキルポイントで すばやさ+1（会心の一撃＆敵の攻撃をかわす確率がUP！）' },
+];
+
+/* わりふりちゅうの スキルポイント（まだ G.player に はんえいしていない かりの わりあて）。
+   「けってい」ボタンを おして はじめて G.player に てきようされる（おしまちがい ぼうし） */
+let statusPending = {};
+let currentRoomTab = 'status-equip';
+
+function setRoomTab(tabKey){
+  // 「持ち物」タブは なくなった（そうび画面の「アイテム」タブに 統合）
+  if (tabKey === 'inventory') { tabKey = 'status-equip'; equipListTab = 'items'; }
+  currentRoomTab = tabKey || 'status-equip';
+  document.querySelectorAll('.room-nav-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.roomTab === currentRoomTab);
+  });
+  document.querySelectorAll('.room-tab-pane').forEach(p => {
+    p.classList.toggle('active', p.id === `room-tab-pane-${currentRoomTab}`);
+  });
+
+  if (currentRoomTab === 'status-equip') {
+    renderStatus();
+    renderEquipmentSlots();
+  } else if (currentRoomTab === 'stats') {
+    renderPlayerStudyStats();
+  }
+}
+
+function showStatus(){
+  statusPending = {};
+  showScreen('screen-status');
+  setRoomTab(currentRoomTab || 'status-equip');
+}
+
+function statusPendingTotal(){
+  return Object.values(statusPending).reduce((a, b) => a + b, 0);
+}
+
+
+let roomInventoryTarget = null; // いま アイテムを 描いている 先（もちもの タブ／そうび画面の 一覧）
+function renderRoomInventory(gridEl, cellCount) {
+  const grid = gridEl || roomInventoryTarget;
+  if (!grid) return;
+  roomInventoryTarget = grid;
+  grid.innerHTML = '';
+  const CELLS = cellCount || 64; // 8x8
+  
+  for (let i = 0; i < CELLS; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'inv-grid-cell';
+    
+    if (i < G.items.length) {
+      const it = G.items[i];
+      const db = getItemTemplate(it.id);
+      if (db) {
+        const isBlueprint = isBlueprintItem(db);
+        const isCostSeed = db.effect === 'cost';
+        const isBattle = isBattleItem(db);
+        const emoji = db.emoji || (isBlueprint ? '📜' : '💊');
+        cell.innerHTML = `<div style="font-size:32px;">${iconHtml(emoji, 32)}</div><span class="item-count">x${it.count}</span>`;
+        
+        let desc = db.desc || '';
+        if (isBlueprint) {
+          desc = '印刷画面を開くと1個消費。挑戦状を解こう。古代装備がランダムで完成！未所持の種類が優先され、6種類そろうまでは重複しません。';
+        }
+
+        let tagBadge = '';
+        let actionHint = '';
+        if (isBlueprint) {
+          tagBadge = '<span class="tag" style="background:rgba(243,156,18,0.2); border-color:#f39c12; color:#f39c12; font-size:11px; margin-left:6px; padding:1px 6px; border-radius:4px;">📜 挑戦状</span>';
+          actionHint = '<div style="font-size:13px; margin-top:8px; color:#f1c40f;">🖱 クリックして プリント</div>';
+        } else if (isCostSeed) {
+          tagBadge = '<span class="tag" style="background:rgba(46,204,113,0.2); border-color:#2ecc71; color:#2ecc71; font-size:11px; margin-left:6px; padding:1px 6px; border-radius:4px;">🌱 部屋用</span>';
+          actionHint = '<div style="font-size:13px; margin-top:8px; color:#2ecc71;">🖱 クリックして つかう</div>';
+        } else if (isBattle) {
+          tagBadge = '<span class="tag" style="background:rgba(231,76,60,0.2); border-color:#e74c3c; color:#ff7675; font-size:11px; margin-left:6px; padding:1px 6px; border-radius:4px;">⚔️ 戦闘用</span>';
+          actionHint = '<div style="font-size:12px; margin-top:8px; color:#f39c12;">⚔️ 戦闘用アイテム（部屋では使えません）</div>';
+        } else {
+          actionHint = '<div style="font-size:12px; margin-top:8px; color:#bbb;">🖱 クリックして つかう</div>';
+        }
+
+        cell.onmouseover = (e) => showTooltip(e, generateItemDetailHtml(db, { count: it.count }));
+        cell.onmouseout = () => hideTooltip();
+        cell.onclick = () => {
+          hideTooltip();
+          if (isBlueprint) {
+            printBlueprintSheet(db, it.uid);
+          } else if (isCostSeed) {
+            const res = useItem(it.uid, db, false);
+            if (res && res.success) {
+              renderEquipmentSlots();
+              renderStatus();
+              renderRoomInventory(); // Re-render
+              updateHud(); 
+              save(); 
+              const costBar = $('equip-cost-bar');
+              if (costBar) {
+                costBar.classList.remove('cost-up-anim');
+                void costBar.offsetWidth;
+                costBar.classList.add('cost-up-anim');
+              }
+            }
+          } else if (db.effect === 'respec') {
+            showConfirmModal('スキルポイントのリセット',
+              '「ふりなおしのたね」をつかって、わりふったスキルポイントを 全てリセットしますか？',
+              () => {
+                const res = useItem(it.uid, db, false);
+                if (res && res.success) {
+                  renderEquipmentSlots();
+                  renderStatus();
+                  renderRoomInventory();
+                  updateHud();
+                  save();
+                }
+              }
+            );
+          } else if (isBattle) {
+            SM.playBeep('error');
+            alert('「戦闘用」アイテムは バトル中に つかおう！\n（部屋で使えるのは 古代からの挑戦状 や コストの種 のみです）');
+          } else {
+            const res = useItem(it.uid, db, false);
+            if (res && res.success) {
+              updateHud();
+              save();
+              renderRoomInventory();
+            }
+          }
+        };
+      }
+    }
+    grid.appendChild(cell);
+  }
+}
+
+function renderStatus(){
+  showScreen('screen-status');
+  const remaining = G.player.points - statusPendingTotal();
+  $('status-points').textContent = `のこりスキルポイント：${remaining}`;
+  const bonus = equipBonus();
+  const bonusMap = { maxHp:bonus.hp, maxMp:bonus.mp, atk:bonus.atk, def:bonus.def, spd:bonus.spd };
+
+  // 五角形パラメーター統合UI（五角形チャート＋5頂点割り振りボタン・ホバー解説）を描画
+  renderStatusPentagonUI(bonusMap, remaining);
+  const confirmBtn = $('btn-status-confirm');
+  const total = statusPendingTotal();
+  confirmBtn.disabled = total <= 0;
+  confirmBtn.textContent = total > 0 ? `けってい（スキルポイント${total}を つかう）` : 'けってい';
+  updateHud();
+  renderEquipmentSlots();
+  renderTestModeStatEditor();
+}
+
+/* テストモード専用：ステータスを数値で直接入力して書き換えるパネル */
+function renderTestModeStatEditor(){
+  const old = $('test-stat-editor');
+  if (old) old.remove();
+  if (!G || !G.isTestMode) return;
+  const anchor = $('btn-status-confirm');
+  if (!anchor) return;
+  const fields = [
+    { key:'maxHp', label:'HP（さいだい）' },
+    { key:'maxMp', label:'MP（さいだい）' },
+    { key:'atk', label:'こうげき力' },
+    { key:'def', label:'しゅび力' },
+    { key:'spd', label:'すばやさ' },
+  ];
+  const box = document.createElement('div');
+  box.id = 'test-stat-editor';
+  box.style.cssText = 'margin-top:12px; padding:10px; border:1px dashed #f1c40f; border-radius:8px; background:rgba(0,0,0,.25);';
+  box.innerHTML = '<div style="font-weight:bold; color:#f1c40f; margin-bottom:6px;">🛠 テスト用：数値を直接入力</div>'
+    + fields.map(f => `<label style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin:4px 0;"><span>${f.label}</span><input type="number" min="1" max="999999" step="1" inputmode="numeric" data-test-stat="${f.key}" value="${G.player[f.key]}" style="width:110px; padding:4px 6px; text-align:right;"></label>`).join('')
+    + '<button type="button" id="btn-test-stat-apply" class="btn btn-primary" style="margin-top:8px;">てきよう</button>';
+  anchor.insertAdjacentElement('afterend', box);
+  $('btn-test-stat-apply').addEventListener('click', () => {
+    box.querySelectorAll('input[data-test-stat]').forEach(inp => {
+      const v = Math.floor(Number(toHalfWidth(String(inp.value))));
+      if (Number.isFinite(v) && v >= 1) G.player[inp.dataset.testStat] = Math.min(v, 999999);
+    });
+    G.player.hp = G.player.maxHp;
+    G.player.mp = G.player.maxMp;
+    renderStatus();
+  });
+}
+
+/* 五角形パラメーター統合UI（五角形チャート＋5頂点操作ノード＋ホバー解説）の描画 */
+const STAT_RADAR_DEFS = [
+  {
+    key: 'maxHp',
+    name: 'HP',
+    iconImg: 'assets/ui_icons/ui_icon_4.png',
+    baseCap: 120,
+    per: 6,
+    posClass: 'pos-top',
+    fullName: '💖 HP（さいだいHP）',
+    desc: '1スキルポイントで さいだいHP+6',
+    note: '戦闘中の体力。0になるとたおれてしまうぞ！'
+  },
+  {
+    key: 'maxMp',
+    name: 'MP',
+    iconImg: 'assets/ui_icons/ui_icon_6.png',
+    baseCap: 40,
+    per: 4,
+    posClass: 'pos-top-right',
+    fullName: '🔮 MP（さいだいMP）',
+    desc: '1スキルポイントで さいだいMP+4',
+    note: 'とくぎや魔法を使うための魔力。'
+  },
+  {
+    key: 'atk',
+    name: 'こうげき力',
+    iconImg: 'assets/ui_icons/ui_icon_2.png',
+    baseCap: 20,
+    per: 1,
+    posClass: 'pos-bottom-right',
+    fullName: '⚔️ こうげき力',
+    desc: '1スキルポイントで こうげき力+1',
+    note: '敵に与えるダメージがアップする！'
+  },
+  {
+    key: 'def',
+    name: 'しゅび力',
+    iconImg: 'assets/ui_icons/ui_icon_3.png',
+    baseCap: 12,
+    per: 1,
+    posClass: 'pos-bottom-left',
+    fullName: '🛡️ しゅび力',
+    desc: '1スキルポイントで しゅび力+1',
+    note: '敵から受けるダメージを減らす！'
+  },
+  {
+    key: 'spd',
+    name: 'すばやさ',
+    iconImg: 'assets/ui_icons/ui_icon_1.png',
+    baseCap: 24,
+    per: 1,
+    posClass: 'pos-top-left',
+    fullName: '👟 すばやさ',
+    desc: '1スキルポイントで すばやさ+1',
+    note: '会心の一撃（クリティカル）と、相手の攻撃をかわす確率（ミス！）がアップ！<br><span style="color:#f1c40f; font-size:11px;">※10ポイントで+5%（30%を超えると10ポイントで+1%）</span>'
+  },
+];
+
+function renderStatusPentagonUI(bonusMap, remaining){
+  const svg = $('status-radar-svg');
+  const nodesContainer = $('status-nodes-container');
+  if (!svg || !nodesContainer) return;
+
+  const cx = 210;
+  const cy = 200;
+  const maxR = 98;
+  const numAxes = 5;
+
+  // 外側のふち＝「いまのレベルの めやす」。レベルが あがるほど めやすも ふえる。
+  // 各じくを それぞれ めやすで わる（ひとつの 能力が めやすを こえても、ほかの能力が つぶれない）
+  const capScale = 1 + 0.1 * (Math.max(1, G.player.lvl) - 1);
+  const capOf = item => item.baseCap * capScale;
+
+  const getAngle = (i) => (-90 + i * (360 / numAxes)) * (Math.PI / 180);
+
+  // 背景の五角形グリッド（20%, 40%, 60%, 80%, 100%）
+  const steps = [0.2, 0.4, 0.6, 0.8, 1.0];
+  let gridHtml = '';
+  for (const step of steps){
+    const r = maxR * step;
+    const pts = [];
+    for (let i = 0; i < numAxes; i++){
+      const th = getAngle(i);
+      pts.push(`${(cx + r * Math.cos(th)).toFixed(1)},${(cy + r * Math.sin(th)).toFixed(1)}`);
+    }
+    const isOuter = step === 1.0;
+    gridHtml += `<polygon points="${pts.join(' ')}" class="status-radar-grid${isOuter ? ' outer' : ''}" />`;
+  }
+
+  // 軸線（中心から各頂点への破線）
+  let axesHtml = '';
+  for (let i = 0; i < numAxes; i++){
+    const th = getAngle(i);
+    const x = (cx + maxR * Math.cos(th)).toFixed(1);
+    const y = (cy + maxR * Math.sin(th)).toFixed(1);
+    axesHtml += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" class="status-radar-axis" />`;
+  }
+
+  // ステータス多角形の計算
+  const basePoints = [];
+  const pendingPoints = [];
+  const baseDots = [];
+  const pendingDots = [];
+
+  const hasPending = statusPendingTotal() > 0;
+  nodesContainer.innerHTML = '';
+
+  STAT_RADAR_DEFS.forEach((item, i) => {
+    const th = getAngle(i);
+    const baseVal = (G.player[item.key] || 0);
+    const bonusVal = (bonusMap[item.key] || 0);
+    const curTotal = baseVal + bonusVal;
+    const pend = statusPending[item.key] || 0;
+    const pendGain = pend * item.per;
+    const previewTotal = curTotal + pendGain;
+
+    // 比率 (最小8%、最大100%)
+    const baseRatio = Math.max(0.08, Math.min(1.0, curTotal / capOf(item)));
+    const pendRatio = Math.max(0.08, Math.min(1.0, previewTotal / capOf(item)));
+
+    const bx = cx + maxR * baseRatio * Math.cos(th);
+    const by = cy + maxR * baseRatio * Math.sin(th);
+    basePoints.push(`${bx.toFixed(1)},${by.toFixed(1)}`);
+    baseDots.push(`<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="5" class="status-radar-dot" />`);
+
+    if (hasPending){
+      const px = cx + maxR * pendRatio * Math.cos(th);
+      const py = cy + maxR * pendRatio * Math.sin(th);
+      pendingPoints.push(`${px.toFixed(1)},${py.toFixed(1)}`);
+      pendingDots.push(`<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="6" class="status-radar-dot-pending" />`);
+    }
+
+    // 5頂点ごとの操作ノード（2段組：被り防止スリムカード）
+    const nodeEl = document.createElement('div');
+    nodeEl.className = `stat-radar-node ${item.posClass}`;
+
+    let valDisplay = `${curTotal}`;
+    if (pendGain > 0){
+      valDisplay += ` <span class="pending-gain">→${previewTotal}</span>`;
+    }
+    if (bonusVal > 0){
+      if (pendGain > 0){
+        valDisplay += ` <small>(きそ ${baseVal}→${baseVal + pendGain})</small>`;
+      } else {
+        valDisplay += ` <small>(きそ ${baseVal})</small>`;
+      }
+    }
+
+    let tooltipNoteHtml = item.note;
+    if (item.key === 'spd') {
+      const curPct = (calcSpdRate(curTotal) * 100).toFixed(1);
+      if (pendGain > 0) {
+        const nextPct = (calcSpdRate(previewTotal) * 100).toFixed(1);
+        tooltipNoteHtml += `<div style="margin-top:5px; font-weight:bold; color:#74b9ff; font-size:12px;">⚡ 会心・回避率: ${curPct}% → <span style="color:#55efc4;">${nextPct}%</span></div>`;
+      } else {
+        tooltipNoteHtml += `<div style="margin-top:5px; font-weight:bold; color:#74b9ff; font-size:12px;">⚡ 会心・回避率: ${curPct}%</div>`;
+      }
+    }
+
+    nodeEl.innerHTML = `
+      <div class="stat-node-header">
+        <span class="stat-node-name"><img src="${item.iconImg}" class="stat-inline-icon"> ${item.name}</span>
+        <span class="stat-node-val">${valDisplay}</span>
+      </div>
+      <div class="stat-node-controls">
+        <button class="btn btn-stat-minus" ${pend <= 0 ? 'disabled' : ''}>−</button>
+        <button class="btn btn-stat-plus btn-primary" ${remaining <= 0 ? 'disabled' : ''}>＋</button>
+      </div>
+      <!-- マウスホバーで表示される解説ツールチップ -->
+      <div class="stat-node-tooltip">
+        <div class="tooltip-title">${item.fullName}</div>
+        <div class="tooltip-gain">✨ ${item.desc}</div>
+        <div class="tooltip-note">${tooltipNoteHtml}</div>
+      </div>
+    `;
+
+    const minusBtn = nodeEl.querySelector('.btn-stat-minus');
+    minusBtn.onclick = (e) => {
+      e.stopPropagation();
+      if ((statusPending[item.key] || 0) <= 0) return;
+      statusPending[item.key]--;
+      renderStatus();
+    };
+
+    const plusBtn = nodeEl.querySelector('.btn-stat-plus');
+    plusBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (G.player.points - statusPendingTotal() <= 0) return;
+      statusPending[item.key] = (statusPending[item.key] || 0) + 1;
+      renderStatus();
+    };
+
+    nodesContainer.appendChild(nodeEl);
+  });
+
+  const content = `
+    ${gridHtml}
+    ${axesHtml}
+    ${hasPending ? `<polygon points="${pendingPoints.join(' ')}" class="status-radar-poly-pending" />` : ''}
+    <polygon points="${basePoints.join(' ')}" class="status-radar-poly-base" />
+    ${baseDots.join('')}
+    ${hasPending ? pendingDots.join('') : ''}
+  `;
+
+  svg.innerHTML = content;
+}
+
+function confirmStatusAllocation(){
+  const total = statusPendingTotal();
+  if (total <= 0) return;
+  const summary = STAT_DEFS.filter(s => (statusPending[s.key] || 0) > 0)
+    .map(s => `${s.name.replace(/<[^>]+>/g, '')} +${statusPending[s.key] * s.per}`)
+    .join('<br>');
+  showConfirmModal('スキルポイントの わりふり',
+    `つぎの ないようで けっていします。<br>${summary}<br>よろしいですか？`,
+    () => {
+      for (const s of STAT_DEFS){
+        const pend = statusPending[s.key] || 0;
+        if (pend <= 0) continue;
+        const gain = pend * s.per;
+        G.player[s.key] += gain;
+        if (s.key === 'maxHp') G.player.hp += gain;
+        if (s.key === 'maxMp') G.player.mp += gain;
+        G.player.points -= pend;
+      }
+      save();
+      statusPending = {};
+      renderStatus();
+    });
+}
+
+/* はい／いいえの かくにんダイアログ（きょうつう部品）。とりけしできない
+   そうさの まえに つかう（例：スキルポイントの わりふり かくてい） */
+function showConfirmModal(title, message, onYes){
+  document.querySelector('.confirm-overlay:not(.raid-exchange-overlay)')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'confirm-overlay';
+  overlay.innerHTML = `
+    <div class="panel confirm-card">
+      <h3>${title}</h3>
+      <div class="confirm-message">${message}</div>
+      <div class="confirm-actions">
+        <button class="btn" id="btn-confirm-no">${onYes ? 'いいえ' : 'とじる'}</button>
+        ${onYes ? '<button class="btn btn-primary" id="btn-confirm-yes">はい</button>' : ''}
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  $('btn-confirm-no').onclick = () => overlay.remove();
+  if(onYes)$('btn-confirm-yes').onclick = () => { overlay.remove(); onYes(); };
+}
+
+const SHOP_CASH_DENOMINATIONS = [1000,500,100,50,10,1];
+// 後で再開するときは true に戻す。旧フローの関数は showShopPaymentModal に保持する。
+const SHOP_CASH_TENDER_EXERCISE_ENABLED = false;
+function confirmShopPurchase(name,price,onPaid){
+  if (SHOP_CASH_TENDER_EXERCISE_ENABLED) {
+    showShopPaymentModal(name,price,onPaid);
+    return;
+  }
+  const balance=Math.max(0,Math.floor(Number(G?.player?.gold)||0));
+  if(price>balance){showConfirmModal('ゴールドがたりません',`所持金は ${balance}G、価格は ${price}G です。`,null);return;}
+  showConfirmModal(`${escapeHtml(name)}を買う`,`価格 <b>${price}G</b> を支払って購入しますか？<br>購入後の所持金：<b>${balance-price}G</b>`,onPaid);
+}
+function shopCashBreakdown(amount){
+  let remaining=Math.max(0,Math.floor(Number(amount)||0));
+  return SHOP_CASH_DENOMINATIONS.map(value=>{
+    const count=Math.floor(remaining/value);remaining-=count*value;
+    return {value,count};
+  });
+}
+function showShopPaymentModal(name,price,onPaid){
+  const balance=Math.max(0,Math.floor(Number(G?.player?.gold)||0));
+  if(price>balance){showConfirmModal('ゴールドがたりません',`所持金は ${balance}G、価格は ${price}G です。`,null);return;}
+  document.querySelector('.confirm-overlay:not(.raid-exchange-overlay)')?.remove();
+  const overlay=document.createElement('div');overlay.className='confirm-overlay shop-payment-overlay';
+  const cash=shopCashBreakdown(balance).filter(item=>item.count>0);
+  const breakdown=cash
+    .map(item=>`<span>${item.value>=1000?`${item.value}G札`:`${item.value}G玉`} ×${item.count}</span>`).join(' ・ ');
+  overlay.innerHTML=`<section class="panel confirm-card shop-payment-card" role="dialog" aria-modal="true" aria-labelledby="shop-payment-title">
+    <h3 id="shop-payment-title">${escapeHtml(name)}を買う</h3>
+    <p>価格 <b>${price}G</b> ／ 手持ち <b>${balance}G</b></p>
+    <p class="shop-cash-breakdown" aria-label="手持ちのお金">${breakdown||'お金がありません'}</p>
+    <div class="shop-cash-denominations" aria-label="出すお金を選ぶ">${cash.map(item=>`<button type="button" class="btn btn-sm" data-denomination="${item.value}" ${item.count<1?'disabled':''}>${item.value>=1000?`${item.value}G札`:`${item.value}G玉`} ×${item.count}</button>`).join('')}</div>
+    <label>出す金額（G）<input id="shop-payment-tender" type="number" inputmode="numeric" min="${price}" max="${balance}" step="1" value="${price}"></label>
+    <label>おつりはいくら？（G）<input id="shop-payment-change" type="number" inputmode="numeric" min="0" step="1" placeholder="おつりを入力"></label>
+    <p id="shop-payment-feedback" role="status" aria-live="polite">ちょうど払うときは、おつりに0を入力。</p>
+    <div class="confirm-actions"><button type="button" class="btn" data-cancel>やめる</button><button type="button" class="btn btn-primary" data-pay>金額を確かめる</button></div>
+  </section>`;
+  const tender=overlay.querySelector('#shop-payment-tender'),change=overlay.querySelector('#shop-payment-change'),feedback=overlay.querySelector('#shop-payment-feedback');
+  const candidates=[price,...cash.map(item=>item.value).filter(value=>value>price&&value<=balance)];
+  const quick=document.createElement('div');quick.className='shop-payment-quick';
+  for(const value of [...new Set(candidates)].sort((a,b)=>a-b)){
+    const button=document.createElement('button');button.type='button';button.className='btn btn-sm';button.textContent=value===price?'ちょうど払う':`${value}Gを出す`;
+    button.onclick=()=>{tender.value=String(value);change.value=value===price?'0':'';feedback.textContent=value===price?'ちょうど払う金額です。':'おつりを計算しよう。';};quick.appendChild(button);
+  }
+  overlay.querySelector('.confirm-actions').before(quick);
+  overlay.querySelectorAll('[data-denomination]').forEach(button=>button.onclick=()=>{
+    const value=Number(button.dataset.denomination);
+    tender.value=String(value);
+    change.value=value===price?'0':'';
+    feedback.textContent=value===price?'ちょうど払う金額です。':'選んだお金で払うときのおつりを計算しよう。';
+  });
+  overlay.querySelector('[data-cancel]').onclick=()=>overlay.remove();
+  overlay.querySelector('[data-pay]').onclick=()=>{
+    const paid=Math.floor(Number(tender.value)),givenChange=Number(change.value),expected=paid-price;
+    if(!Number.isFinite(paid)||paid<price||paid>balance){feedback.textContent=`${price}G以上、手持ちの${balance}G以下の金額を入力してください。`;return;}
+    if(change.value===''||!Number.isInteger(givenChange)||givenChange<0){feedback.textContent='おつりの金額を入力してください。';return;}
+    if(givenChange!==expected){feedback.textContent=`おつりが違うよ。もう一度計算してみよう。（${paid}G − ${price}G）`;return;}
+    overlay.remove();onPaid();
+  };
+  document.body.appendChild(overlay);tender.focus();
+}
+
+/* ==========================================================
+   装備画面（けいさんに正解して装備）
+   ========================================================== */
+const SLOT_LABELS = { weapon:'ぶき', armor:'よろい', accessory:'アクセサリ' };
+
+function statName(k) {
+  const icons = { hp:'ui_icon_4.png', mp:'ui_icon_6.png', atk:'ui_icon_2.png', def:'ui_icon_3.png', spd:'ui_icon_1.png' };
+  if (icons[k]) return `<img src="${av('assets/ui_icons/' + icons[k])}" class="stat-inline-icon">`;
+  return {hp:'HP', mp:'MP', atk:'ATK', def:'DEF', spd:'SPD'}[k] || k;
+}
+
+/* そうびの各ステータスの理論上の最大値（★5の最強装備基準）。
+   バー表示のパーセント計算に使う */
+function equipStatCap(key){
+  let maxBase = 0;
+  for (const db of [EQUIP_DB, ANCIENT_EQUIP_DB, LIMITED_EQUIP_DB, CHRISTMAS_EQUIP_DB, QUEST_MEDAL_EQUIPMENT]){
+    for (const item of db){
+      if (item.stat[key] && item.stat[key] > maxBase) maxBase = item.stat[key];
+    }
+  }
+  return Math.max(1, Math.floor(maxBase * RARITY_MULTI[RARITY_MAX]));
+}
+const EQUIP_STAT_CAP = { atk:equipStatCap('atk'), def:equipStatCap('def'), spd:equipStatCap('spd'), mp:equipStatCap('mp'), hp:equipStatCap('hp') };
+
+/* 装備ステータスの数値表示（バーではなく数値で分かりやすく表示） */
+const EQUIP_STAT_INFOS = {
+  hp:  { name:'さいだいHP', icon:'💖' },
+  mp:  { name:'さいだいMP', icon:'🔮' },
+  atk: { name:'こうげき力', icon:'⚔️' },
+  def: { name:'しゅび力',   icon:'🛡️' },
+  spd: { name:'すばやさ',   icon:'👟' },
+};
+
+function equipStatValuesHtml(stat){
+  return `<div class="equip-stat-values">` +
+    Object.entries(stat).map(([k, v]) => {
+      const info = EQUIP_STAT_INFOS[k] || { name:k, icon:'✨' };
+      const sign = v >= 0 ? `+${v}` : `${v}`;
+      const isMinus = v < 0;
+      return `<div class="equip-stat-val-badge ${isMinus ? 'stat-minus' : 'stat-plus'}">
+        <span class="stat-badge-icon">${info.icon}</span>
+        <span class="stat-badge-name">${info.name}</span>
+        <span class="stat-badge-num">${sign}</span>
+      </div>`;
+    }).join('') +
+  `</div>`;
+}
+
+function equipStatBarsHtml(stat){
+  // バー表示から見やすい数値バッジ表示へ統一
+  return equipStatValuesHtml(stat);
+}
+
+/* そうびコストの視覚化：四角いブロック1個＝コスト1。上限ぶんのマスの うち
+   つかっている分だけ 色がつく */
+/* コストの ブロック表示（どこでも これ1つ）。1段に 10こまで。11こめからは 下の段へ のびる。
+   total＝ブロックの数、filled＝そのうち 色がつく数、over＝赤くする */
+const COST_BLOCKS_PER_ROW = 10;
+function costGridHtml(total, filled, over = false){
+  let cells = '';
+  for (let i = 1; i <= total; i++){
+    cells += `<span class="cost-cell${i <= filled ? (over ? ' over' : ' filled') : ''}"></span>`;
+  }
+  return `<span class="cost-grid" style="--cost-cols:${COST_BLOCKS_PER_ROW}">${cells}</span>`;
+}
+
+/* 自分の部屋：いまの そうびコスト（つかっている／上限）。
+   next を わたすと「そうびしたら ここまで ふえる」を 点滅で見せる。上限を こえた ぶんは 赤い ブロック */
+function costBarHtml(used, cap, next){
+  const hasNext = Number.isFinite(next) && next !== used;
+  const target = hasNext ? next : used;
+  const total = Math.max(cap, used, target);
+  const stay = hasNext ? Math.min(used, next) : used;
+  let cells = '';
+  for (let i = 1; i <= total; i++){
+    let cls = '';
+    if (i <= stay) cls = i <= cap ? ' filled' : ' over';
+    else if (hasNext && next > used && i <= next) cls = i <= cap ? ' blink' : ' blink-over';
+    else if (hasNext && next < used && i <= used) cls = ' blink-free';
+    cells += `<span class="cost-cell${cls}"></span>`;
+  }
+  const label = hasNext
+    ? `<b>${used}</b> → <b class="${next > cap ? 'bad' : 'preview'}">${next}</b>`
+    : `<b class="${used > cap ? 'bad' : ''}">${used}</b>`;
+  return `<div class="cost-bar-label">そうびコスト：${label} / ${cap}</div>
+    <span class="cost-grid" style="--cost-cols:${COST_BLOCKS_PER_ROW}">${cells}</span>`;
+}
+
+/* 個別そうびのコスト表示：ブロックと数字（そうび枠・一覧・詳細ウィンドウ共通） */
+function costBlocksHtml(cost, wouldExceed = false, showLabel = true){
+  return `<span class="tag cost-tag${wouldExceed ? ' cost-tag-over' : ''}">
+    ${showLabel ? '<span class="cost-tag-text">コスト:</span>' : ''}
+    <span class="cost-num-val">${cost}</span>
+    ${costGridHtml(cost, cost, wouldExceed)}
+  </span>`;
+}
+
+/* 装備ホバー時の統一レイアウト詳細カード生成（お店・自分の部屋・モーダル共通） */
+function bindEquipDetailTooltip(element, db, options = {}) {
+  element.tabIndex = 0;
+  element.removeAttribute('title');
+  const detail = () => generateEquipDetailHtml(db, options);
+  element.onmouseover = event => showTooltip(event, detail());
+  element.onmousemove = updateTooltipPos;
+  element.onmouseout = hideTooltip;
+  element.onfocus = () => { const rect = element.getBoundingClientRect(); showTooltip({ clientX: rect.left, clientY: rect.bottom }, detail()); };
+  element.onblur = hideTooltip;
+  element.onkeydown = event => { if (event.key === 'Escape') hideTooltip(); };
+}
+
+function generateEquipDetailHtml(db, options = {}){
+  const rarity = options.rarity || db.rarity || 1;
+  const stat = calcEquipStat(db.stat, rarity, options.owned);
+  const cost = equipCost(db, rarity);
+  const abilityId = options.ability || db.ability || null;
+  const abilityInfo = abilityId ? getAbility(abilityId) : null;
+  const slot = db.slot;
+  const SLOT_ICONS = { weapon:'⚔️', armor:'🛡️', accessory:'💍' };
+  const ancientEffects = {
+    anc_w1:'通常攻撃：攻撃力×0.8の連続2回攻撃',
+    anc_w2:`すばやさ +${Math.floor(30 * awakeningScale(options.owned || {rarity}))}`,
+    anc_w3:`クリティカル率が別枠で+${Math.round(30 * awakeningScale(options.owned || {rarity}))}%`,
+    anc_a2:`受けるダメージを${Math.round(30 * awakeningScale(options.owned || {rarity}))}%カット`,
+    anc_c1:`最大MP +${Math.floor(100 * awakeningScale(options.owned || {rarity}))}`,
+    anc_a1:'高い防御力と最大HPを持つ古代の鎧',
+  };
+  const ancientEffect = ancientEffects[db.id];
+
+
+  const statBadges = Object.entries(stat).map(([k, v]) => {
+    const info = EQUIP_STAT_INFOS[k] || { name:k, icon:'✨' };
+    const sign = v >= 0 ? `+${v}` : `${v}`;
+    const isMinus = v < 0;
+    return `<div class="equip-stat-val-badge ${isMinus ? 'stat-minus' : 'stat-plus'}">
+      <span class="stat-badge-icon">${info.icon}</span>
+      <span class="stat-badge-name">${info.name}</span>
+      <span class="stat-badge-num">${sign}</span>
+    </div>`;
+  }).join('');
+
+  // お店（武器屋）の場合の注意点・警告
+  let shopSectionHtml = '';
+  if (options.isShop){
+    const owned = G.ownedEquips.some(o => o.id === db.id);
+    const goldShort = G.player.gold < db.price;
+    const willExceedCap = cost > costCap();
+    const willExceedCurrent = (usedCost(db.slot) + cost) > costCap();
+
+    let warnings = [];
+    if (owned){
+      warnings.push(`<div class="shop-warn-item warn-info">ℹ️ すでに もっています（こうにゅう不要）</div>`);
+    } else {
+      if (goldShort){
+        warnings.push(`<div class="shop-warn-item warn-bad">💰 ゴールド不足（あと ${db.price - G.player.gold} G ひつよう）</div>`);
+      }
+      if (willExceedCap){
+        warnings.push(`<div class="shop-warn-item warn-bad">⚠️ そうびコスト上限オーバー（コスト上限 ${costCap()} を超えるため装備できません）</div>`);
+      } else if (willExceedCurrent){
+        warnings.push(`<div class="shop-warn-item warn-warn">⚠️ コスト不足（今のそうび構成だと コスト空き枠が足りません）</div>`);
+      } else {
+        warnings.push(`<div class="shop-warn-item warn-good">✅ すぐに そうびできます！</div>`);
+      }
+    }
+
+    shopSectionHtml = `
+      <div class="equip-detail-shop-box">
+        <div class="shop-price-row">
+          <span class="shop-price-label">おみせの ねだん:</span>
+          <span class="shop-price-val ${goldShort ? 'bad' : 'good'}">💰 ${db.price} G</span>
+        </div>
+        <div class="shop-warn-list">
+          ${warnings.join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="equip-unified-card" data-equip-rarity="${rarity}">
+      <div class="equip-unified-header">
+        <span class="slot-badge">${SLOT_ICONS[slot] || '✨'} ${SLOT_LABELS[slot]}</span>
+        <span class="rarity-${rarity} rarity-label">${rarityLabelHtml(rarity)} <span class="equip-detail-rarity-stars" aria-label="${rarity}つ星">${'★'.repeat(Math.max(1,Math.min(6,Number(rarity)||1)))}</span></span>
+        <div class="equip-cost-display">
+          <span class="cost-lbl">コスト:</span>
+          <span class="cost-num-val">${cost}</span>
+          ${costGridHtml(cost, cost)}
+        </div>
+      </div>
+
+      <div class="equip-unified-main">
+        <div class="equipment-card-icon rarity-${rarity}">${equipmentCardLayers(db,rarity,64)}</div>
+        <div class="equip-unified-info">
+          <div class="equip-unified-name rarity-${rarity}">${db.name}</div>
+          <div class="equip-unified-calc">✏️ そうび計算: ${OP_LABELS[db.opTier]}</div>
+        </div>
+      </div>
+
+      ${Number(rarity) === 6 ? awakeningDetailHtml(options.owned || {rarity}, db) : ''}
+      <div class="equip-unified-stats">
+        <div class="equip-stat-values">${statBadges}</div>
+      </div>
+
+      ${abilityInfo ? `
+        <div class="equip-unified-ability">
+          <div class="ability-title">✨ ${abilityInfo.name}</div>
+          <div class="ability-desc">${abilityInfo.desc}</div>
+        </div>
+      ` : ''}
+
+      ${ancientEffect ? `<div class="equip-unified-ability"><div class="ability-title">★6 古代効果</div><div class="ability-desc">${ancientEffect}</div></div>` : ''}
+
+      ${shopSectionHtml}
+    </div>
+  `;
+}
+
+/* アイテムホバー時の統一レイアウト詳細カード生成（お店・自分の部屋・インベントリ・バトル共通） */
+function generateItemDetailHtml(db, options = {}){
+  if (!db) return '';
+  const isBlueprint = isBlueprintItem(db);
+  const isCostSeed = db.effect === 'cost';
+  const isBattle = isBattleItem(db);
+  const emoji = db.emoji || (isBlueprint ? 'assets/items/blueprint.png' : '💊');
+
+  // カテゴリバッジ
+  let categoryBadge = '';
+  if (isBlueprint){
+    categoryBadge = `<span class="slot-badge" style="color:#f59e0b;">📜 古代からの挑戦状</span>`;
+  } else if (isCostSeed){
+    categoryBadge = `<span class="slot-badge" style="color:#10b981;">🌱 部屋用アイテム</span>`;
+  } else if (isBattle){
+    categoryBadge = `<span class="slot-badge" style="color:#f43f5e;">⚔️ 戦闘用アイテム</span>`;
+  } else {
+    categoryBadge = `<span class="slot-badge" style="color:#38bdf8;">🎒 どうぐ</span>`;
+  }
+
+  // 所持数表示
+  let ownedCount = 0;
+  if (G && G.items){
+    const it = G.items.find(i => i.id === db.id);
+    if (it) ownedCount = it.count;
+  }
+  const countToShow = options.count !== undefined ? options.count : ownedCount;
+  const countBadge = `<span class="item-unified-count">所持: <b>${countToShow}</b>個</span>`;
+
+  // 効果数値バッジ（バーではなく数値でハッキリ表示）
+  let effectBadges = '';
+  if (isBlueprint){
+    effectBadges = `
+      <div class="equip-stat-val-badge stat-plus" style="border-color:rgba(245,158,11,0.4); background:rgba(245,158,11,0.12);">
+        <span class="stat-badge-icon">🔨</span>
+        <span class="stat-badge-name">せいさく</span>
+        <span class="stat-badge-num" style="color:#fbbf24;">ランダムで1つ</span>
+      </div>`;
+  } else if (db.effect === 'heal'){
+    effectBadges = `
+      <div class="equip-stat-val-badge stat-plus" style="border-color:rgba(239,68,68,0.4); background:rgba(239,68,68,0.12);">
+        <span class="stat-badge-icon">❤️</span>
+        <span class="stat-badge-name">HP回復</span>
+        <span class="stat-badge-num" style="color:#f87171;">+${db.value}</span>
+      </div>`;
+  } else if (db.effect === 'mana'){
+    effectBadges = `
+      <div class="equip-stat-val-badge stat-plus" style="border-color:rgba(59,130,246,0.4); background:rgba(59,130,246,0.12);">
+        <span class="stat-badge-icon">🔷</span>
+        <span class="stat-badge-name">MP回復</span>
+        <span class="stat-badge-num" style="color:#60a5fa;">+${db.value}</span>
+      </div>`;
+  } else if (isCostSeed){
+    effectBadges = `
+      <div class="equip-stat-val-badge stat-plus" style="border-color:rgba(16,185,129,0.4); background:rgba(16,185,129,0.12);">
+        <span class="stat-badge-icon">🌟</span>
+        <span class="stat-badge-name">コスト上限</span>
+        <span class="stat-badge-num" style="color:#34d399;">+${db.value || 1}</span>
+      </div>`;
+  } else if (db.effect === 'respec'){
+    effectBadges = `
+      <div class="equip-stat-val-badge stat-plus" style="border-color:rgba(168,85,247,0.4); background:rgba(168,85,247,0.12);">
+        <span class="stat-badge-icon">🔄</span>
+        <span class="stat-badge-name">ポイント全返還</span>
+        <span class="stat-badge-num" style="color:#c084fc;">リセット</span>
+      </div>`;
+  } else if (db.value){
+    effectBadges = `
+      <div class="equip-stat-val-badge stat-plus">
+        <span class="stat-badge-icon">✨</span>
+        <span class="stat-badge-name">効果値</span>
+        <span class="stat-badge-num">+${db.value}</span>
+      </div>`;
+  }
+
+  // 計算の難易度（もしあれば）
+  const tierKey = db.opTier || db.tier;
+  const calcText = tierKey && OP_LABELS[tierKey] ? `✏️ けいさん: ${OP_LABELS[tierKey]}` : '';
+
+  // 説明文
+  let descText = db.desc || '';
+  if (isBlueprint){
+    descText = '印刷画面を開くと1個消費。挑戦状を解こう。6種類からランダムで1つ完成！全種類を持つまでは未所持品が出ます。';
+  }
+  const itemNameHtml = renderReadingHints(db.name);
+  const itemDescHtml = renderReadingHints(descText);
+
+  // 使用場所・使い方ガイド
+  let usageGuide = '';
+  if (isBlueprint){
+    usageGuide = '🖨️ 自分の部屋でプリントし、暗号を解くと古代装備がランダムで完成！6種類そろった後は重複することがあります。';
+  } else if (isCostSeed){
+    usageGuide = '🌱 自分の部屋で使うと そうびコスト上限が 1 ふえます！';
+  } else if (db.effect === 'respec'){
+    usageGuide = '🌰 自分の部屋で使うと わりふったスキルポイントを 全リセットして振り直せます！';
+  } else if (isBattle){
+    usageGuide = '⚔️ バトル中に コマンド「どうぐ」から使えます！';
+  } else {
+    usageGuide = '🎒 いつでも使うことができます！';
+  }
+
+  // お店（道具屋）用セクション
+  let shopSectionHtml = '';
+  if (options.isShop && db.price){
+    const goldShort = G.player.gold < db.price;
+    let warnings = [];
+    if (goldShort){
+      warnings.push(`<div class="shop-warn-item warn-bad">💰 ゴールド不足（あと ${db.price - G.player.gold} G ひつよう）</div>`);
+    } else {
+      warnings.push(`<div class="shop-warn-item warn-good">✅ すぐに かえます！</div>`);
+    }
+
+    shopSectionHtml = `
+      <div class="equip-detail-shop-box">
+        <div class="shop-price-row">
+          <span class="shop-price-label">おみせの ねだん:</span>
+          <span class="shop-price-val ${goldShort ? 'bad' : 'good'}">💰 ${db.price} G</span>
+        </div>
+        <div class="shop-warn-list">
+          ${warnings.join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="equip-unified-card item-unified-card">
+      <div class="equip-unified-header">
+        ${categoryBadge}
+        ${countBadge}
+      </div>
+
+      <div class="equip-unified-main">
+        <div class="equip-icon item-unified-icon">${iconHtml(emoji, 44)}</div>
+        <div class="equip-unified-info">
+          <div class="equip-unified-name">${itemNameHtml}</div>
+          ${calcText ? `<div class="equip-unified-calc">${calcText}</div>` : ''}
+        </div>
+      </div>
+
+      ${effectBadges ? `
+      <div class="equip-unified-stats">
+        <div class="equip-stat-values">${effectBadges}</div>
+      </div>` : ''}
+
+      <div class="equip-unified-desc">
+        <div class="item-desc-text">${itemDescHtml}</div>
+        <div class="item-usage-guide">${renderReadingHints(usageGuide)}</div>
+      </div>
+
+      ${shopSectionHtml}
+    </div>
+  `;
+}
+
+/* ==========================================================
+   武器屋（ゴールドで そうびを こうにゅう）
+   タブ（全て／武器／防具／アクセサリー）で 一覧を きりかえられる
+   ========================================================== */
+const WEAPON_SHOP_TABS = [
+  { key:'all', label:'全て' },
+  { key:'weapon', label:'武器' },
+  { key:'armor', label:'防具' },
+  { key:'accessory', label:'アクセサリー' },
+];
+let weaponShopFilter = 'all';
+
+function showWeaponShop(){
+  showScreen('screen-weapon-shop');
+  renderWeaponShopTabs();
+  renderWeaponShopList();
+}
+
+function renderWeaponShopTabs(){
+  const tabs = $('weapon-shop-tabs');
+  tabs.innerHTML = WEAPON_SHOP_TABS.map(t =>
+    `<button class="shop-tab-btn${t.key === weaponShopFilter ? ' active' : ''}" data-slot="${t.key}">${t.label}</button>`
+  ).join('');
+  tabs.querySelectorAll('.shop-tab-btn').forEach(btn => {
+    btn.onclick = () => {
+      weaponShopFilter = btn.dataset.slot;
+      renderWeaponShopTabs();
+      renderWeaponShopList();
+    };
+  });
+}
+
+function renderWeaponShopList(){
+  $('weapon-shop-gold').textContent = G.player.gold;
+  const list = $('weapon-shop-list');
+  list.className = 'shop-icon-grid';
+  list.innerHTML = '';
+  const items = weaponShopFilter === 'all' ? EQUIP_DB : EQUIP_DB.filter(db => db.slot === weaponShopFilter);
+  
+  for (let i = 0; i < items.length; i++) {
+    const cell = document.createElement('button');
+    cell.type='button';
+    cell.className = 'shop-icon equip-icon rarity-1';
+    
+    if (i < items.length) {
+      const db = items[i];
+      const stat = calcEquipStat(db.stat, 1);
+      const owned = G.ownedEquips.some(o => o.id === db.id);
+      const isOverCost = db.cost > costCap();
+      const canBuy = !owned && !isOverCost && G.player.gold >= db.price;
+      
+      cell.innerHTML = iconHtml(db.emoji,48);
+      cell.setAttribute('aria-label',`${db.name}・${db.price}G${owned?'・所持済み':''}`);
+      if (owned) cell.style.opacity = '0.3';
+
+      // 統一装備詳細カードをお店モードでホバー表示
+      cell.onmouseover = (e) => showTooltip(e, generateEquipDetailHtml(db, { isShop: true, rarity: 1 }));
+      cell.onmouseout = () => hideTooltip();
+      
+      cell.onclick = () => {
+        hideTooltip();
+        if (owned) {
+          showConfirmModal('所持済みの装備','すでに もっているよ！',null);
+          return;
+        }
+        
+        const detailHtml = generateEquipDetailHtml(db, { isShop: true, rarity: 1 });
+        const messageHtml = `
+          <div style="text-align:left; margin-bottom: 12px; font-size:14px; max-height:40vh; overflow-y:auto; background:rgba(0,0,0,0.4); border-radius:8px; padding:8px;">
+            ${detailHtml}
+          </div>
+          <div style="font-weight:bold; color:#f1c40f; text-align:center;">
+            所持ゴールド：${G.player.gold}G ➔ <span style="${canBuy ? '' : 'color:#e74c3c;'}">${G.player.gold - db.price}G</span>
+          </div>
+          ${isOverCost ? `<div style="color:#e74c3c; margin-top:8px; text-align:center;">⚠️ 装備コストが 高いため、今は装備できません！<br>(コスト: ${db.cost} / 最大: ${costCap()})</div>` : ''}
+          ${!canBuy && !isOverCost ? `<div style="color:#e74c3c; margin-top:8px; text-align:center;">⚠️ ゴールドが たりません！</div>` : ''}
+          ${canBuy ? `<div style="margin-top: 12px; font-size: 18px; text-align:center;">これを 購入しますか？</div>` : ''}
+        `;
+
+        if(canBuy)confirmShopPurchase(db.name,db.price,()=>buyEquip(db));
+        else showConfirmModal(`「${db.name}」`,messageHtml,null);
+      };
+    }
+    list.appendChild(cell);
+  }
+}
+
+function buyEquip(db){
+  if (G.player.gold < db.price) return;
+  if (G.ownedEquips.some(o => o.id === db.id)) return;
+  G.player.gold -= db.price;
+  G.ownedEquips.push({ uid: G.nextUid++, id: db.id, rarity: 1, ability: null });
+  save();
+  showEquipPurchaseReveal({ kind:'equip', name: db.name, rarity: 1, icon: db.emoji, ability: null });
+}
+
+/* そうび画面：上＝コスト、その下＝ぶき・よろい・アクセサリを 横ならび、その下＝そうび／アイテムの 一覧 */
+let equipListTab = 'equips';
+let equipSlotFilter = 'all'; // 'all' | 'weapon' | 'armor' | 'accessory'
+
+function equipmentCategoryIcon(slot){
+  const category={weapon:'weapon',armor:'armor',accessory:'accessory'}[slot]||'weapon';
+  return `assets/equipment-category-icons/${category}.png`;
+}
+
+function equipmentCardLayers(db,rarity,size){
+  const stars='★'.repeat(Math.max(1,Math.min(6,Number(rarity)||1)));
+  return `<span class="equipment-card-art">${iconHtml(db.emoji,size)}</span>
+    <img class="equipment-card-category category-${db.slot}" src="${av(equipmentCategoryIcon(db.slot))}" alt="${SLOT_LABELS[db.slot]}" aria-hidden="true">
+    <span class="equipment-card-stars" aria-label="${stars}">${stars}</span>`;
+}
+
+const equipmentArtworkBounds=new Map();
+const equipmentCategoryBounds=new Map();
+const equipmentCategoryReference=new Image();
+equipmentCategoryReference.src=av(equipmentCategoryIcon('weapon'));
+function equipmentAlphaBounds(image){
+  const key=image.currentSrc||image.src;
+  if(equipmentCategoryBounds.has(key))return equipmentCategoryBounds.get(key);
+  const canvas=document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
+  const context=canvas.getContext('2d',{willReadFrequently:true});
+  if(!context)return null;
+  context.drawImage(image,0,0);
+  const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
+  let left=canvas.width,top=canvas.height,right=-1,bottom=-1;
+  for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++)if(pixels[(y*canvas.width+x)*4+3]>8){left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x);bottom=Math.max(bottom,y);}
+  const bounds=right<left?null:{left,top,right,bottom,width:canvas.width,height:canvas.height};
+  equipmentCategoryBounds.set(key,bounds);return bounds;
+}
+function alignEquipmentCategoryIcons(root){
+  const icons=[...root.querySelectorAll('.equipment-card-category')];
+  const align=()=>{
+    if(!equipmentCategoryReference.naturalWidth)return;
+    const ref=equipmentAlphaBounds(equipmentCategoryReference);if(!ref)return;
+    for(const image of icons){
+      if(!image.naturalWidth){image.addEventListener('load',align,{once:true});continue;}
+      const bounds=equipmentAlphaBounds(image);if(!bounds)continue;
+      const box=image.getBoundingClientRect();
+      const dx=(ref.left/ref.width-bounds.left/bounds.width)*box.width;
+      const dy=(ref.top/ref.height-bounds.top/bounds.height)*box.height;
+      image.style.translate=`${dx}px ${dy}px`;
+    }
+  };
+  if(equipmentCategoryReference.complete)requestAnimationFrame(align);else equipmentCategoryReference.addEventListener('load',align,{once:true});
+  icons.forEach(image=>{if(!image.complete)image.addEventListener('load',align,{once:true});});
+}
+function centerEquipmentCardArtwork(root){
+  root?.querySelectorAll('.equipment-card-art img').forEach(image=>{
+    const align=()=>{
+      if(!image.naturalWidth||!image.naturalHeight)return;
+      let bounds=equipmentArtworkBounds.get(image.currentSrc);
+      if(!bounds){
+        const canvas=document.createElement('canvas');
+        canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
+        const context=canvas.getContext('2d',{willReadFrequently:true});
+        if(!context)return;
+        context.drawImage(image,0,0);
+        const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
+        let left=canvas.width,top=canvas.height,right=-1,bottom=-1;
+        for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++){
+          if(pixels[(y*canvas.width+x)*4+3]>8){left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x);bottom=Math.max(bottom,y);}
+        }
+        if(right<left)return;
+        bounds={left,top,right,bottom,width:canvas.width,height:canvas.height};
+        equipmentArtworkBounds.set(image.currentSrc,bounds);
+      }
+      const box=image.getBoundingClientRect();
+      const scale=Math.min(box.width/bounds.width,box.height/bounds.height);
+      const dx=(bounds.width/2-(bounds.left+bounds.right)/2)*scale/box.width*100;
+      const dy=(bounds.height/2-(bounds.top+bounds.bottom)/2)*scale/box.height*100;
+      image.style.setProperty('--visual-x',`${dx}%`);
+      image.style.setProperty('--visual-y',`${dy}%`);
+    };
+    if(image.complete)requestAnimationFrame(align);else image.addEventListener('load',align,{once:true});
+  });
+}
+
+function setEquipListMsg(text){
+  const el = $('equip-list-msg');
+  if (el) el.textContent = text || '';
+}
+
+function renderEquipmentSlots(){
+  const SLOT_ICONS = { weapon:'⚔️', armor:'🛡️', accessory:'💍' };
+  for (const slot of EQUIP_SLOTS){
+    const el = $(`slot-${slot}`);
+    if (!el) continue;
+    const eq = G.equipment[slot];
+    let owned = null;
+    let db = null;
+    if (eq) {
+      owned = G.ownedEquips.find(o => o.uid === eq.uid);
+      if (owned) db = getEquipTemplate(owned.id);
+    }
+    if (!db){
+      el.className = 'equip-slot empty-slot';
+      el.innerHTML = `
+        <div class="slot-badge">${SLOT_ICONS[slot]} ${SLOT_LABELS[slot]}</div>
+        <div class="equip-icon equip-icon-empty">${HOME_EQUIP_SLOT_EMPTY_ICON[slot] || '？'}</div>
+        <div class="equip-slot-name equip-slot-none">未装備</div>`;
+    } else {
+      el.className = 'equip-slot';
+      el.innerHTML = `
+        <div class="slot-badge">${SLOT_ICONS[slot]} ${SLOT_LABELS[slot]}</div>
+        <button type="button" class="equip-icon rarity-${owned.rarity} equipment-card-icon" aria-label="${db.name}を はずす">${equipmentCardLayers(db,owned.rarity,56)}</button>
+        <div class="equip-slot-name rarity-${owned.rarity}">${db.name}</div>
+        <span class="tag cost-tag"><span class="cost-tag-text">コスト</span> <span class="cost-num-val">${equipCost(db, owned.rarity)}</span></span>
+        <button type="button" class="btn btn-unequip">✕ はずす</button>`;
+      const iconEl = el.querySelector('.equip-icon');
+      bindEquipDetailTooltip(iconEl, db, { rarity: owned.rarity, ability: owned.ability, owned });
+      const unequip = () => {
+        hideTooltip();
+        G.equipment[slot] = null;
+        save();
+        renderStatus();
+        renderEquipmentSlots();
+      };
+      iconEl.onclick = unequip;
+      el.querySelector('.btn-unequip').onclick = unequip;
+    }
+  }
+  $('equip-cost-bar').innerHTML = costBarHtml(usedCost(), costCap());
+  EQUIP_SLOTS.forEach(slot=>{centerEquipmentCardArtwork($(`slot-${slot}`));alignEquipmentCategoryIcons($(`slot-${slot}`));});
+  renderEquipList();
+}
+
+/* 下の 一覧：そうび／アイテムを タブで きりかえ。アイコンを おすと そうび・つかう */
+/* コストバーの「そうびしたら」プレビュー（ホバー中だけ）。高さを 固定して、のびた ぶんは 上に かさねる（一覧が ずれて ちらつかないように） */
+function previewEquipCost(nextUsed){
+  const bar = $('equip-cost-bar');
+  if (!bar) return;
+  if (!bar.classList.contains('is-previewing')) {
+    bar.style.height = bar.offsetHeight + 'px';
+    bar.classList.add('is-previewing');
+  }
+  bar.innerHTML = costBarHtml(usedCost(), costCap(), nextUsed);
+}
+function clearEquipCostPreview(){
+  const bar = $('equip-cost-bar');
+  if (!bar || !bar.classList.contains('is-previewing')) return;
+  bar.classList.remove('is-previewing');
+  bar.style.height = '';
+  bar.innerHTML = costBarHtml(usedCost(), costCap());
+}
+
+function renderEquipList(){
+  const grid = $('equip-list-grid');
+  if (!grid) return;
+  $('equip-tab-equips')?.classList.toggle('active', equipListTab === 'equips');
+  $('equip-tab-items')?.classList.toggle('active', equipListTab === 'items');
+  $('equip-tab-equips')?.setAttribute('aria-selected', String(equipListTab === 'equips'));
+  $('equip-tab-items')?.setAttribute('aria-selected', String(equipListTab === 'items'));
+  const filterEl = $('equip-slot-filter');
+  if (filterEl) filterEl.style.display = equipListTab === 'equips' ? '' : 'none';
+  if (equipListTab === 'items') {
+    grid.className = 'equip-list-grid is-items';
+    renderRoomInventory(grid, Math.max(24, G.items.length + 4));
+    return;
+  }
+  roomInventoryTarget = null;
+  grid.className = 'equip-list-grid is-equips';
+  grid.innerHTML = '';
+  const slotOrder = s => EQUIP_SLOTS.indexOf(s);
+  const allOwned = G.ownedEquips.map(o => ({ o, db: getEquipTemplate(o.id) })).filter(x => x.db);
+  // 種類でしぼりこむボタン（すべて／ぶき／よろい／アクセサリ）
+  if (filterEl) {
+    const SLOT_ICONS_F = { weapon:'⚔️', armor:'🛡️', accessory:'💍' };
+    const chips = [{ key:'all', label:'すべて', icon:'' }, ...EQUIP_SLOTS.map(sl => ({ key:sl, label:SLOT_LABELS[sl], icon:SLOT_ICONS_F[sl] }))];
+    filterEl.innerHTML = chips.map(c => {
+      const n = c.key === 'all' ? allOwned.length : allOwned.filter(x => x.db.slot === c.key).length;
+      return `<button type="button" class="equip-filter-chip${equipSlotFilter === c.key ? ' active' : ''}" data-slot-filter="${c.key}" aria-pressed="${equipSlotFilter === c.key}">${c.icon} ${c.label}<small>${n}</small></button>`;
+    }).join('');
+    filterEl.querySelectorAll('[data-slot-filter]').forEach(btn => {
+      btn.onclick = () => { equipSlotFilter = btn.dataset.slotFilter; setEquipListMsg(''); renderEquipList(); };
+    });
+  }
+  const owned = allOwned
+    .filter(x => equipSlotFilter === 'all' || x.db.slot === equipSlotFilter)
+    .sort((a, b) => slotOrder(a.db.slot) - slotOrder(b.db.slot) || b.o.rarity - a.o.rarity || a.db.name.localeCompare(b.db.name, 'ja'));
+  if (!owned.length) {
+    grid.innerHTML = `<div class="flavor equip-list-empty">${equipSlotFilter === 'all' ? 'そうびを もっていない。' : `${SLOT_LABELS[equipSlotFilter]}は もっていない。`}</div>`;
+    return;
+  }
+  for (const { o, db } of owned) {
+    const equipped = !!G.equipment[db.slot] && G.equipment[db.slot].uid === o.uid;
+    const cost = equipCost(db, o.rarity);
+    const tooCostly = !equipped && (usedCost(db.slot) + cost > costCap());
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = `equip-grid-cell rarity-${o.rarity}${equipped ? ' is-equipped' : ''}${tooCostly ? ' is-costly' : ''}`;
+    cell.setAttribute('aria-label', `${db.name}${equipped ? '（そうびちゅう）' : ''} コスト${cost}`);
+    cell.innerHTML = `${equipmentCardLayers(db,o.rarity,44)}<span class="egc-cost">${cost}</span>`;
+    bindEquipDetailTooltip(cell, db, { rarity: o.rarity, ability: o.ability, owned:o });
+    if (!equipped) {
+      // ホバー／フォーカスで「そうびしたら コストが ここまで ふえる」を 点滅表示（上限こえは 赤）
+      const nextUsed = usedCost(db.slot) + cost;
+      cell.addEventListener('mouseenter', () => previewEquipCost(nextUsed));
+      cell.addEventListener('focus', () => previewEquipCost(nextUsed));
+      cell.addEventListener('mouseleave', clearEquipCostPreview);
+      cell.addEventListener('blur', clearEquipCostPreview);
+    }
+    cell.onclick = () => {
+      hideTooltip();
+      clearEquipCostPreview();
+      setEquipListMsg('');
+      if (equipped) {
+        G.equipment[db.slot] = null;
+        save();
+        renderStatus();
+        renderEquipmentSlots();
+      } else if (tooCostly) {
+        SM.playBeep('error');
+        setEquipListMsg(`コストが たりないよ！（${usedCost(db.slot) + cost} ／ ${costCap()}）`);
+      } else {
+        const nextUsed = usedCost(db.slot) + cost;
+        showConfirmModal('そうびしますか？',
+          `<div class="equip-confirm-body">${iconHtml(db.emoji, 56)}<b class="rarity-${o.rarity}">${db.name}</b>
+            <div>コスト ${usedCost()} → <b>${nextUsed}</b> ／ ${costCap()}</div>
+            <small>※ けいさん（${OP_LABELS[db.opTier]}）に せいかいすると そうびできるよ</small></div>`,
+          () => startEquipFlow(o, db));
+      }
+    };
+    grid.appendChild(cell);
+    centerEquipmentCardArtwork(cell);
+    alignEquipmentCategoryIcons(cell);
+  }
+}
+
+function openEquipSelectModal(targetSlot) {
+  const modal = $('equip-select-modal');
+  const list = $('equip-select-list');
+  $('equip-select-title').textContent = `${SLOT_LABELS[targetSlot]} をえらぶ`;
+  
+  list.innerHTML = '';
+  const equipsForSlot = G.ownedEquips.filter(o => {
+    const db = getEquipTemplate(o.id);
+    return db && db.slot === targetSlot;
+  });
+  
+  for (const owned of equipsForSlot){
+    const db = getEquipTemplate(owned.id);
+    const equipped = G.equipment[db.slot] && G.equipment[db.slot].uid === owned.uid;
+    const cost = equipCost(db, owned.rarity);
+    const wouldExceed = !equipped && (usedCost(db.slot) + cost > costCap());
+    const row = document.createElement('div');
+    row.className = 'inv-row';
+    const stat = calcEquipStat(db.stat, owned.rarity, owned);
+    const abilityInfo = owned.ability ? getAbility(owned.ability) : null;
+    row.innerHTML = `<div class="equip-icon rarity-${owned.rarity}">${iconHtml(db.emoji, 56)}</div>
+    <div class="info">
+      <span class="rarity-${owned.rarity}">${rarityLabelHtml(owned.rarity)} ${db.name}</span>
+      ${costBlocksHtml(cost, wouldExceed)}
+      ${equipped ? '<span class="tag mastered">装備中</span>' : ''}
+      <div class="equip-stat-bars">${equipStatBarsHtml(stat)}</div>
+      ${abilityInfo ? `<div class="desc ability-desc">✨ ${abilityInfo.name}（${abilityInfo.desc}）</div>` : ''}
+      <div class="desc">そうび計算: ${OP_LABELS[db.opTier]}</div>
+      ${wouldExceed ? '<div class="desc bad">コストが たりない</div>' : ''}</div>`;
+
+    // アイコンホバーで統一詳細表示
+    const rowIcon = row.querySelector('.equip-icon');
+    if (rowIcon){
+      rowIcon.onmouseover = (e) => showTooltip(e, generateEquipDetailHtml(db, { rarity: owned.rarity, ability: owned.ability, owned }));
+      rowIcon.onmouseout = () => hideTooltip();
+    }
+
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-primary';
+    btn.textContent = equipped ? 'はずす' : 'そうび';
+    btn.disabled = wouldExceed;
+    btn.onclick = () => {
+      hideTooltip();
+      if (equipped){
+        G.equipment[db.slot] = null;
+        save();
+        renderEquipmentSlots();
+        renderStatus();
+        openEquipSelectModal(targetSlot);
+      } else {
+        closeEquipSelectModal();
+        startEquipFlow(owned, db);
+      }
+    };
+    row.appendChild(btn);
+    list.appendChild(row);
+  }
+  if (equipsForSlot.length === 0) list.innerHTML = '<div class="flavor">このしゅるいの そうびを もっていない。</div>';
+  modal.style.display = 'flex';
+}
+
+function closeEquipSelectModal() {
+  $('equip-select-modal').style.display = 'none';
+}
+
+function startEquipFlow(owned, db){
+  if (usedCost(db.slot) + equipCost(db, owned.rarity) > costCap()){
+    showStatus();
+    return;
+  }
+  showScreen('screen-training');
+  $('btn-training-quit').textContent = 'やめる';
+  $('training-title').textContent = `「${db.name}」を そうびする`;
+  $('training-progress').textContent = `けいさん（${OP_LABELS[db.opTier]}）に せいかいして そうびしよう！`;
+  const tier = db.opTier || 'add1';
+  const _prob = generateProblem(tier);
+  startChallenge($('training-challenge'),
+    { problem:_prob, timeLimit:problemTimeLimit(tier) + 4000, prompt:getChallengePrompt(_prob) },
+    (res) => {
+      destroyChallenge();
+      if (res.success){
+        hitTrainingDummy();
+        G.equipment[db.slot] = { uid: owned.uid };
+        save();
+        trainingDone(`ゆうしゃは 「${db.name}」を そうびした！`);
+      } else {
+        trainingDone('けいさんに しっぱいした…。もういちど ちょうせんしよう。');
+      }
+    });
+}
+
+function trainingDone(msg){
+  $('training-progress').innerHTML = `<span class="mastered">${msg}</span>`;
+  $('training-challenge').innerHTML = '';
+  $('btn-training-quit').textContent = '戻る';
+}
+
+/* ==========================================================
+   スキル修行
+   ========================================================== */
+let trainingSkill = null;
+
+function showSkills(){
+  showScreen('screen-skills');
+  const list = $('skill-list');
+  list.innerHTML = '';
+  const kukuButton=document.createElement('button');
+  kukuButton.className='btn btn-primary';
+  const updateKukuLabel=()=>{kukuButton.textContent=`⚔ 師匠の九九道場（3のだん ${kukuMastered(G).length}/9）`;};
+  updateKukuLabel();
+  kukuButton.onclick=()=>openKukuTraining({getState:()=>G,onSave:()=>save(true),onChange:updateKukuLabel,playHit:()=>SM.playBeep('hit')});
+  list.appendChild(kukuButton);
+  for (const s of SKILL_DB){
+    const st = G.skills[s.id] || { level:0, progress:0 };
+    const locked = G.player.lvl < (s.reqLvl || 1);
+    const learned = st.level >= 1;
+    const tier = skillTier(s);
+    const row = document.createElement('div');
+    row.className = 'skill-row' + (locked ? ' skill-row-locked' : '');
+    row.innerHTML = `
+      ${iconHtml(s.emoji, 48)}
+      <div class="info">
+      ${learned ? `<span class="mastered">✓</span> ` : ''}${s.name}
+      <span class="tag">🧮${OP_LABELS[tier]}</span><span class="tag">MP${s.mp}</span>
+      ${locked ? `<span class="tag locked">🔒Lv.${s.reqLvl}で解放</span>` : ''}
+      <div class="desc">${s.desc}</div>
+      ${locked
+        ? '<div class="desc locked">まだ しゅぎょうできない</div>'
+        : learned
+          ? '<div class="desc mastered">しゅうとく ずみ！ せんとうで つかえる</div>'
+          : `<div class="skill-progress"><div class="skill-progress-fill" style="width:${st.progress / s.trainReq * 100}%"></div></div>
+             <div class="desc">しゅうとくまで ${st.progress}/${s.trainReq}</div>`}
+      </div>`;
+    const btnGroup = document.createElement('div');
+    btnGroup.className = 'skill-row-btns';
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-primary';
+    btn.textContent = learned ? 'しゅうとくずみ' : 'しゅぎょう';
+    btn.disabled = learned || locked;
+    btn.onclick = () => startTraining(s);
+    const printBtn = document.createElement('button');
+    printBtn.className = 'btn';
+    printBtn.textContent = '🖨️ プリント';
+    printBtn.disabled = locked || learned;
+    printBtn.onclick = () => printTrainingSheet(s);
+    btnGroup.appendChild(btn);
+    btnGroup.appendChild(printBtn);
+    row.appendChild(btnGroup);
+    list.appendChild(row);
+  }
+
+  
+}
+
+/* ==========================================================
+   しゅぎょうプリント（紙で れんしゅうできる もんだいシート）
+   ========================================================== */
+
+/* 別ウィンドウを開いてプリント内容だけを印刷する（超高速）*/
+function openPrintWindow(htmlContent, bgUrl, isLandscape) {
+  // 国語系プリントは htmlContent 内に <style> を持つため、
+  // isLandscape=true の場合は最小限のリセットのみ行う
+  let printCSS;
+  if (isLandscape) {
+    printCSS = `
+      @page { size: A4 landscape; margin: 10mm; }
+      body { margin: 0; padding: 0; }
+    `;
+  } else {
+    printCSS = `
+      @page { size: A4; margin: 8mm; }
+      body { font-family: sans-serif; background: #fff; color: #222; padding: 6mm; }
+      h1 { font-size: 26px; margin-bottom: 6px; }
+      .p-sub { font-size: 15px; color: #555; margin-bottom: 16px; }
+      .p-sheet { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 60px; }
+      .p-row { font-size: 24px; display: flex; align-items: baseline; gap: 12px; padding: 6px 0; border-bottom: 1px dotted #aaa; }
+      .p-num { width: auto; min-width: 34px; color: #888; font-size: 16px; white-space: nowrap; }
+      .p-expr { white-space: nowrap; }
+      .p-blank { flex: 1; border-bottom: 1px solid #222; min-width: 70px; height: 1.1em; }
+      .p-remainder-blank { display:inline-flex; align-items:baseline; gap:5px; flex:1; font-size:16px; }
+      .p-remainder-blank .p-blank { min-width:26px; }
+      .frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 6px; line-height: 1.15; }
+      .frac-n { padding: 0 6px 1px; border-bottom: 2px solid #222; }
+      .frac-d { padding: 1px 6px 0; }
+      .p-frac-blank { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; gap: 3px; margin-left: 6px; }
+      .p-frac-blank i { display: block; width: 56px; height: 1.3em; border: 1px solid #222; border-radius: 3px; }
+      .p-frac-blank i.p-frac-bar { height: 2px; border: 0; background: #222; border-radius: 0; }
+      .p-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 60px; }
+      .p-meta { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 40px; font-size: 16px; margin-bottom: 18px; }
+      .p-meta-name { border-bottom: 1px solid #222; padding: 0 160px 4px 4px; }
+      .p-title { font-size: 22px; font-weight: bold; margin-bottom: 8px; }
+      .p-name-box { font-size: 16px; margin-bottom: 12px; }
+      .p-name-line { display: inline-block; width: 200px; border-bottom: 1px solid #222; }
+      .p-desc { font-size: 14px; color: #555; margin-bottom: 16px; }
+      .p-bonus-banner { background: #fffde7; border: 2px solid #f9a825; border-radius: 8px; padding: 8px 12px; margin-bottom: 16px; font-size: 15px; }
+    `;
+  }
+  if(!isLandscape)printCSS+=regularMathPrintCss;
+  const pw = window.open('', '_blank', 'width=800,height=900');
+  if (!pw) { alert('ポップアップがブロックされました。許可してください。'); return false; }
+  pw.document.open();
+  pw.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>プリント</title><style>${printCSS}</style></head><body>${htmlContent}</body></html>`);
+  pw.document.close();
+  pw.focus();
+  let printRequested=false;
+  const requestPrint=()=>{if(printRequested||pw.closed)return;printRequested=true;pw.print();};
+  pw.onload = requestPrint;
+  setTimeout(requestPrint, 500);
+  return true;
+}
+
+function openLayoutPrintWindow(htmlContent,{ancient=false,alreadyPaginated=false,onOpened=null}={}){
+  const pw=window.open('','_blank','width=900,height=1000');
+  if(!pw)return null;
+  const cssUrl=new URL('./word_problem_print_layout_v2.css?v=20261109-paragraph-indent',document.baseURI).href;
+  const layoutUrl=new URL('./word_problem_print_layout_v2.js',document.baseURI).href;
+  const ancientUrl=new URL('./ancient_word_problem_print_adapter_v2.js',document.baseURI).href;
+  const source=ancient
+    ? `import {paginateAncientAutomaticV2} from ${JSON.stringify(ancientUrl)}; const root=document.getElementById('wpp2-print-root'); await paginateAncientAutomaticV2(root);`
+    : alreadyPaginated ? '' : `import {paginateWordProblemPrintV2} from ${JSON.stringify(layoutUrl)}; await Promise.all([...document.querySelectorAll('.wpp2-root')].map(root=>paginateWordProblemPrintV2(root)));`;
+  pw.document.open();
+  pw.document.write(`<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>文章問題プリント</title><link rel="stylesheet" href="${escapeHtml(cssUrl)}"><style>body{margin:0;padding:16px;background:#ececec;color:#111}.wpp2-controls{position:sticky;top:0;z-index:10;display:flex;justify-content:center;gap:10px;padding:10px;background:#fff;border-bottom:1px solid #aaa;font:16px sans-serif}.wpp2-controls button{padding:8px 16px;font:inherit}@media print{body{padding:0;background:#fff}.wpp2-controls{display:none!important}}</style></head><body><nav class="wpp2-controls"><button type="button" id="wpp2-print-now">印刷する</button><button type="button" onclick="window.close()">とじる</button></nav>${ancient?`<main id="wpp2-print-root">${htmlContent}</main>`:htmlContent}<script type="module">${source} document.getElementById('wpp2-print-now').onclick=()=>window.print(); await document.fonts.ready; setTimeout(()=>window.print(),120);</script></body></html>`);
+  pw.document.close();pw.focus();
+  try{onOpened?.(pw);}catch(error){pw.close();throw error;}
+  return pw;
+}
+
+async function paginateAncientHtmlForReview(html){
+  const frame=document.createElement('iframe');
+  frame.setAttribute('aria-hidden','true');
+  frame.style.cssText='position:fixed;left:-12000px;top:0;width:1000px;height:1200px;border:0;visibility:hidden';
+  const cssUrl=new URL('./word_problem_print_layout_v2.css?v=20261109-paragraph-indent',document.baseURI).href;
+  const loaded=new Promise((resolve,reject)=>{frame.onload=resolve;frame.onerror=reject;});
+  frame.srcdoc=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><link rel="stylesheet" href="${escapeHtml(cssUrl)}"></head><body><main id="ancient-review-root"></main></body></html>`;
+  document.body.append(frame);
+  try{
+    await loaded;
+    const doc=frame.contentDocument,root=doc?.getElementById('ancient-review-root');
+    if(!root)throw new Error('印刷プレビューを用意できませんでした');
+    await doc.fonts.ready;
+    root.innerHTML=html;
+    const pages=await paginateAncientAutomaticV2(root);
+    return {html:root.innerHTML,pages};
+  }finally{frame.remove();}
+}
+
+function openAncientPrintReview(prepared,{onFirstOpen=null,reprint=false}={}){
+  const overlay=document.createElement('div');overlay.className='quest-detail-overlay ancient-print-review-overlay';
+  const panel=document.createElement('section');panel.className='quest-detail-panel ancient-print-review';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-labelledby','ancient-print-review-title');
+  panel.innerHTML=`<header><div><h2 id="ancient-print-review-title">古代からの挑戦状を確認</h2><p>全33問・27問以上正解で古代装備を獲得できます。プレビューを閉じる/印刷画面が開かない場合は消費しません。印刷画面が開くと設計図を1枚消費し、その後ダイアログをキャンセルしても戻りません。プリント番号一覧から同じ内容を再印刷できます。</p></div><button type="button" class="btn" data-review-close aria-label="閉じる">とじる</button></header><nav class="ancient-print-review-tabs" aria-label="印刷内容"><button type="button" class="btn active" data-review-mode="student">児童用</button><button type="button" class="btn" data-review-mode="teacher">先生用・解答</button></nav><iframe class="ancient-print-review-frame" title="古代からの挑戦状のプレビュー"></iframe><p class="ancient-print-review-status" role="status"></p><footer><button type="button" class="btn btn-primary" data-review-print>児童用を印刷${reprint?'（再印刷）':''}</button><button type="button" class="btn" data-review-close>プレビューを閉じる</button></footer>`;
+  overlay.append(panel);document.body.append(overlay);
+  let mode='student',closed=false;
+  const frame=panel.querySelector('.ancient-print-review-frame'),status=panel.querySelector('.ancient-print-review-status'),printButton=panel.querySelector('[data-review-print]');
+  const previews={student:prepared.student,teacher:prepared.teacher};
+  const showPreview=()=>{
+    const cssUrl=new URL('./word_problem_print_layout_v2.css?v=20261109-paragraph-indent',document.baseURI).href;
+    frame.srcdoc=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="${escapeHtml(cssUrl)}"><style>body{margin:0;padding:10px;background:#eee}.wpp2-page{margin:6px auto!important;box-shadow:0 1px 5px #aaa}</style></head><body>${previews[mode].html}</body></html>`;
+    printButton.textContent=`${mode==='student'?'児童用':'先生用・解答'}を印刷${reprint?'（再印刷）':''}`;
+  };
+  const close=()=>{if(closed)return;closed=true;overlay.remove();};
+  panel.querySelectorAll('[data-review-close]').forEach(button=>button.addEventListener('click',close));
+  overlay.addEventListener('click',event=>{if(event.target===overlay)close();});
+  panel.querySelectorAll('[data-review-mode]').forEach(button=>button.addEventListener('click',()=>{
+    mode=button.dataset.reviewMode;
+    panel.querySelectorAll('[data-review-mode]').forEach(tab=>tab.classList.toggle('active',tab===button));
+    showPreview();
+  }));
+  printButton.addEventListener('click',()=>{
+    if(closed||printButton.disabled)return;
+    printButton.disabled=true;
+    try{
+      const html=previews[mode].html;
+      const opened=openLayoutPrintWindow(html,{alreadyPaginated:true,onOpened:()=>onFirstOpen?.()});
+      if(!opened){status.textContent='印刷画面を開けませんでした。ポップアップ設定を確認してください。';printButton.disabled=false;return;}
+      close();
+    }catch(error){console.error('Ancient print popup failed',error);status.textContent='印刷画面を開けませんでした。挑戦状は消費していません。';printButton.disabled=false;}
+  });
+  showPreview();printButton.focus();
+  return {close};
+}
+
+function openMaterialPrintChoices(subject,record){
+  const overlay=document.createElement('div');overlay.className='quest-detail-overlay';
+  const panel=document.createElement('section');panel.className='quest-detail-panel material-print-dialog';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-labelledby','material-print-title');
+  panel.innerHTML=`<h2 id="material-print-title">プリントの種類を選ぶ</h2><p>問題プリントには答えを載せません。先生用には解答と解説を載せます。</p><div class="quest-detail-actions"><button type="button" class="btn btn-primary" data-print-mode="student">児童用を印刷</button><button type="button" class="btn" data-print-mode="teacher">先生用・解答を印刷</button><button type="button" class="btn" data-print-close>もどる</button></div><p class="material-print-status" role="status"></p>`;
+  overlay.append(panel);document.body.append(overlay);
+  const close=()=>overlay.remove();panel.querySelector('[data-print-close]').onclick=close;overlay.onclick=event=>{if(event.target===overlay)close();};
+  panel.querySelectorAll('[data-print-mode]').forEach(button=>button.onclick=()=>{
+    const mode=button.dataset.printMode,html=subject==='math'?(Array.isArray(record)?renderMathWordSetPrintV2(record,{mode}):renderMathWordPrintV2(record,{mode})):renderJapaneseReadingPrintV2(record,{mode});
+    const opened=openLayoutPrintWindow(html);if(opened)close();else panel.querySelector('.material-print-status').textContent='印刷画面を開けませんでした。ブラウザのポップアップ設定を確認してください。';
+  });
+  panel.querySelector('[data-print-mode="student"]').focus();
+}
+/* プリント選択モーダルを表示する（3バリアント選択→印刷・保存） 
+   variants: [{ title, problems, buildHtml, onSelect }] */
+function showPrintChoiceModal(variants) {
+  const modal = document.getElementById('modal-print-choice');
+  const cardsEl = document.getElementById('print-choice-cards');
+  cardsEl.innerHTML = '';
+
+  const labels = ['🅰 Aセット', '🅱 Bセット', '🅲 Cセット'];
+
+  variants.forEach((v, i) => {
+    const card = document.createElement('div');
+    card.className = 'print-choice-card';
+    card.onmouseover = () => card.style.borderColor = '#f9ca24';
+    card.onmouseout = () => card.style.borderColor = '#4b6584';
+
+    // プレビュー（全問表示）
+    const previewHtml = v.previewHtml ?? v.problems.map((p, pi) =>
+      `<div style="font-size:14px; padding:4px 0; border-bottom:1px dotted rgba(255,255,255,0.2);">${pi+1}. ${fractionTextHtml(p.text)} = ？</div>`
+    ).join('');
+
+    card.innerHTML = `
+      <div style="font-size:18px; font-weight:bold; margin-bottom:10px; color:#f9ca24;">${escapeHtml(v.choiceLabel || labels[i])}</div>
+      <div style="font-size:13px; color:#aaa; margin-bottom:10px;">${v.problems.length}問 (${v.opLabel || ''})</div>
+      <div class="print-choice-problems">${previewHtml}</div>
+      <button class="btn btn-primary" style="width:100%; font-size:16px;">🖨️ これを印刷する</button>
+    `;
+    card.querySelector('button').onclick = () => {
+      modal.classList.add('hidden');
+      v.onSelect();
+    };
+
+    cardsEl.appendChild(card);
+  });
+
+  modal.classList.remove('hidden');
+}
+window.showPrintChoiceModal = showPrintChoiceModal;
+
+
+function printTrainingSheet(s){
+  const count = REVIEW_SETTINGS.regularPrintQuestions;
+  const tier = resolveTrainingTier(s);
+
+  // 3種類のセットを生成
+  const variants = ['🅰 Aセット', '🅱 Bセット', '🅲 Cセット'].map((label, vi) => {
+    const problems = [];
+    problems.push(...uniquePrintProblems(()=>generateProblem(tier),count));
+    return {
+      problems,
+      opLabel: OP_LABELS[tier],
+      onSelect: () => {
+        const p1 = problems.slice(0, Math.ceil(count/2)).map((p, i) =>
+          `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
+        ).join('');
+        const p2 = problems.slice(Math.ceil(count/2)).map((p, i) =>
+          `<div class="p-row"><span class="p-num">${i + 1 + Math.ceil(count/2)}.</span><span class="p-expr">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
+        ).join('');
+        const code = problems.map(p => String(p.answer).slice(-1)).join('');
+        const printId = addPrintCode(s.id, code, { type: 'skill', problems, name: s.name });
+        save();
+        openPrintWindow(`
+          <div style="display:flex; align-items:center; gap:12px;"><h1>${s.name}の修行プリント</h1></div>
+          ${printRewardStripHtml({questionCount:problems.length})}
+          <div class="p-sub">えんざん：${OP_LABELS[tier]}／${label}／ぜんぶで ${problems.length}もん</div>
+          <div class="p-sub" style="font-size:20px; font-weight:bold;">【プリント番号: ${printId}】</div>
+          <div class="p-sheet">${p1}${p2}</div>
+        `, av('画像/ステージ/試練の塔.jpg'));
+      }
+    };
+  });
+
+  showPrintChoiceModal(variants);
+}
+
+/* ==========================================================
+   あんごう にゅうりょく（プリントの こたえから とくぎを かくとく）
+   ========================================================== */
+function startCodeEntry(s){
+  showScreen('screen-training');
+  $('btn-training-quit').textContent = 'やめる';
+  $('training-title').textContent = `＊${s.name}の あんごう＊`;
+
+  const hasCode = hasPrintCode(s.id);
+  if (!hasCode) {
+    $('training-progress').innerHTML = 'まだ プリントした もんだいシートが ないみたい。さきに 🖨️プリントで もんだいを といてみよう！';
+    $('training-challenge').innerHTML = '';
+    return;
+  }
+
+  $('training-progress').innerHTML = `プリントした 10もんの こたえから つくった あんごう（すうじ10けた）を にゅうりょくしよう！`;
+  $('training-challenge').innerHTML = `
+    <input type="text" inputmode="numeric" id="code-input" class="challenge-input" maxlength="20" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <button id="code-submit" class="btn btn-primary" style="margin-top:12px;">けってい</button>
+    <p class="result-text" id="code-result"></p>
+  `;
+
+  const input = $('code-input');
+  input.addEventListener('input', () => {
+    input.value = toHalfWidth(input.value).replace(/[^0-9]/g, '');
+  });
+  input.focus();
+
+  $('code-submit').onclick = () => {
+    const val = input.value;
+    if (checkPrintCode(s.id, val)) {
+      removePrintCode(s.id, val);
+      if (s.id === 'levelup') {
+        const lvlBefore = G.player.lvl;
+        const maxHpBefore = totalMaxHp();
+        const maxMpBefore = totalMaxMp();
+        G.player.lvl += 5;
+        G.player.points += 15;
+        G.player.maxHp += LEVEL_UP_HP_GAIN * 5;
+        G.player.maxMp += LEVEL_UP_MP_GAIN * 5;
+        G.player.hp = totalMaxHp();
+        G.player.mp = totalMaxMp();
+        save();
+        trainingDone(`あんごう せいかい！ ゆうしゃは レベルが 5 あがって Lv${G.player.lvl}に なった！`);
+        const unlockedSkills = SKILL_DB.filter(s2 => (s2.reqLvl || 1) > lvlBefore && (s2.reqLvl || 1) <= G.player.lvl);
+        showLevelUpModal({
+          fromLvl: lvlBefore, toLvl: G.player.lvl,
+          hpBefore: maxHpBefore, hpAfter: totalMaxHp(),
+          mpBefore: maxMpBefore, mpAfter: totalMaxMp(),
+          pointsGained: 15, unlockedSkills,
+        });
+      } else {
+        const st = G.skills[s.id] || (G.skills[s.id] = { level:0, progress:0 });
+        st.level = 1;
+        st.progress = 0;
+        save();
+        trainingDone(`あんごう せいかい！ ゆうしゃは 「${s.name}」を しゅうとくした！`);
+      }
+    } else {
+      const resultEl = $('code-result');
+      resultEl.textContent = 'ちがう あんごうだよ…。もういちど プリントを みなおしてみよう。';
+      resultEl.className = 'result-text bad';
+      input.classList.remove('flash-ng'); void input.offsetWidth; input.classList.add('flash-ng');
+      SM.playBeep('error');
+    }
+  };
+}
+
+/* ==========================================================
+   古代装備の せっけいず プリント＆あんごう
+   ========================================================== */
+/* 古代からの挑戦状には、そのプレイヤーがクリア済みの最も難しいステージを使う。 */
+function blueprintChallengeSource(bp) {
+  const cleared=[];
+  for(const [areaId,area] of Object.entries(AREA_STAGES)) for(let stageIndex=0;stageIndex<area.stages.length;stageIndex++) {
+    const stars=Number(G?.stageClearCounts?.[areaId]?.[stageIndex]) || 0;
+    const total=Number(G?.stageTotalClears?.[areaId]?.[stageIndex]) || 0;
+    if(stars>0 || total>0)cleared.push({areaId,stageIndex,difficulty:stageDropDifficulty(areaId,stageIndex)});
+  }
+  cleared.sort((a,b)=>b.difficulty-a.difficulty || b.stageIndex-a.stageIndex || a.areaId.localeCompare(b.areaId));
+  const source=cleared[0];if(!source)return null;
+  const area=AREA_STAGES[source.areaId],stage=area.stages[source.stageIndex];
+  return {...source,gen:()=>stage.generateProblem(),label:`${area.name} ${stage.name}`,bg:area.bgImage};
+}
+
+const BLUEPRINT_KANJI_AREAS = new Set(['area5','area6','area7','area8','area9','area10']);
+const BLUEPRINT_JAPANESE_AREAS = new Set([...BLUEPRINT_KANJI_AREAS,'area14','area15']);
+
+function blueprintSubjectSources(isKanji) {
+  const cleared=[];
+  for(const [areaId,area] of Object.entries(AREA_STAGES)) {
+    if(isKanji?!BLUEPRINT_KANJI_AREAS.has(areaId):BLUEPRINT_JAPANESE_AREAS.has(areaId))continue;
+    for(let stageIndex=0;stageIndex<area.stages.length;stageIndex++) {
+      const stars=Number(G?.stageClearCounts?.[areaId]?.[stageIndex])||0;
+      const total=Number(G?.stageTotalClears?.[areaId]?.[stageIndex])||0;
+      if(stars>0||total>0)cleared.push({areaId,stageIndex,difficulty:stageDropDifficulty(areaId,stageIndex)});
+    }
+  }
+  cleared.sort((a,b)=>b.difficulty-a.difficulty||b.stageIndex-a.stageIndex||a.areaId.localeCompare(b.areaId));
+  const challenge=cleared[0];
+  if(!challenge)return null;
+  let previous=challenge.stageIndex>0
+    ? {areaId:challenge.areaId,stageIndex:challenge.stageIndex-1}
+    : null;
+  if(!previous) {
+    previous=Object.entries(AREA_STAGES).flatMap(([areaId,area])=>(isKanji?BLUEPRINT_KANJI_AREAS.has(areaId):!BLUEPRINT_JAPANESE_AREAS.has(areaId))
+      ? area.stages.map((_,stageIndex)=>({areaId,stageIndex,difficulty:stageDropDifficulty(areaId,stageIndex)})) : [])
+      .filter(stage=>stage.difficulty<challenge.difficulty)
+      .sort((a,b)=>b.difficulty-a.difficulty||b.stageIndex-a.stageIndex)[0]||null;
+  }
+  if(!previous)previous=challenge;
+  const describe=source=>{
+    const area=AREA_STAGES[source.areaId],stage=area.stages[source.stageIndex];
+    return {...source,area,stage,label:`${area.name} ${stage.name}`};
+  };
+  return {challenge:describe(challenge),previous:describe(previous)};
+}
+
+function blueprintTestProblems(source, isKanji, count=5) {
+  const problems=[],seenWords=new Set(),seenReadings=new Set(),seenMath=new Set();
+  const normalize=value=>String(value??'').normalize('NFKC').replace(/\s/gu,'').replace(/[ァ-ヶ]/gu,c=>String.fromCharCode(c.charCodeAt(0)-0x60));
+  for(let attempt=0;attempt<250&&problems.length<count;attempt++) {
+    const problem=source.stage.generateProblem();
+    const word=normalize(problem.text),answer=normalize(problem.answer);
+    const key=isKanji?`${word}\u0000${answer}`:`${word}\u0000${answer}`;
+    if(!word||!answer||seenMath.has(key)||(isKanji&&(seenWords.has(word)||seenReadings.has(answer))))continue;
+    seenMath.add(key);
+    if(isKanji){seenWords.add(word);seenReadings.add(answer);}
+    problems.push({...problem,...(isKanji?{printContext:kanjiPrintContext(problem)}:{}),sourceLabel:source.label});
+  }
+  if(problems.length<count&&source.stageIndex>0&&source.area?.stages){
+    const index=source.stageIndex-1,stage=source.area.stages[index];
+    for(const p of blueprintTestProblems({...source,stageIndex:index,stage,label:`${source.area.name} ${stage.name}`},isKanji,count-problems.length))problems.push(p);
+  }
+  if(problems.length<count)throw new Error(`${source.label}から問題を${count}問用意できませんでした`);
+  return problems;
+}
+
+function blueprintKanjiModeProblems(sources,excluded=new Set()){
+  const out=[],seen=new Set(excluded),answers=new Set();
+  for(let attempt=0;attempt<600&&out.length<10;attempt++){
+    const source=attempt%2?sources.previous:sources.challenge;
+    const p=source.stage.generateProblem();
+    if(!/[\p{Script=Han}]/u.test(p.text||'')||seen.has(p.text)||answers.has(p.answer))continue;
+    seen.add(p.text);answers.add(p.answer);out.push({...p,printContext:kanjiPrintContext(p),sourceLabel:source.label});
+  }
+  if(out.length<10&&typeof window!=='undefined'){
+    const sample=sources.challenge.stage.generateProblem(),tier=String(sample.tier||'').replace(/_\d+$/,'');
+    for(const p of window.KANJI_POOLS?.[tier]||[]){
+      if(out.length>=10)break;if(seen.has(p.text)||answers.has(p.answer))continue;
+      seen.add(p.text);answers.add(p.answer);out.push({...p,tier,printContext:kanjiPrintContext(p),sourceLabel:sources.challenge.label});
+    }
+  }
+  if(out.length<10)throw new Error('漢字を10問用意できませんでした');
+  return out;
+}
+
+async function printBlueprintTest(bp,uid) {
+  const gameAtStart=G;
+  const owned=G?.items?.find(item=>item.uid===uid&&item.id===bp.id&&item.count>0);
+  if(!owned){showConfirmModal('古代からの挑戦状','この挑戦状を持っていません。',null);return false;}
+  const mathSources=blueprintSubjectSources(false),kanjiSources=blueprintSubjectSources(true);
+  if(!mathSources||!kanjiSources) {
+    showConfirmModal('古代からの挑戦状','漢字と算数の両方で、ステージを1つずつクリアすると両面テストを印刷できます。',null);
+    return;
+  }
+  try {
+    const readingProblems=blueprintKanjiModeProblems(kanjiSources);
+    const writingProblems=blueprintKanjiModeProblems(kanjiSources,new Set(readingProblems.map(p=>p.text)));
+    const mathProblems=uniquePrintProblems((i,attempt)=>(attempt%2?mathSources.previous:mathSources.challenge).stage.generateProblem(),10).map(ancientCalculationProblem);
+    if(mathProblems.length<10)throw new Error('計算問題を10問用意できませんでした');
+    const storyProblems=[],seenStories=new Set();
+    for(let attempt=0;attempt<600&&storyProblems.length<3;attempt++){
+      const source=attempt%3===1?mathSources.previous:mathSources.challenge;
+      const p=ancientStoryProblem(source.stage.generateProblem());
+      if(!p||seenStories.has(p.text))continue;
+      seenStories.add(p.text);storyProblems.push({...p,sourceLabel:source.label});
+    }
+    if(storyProblems.length<3)throw new Error('文章問題を3問用意できませんでした');
+    const problems=[
+      ...mathProblems.map(p=>({...p,subject:'算数',category:'calculation'})),
+      ...storyProblems.map(p=>({...p,subject:'算数',category:'story'})),
+      ...readingProblems.map(p=>({...p,subject:'国語',printMode:'yomi'})),
+      ...writingProblems.map(p=>({...p,subject:'国語',printMode:'kaki',kanjiSourceText:p.text,text:p.answer,answer:p.text,alternatives:[p.text.replace(/[^\p{Script=Han}]/gu,'')]})),
+    ];
+    const printName='古代からの挑戦状（算数13問・国語20問）';
+    const printId=generatePrintId(),code=Array.from({length:6},()=>Math.floor(Math.random()*10)).join('');
+    const printMeta={type:'blueprint',uid,problems,name:printName,questionCount:33,duplex:true,formatVersion:2,itemConsumedAtPrint:false};
+    const plan=ancientPrintPlanV2({calculations:mathProblems,stories:storyProblems,readings:readingProblems,writings:writingProblems,name:G.playerName,printId,grade:2});
+    const [student,teacher]=await Promise.all([paginateAncientHtmlForReview(plan.automaticStudentHtml),paginateAncientHtmlForReview(plan.teacherHtml)]);
+    openAncientPrintReview({student,teacher},{onFirstOpen:()=>{
+      if(G!==gameAtStart)throw new Error('セーブデータが切り替わりました');
+      if(G.activePrints?.[printId])throw new Error('プリント番号が重複しました');
+      const stillOwned=G?.items?.find(item=>item.uid===uid&&item.id===bp.id&&item.count>0);
+      if(!stillOwned)throw new Error('挑戦状を確認できません。印刷前のため消費していません。');
+      const registered=addPrintCode(bp.id,code,printMeta,printId);
+      if(registered!==printId)throw new Error('プリント番号を保存できませんでした');
+      removeItem(uid,1);printMeta.itemConsumedAtPrint=true;save(true);
+      if(typeof updateHud==='function')updateHud();
+      if($('screen-items')?.classList.contains('active'))showItems();
+      if($('screen-status')?.classList.contains('active'))renderRoomInventory();
+    }});
+    return true;
+  } catch(error) {
+    console.error('Ancient blueprint test generation failed',error);
+    showConfirmModal('古代からの挑戦状','このステージから問題を十分に作れませんでした。別のステージをクリアしてから、もう一度お試しください。',null);
+  }
+}
+
+function printBlueprintSheet(bp,uid) {
+  return printBlueprintTest(bp,uid);
+}
+
+function startBlueprintCodeEntry(uid, bp){
+  showScreen('screen-training');
+  $('btn-training-quit').textContent = 'やめる';
+  $('training-title').textContent = `＊${bp.name}の あんごう＊`;
+
+  const hasCode = hasPrintCode(bp.id);
+  if (!hasCode) {
+    $('training-progress').innerHTML = 'まだ プリントした せっけいずが ないみたい。さきに 🖨️プリントで もんだいを といてみよう！';
+    $('training-challenge').innerHTML = '';
+    return;
+  }
+
+  $('training-progress').innerHTML = `プリントした せっけいずの あんごうを にゅうりょくしよう！`;
+  $('training-challenge').innerHTML = `
+    <input type="text" inputmode="numeric" id="code-input" class="challenge-input" maxlength="20" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <button id="code-submit" class="btn btn-primary" style="margin-top:12px;">けってい</button>
+    <p class="result-text" id="code-result"></p>
+  `;
+
+  const input = $('code-input');
+  input.addEventListener('input', () => {
+    input.value = toHalfWidth(input.value).replace(/[^0-9]/g, '');
+  });
+  input.focus();
+
+  $('code-submit').onclick = () => {
+    const val = input.value;
+    if (checkPrintCode(bp.id, val)) {
+      const equipDb = rollAncientBlueprintReward();
+      removePrintCode(bp.id, val);
+      removeItem(uid, 1);
+      const ability = rollAbility(6);
+      G.ownedEquips.push({ uid: G.nextUid++, id: equipDb.id, rarity: 6, ability });
+      save();
+      const abilityInfo = ability ? getAbility(ability) : null;
+      trainingDone(`あんごう せいかい！ <span class="rarity-6">${equipDb.name}を手に入れた！</span>${abilityInfo ? `<br><span class="tag ability">✨ ${abilityInfo.name}（${abilityInfo.desc}）</span>` : ''}`);
+    } else {
+      const resultEl = $('code-result');
+      resultEl.textContent = 'ちがう あんごうだよ…。もういちど プリントを みなおしてみよう。';
+      resultEl.className = 'result-text bad';
+      input.classList.remove('flash-ng'); void input.offsetWidth; input.classList.add('flash-ng');
+      SM.playBeep('error');
+    }
+  };
+}
+
+async function reprintAncientBlueprint(printId){
+  const meta=G?.activePrints?.[printId];
+  if(!meta||meta.type!=='blueprint'||meta.formatVersion!==2||!meta.itemConsumedAtPrint||!Array.isArray(meta.problems))return false;
+  $('modal-unified-code')?.classList.add('hidden');
+  try{
+    const calculations=meta.problems.filter(problem=>problem.subject==='算数'&&problem.category==='calculation');
+    const stories=meta.problems.filter(problem=>problem.subject==='算数'&&problem.category==='story');
+    const readings=meta.problems.filter(problem=>problem.subject==='国語'&&problem.printMode==='yomi');
+    const writings=meta.problems.filter(problem=>problem.subject==='国語'&&problem.printMode==='kaki').map(problem=>({...problem,text:problem.kanjiSourceText??problem.answer,answer:problem.text}));
+    const plan=ancientPrintPlanV2({calculations,stories,readings,writings,name:G.playerName,printId,grade:2});
+    const [student,teacher]=await Promise.all([paginateAncientHtmlForReview(plan.automaticStudentHtml),paginateAncientHtmlForReview(plan.teacherHtml)]);
+    openAncientPrintReview({student,teacher},{reprint:true});
+    return true;
+  }catch(error){
+    console.error('Ancient blueprint reprint preparation failed',error);
+    showConfirmModal('古代からの挑戦状','保存したプリントの再印刷準備に失敗しました。セーブの内容は変更していません。',null);
+    return false;
+  }
+}
+
+/* ==========================================================
+   魔王城の秘密プリント（タイトル画面の魔王城から開く）
+   ========================================================== */
+function openDemonCastleModal(){
+  cleanupOldPrints();
+  if (!G) {
+    showLoadSaveScreen(() => {
+      showScreen('screen-home'); // 拠点画面を裏に表示
+      openDemonCastleModal();    // セーブデータ選択後に改めてモーダルを開く
+    });
+    return;
+  }
+
+  const modal = $('modal-demon-castle-secret');
+  if (modal) {
+    modal.classList.remove('hidden');
+    SM.playBeep('type');
+    const hint = $('demon-sheet-status-hint');
+    const code = hasPrintCode('demon_castle');
+    if (hint) {
+      if (code) {
+        hint.innerHTML = '<span style="color:#2ecc71;">✅ プリントが発行されています！「🔑 魔王のあんごうをいれる」を押して入力しよう！</span>';
+      } else {
+        hint.innerHTML = 'まずは 🖨️プリントを印刷して解いてみよう！';
+      }
+    }
+  }
+}
+
+function printDemonCastleSheet(){
+  const count = 20;
+  
+  const variants = ['🅰 Aセット', '🅱 Bセット', '🅲 Cセット'].map((label, vi) => {
+    const problems = [];
+    problems.push(...uniquePrintProblems(()=>generateProblem(pick(['add5','sub5','mul4','div3','div4'])),15));
+    problems.push(...uniquePrintProblems(()=>{const kp=generateKanjiProblem(pick(['kanji_g1','kanji_g2','kanji_g3','kanji_g4','kanji_g5','kanji_g6']));return {text:`【漢字】${kp.text}`,answer:kp.answer.length};},5));
+
+    return {
+      problems,
+      opLabel: '魔王の試練',
+      onSelect: () => {
+        const p1 = problems.slice(0, 10).map((p, i) =>
+          `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr" style="font-size: 20px;">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
+        ).join('');
+        const p2 = problems.slice(10, 20).map((p, i) =>
+          `<div class="p-row"><span class="p-num">${i + 11}.</span><span class="p-expr" style="font-size: 20px;">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
+        ).join('');
+        
+        const code = problems.map(p => String(Math.abs(parseInt(p.answer, 10) || 1)).slice(-1)).join('');
+        const printId = addPrintCode('demon_castle', code, { type: 'demon_castle', problems, name: '禁断の魔王城' });
+        if (G) save();
+
+        const titleHtml = `<div style="display:flex; align-items:center; gap:12px;"><span style="font-size:42px;">👑</span> <h1>禁断の魔王城 秘密の試練プリント</h1></div>`;
+
+        openPrintWindow(`
+          ${titleHtml}
+          ${G?printRewardStripHtml({questionCount:problems.length}):''}
+          ${renderPrintRewardIcons([{icon:"⚔️",label:"半分以上正解：でんせつの剣"}])}
+          <div class="p-sub" style="margin-top: 10px;">魔王の秘宝を手に入れるための特別問題／ぜんぶで ${problems.length}もん／${label}</div>
+          <div class="p-sub" style="margin-top: 10px; font-size:24px; font-weight:bold;">【プリント番号: ${printId}】</div>
+          <div class="p-sheet">${p1}${p2}</div>
+        `, av('画像/ステージ/魔王城.jpg'));
+        
+        const hint = $('demon-sheet-status-hint');
+        if (hint) {
+          hint.innerHTML = '<span style="color:#2ecc71;">✅ プリントを印刷しました！「🔑 魔王のあんごうをいれる」から採点してね！</span>';
+        }
+      }
+    };
+  });
+
+  showPrintChoiceModal(variants);
+}
+
+function openDemonCastleCodeInput(){
+  const modal = $('modal-demon-castle-secret');
+  if (modal) modal.classList.add('hidden');
+
+  showScreen('screen-training');
+  
+  // 「やめる」ボタンの処理を上書きして、Gがない場合はタイトルに戻れるようにする
+  const quitBtn = $('btn-training-quit');
+  const originalQuit = quitBtn.onclick;
+  quitBtn.textContent = 'やめる';
+  quitBtn.onclick = () => {
+    stopChallenge();
+    quitBtn.onclick = originalQuit; // 元に戻す
+    if (!G) {
+      showScreen('screen-title');
+    } else {
+      showHome();
+    }
+  };
+
+  $('training-title').textContent = '＊禁断の魔王城 あんごう入力＊';
+
+  const hasCode = hasPrintCode('demon_castle');
+  if (!hasCode) {
+    $('training-progress').innerHTML = 'まだ プリントした 魔王城シートが ないみたい。さきに 🖨️プリントで もんだいを といてみよう！';
+    $('training-challenge').innerHTML = '';
+    return;
+  }
+
+  $('training-progress').innerHTML = `プリントした 20もんの こたえから つくった あんごう（すうじ20けた）を にゅうりょくしよう！`;
+  $('training-challenge').innerHTML = `
+    <input type="text" inputmode="numeric" id="code-input" class="challenge-input" maxlength="20" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <button id="code-submit" class="btn btn-primary" style="margin-top:12px;">けってい</button>
+    <p class="result-text" id="code-result"></p>
+  `;
+
+  const input = $('code-input');
+  input.addEventListener('input', () => {
+    input.value = toHalfWidth(input.value).replace(/[^0-9]/g, '');
+  });
+  input.focus();
+
+  $('code-submit').onclick = () => {
+    const val = input.value;
+    if (checkPrintCode('demon_castle', val)) {
+      removePrintCode('demon_castle', val);
+
+      if (G) {
+        G.player.exp += 1000;
+        G.player.gold += 10000;
+        const ability = rollAbility(5);
+        const equip = {
+          uid: G.nextUid++,
+          id: 'demon_sword',
+          rarity: 5,
+          ability
+        };
+        G.ownedEquips.push(equip);
+        save();
+
+        quitBtn.onclick = originalQuit; // 戻す
+        playItemRevealSequence([
+          { kind:'item', name:'ゴールド 10,000 G', icon:'💰' },
+          { kind:'item', name:'経験値 1,000 EXP', icon:'✨' },
+          { kind:'equip', name:'魔王の覇剣 (★5 レジェンド)', icon:'⚔️', rarity:5, ability }
+        ], {
+          badge: '👑 試練突破！',
+          title: '魔王の秘宝 解放！！',
+          showSummary: true,
+          onDone: showHome
+        });
+      } else {
+        // Gがない（タイトル画面）場合はフラグを立てておく
+        storageSet('guest_demon_castle_cleared', '1');
+        quitBtn.onclick = originalQuit; // 戻す
+        const msg = 'あんごう せいかい！！\n「あたらしく はじめる」か「ぼうけんを つづける」で セーブデータを えらぶと、魔王の秘宝が てにはいるぞ！';
+        alert(msg);
+        showScreen('screen-title');
+      }
+    } else {
+      const resultEl = $('code-result');
+      resultEl.textContent = 'ちがう あんごうだよ…。もういちど プリントを みなおしてみよう。';
+      resultEl.className = 'result-text bad';
+      input.classList.remove('flash-ng'); void input.offsetWidth; input.classList.add('flash-ng');
+      SM.playBeep('error');
+    }
+  };
+}
+
+/* しゅぎょう画面の カカシに「あたった」えんしゅつを 1回 さいせいする */
+function hitTrainingDummy(skillId){
+  const wrap = $('training-dummy-wrap');
+  if (!wrap || wrap.offsetParent === null) return; // 画面が非表示のときは描画・エフェクト処理をスキップしてクラッシュを防ぐ
+  wrap.classList.remove('hit');
+  void wrap.offsetWidth;
+  wrap.classList.add('hit');
+
+  const sId = skillId || (trainingSkill ? trainingSkill.id : null);
+  const s = sId ? SKILL_DB.find(item => item.id === sId) : null;
+
+  // プレイヤーの攻撃力から基本ダメージを算出
+  const atk = (typeof effectiveAtk === 'function') ? effectiveAtk() : (G && G.player ? G.player.atk : 20);
+  const mult = s ? (s.dmgMult || 1.6) : 1.0;
+  const totalDmg = Math.max(1, Math.round(atk * mult));
+
+  TCM.start();
+  const canvas = $('training-canvas');
+  if (canvas) {
+    const w = canvas.width || 240;
+    const h = canvas.height || 280;
+    const x = w / 2;
+    const y = h * 0.45; // カカシの中心部
+
+    if (sId === 'renzoku' || sId === 'renzoku2') {
+      // ⚔️ れんぞく斬り：こうげき力×0.8 を 2回攻撃（多段）ダメージ演出
+      const singleHitDmg = Math.max(1, Math.round(atk * (s.hitMult || 0.8)));
+
+      TCM.addEffect(new RenzokuSlashEffect(x, y, sId === 'renzoku2'));
+
+      // 1撃目ダメージ（0.12秒後：攻撃力×0.8）
+      setTimeout(() => {
+        spawnFloatingDamage(wrap, singleHitDmg, 'skill-dmg', TCM);
+      }, 120);
+
+      // 2撃目・フィニッシュダメージ（0.38秒後：攻撃力×0.8）
+      setTimeout(() => {
+        spawnFloatingDamage(wrap, singleHitDmg, 'skill-dmg crit', TCM);
+      }, 380);
+
+    } else if (sId === 'honoo' || sId === 'honoo2') {
+      TCM.addEffect(new FlameSlashEffect(x, y, sId === 'honoo2'));
+      spawnFloatingDamage(wrap, totalDmg, 'skill-dmg crit', TCM);
+    } else if (sId === 'inazuma' || sId === 'inazuma2') {
+      TCM.addEffect(new InazumaSlashEffect(x, y, sId === 'inazuma2'));
+      spawnFloatingDamage(wrap, totalDmg, 'skill-dmg crit', TCM);
+    } else if (sId === 'gale' || sId === 'gale2') {
+      TCM.addEffect(new GaleSlashEffect(x, y, sId === 'gale2'));
+      spawnFloatingDamage(wrap, totalDmg, 'skill-dmg crit', TCM);
+    } else {
+      TCM.addEffect(new SlashEffect(x, y));
+      spawnFloatingDamage(wrap, totalDmg, s ? 'skill-dmg' : 'enemy-dmg', TCM);
+      if (SM.initialized) SM.playBeep('hit');
+    }
+  } else if (SM.initialized) {
+    SM.playBeep('hit');
+  }
+}
+
+function startTraining(s){
+  showScreen('screen-training');
+  $('training-title').textContent = `＊${s.name}の しゅぎょう＊`;
+  $('btn-training-quit').textContent = 'やめる';
+  trainingSkill = s;
+  trainingNext();
+}
+
+function trainingNext(){
+  const s = trainingSkill;
+  const st = G.skills[s.id] || (G.skills[s.id] = { level:0, progress:0 });
+  const tier = skillTier(s);
+  $('training-progress').innerHTML =
+    `しゅぎょうの すすみ（${OP_LABELS[tier]}）：<span class="mastered">${st.progress} / ${s.trainReq}</span>（うちきると すすむ）`;
+  startChallenge($('training-challenge'),
+    { problem:generateProblem(tier), timeLimit:problemTimeLimit(tier) + 2000 },
+    (res) => {
+      destroyChallenge();
+      if (res.success) {
+        st.progress++;
+        hitTrainingDummy(s ? s.id : null);
+      }
+      if (st.progress >= s.trainReq){
+        st.level = 1;
+        st.progress = 0;
+        save();
+        trainingDone(`ゆうしゃは 「${s.name}」を しゅうとくした！ せんとうで つかえる！`);
+        return;
+      }
+      save();
+      trainingNext();
+    });
+}
+
+/* ==========================================================
+   アイテム画面（拠点）
+   ========================================================== */
+/* ==========================================================
+   道具屋（ゴールドで どうぐを こうにゅう）
+   ========================================================== */
+function showItemShop(){
+  showScreen('screen-item-shop');
+  $('item-shop-gold').textContent = G.player.gold;
+  const list = $('item-shop-list');
+  list.className='shop-icon-grid';list.innerHTML = '';
+  for (const db of ITEM_DB.filter(item => item.shopAvailable !== false)){
+    const button=document.createElement('button');button.type='button';button.className='shop-icon item-icon';
+    button.innerHTML=iconHtml(db.emoji,48);button.setAttribute('aria-label',`${db.name}・${db.price}G`);
+    const detail=()=>generateItemDetailHtml(db,{isShop:true});
+    button.onmouseover=event=>showTooltip(event,detail());button.onmouseout=hideTooltip;
+    button.onclick=()=>{hideTooltip();const canBuy=G.player.gold>=db.price;if(canBuy)confirmShopPurchase(db.name,db.price,()=>buyItem(db));else showConfirmModal(db.name,`${detail()}<p>所持ゴールド：${G.player.gold}G ／ 価格：${db.price}G</p><p>ゴールドが足りません。</p>`,null);};
+    list.appendChild(button);
+  }
+}
+
+function buyItem(db){
+  if (!db || db.shopAvailable === false) return;
+  if (G.player.gold < db.price) return;
+  G.player.gold -= db.price;
+  addItem(db.id, 1);
+  save();
+  showItemShop();
+}
+
+function showItems(){
+  showScreen('screen-items');
+  const list = $('item-list');
+  list.innerHTML = '';
+  let any = false;
+  for (const it of G.items){
+    const db = getItemTemplate(it.id);
+    if (!db) continue;
+    any = true;
+    const row = document.createElement('div');
+    row.className = 'inv-row';
+    const itemNameHtml = renderReadingHints(db.name);
+    const itemDescHtml = renderReadingHints(db.desc || '');
+
+    // 統一詳細カードホバー
+    row.onmouseover = (e) => showTooltip(e, generateItemDetailHtml(db, { count: it.count }));
+    row.onmouseout = () => hideTooltip();
+
+    if (isBlueprintItem(db)) {
+      // 設計図（古代装備の あんごうプリント用アイテム）
+      row.innerHTML = `<div class="info">${iconHtml(db.emoji, 20)} ${itemNameHtml} ×${it.count} <span class="tag" style="background:rgba(243,156,18,0.2); border-color:#f39c12; color:#f39c12; font-size:11px; margin-left:6px; padding:1px 5px; border-radius:3px;">📜 挑戦状</span><div class="desc">${renderReadingHints('印刷画面を開くと1個消費。解くと古代装備をランダム獲得。6種類そろうまでは重複なし')}</div></div>`;
+      const btnGroup = document.createElement('div');
+      btnGroup.className = 'skill-row-btns';
+      const printBtn = document.createElement('button');
+      printBtn.className = 'btn';
+      printBtn.textContent = '🖨️ プリント（1個消費）';
+      printBtn.onclick = () => {
+        hideTooltip();
+        printBlueprintSheet(db, it.uid);
+      };
+      btnGroup.appendChild(printBtn);
+      row.appendChild(btnGroup);
+    } else if (isBattleItem(db)) {
+      row.innerHTML = `<div class="info">${iconHtml(db.emoji, 20)} ${itemNameHtml} ×${it.count} <span class="tag" style="background:rgba(231,76,60,0.2); border-color:#e74c3c; color:#ff7675; font-size:11px; margin-left:6px; padding:1px 5px; border-radius:3px;">⚔️ 戦闘用</span><div class="desc">${itemDescHtml} (効果:${db.value})</div></div>`;
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.disabled = true;
+      btn.style.opacity = '0.6';
+      btn.textContent = '戦闘用';
+      row.appendChild(btn);
+    } else if (db.effect === 'cost') {
+      row.innerHTML = `<div class="info">${iconHtml(db.emoji, 20)} ${itemNameHtml} ×${it.count} <span class="tag" style="background:rgba(46,204,113,0.2); border-color:#2ecc71; color:#2ecc71; font-size:11px; margin-left:6px; padding:1px 5px; border-radius:3px;">🌱 部屋用</span><div class="desc">${itemDescHtml}</div></div>`;
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.textContent = 'つかう';
+      btn.onclick = () => {
+        hideTooltip();
+        const res = useItem(it.uid, db, false);
+        if (res && res.success) {
+          updateHud();
+          save();
+          showItems();
+          if (typeof renderEquipmentSlots === 'function') renderEquipmentSlots();
+        }
+      };
+      row.appendChild(btn);
+    } else if (db.effect === 'respec') {
+      row.innerHTML = `<div class="info">${iconHtml(db.emoji, 20)} ${itemNameHtml} ×${it.count} <span class="tag" style="background:rgba(168,85,247,0.2); border-color:#a855f7; color:#c084fc; font-size:11px; margin-left:6px; padding:1px 5px; border-radius:3px;">🌰 部屋用</span><div class="desc">${itemDescHtml}</div></div>`;
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.textContent = 'つかう';
+      btn.onclick = () => {
+        hideTooltip();
+        showConfirmModal('スキルポイントのリセット',
+          '「ふりなおしのたね」をつかって、わりふったスキルポイントを 全てリセットしますか？',
+          () => {
+            const res = useItem(it.uid, db, false);
+            if (res && res.success) {
+              updateHud();
+              save();
+              showItems();
+              if (typeof renderStatus === 'function') renderStatus();
+            }
+          }
+        );
+      };
+      row.appendChild(btn);
+    } else {
+      row.innerHTML = `<div class="info">${iconHtml(db.emoji, 20)} ${itemNameHtml} ×${it.count} <div class="desc">${itemDescHtml}</div></div>`;
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.textContent = 'つかう';
+      btn.onclick = () => {
+        hideTooltip();
+        const res = useItem(it.uid, db, false);
+        if (res && res.success) {
+          updateHud();
+          save();
+          showItems();
+        }
+      };
+      row.appendChild(btn);
+    }
+    list.appendChild(row);
+  }
+  if (!any) list.innerHTML = '<div class="flavor">アイテムを持っていない。</div>';
+}
+
+/* ==========================================================
+   イベント登録・起動
+   ========================================================== */
+/* ==========================================================
+   ガチャ・合成
+   ========================================================== */
+let gachaView = 'skins';
+
+function setGachaView(view) {
+  gachaView = ['skins','items','halloween','christmas-skins','christmas-items'].includes(view) ? view : 'skins';
+  $('skin-gacha-section').classList.toggle('hidden', gachaView !== 'skins');
+  $('gacha-item-section').classList.toggle('hidden', gachaView !== 'items');
+  $('btn-gacha-tab-skins').setAttribute('aria-selected', String(gachaView === 'skins'));
+  $('btn-gacha-tab-items').setAttribute('aria-selected', String(gachaView === 'items'));
+  $('halloween-gacha-section').classList.toggle('hidden', gachaView !== 'halloween');
+  $('btn-gacha-tab-halloween').setAttribute('aria-selected', String(gachaView === 'halloween'));
+  $('christmas-skin-gacha-section').classList.toggle('hidden', gachaView !== 'christmas-skins');
+  $('christmas-equip-gacha-section').classList.toggle('hidden', gachaView !== 'christmas-items');
+  $('btn-gacha-tab-christmas-skins').setAttribute('aria-selected', String(gachaView === 'christmas-skins'));
+  $('btn-gacha-tab-christmas-items').setAttribute('aria-selected', String(gachaView === 'christmas-items'));
+}
+
+function showGacha(view){
+  showScreen('screen-gacha');
+  document.querySelector('.gacha-showcase').style.backgroundImage = `url("${av('assets/characters/bg_skin_starlight.png')}")`;
+  $('skin-gacha-title').src = av('assets/ui/background_skin_gacha_logo.png');
+  $('equipment-gacha-title').src = av('assets/ui/equipment_gacha_logo.png');
+  setGachaView(typeof view === 'string' ? view : gachaView);
+  $('gacha-current-gold').textContent = G.player.gold;
+  $('gacha-results').innerHTML = '';
+  $('christmas-gacha-results').innerHTML = '';
+  renderSkinGachaControls();
+  renderEquipmentGachaControls();
+  renderChristmasSkinGachaControls();
+  renderChristmasEquipmentGachaControls();
+  renderHalloweenGacha();
+}
+
+function renderEquipmentGachaControls() {
+  const buttonCosts = [['btn-gacha-1', 150], ['btn-gacha-6', 750], ['btn-gacha-13', 1400]];
+  buttonCosts.forEach(([id, cost]) => { $(id).disabled = equipmentGachaRolling || G.player.gold < cost; });
+  const tickets = G.equipGachaTenPullTickets || 0;
+  $('equip-gacha-tickets').textContent = tickets;
+  $('btn-gacha-ticket').disabled = equipmentGachaRolling || tickets < 1;
+  const entry = db => `<button type="button" class="skin-gacha-theme equipment-gacha-preview" data-equip-id="${db.id}" aria-label="${db.name}の抽選レアリティと性能を表示"><img src="${av(db.emoji)}" alt=""><b>${db.name}</b><span>${SLOT_LABELS[db.slot]}</span><span class="equipment-gacha-rates"><i class="rarity-3">★3 9%</i><i class="rarity-4">★4 0.7%</i><i class="rarity-5">★5 0.3%</i></span></button>`;
+  $('equipment-gacha-featured').innerHTML = LIMITED_EQUIP_DB.map(entry).join('');
+  $('equipment-gacha-collection').innerHTML = EQUIP_DB.filter(db => !db.assist).map(entry).join('');
+  document.querySelectorAll('.equipment-gacha-preview').forEach(button => {
+    bindEquipDetailTooltip(button, getEquipTemplate(button.dataset.equipId), { rarity: 3 });
+  });
+}
+
+function renderChristmasEquipmentGachaControls() {
+  if (!G) return;
+  const buttonCosts = [['btn-christmas-gacha-1',150],['btn-christmas-gacha-6',750],['btn-christmas-gacha-13',1400]];
+  buttonCosts.forEach(([id,cost]) => { $(id).disabled = equipmentGachaRolling || G.player.gold < cost; });
+  const tickets = G.equipGachaTenPullTickets || 0;
+  $('christmas-equip-gacha-tickets').textContent = tickets;
+  $('btn-christmas-gacha-ticket').disabled = equipmentGachaRolling || tickets < 1;
+  const entry = db => `<button type="button" class="skin-gacha-theme equipment-gacha-preview christmas-equipment-gacha-preview" data-equip-id="${db.id}" aria-label="${db.name}の抽選レアリティと性能を表示"><img src="${av(db.emoji)}" alt=""><b>${db.name}</b><span class="christmas-equipment-badge${db.id.startsWith('christmas_') ? '' : ' is-standard'}">${db.id.startsWith('christmas_') ? 'クリスマス限定' : '通常限定'}</span><span>${SLOT_LABELS[db.slot]}</span><span class="equipment-gacha-rates"><i class="rarity-3">★3 9%</i><i class="rarity-4">★4 0.7%</i><i class="rarity-5">★5 0.3%</i></span></button>`;
+  $('christmas-equipment-gacha-featured').innerHTML = [...LIMITED_EQUIP_DB,...CHRISTMAS_EQUIP_DB].map(entry).join('');
+  $('christmas-equipment-gacha-collection').innerHTML = EQUIP_DB.filter(db => !db.assist).map(entry).join('');
+  document.querySelectorAll('#christmas-equip-gacha-section .equipment-gacha-preview').forEach(button => {
+    bindEquipDetailTooltip(button,getEquipTemplate(button.dataset.equipId),{rarity:3});
+  });
+}
+
+let gachaPreviewPreviousFocus = null;
+function closeGachaArtworkPreview() {
+  $('skin-gacha-preview-modal').classList.add('hidden');
+  if (gachaPreviewPreviousFocus?.isConnected) gachaPreviewPreviousFocus.focus({preventScroll:true});
+}
+function presentGachaArtworkPreview() {
+  hideTooltip();
+  const modal = $('skin-gacha-preview-modal');
+  if (modal.classList.contains('hidden')) gachaPreviewPreviousFocus = document.activeElement;
+  modal.classList.remove('hidden');
+  $('btn-skin-gacha-preview-close').focus({preventScroll:true});
+  modal.onkeydown = event => {
+    event.stopPropagation();
+    if (event.key === 'Escape') { event.preventDefault(); closeGachaArtworkPreview(); }
+    if (event.key === 'Tab') {
+      const controls = [...modal.querySelectorAll('button')].filter(button => !button.closest('.hidden'));
+      const index = controls.indexOf(document.activeElement);
+      event.preventDefault(); controls[(index + (event.shiftKey ? -1 : 1) + controls.length) % controls.length]?.focus();
+    }
+  };
+}
+
+let equipmentPreviewEquipId = null;
+let equipmentPreviewRarity = 3;
+function openEquipmentGachaPreview(id) {
+  const db = getEquipTemplate(id);
+  if (!db) return;
+  hideTooltip();
+  equipmentPreviewEquipId = id;
+  equipmentPreviewRarity = 3;
+  $('skin-gacha-preview-title').textContent = db.name;
+  $('equipment-preview-rarities').classList.remove('hidden');
+  renderEquipmentGachaPreviewRarity();
+  const frame=$('skin-gacha-preview-image').closest('.skin-gacha-preview-art');
+  frame?.classList.remove('avatar-composite-stage');
+  frame?.querySelector('.avatar-decoration')?.remove();
+  $('skin-gacha-preview-image').classList.remove('avatar-composite-character');
+  $('skin-gacha-preview-image').classList.remove('hidden', 'avatar-holographic');
+  $('skin-gacha-preview-image').closest('.skin-gacha-preview-art')?.classList.remove('holo-character-prism');
+  $('skin-gacha-preview-image').src = av(db.emoji);
+  $('skin-gacha-preview-image').alt = db.name;
+  $('skin-gacha-preview-bg').classList.add('hidden');
+  presentGachaArtworkPreview();
+}
+
+function renderEquipmentGachaPreviewRarity() {
+  const db = getEquipTemplate(equipmentPreviewEquipId);
+  if (!db) return;
+  const names = { atk: 'こうげき', def: 'ぼうぎょ', hp: 'HP', mp: 'MP', spd: 'すばやさ' };
+  const rarityStats = calcEquipStat(db.stat, equipmentPreviewRarity);
+  const rarityNames = { 3: '激レア', 4: '超激レア', 5: 'レジェンド' };
+  $('equipment-preview-rarities').querySelectorAll('button').forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.rarity) === equipmentPreviewRarity)));
+  $('skin-gacha-preview-description').textContent = `★${equipmentPreviewRarity} ${rarityNames[equipmentPreviewRarity]} / ${SLOT_LABELS[db.slot]} / コスト ${equipCost(db, equipmentPreviewRarity)} / ${Object.entries(rarityStats).map(([key, value]) => `${names[key]} +${value}`).join('・')}`;
+}
+
+const SKIN_GACHA_GOLD_COST = 2500;
+const SKIN_GACHA_HOLOGRAM_RATE = 0.01;
+
+function getSkinGachaPrizes() {
+  const characters = HERO_AVATARS.filter(hero => !hero.rewardSource).flatMap(hero => [
+    { ...hero, kind: 'character', owned: hero.id === G.avatar || (G.unlockedSkins || []).includes(hero.id) },
+    { ...hero, name: `ホログラム・${hero.name}`, kind: 'holo-character', holographic: true, owned: (G.holographicSkins || []).includes(hero.id) },
+  ]);
+  const backgrounds = AVATAR_BACKGROUNDS.filter(background => background.image && !background.rewardSource).flatMap(background => [
+    { ...background, kind: 'background', owned: background.id === G.avatarBackground || (G.unlockedAvatarBackgrounds || []).includes(background.id) },
+    { ...background, name: `ホログラム・${background.name}`, kind: 'holo-background', holographic: true, owned: (G.holographicAvatarBackgrounds || []).includes(background.id) },
+  ]);
+  return [
+    ...characters,
+    ...backgrounds,
+  ];
+}
+
+function getChristmasSkinGachaPrizes() {
+  const characters = HERO_AVATARS.filter(hero => hero.rewardSource === 'christmas').flatMap(hero => [
+    { ...hero, kind:'character', owned:hero.id === G.avatar || (G.unlockedSkins || []).includes(hero.id) },
+    { ...hero, name:`ホログラム・${hero.name}`, kind:'holo-character', holographic:true, owned:(G.holographicSkins || []).includes(hero.id) },
+  ]);
+  const backgrounds = AVATAR_BACKGROUNDS.filter(background => background.image && background.rewardSource === 'christmas').flatMap(background => [
+    { ...background, kind:'background', owned:background.id === G.avatarBackground || (G.unlockedAvatarBackgrounds || []).includes(background.id) },
+    { ...background, name:`ホログラム・${background.name}`, kind:'holo-background', holographic:true, owned:(G.holographicAvatarBackgrounds || []).includes(background.id) },
+  ]);
+  const decorations = AVATAR_DECORATIONS.filter(decoration => decoration.source === 'christmas').map(decoration => ({
+    ...decoration, kind:'decoration', owned:(G.unlockedDecorations || []).includes(decoration.id),
+  }));
+  return [...getSkinGachaPrizes(), ...characters, ...backgrounds, ...decorations];
+}
+
+function renderSkinGachaControls(){
+  const prizes = getSkinGachaPrizes();
+  const locked = prizes.filter(prize => !prize.owned);
+  const hasStandard = locked.some(prize => !prize.holographic);
+  const hasHolographic = locked.some(prize => prize.holographic);
+  $('skin-gacha-tickets').textContent = G.skinGachaTickets || 0;
+  $('gacha-current-gold').textContent = G.player.gold;
+  const rates = $('skin-gacha-rates');
+  if (rates) rates.textContent = !locked.length
+    ? 'ラインナップをすべて獲得済み'
+    : hasStandard && hasHolographic
+      ? `通常スキン ${Math.round((1 - SKIN_GACHA_HOLOGRAM_RATE) * 100)}% ／ ホログラム仕様 ${SKIN_GACHA_HOLOGRAM_RATE * 100}%`
+      : hasHolographic ? 'ホログラム仕様 100%（通常スキンは獲得済み）' : '通常スキン 100%（ホログラム仕様は獲得済み）';
+  $('btn-skin-gacha-draw').textContent = `${SKIN_GACHA_GOLD_COST}Gで1回引く`;
+  $('btn-skin-gacha-draw').disabled = !locked.length || G.player.gold < SKIN_GACHA_GOLD_COST;
+  $('btn-skin-gacha-ticket').disabled = !locked.length || !(G.skinGachaTickets > 0);
+  $('skin-gacha-status').textContent = locked.length
+    ? `キャラ・背景の未所持：${locked.length}種。重複は出ません。`
+    : 'キャラクターと背景をすべて獲得しました！';
+  const collection = $('skin-gacha-collection');
+  if (collection) {
+    collection.innerHTML = prizes.map(prize => {
+      const artwork = prize.kind.includes('background')
+        ? `<div class="skin-gacha-background-swatch${prize.holographic ? ' holo-artwork' : ''}" style="background-image:url('${av(prize.image)}')"></div>`
+        : `<span class="skin-gacha-character-art" style="${prize.holographic ? characterFoilMaskStyle(prize.image) : ''}"><img src="${av(prize.image)}" alt=""></span>`;
+      return `<button type="button" class="skin-gacha-theme skin-gacha-preview-trigger" data-preview-kind="${prize.kind}" data-preview-id="${prize.id}" aria-label="${prize.name}を拡大表示">${artwork}<b>${prize.name}</b><span class="${prize.owned ? 'is-owned' : ''}">${prize.owned ? '獲得済み' : '未獲得'}</span></button>`;
+    }).join('');
+  }
+}
+
+function renderChristmasSkinGachaControls() {
+  if (!G) return;
+  const prizes = getChristmasSkinGachaPrizes();
+  const locked = prizes.filter(prize => !prize.owned);
+  $('christmas-skin-gacha-tickets').textContent = G.skinGachaTickets || 0;
+  $('gacha-current-gold').textContent = G.player.gold;
+  $('btn-christmas-skin-gacha-draw').textContent = `${SKIN_GACHA_GOLD_COST}Gで1回引く`;
+  $('btn-christmas-skin-gacha-draw').disabled = !locked.length || G.player.gold < SKIN_GACHA_GOLD_COST;
+  $('btn-christmas-skin-gacha-ticket').disabled = !locked.length || !(G.skinGachaTickets > 0);
+  $('christmas-skin-gacha-status').textContent = locked.length
+    ? `通常とクリスマスの未所持スキン・背景・フレーム：${locked.length}種。スキンと背景は重複しません。`
+    : 'ラインナップをすべて獲得しました！';
+  $('christmas-skin-gacha-collection').innerHTML = prizes.map(prize => {
+    let artwork;
+    if (prize.kind.includes('background')) {
+      artwork = `<div class="skin-gacha-background-swatch${prize.holographic ? ' holo-artwork' : ''}" style="background-image:url('${av(prize.image)}')"></div>`;
+    } else if (prize.kind === 'decoration') {
+      artwork = `<span class="christmas-decoration-art"><img src="${av(prize.image)}" alt=""></span>`;
+    } else {
+      artwork = `<span class="skin-gacha-character-art" style="${prize.holographic ? characterFoilMaskStyle(prize.image) : ''}"><img src="${av(prize.image)}" alt=""></span>`;
+    }
+    const isChristmasPrize = prize.rewardSource === 'christmas' || prize.source === 'christmas';
+    const sourceLabel = isChristmasPrize ? 'クリスマス限定' : '通常ラインナップ';
+    return `<button type="button" class="skin-gacha-theme christmas-skin-gacha-theme christmas-skin-preview-trigger" data-preview-kind="${prize.kind}" data-preview-id="${prize.id}" aria-label="${prize.name}を拡大表示">${artwork}<b>${prize.name}</b><span class="christmas-prize-source${isChristmasPrize ? '' : ' is-standard'}">${sourceLabel}</span><span class="${prize.owned ? 'is-owned' : ''}">${prize.owned ? '獲得済み' : '未獲得'}</span></button>`;
+  }).join('');
+}
+
+// Prize previews show only the acquired artwork; outfit composition belongs in the selector.
+function applyGachaPrizeArtwork(frame,image,prize) {
+  if (!frame || !image) return;
+  frame.querySelectorAll('.avatar-decoration').forEach(layer=>layer.remove());
+  frame.querySelectorAll('.avatar-composite-background,.avatar-composite-bg').forEach(layer=>{layer.style.display='none';});
+  frame.classList.remove('avatar-composite-stage','holo-character-prism');
+  frame.classList.toggle('holo-artwork',!!prize.holographic && prize.kind.includes('background'));
+  image.classList.remove('avatar-composite-character','hidden');
+  image.src=av(prize.image);image.alt=prize.name;
+  image.style.display='block';image.style.objectFit=prize.kind.includes('background')?'cover':'contain';
+  image.classList.toggle('avatar-holographic',!!prize.holographic && !prize.kind.includes('background'));
+}
+
+function openSkinGachaPreview(kind, id) {
+  $('equipment-preview-rarities').classList.add('hidden');
+  $('skin-gacha-preview-bg').classList.remove('hidden');
+  const isBackground = kind.includes('background');
+  const isDecoration = kind === 'decoration';
+  const holographic = kind.startsWith('holo-');
+  const background = isBackground ? getAvatarBackground(id) : getAvatarBackground(G?.avatarBackground);
+  const hero = isBackground || isDecoration ? getHeroAvatar(G?.avatar) : getHeroAvatar(id);
+  const decoration = isDecoration ? AVATAR_DECORATIONS.find(entry => entry.id === id) : null;
+  const title = isDecoration ? decoration?.name || 'フレーム' : `${holographic ? 'ホログラム・' : ''}${isBackground ? background.name : hero.name}`;
+  $('skin-gacha-preview-title').textContent = title;
+  $('skin-gacha-preview-description').textContent = isDecoration
+    ? 'プロフィールを飾るクリスマス限定フレーム'
+    : isBackground
+    ? `${holographic ? '光がゆらめくホログラム仕様の' : ''}背景スキン`
+    : `${hero.desc}${holographic ? '・ホログラム仕様' : ''}`;
+  $('skin-gacha-preview-image').src = av(hero.image);
+  $('skin-gacha-preview-image').alt = hero.name;
+  $('skin-gacha-preview-image').classList.toggle('avatar-holographic', holographic);
+  const characterPreview = $('skin-gacha-preview-image').closest('.avatar-composite-preview, .avatar-selector-preview, .skin-gacha-preview-art');
+  characterPreview?.classList.toggle('holo-character-prism', holographic && !isBackground && !isDecoration);
+  
+  if (characterPreview) characterPreview.style.setProperty('--character-foil-mask', `url("${av(hero.image)}")`);
+  applyAvatarBackground($('skin-gacha-preview-bg'), background.id, isBackground && holographic);
+  $('skin-gacha-preview-image').classList.remove('hidden');
+  applyGachaPrizeArtwork(characterPreview,$('skin-gacha-preview-image'),{kind,image:isDecoration ? decoration.image : isBackground ? background.image : hero.image,name:title,holographic});
+  presentGachaArtworkPreview();
+}
+
+function doSkinGacha(payment = 'gold'){
+  if (!G || equipmentGachaRolling || document.querySelector('.skin-gacha-reveal') || document.querySelector('.gacha-reveal-overlay')) return;
+  if (payment !== 'gold' && payment !== 'ticket') return;
+  const locked = getSkinGachaPrizes().filter(prize => !prize.owned);
+  if (!locked.length) return;
+  if (payment === 'ticket') {
+    if (!(G.skinGachaTickets > 0)) return;
+    G.skinGachaTickets--;
+  } else {
+    if (G.player.gold < SKIN_GACHA_GOLD_COST) return;
+    G.player.gold -= SKIN_GACHA_GOLD_COST;
+  }
+  const standardLocked = locked.filter(prize => !prize.holographic);
+  const holographicLocked = locked.filter(prize => prize.holographic);
+  const drawHolographic = holographicLocked.length > 0 && (!standardLocked.length || Math.random() < SKIN_GACHA_HOLOGRAM_RATE);
+  const prize = pick(drawHolographic ? holographicLocked : standardLocked);
+  const isBackground = prize.kind.includes('background');
+  const hero = isBackground ? getHeroAvatar(G.avatar) : prize;
+  if (prize.holographic && isBackground) {
+    G.holographicAvatarBackgrounds = [...new Set([...(G.holographicAvatarBackgrounds || []), prize.id])];
+    G.unlockedAvatarBackgrounds = [...new Set([...(G.unlockedAvatarBackgrounds || ['default']), prize.id])];
+  } else if (prize.holographic) {
+    G.holographicSkins = [...new Set([...(G.holographicSkins || []), prize.id])];
+    G.unlockedSkins = [...new Set([...(G.unlockedSkins || []), prize.id])];
+  } else if (isBackground) G.unlockedAvatarBackgrounds = [...(G.unlockedAvatarBackgrounds || ['default']), prize.id];
+  else G.unlockedSkins = [...(G.unlockedSkins || []), prize.id];
+  save();
+  renderSkinGachaControls();
+  showSkinGachaSummon(prize, hero);
+}
+
+function doChristmasSkinGacha(payment = 'gold') {
+  if (!G || equipmentGachaRolling || document.querySelector('.skin-gacha-reveal') || document.querySelector('.gacha-reveal-overlay')) return;
+  if (payment !== 'gold' && payment !== 'ticket') return;
+  const locked = getChristmasSkinGachaPrizes().filter(prize => !prize.owned);
+  if (!locked.length) return;
+  if (payment === 'ticket') {
+    if (!(G.skinGachaTickets > 0)) return;
+    G.skinGachaTickets--;
+  } else {
+    if (G.player.gold < SKIN_GACHA_GOLD_COST) return;
+    G.player.gold -= SKIN_GACHA_GOLD_COST;
+  }
+  const standardLocked = locked.filter(prize => !prize.holographic);
+  const holographicLocked = locked.filter(prize => prize.holographic);
+  const drawHolographic = holographicLocked.length > 0 && (!standardLocked.length || Math.random() < SKIN_GACHA_HOLOGRAM_RATE);
+  const prize = pick(drawHolographic ? holographicLocked : standardLocked);
+  const isBackground = prize.kind.includes('background');
+  const isDecoration = prize.kind === 'decoration';
+  if (isDecoration) G.unlockedDecorations = [...new Set([...(G.unlockedDecorations || []), prize.id])];
+  else if (prize.holographic && isBackground) {
+    G.holographicAvatarBackgrounds = [...new Set([...(G.holographicAvatarBackgrounds || []), prize.id])];
+    G.unlockedAvatarBackgrounds = [...new Set([...(G.unlockedAvatarBackgrounds || ['default']), prize.id])];
+  } else if (prize.holographic) {
+    G.holographicSkins = [...new Set([...(G.holographicSkins || []), prize.id])];
+    G.unlockedSkins = [...new Set([...(G.unlockedSkins || []), prize.id])];
+  } else if (isBackground) G.unlockedAvatarBackgrounds = [...new Set([...(G.unlockedAvatarBackgrounds || ['default']), prize.id])];
+  else G.unlockedSkins = [...new Set([...(G.unlockedSkins || []), prize.id])];
+  const hero = isBackground || isDecoration ? getHeroAvatar(G.avatar) : prize;
+  save();
+  renderChristmasSkinGachaControls();
+  showSkinGachaSummon(prize, hero, 'christmas');
+}
+
+function doSkinGachaTenPull(){
+  if (!G || equipmentGachaRolling || document.querySelector('.skin-gacha-reveal') || document.querySelector('.gacha-reveal-overlay') || !(G.skinGachaTenPullTickets > 0)) return;
+  const available = getSkinGachaPrizes().filter(prize => !prize.owned);
+  if (!available.length) return;
+  G.skinGachaTenPullTickets--;
+  const results = [];
+  while (available.length && results.length < 10) {
+    const standard = available.filter(prize => !prize.holographic);
+    const holographic = available.filter(prize => prize.holographic);
+    const drawHolographic = holographic.length > 0 && (!standard.length || Math.random() < SKIN_GACHA_HOLOGRAM_RATE);
+    const pool = drawHolographic ? holographic : standard;
+    const prize = pick(pool);
+    results.push(prize);
+    available.splice(available.findIndex(item => item.kind === prize.kind && item.id === prize.id), 1);
+    if (prize.holographic && prize.kind.includes('background')) {
+      G.holographicAvatarBackgrounds = [...new Set([...(G.holographicAvatarBackgrounds || []), prize.id])];
+      G.unlockedAvatarBackgrounds = [...new Set([...(G.unlockedAvatarBackgrounds || ['default']), prize.id])];
+    } else if (prize.holographic) {
+      G.holographicSkins = [...new Set([...(G.holographicSkins || []), prize.id])];
+      G.unlockedSkins = [...new Set([...(G.unlockedSkins || []), prize.id])];
+    } else if (prize.kind.includes('background')) G.unlockedAvatarBackgrounds = [...new Set([...(G.unlockedAvatarBackgrounds || ['default']), prize.id])];
+    else G.unlockedSkins = [...new Set([...(G.unlockedSkins || []), prize.id])];
+  }
+  save(true);
+  renderSkinGachaControls();
+  showSkinGachaTenResults(results);
+}
+
+function showSkinGachaTenResults(prizes){
+  const overlay = document.createElement('div');
+  overlay.className = 'skin-gacha-reveal skin-gacha-ten-reveal';
+  overlay.dataset.phase = 'summoning';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', '背景スキンガチャ10連の結果');
+  overlay.style.backgroundImage = `url("${av('assets/characters/bg_skin_starlight.png')}")`;
+  overlay.innerHTML = `<div class="skin-gacha-summoning"><canvas class="skin-gacha-magic" aria-hidden="true"></canvas><div class="skin-gacha-summon-label" role="status">10連召喚中…</div><button class="btn skin-gacha-skip" type="button" data-action="reveal">スキップ</button></div><section class="skin-gacha-ten-results hidden"><h2>10連ガチャ結果</h2><div class="skin-gacha-ten-grid">${prizes.map(prize => {
+    const bg = prize.kind.includes('background');
+    const hero = bg ? null : getHeroAvatar(prize.id);
+    const image = bg ? prize.image : hero.image;
+    return `<article class="skin-gacha-ten-card"><div class="skin-gacha-ten-art${bg ? ' is-background-result' : ''}" style="${prize.holographic && !bg ? characterFoilMaskStyle(image) : ''}">${bg ? '' : `<img class="${prize.holographic ? 'avatar-holographic' : ''}" src="${av(image)}" alt="">`}<div class="avatar-composite-bg${bg ? '' : ' hidden'}${prize.holographic && bg ? ' holo-artwork' : ''}" style="${bg ? `background-image:url('${av(image)}')` : ''}"></div></div><b>${prize.name}</b></article>`;
+  }).join('')}</div><p>${prizes.length < 10 ? `未所持の景品が残り${prizes.length}種のため、${prizes.length}回分を獲得しました。` : '重複なしで10種を獲得しました。'}</p><button class="btn btn-primary" type="button" data-action="close">ガチャへ戻る</button></section>`;
+  document.body.appendChild(overlay);
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  overlay.querySelectorAll('.skin-gacha-ten-card').forEach((card,index)=>{
+    const prize=prizes[index], frame=card.querySelector('.skin-gacha-ten-art');
+    let image=frame.querySelector('img');if(!image){image=document.createElement('img');frame.appendChild(image);}
+    const background=prize.kind.includes('background');
+    applyAvatarComposition(frame,image,{...cosmeticPreviewAppearance(background?'background':'skin',prize.id),avatarHolographic:!background && !!prize.holographic,avatarBackgroundHolographic:background && !!prize.holographic});
+  });
+  const stopMagic = startSkinGachaMagic(overlay.querySelector('canvas'), reducedMotion);
+  let timer;
+  const reveal = () => {
+    if (overlay.dataset.phase !== 'summoning') return;
+    clearTimeout(timer); stopMagic(); overlay.dataset.phase = 'revealed';
+    overlay.querySelector('.skin-gacha-summoning').classList.add('hidden');
+    overlay.querySelector('.skin-gacha-ten-results').classList.remove('hidden');
+    SM.play('se_gacha_result2'); overlay.querySelector('[data-action="close"]').focus({ preventScroll: true });
+  };
+  overlay.querySelector('[data-action="reveal"]').onclick = reveal;
+  overlay.querySelector('[data-action="close"]').onclick = () => { if (overlay.dataset.phase !== 'revealed') return; overlay.remove(); showGacha(); $('btn-skin-gacha-ten-ticket')?.focus({ preventScroll: true }); };
+  timer = setTimeout(reveal, reducedMotion ? 300 : 2600);
+  SM.play('se_decide');
+}
+
+function startSkinGachaMagic(canvas, reducedMotion) {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return () => {};
+  const size = 512;
+  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = size * ratio;
+  canvas.height = size * ratio;
+  ctx.scale(ratio, ratio);
+  const startedAt = performance.now();
+  let frame = null;
+  const draw = now => {
+    const time = reducedMotion ? 1.4 : (now - startedAt) / 1000;
+    const charge = Math.min(1, time / 2.4);
+    ctx.clearRect(0, 0, size, size);
+    ctx.save();
+    ctx.translate(size / 2, size / 2);
+    ctx.globalAlpha = Math.min(1, time * 2);
+    ctx.shadowColor = '#73f1d0';
+    ctx.shadowBlur = 12 + charge * 14;
+    [190, 158, 113].forEach((radius, ring) => {
+      ctx.save();
+      ctx.rotate(time * (ring % 2 ? -0.45 : 0.3));
+      ctx.strokeStyle = ring === 1 ? '#ffdf8c' : '#84edce';
+      ctx.lineWidth = ring === 1 ? 3 : 2;
+      ctx.setLineDash(ring === 2 ? [5, 12] : []);
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      for (let i = 0; i < 12; i++) {
+        const angle = i * Math.PI / 6;
+        ctx.save();
+        ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.moveTo(radius - 9, -5);
+        ctx.lineTo(radius + 9, 0);
+        ctx.lineTo(radius - 9, 5);
+        ctx.stroke();
+        ctx.restore();
+      }
+      ctx.restore();
+    });
+    ctx.strokeStyle = '#ffe7a6';
+    ctx.beginPath();
+    for (let i = 0; i < 7; i++) {
+      const angle = i * Math.PI * 2 / 6 - Math.PI / 2 + time * 0.12;
+      const x = Math.cos(angle) * 140;
+      const y = Math.sin(angle) * 140;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    // Streaks converge on the sigil, then fan out for the reveal.
+    for (let i = 0; i < 42; i++) {
+      const progress = (time * 0.6 + i / 42) % 1;
+      const angle = i * 2.399 + time * 0.1;
+      const distance = time < 2.2 ? 230 * (1 - progress) : 20 + (time - 2.2) * 330 + i % 6 * 8;
+      const length = 6 + charge * 12;
+      ctx.globalAlpha = Math.min(1, time * 2) * (0.35 + progress * 0.65);
+      ctx.strokeStyle = i % 3 ? '#ffe9aa' : '#91ffe8';
+      ctx.lineWidth = i % 3 ? 2 : 3;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(angle) * distance, Math.sin(angle) * distance);
+      ctx.lineTo(Math.cos(angle) * (distance + length), Math.sin(angle) * (distance + length));
+      ctx.stroke();
+    }
+    ctx.globalAlpha = Math.min(0.85, charge);
+    ctx.lineWidth = 3 + charge * 9;
+    ctx.strokeStyle = '#fff3c7';
+    ctx.beginPath();
+    ctx.moveTo(0, -20 - charge * 110);
+    ctx.lineTo(0, 20 + charge * 110);
+    ctx.moveTo(-20 - charge * 70, 0);
+    ctx.lineTo(20 + charge * 70, 0);
+    ctx.stroke();
+    ctx.restore();
+    if (!reducedMotion) frame = requestAnimationFrame(draw);
+  };
+  draw(startedAt);
+  return () => { if (frame !== null) cancelAnimationFrame(frame); };
+}
+
+function showSkinGachaSummon(prize, hero, theme = 'standard') {
+  const isBackground = prize.kind.includes('background');
+  const isDecoration = prize.kind === 'decoration';
+  const isHolographic = !!prize.holographic;
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const previousFocus = document.activeElement;
+  const overlay = document.createElement('div');
+  overlay.className = 'skin-gacha-reveal';
+  overlay.dataset.phase = 'summoning';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', theme === 'christmas' ? 'クリスマススキンガチャの結果' : '背景スキンガチャの結果');
+  overlay.style.backgroundImage = `url("${av(theme === 'christmas' ? 'assets/christmas/background_north_star_sanctuary.webp' : 'assets/characters/bg_skin_starlight.png')}")`;
+  overlay.innerHTML = `
+    <div class="skin-gacha-summoning">
+      <canvas class="skin-gacha-magic" aria-hidden="true"></canvas>
+      <div class="skin-gacha-summon-label" role="status">${theme === 'christmas' ? '雪と星の光を集めて…' : '召喚中…'}</div>
+      <button class="btn skin-gacha-skip" type="button" data-action="skip">スキップ</button>
+    </div>
+    <div class="skin-gacha-reveal-panel hidden">
+      <div class="skin-gacha-result-art${isHolographic ? ' is-holographic' : ''}${isBackground ? ' is-background-result' : ''}" style="${isHolographic && !isBackground ? characterFoilMaskStyle(hero.image) : ''}"><div class="avatar-composite-bg${isBackground ? ' hidden' : ''}"></div><img class="${isHolographic && !isBackground ? 'avatar-holographic' : ''}" src="${av(isBackground ? prize.image : hero.image)}" alt="${isBackground ? prize.name : hero.name}"></div>
+      <div class="skin-gacha-result-details">
+        <span class="skin-gacha-new-badge">NEW</span>
+        <h2>${isDecoration ? '新しいフレームを獲得！' : isBackground ? '新しい背景を獲得！' : '新しいスキンを獲得！'}</h2>
+        <strong>${prize.name}</strong>
+        <p>${isDecoration ? 'プロフィールを飾るクリスマス限定フレーム' : isBackground ? '背景スキン' : hero.desc}</p>
+        <div class="skin-gacha-reveal-actions"><button class="btn" type="button" data-action="close">ガチャへ戻る</button><button class="btn btn-primary" type="button" data-action="equip">${isDecoration ? 'このフレームを使う' : isBackground ? 'この背景にする' : 'このスキンに着替える'}</button></div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const art=overlay.querySelector('.skin-gacha-result-art');
+  applyGachaPrizeArtwork(art,art.querySelector('img'),prize);
+  const stopMagic = startSkinGachaMagic(overlay.querySelector('canvas'), reducedMotion);
+  SM.play('se_decide');
+  let timer;
+  const reveal = () => {
+    if (overlay.dataset.phase !== 'summoning' || !overlay.isConnected) return;
+    clearTimeout(timer);
+    stopMagic();
+    overlay.dataset.phase = 'revealed';
+    overlay.querySelector('.skin-gacha-summoning').classList.add('hidden');
+    overlay.querySelector('.skin-gacha-reveal-panel').classList.remove('hidden');
+    SM.play('se_gacha_result2');
+    overlay.querySelector('[data-action="equip"]').focus({ preventScroll: true });
+  };
+  const finish = equip => {
+    if (overlay.dataset.phase !== 'revealed') return;
+    clearTimeout(timer);
+    stopMagic();
+    if (equip) {
+      if (isBackground) { G.avatarBackground = prize.id; G.avatarBackgroundHolographic = isHolographic; }
+      else if (isDecoration) G.avatarDecoration = prize.id;
+      else { G.avatar = hero.id; G.avatarHolographic = isHolographic; }
+      save();
+    }
+    overlay.remove();
+    if (equip) {
+      showHome();
+      $('home-avatar-window')?.focus();
+    } else {
+      showGacha();
+      const target = previousFocus?.isConnected && !previousFocus.disabled ? previousFocus : $('btn-gacha-back');
+      target?.focus({ preventScroll: true });
+    }
+  };
+  overlay.querySelector('[data-action="skip"]').onclick = reveal;
+  overlay.querySelector('[data-action="close"]').onclick = () => finish(false);
+  overlay.querySelector('[data-action="equip"]').onclick = () => finish(true);
+  overlay.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      if (overlay.dataset.phase === 'summoning') reveal(); else finish(false);
+    } else if (event.key === 'Tab') {
+      const buttons = [...overlay.querySelectorAll('button')].filter(button => button.getClientRects().length);
+      const first = buttons[0];
+      const last = buttons[buttons.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
+  });
+  overlay.querySelector('[data-action="skip"]').focus({ preventScroll: true });
+  timer = setTimeout(reveal, reducedMotion ? 150 : 2900);
+}
+
+/* ガチャの そうび抽選：レアリティは 運まかせのままだが、
+   えらばれる きほんアイテムは「そのレアリティで そうびした時のコストが
+   いまのコスト上限におさまるもの」から えらぶ。
+   レベルが ひくすぎて どれも おさまらない時だけ、いちばん コストの ひくいものを わたす */
+function gachaEquipPick(rarity, includeChristmas = false){
+  const cap = costCap();
+  const featuredPool = includeChristmas ? [...LIMITED_EQUIP_DB,...CHRISTMAS_EQUIP_DB] : LIMITED_EQUIP_DB;
+  const limited = featuredPool.filter(db => equipCost(db, rarity) <= cap);
+  if (limited.length && Math.random() < 0.15) return pick(limited);
+  const pool = EQUIP_DB.filter(db => !db.assist);
+  const eligible = pool.filter(db => equipCost(db, rarity) <= cap);
+  if (eligible.length > 0) return pick(eligible);
+  const minCost = Math.min(...pool.map(db => equipCost(db, rarity)));
+  return pick(pool.filter(db => equipCost(db, rarity) === minCost));
+}
+
+let equipmentGachaRolling = false;
+function doGacha(times, cost, payment) {
+  if (!G || equipmentGachaRolling || document.querySelector('.skin-gacha-reveal') || document.querySelector('.gacha-reveal-overlay')) return;
+  if (payment === 'ticket') {
+    if (!(G.equipGachaTenPullTickets > 0)) {
+      $('gacha-results').innerHTML = '<span class="bad">装備ガチャ10連チケットがない！</span>';
+      return;
+    }
+    G.equipGachaTenPullTickets--;
+    times = 10;
+  } else {
+    if (G.player.gold < cost) {
+      $('gacha-results').innerHTML = '<span class="bad">ゴールドがたりない！</span>';
+      return;
+    }
+    G.player.gold -= cost;
+  }
+  $('gacha-current-gold').textContent = G.player.gold;
+
+  let results = [];
+  for (let i = 0; i < times; i++) {
+    // レアリティ: ★1 60% / ★2 30% / ★3 9% / ★4 0.7% / ★5 0.3%
+    const r = Math.random();
+    let rarity;
+    if (r < 0.003) rarity = 5;
+    else if (r < 0.01) rarity = 4;
+    else if (r < 0.10) rarity = 3;
+    else if (r < 0.40) rarity = 2;
+    else rarity = 1;
+
+    const db = gachaEquipPick(rarity);
+    const ability = rollAbility(rarity);
+    G.ownedEquips.push({ uid: G.nextUid++, id: db.id, rarity, ability });
+    results.push({ kind:'equip', id:db.id, name:db.name, rarity, icon:db.emoji, ability });
+  }
+  save();
+  equipmentGachaRolling = true;
+
+  $('gacha-results').innerHTML = '<div class="gacha-animation"></div><div class="flavor" style="margin-top:10px;">ガチャを回しています…</div>';
+
+  // Disable buttons while rolling
+  const buttons = document.querySelectorAll('#screen-gacha button');
+  buttons.forEach(b => b.disabled = true);
+
+  setTimeout(() => {
+    playItemRevealSequence(results, { badge:'装備ガチャ', title:'獲得した装備', showSummary:true, onDone: () => {
+      equipmentGachaRolling = false;
+      buttons.forEach(b => b.disabled = false);
+      showGacha();
+    } });
+  }, 1000);
+}
+
+function doChristmasEquipGacha(times, cost, payment) {
+  if (!G || equipmentGachaRolling || document.querySelector('.skin-gacha-reveal') || document.querySelector('.gacha-reveal-overlay')) return;
+  if (payment === 'ticket') {
+    if (!(G.equipGachaTenPullTickets > 0)) {
+      $('christmas-gacha-results').innerHTML = '<span class="bad">装備ガチャ10連チケットがない！</span>';
+      return;
+    }
+    G.equipGachaTenPullTickets--;
+    times = 10;
+  } else {
+    if (G.player.gold < cost) {
+      $('christmas-gacha-results').innerHTML = '<span class="bad">ゴールドがたりない！</span>';
+      return;
+    }
+    G.player.gold -= cost;
+  }
+  $('gacha-current-gold').textContent = G.player.gold;
+
+  const results = [];
+  for (let i = 0; i < times; i++) {
+    const r = Math.random();
+    let rarity;
+    if (r < 0.003) rarity = 5;
+    else if (r < 0.01) rarity = 4;
+    else if (r < 0.10) rarity = 3;
+    else if (r < 0.40) rarity = 2;
+    else rarity = 1;
+
+    const db = gachaEquipPick(rarity,true);
+    const ability = eventEquipmentAbility(db.id) || rollAbility(rarity);
+    G.ownedEquips.push({ uid:G.nextUid++, id:db.id, rarity, ability });
+    results.push({ kind:'equip', id:db.id, name:db.name, rarity, icon:db.emoji, ability });
+  }
+  save();
+  equipmentGachaRolling = true;
+  $('christmas-gacha-results').innerHTML = '<div class="gacha-animation"></div><div class="flavor" style="margin-top:10px;">クリスマスガチャを回しています…</div>';
+  const buttons = document.querySelectorAll('#screen-gacha button');
+  buttons.forEach(button => { button.disabled = true; });
+  setTimeout(() => {
+    playItemRevealSequence(results,{badge:'クリスマス装備ガチャ',title:'獲得した装備',showSummary:true,onDone:() => {
+      equipmentGachaRolling = false;
+      buttons.forEach(button => { button.disabled = false; });
+      showGacha();
+    }});
+  },1000);
+}
+
+function synthesisMatches(base, game = G) {
+  if (!base || base.rarity >= RARITY_MAX) return [];
+  return game.ownedEquips.filter(eq => eq.uid !== base.uid && eq.id === base.id && eq.rarity === base.rarity);
+}
+
+function synthesisPairValid(baseUid, materialUid, game = G) {
+  const base = game.ownedEquips.find(eq => eq.uid === baseUid);
+  return !!base && synthesisMatches(base, game).some(eq => eq.uid === materialUid);
+}
+
+function commitSynthesis(baseUid, materialUid) {
+  if (!synthesisPairValid(baseUid, materialUid)) return null;
+  const base = G.ownedEquips.find(eq => eq.uid === baseUid);
+  const result = { uid:G.nextUid++, id:base.id, rarity:base.rarity + 1, ability:eventEquipmentAbility(base.id) || rollAbility(base.rarity + 1) };
+  G.ownedEquips = G.ownedEquips.filter(eq => eq.uid !== baseUid && eq.uid !== materialUid);
+  for (const slot of EQUIP_SLOTS) {
+    if ([baseUid, materialUid].includes(G.equipment[slot]?.uid)) G.equipment[slot] = null;
+  }
+  G.ownedEquips.push(result);
+  save();
+  return result;
+}
+
+function synthesisEquipmentHtml(eq, size = 64) {
+  const db = getEquipTemplate(eq.id);
+  const ability = eq.ability ? getAbility(eq.ability) : null;
+  const equipped = EQUIP_SLOTS.some(slot => G.equipment[slot]?.uid === eq.uid);
+  return `<div class="synthesis-art rarity-${eq.rarity}">${iconHtml(db.emoji,size)}</div><b>${escapeHtml(db.name)}</b><span class="rarity-${eq.rarity}">${rarityLabelHtml(eq.rarity)}</span>${ability ? `<small>${escapeHtml(ability.name)}</small>` : ''}${equipped ? '<small class="synthesis-equipped">装備中</small>' : ''}`;
+}
+
+function showSynthesis(baseUid = null, materialUid = null) {
+  hideTooltip();
+  showScreen('screen-synthesis');
+  const base = G.ownedEquips.find(eq => eq.uid === baseUid);
+  const material = base && synthesisMatches(base).find(eq => eq.uid === materialUid);
+  $('synthesis-step').textContent = !base ? '① 2つ以上ある装備を選ぶ' : !material ? '② 同じ種類・レアリティの装備を素材に選ぶ' : '③ 2問の計算に正解して、レアリティを上げる';
+  const recipe = $('synthesis-recipe');
+  recipe.innerHTML = base ? `<div class="synthesis-slot">${synthesisEquipmentHtml(base)}</div><span class="synthesis-symbol">＋</span><div class="synthesis-slot">${material ? synthesisEquipmentHtml(material) : '<span>素材を選ぼう</span>'}</div><span class="synthesis-symbol">→</span><div class="synthesis-slot synthesis-target">${synthesisEquipmentHtml({...base,uid:null,rarity:base.rarity+1,ability:null})}</div><div class="synthesis-actions"><button type="button" class="btn" data-reset>選び直す</button><button type="button" class="btn btn-primary" data-start ${material ? '' : 'disabled'}>合成の計算へ</button><small>選んだ2つを消費。追加能力は再抽選。失敗・中断では消費しません。</small></div>` : '';
+  recipe.querySelector('[data-reset]')?.addEventListener('click', () => showSynthesis());
+  recipe.querySelector('[data-start]')?.addEventListener('click', () => startSynthesisFlow({baseUid:base.uid,materialUid:material.uid}));
+  const list = $('synthesis-list');
+  list.innerHTML = '';
+  const inventory = base ? synthesisMatches(base) : G.ownedEquips;
+  if (!inventory.length) list.innerHTML = '<p class="flavor">装備がありません。同じ種類・同じレアリティを2つ集めよう。</p>';
+  for (const eq of inventory) {
+    const db = getEquipTemplate(eq.id);
+    if (!db) continue;
+    const matches = synthesisMatches(eq);
+    const selectable = !!base || matches.length > 0;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'synthesis-inventory-card';
+    button.disabled = !selectable;
+    button.dataset.equipUid = eq.uid;
+    button.setAttribute('aria-pressed', String(eq.uid === material?.uid));
+    button.innerHTML = `${synthesisEquipmentHtml(eq)}<small>${eq.rarity >= RARITY_MAX ? '合成上限' : `同じ装備 ×${matches.length + 1}`}</small><span>${!selectable ? '素材が足りない' : base ? '素材に選ぶ' : 'この装備を選ぶ'}</span>`;
+    button.onclick = () => showSynthesis(base ? base.uid : eq.uid, base ? eq.uid : null);
+    list.appendChild(button);
+  }
+}
+
+let synthesisRun = null;
+function quitSynthesisFlow() {
+  synthesisRun = null;
+  destroyChallenge();
+  showSynthesis();
+}
+
+function startSynthesisFlow({baseUid, materialUid}) {
+  if (!synthesisPairValid(baseUid, materialUid)) { showSynthesis(); return; }
+  const base = G.ownedEquips.find(eq => eq.uid === baseUid);
+  const material = G.ownedEquips.find(eq => eq.uid === materialUid);
+  const db = getEquipTemplate(base.id);
+  const run = synthesisRun = {baseUid, materialUid, stage:0};
+  showScreen('screen-synthesis-calc');
+  $('synthesis-calc-recipe').innerHTML = `<div class="synthesis-slot">${synthesisEquipmentHtml(base)}</div><span class="synthesis-symbol">＋</span><div class="synthesis-slot">${synthesisEquipmentHtml(material)}</div>`;
+  $('synthesis-calc-result').innerHTML = '';
+  $('btn-synthesis-calc-quit').textContent = '合成をやめる';
+  const finish = (result) => {
+    synthesisRun = null;
+    $('synthesis-challenge').innerHTML = '';
+    $('synthesis-calc-progress').textContent = result ? '合成成功！' : '合成失敗。装備は消費していません。';
+    $('synthesis-calc-result').innerHTML = result ? `<div class="synthesis-success">${synthesisEquipmentHtml(result,96)}</div>` : '<p>装備を選び直して、もう一度挑戦しよう。</p>';
+    $('btn-synthesis-calc-quit').textContent = '装備一覧へ戻る';
+    $('btn-synthesis-calc-quit').focus({preventScroll:true});
+    if (result) SM.play('se_gacha_result2');
+  };
+  function nextProblem() {
+    if (synthesisRun !== run) return;
+    run.stage++;
+    $('synthesis-calc-progress').textContent = `合成の計算 ${run.stage} / 2問 · 2問とも正解で成功`;
+    const tier = db.opTier || 'add1';
+    startChallenge($('synthesis-challenge'), {problem:generateProblem(tier), timeLimit:problemTimeLimit(tier)+3000, prompt:`魔力を合わせよう！ ${run.stage}問目`}, res => {
+      if (synthesisRun !== run) return;
+      destroyChallenge();
+      if (!res.success) { finish(null); return; }
+      if (run.stage < 2) { nextProblem(); return; }
+      finish(commitSynthesis(baseUid,materialUid));
+    });
+  }
+  nextProblem();
+}
+
+function bindEvents(){
+  const on = (id, fn) => {
+    const el = $(id);
+    if (el) el.onclick = fn;
+  };
+
+  let currentAvatarIndex = 0;
+  let selectedNewSaveAvatar = HERO_AVATARS[0].id;
+
+  function updateAvatarDisplay(index) {
+    const avatars = getInitialSelectableAvatars();
+    currentAvatarIndex = (index + avatars.length) % avatars.length;
+    const hero = avatars[currentAvatarIndex];
+    selectedNewSaveAvatar = hero.id;
+
+    const imgEl = $('hero-preview-img');
+    if (imgEl) {
+      imgEl.style.transform = 'scale(0.88)';
+      imgEl.style.opacity = '0.5';
+      setTimeout(() => {
+        imgEl.src = av(hero.image);
+        imgEl.alt = 'キャラクター';
+        imgEl.style.transform = 'scale(1)';
+        imgEl.style.opacity = '1';
+      }, 90);
+    }
+
+    // サムネイルのアクティブ状態更新
+    const thumbBtns = document.querySelectorAll('.hero-thumb-btn');
+    thumbBtns.forEach((btn, i) => {
+      btn.classList.toggle('is-active', i === currentAvatarIndex);
+    });
+  }
+
+  function initAvatarSelection() {
+    const avatars = getInitialSelectableAvatars();
+    currentAvatarIndex = 0;
+    const thumbsContainer = $('hero-thumbs-list');
+    if (thumbsContainer) {
+      thumbsContainer.innerHTML = avatars.map((hero, i) => `
+        <button type="button" class="hero-thumb-btn ${i === 0 ? 'is-active' : ''}" data-index="${i}">
+          <div class="hero-thumb-img-wrap">
+            <img src="${av(hero.image)}" alt="アバター">
+          </div>
+        </button>
+      `).join('');
+
+      thumbsContainer.querySelectorAll('.hero-thumb-btn').forEach(btn => {
+        btn.onclick = () => {
+          const idx = parseInt(btn.dataset.index, 10);
+          updateAvatarDisplay(idx);
+        };
+      });
+    }
+
+    const prevBtn = $('btn-hero-prev');
+    const nextBtn = $('btn-hero-next');
+    if (prevBtn) prevBtn.onclick = () => updateAvatarDisplay(currentAvatarIndex - 1);
+    if (nextBtn) nextBtn.onclick = () => updateAvatarDisplay(currentAvatarIndex + 1);
+
+    updateAvatarDisplay(0);
+  }
+
+  on('btn-newgame', () => {
+    showScreen('screen-new-save');
+    initAvatarSelection();
+    const nameInput = $('new-save-name');
+    if (nameInput) {
+      nameInput.value = '';
+      setTimeout(() => nameInput.focus(), 50);
+    }
+  });
+  on('btn-new-save-back', () => showScreen('screen-title'));
+  on('btn-new-save-start', async () => {
+    const nameInput = $('new-save-name');
+    let key;
+    if (window.AccountSession) {
+      const button=$('btn-new-save-start');if(button.disabled)return;button.disabled=true;
+      try {
+        const game=newGameState(nameInput?.value,selectedNewSaveAvatar);
+        const created=await window.AccountSession.createSave(game.playerName,game);
+        key=currentSlotKey=created.key;G=created.gameState;storageSet(key,JSON.stringify(G));
+        if($('account-save-count'))$('account-save-count').textContent=`プレイヤー ${window.AccountSession.summary.used} / ${window.AccountSession.summary.saveLimit}`;
+      }catch(error){
+        showConfirmModal('プレイヤーを作成できません',error.message==='save_limit_reached'?'プレイヤーの枠がいっぱいです。':'接続とログインを確認して、もう一度お試しください。',null);
+        return;
+      }finally{button.disabled=false;}
+    } else key = createSaveSlot(nameInput ? nameInput.value : '', selectedNewSaveAvatar);
+    startTimeLimitSession(key);
+    showScreen('screen-intro'); // チュートリアル画面へ
+  });
+  
+  on('btn-intro-assist', () => {
+    G.ownedEquips.push({ uid: G.nextUid, id: 'ast1', rarity: 1, ability: null });
+    G.equipment.weapon = { uid: G.nextUid };
+    G.nextUid++;
+    alert('「かぞえだま」を手に入れた！');
+    showHome();
+  });
+  
+  on('btn-intro-sword', () => {
+    G.ownedEquips.push({ uid: G.nextUid, id: 'w1', rarity: 1, ability: null });
+    G.equipment.weapon = { uid: G.nextUid };
+    G.nextUid++;
+    alert('「木の剣」を手に入れた！');
+    showHome();
+  });
+
+  const nameInput = $('new-save-name');
+  if (nameInput) {
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const startBtn = $('btn-new-save-start');
+        if (startBtn) startBtn.click();
+      }
+    });
+  }
+
+  on('btn-continue', () => showLoadSaveScreen());
+  on('btn-load-save-back', () => showScreen('screen-title'));
+
+  on('hotspot-training', showSkills);
+  on('hotspot-item-shop', showItemShop);
+  on('hotspot-weapon-shop', showWeaponShop);
+  on('hotspot-status', showStatus);
+  on('hotspot-gacha', showGacha);
+  on('hotspot-synthesis', () => showSynthesis());
+  on('hotspot-quest-board', showQuestBoard);
+  const raidHotspot = $('hotspot-raid-boss');
+  if (raidHotspot && !raidFeatureOpen()) {
+    const label = raidHotspot.querySelector('.hotspot-tag');
+    if (label) label.textContent = '🔒 11月1日の新レイドまで休止';
+    raidHotspot.setAttribute('aria-label', 'レイドは11月1日の新レイド開始まで休止中');
+  }
+  on('hotspot-raid-boss', () => raidFeatureOpen() ? showRaidBossMenu() : showRaidClosedNotice());
+  on('hotspot-halloween', showHalloweenMenu);
+  
+  on('btn-raid-exchange', () => showRaidExchange());
+  on('btn-raid-history', showRaidHistory);
+  on('btn-raid-history-older', () => changeRaidHistory(1));
+  on('btn-raid-history-newer', () => changeRaidHistory(-1));
+  on('btn-raid-history-retry', () => raidHistoryEntries.length ? renderRaidHistory() : showRaidHistory());
+
+  on('btn-raid-rules', () => {
+    const button = $('btn-raid-rules');
+    const expanded = button.getAttribute('aria-expanded') !== 'true';
+    button.setAttribute('aria-expanded', String(expanded));
+    $('raid-rules').classList.toggle('hidden', !expanded);
+  });
+  on('btn-raid-sync-retry', () => syncRaidState());
+  on('btn-raid-challenge', confirmRaidStart);
+  on('hotspot-adventure', openAdventure);
+
+  // 教科タブ切り替え
+  on('subject-tab-math', () => setSubjectTab('math'));
+  on('subject-tab-kanji', () => setSubjectTab('kanji'));
+
+  // さんすうエリア
+  on('area-card-tower', () => showStageSelectNew('area1'));
+  on('stage-card-area13', () => showStageSelectNew('area13'));
+  on('stage-card-dungeon', () => showStageSelectNew('area2'));
+  on('stage-card-area3', () => showStageSelectNew('area3'));
+  on('stage-card-area4', () => showStageSelectNew('area4'));
+  on('stage-card-area11', () => showStageSelectNew('area11'));
+  on('stage-card-area12', () => showStageSelectNew('area12'));
+
+  // こくご（漢字）エリア
+
+  if ($('stage-status-area14')) {
+    const area = AREA_STAGES['area14'];
+    $('stage-status-area14').innerHTML = `推奨Lv:${area ? area.recLv : 1} / ひらがな　${zoneStarsHtml('kanji1')}`;
+  }
+  if ($('stage-status-area15')) {
+    const area = AREA_STAGES['area15'];
+    $('stage-status-area15').innerHTML = `推奨Lv:${area ? area.recLv : 1} / カタカナ　${zoneStarsHtml('kanji2')}`;
+  }
+
+  on('stage-card-area5', () => showStageSelectNew('area5'));
+  on('stage-card-area14', () => showStageSelectNew('area14'));
+  on('stage-card-area15', () => showStageSelectNew('area15'));
+
+  on('stage-card-area6', () => showStageSelectNew('area6'));
+  on('stage-card-area7', () => showStageSelectNew('area7'));
+  on('stage-card-area8', () => showStageSelectNew('area8'));
+  on('stage-card-area9', () => showStageSelectNew('area9'));
+  on('stage-card-area10', () => showStageSelectNew('area10'));
+
+  on('btn-stage-select-back', showHome);
+  on('btn-stage-select-new-back', showStageSelect);
+
+  on('substage-card-tower', () => enterZone('tower'));
+  on('substage-card-crypt', () => enterZone('crypt'));
+  on('substage-card-bandit', () => enterZone('bandit'));
+  on('btn-grass-substage-back', showStageSelect);
+
+  on('btn-goto-admin', () => requestAdminAccess(showAdmin));
+
+  // タイトル画面 魔王城の秘密プリント（一旦無効化）
+  // on('title-demon-castle-hotspot', openDemonCastleModal);
+  on('btn-demon-secret-close', () => {
+    const m = $('modal-demon-castle-secret');
+    if (m) m.classList.add('hidden');
+  });
+  on('btn-print-demon-sheet', printDemonCastleSheet);
+  on('btn-code-demon-sheet', openUnifiedCodeEntry);
+
+  on('btn-status-back', showHome);
+  on('btn-status-confirm', confirmStatusAllocation);
+  on('equip-tab-equips', () => { equipListTab = 'equips'; setEquipListMsg(''); renderEquipList(); });
+  on('equip-tab-items', () => { equipListTab = 'items'; setEquipListMsg(''); renderEquipList(); });
+
+  // 自分の部屋の左側タブ切り替えボタン
+  document.querySelectorAll('.room-nav-btn').forEach(btn => {
+    btn.onclick = () => {
+      setRoomTab(btn.dataset.roomTab);
+    };
+  });
+
+  const homeWin = $('home-player-window');
+  if (homeWin) {
+    homeWin.style.cursor = 'pointer';
+    homeWin.addEventListener('click', (e) => {
+      if (e.target.closest('#btn-toggle-home-status')) return;
+      showStatus();
+    });
+  }
+  on('btn-skills-back', showHome);
+  on('btn-items-back', showHome);
+  on('btn-equip-select-close', closeEquipSelectModal);
+
+ const updateAvatarSelectorPreview = () => {
+	    const avatar = getHeroAvatar(pendingAvatarId || G.avatar);
+	    const background = getAvatarBackground(pendingAvatarBackgroundId || G.avatarBackground);
+	    $('avatar-selector-preview-image').src = av(avatar.image);
+	    $('avatar-selector-preview-image').alt = avatar.name;
+	    $('avatar-selector-preview-image').classList.toggle('avatar-holographic', pendingAvatarHolographic);
+    const characterPreview = $('avatar-selector-preview-image').closest('.avatar-selector-preview');
+    characterPreview?.classList.toggle('holo-character-prism', pendingAvatarHolographic);
+    
+    if (characterPreview) characterPreview.style.setProperty('--character-foil-mask', `url("${av(avatar.image)}")`);
+	    applyAvatarBackground($('avatar-selector-preview-bg'), background.id, pendingBackgroundHolographic);
+      applyAvatarComposition(characterPreview,$('avatar-selector-preview-image'),{avatar:avatar.id,avatarBackground:background.id,avatarDecoration:pendingAvatarFrameId ?? G.avatarDecoration,avatarHolographic:pendingAvatarHolographic,avatarBackgroundHolographic:pendingBackgroundHolographic});
+	    $('avatar-selector-character-name').textContent = `${pendingAvatarHolographic ? 'ホログラム・' : ''}${avatar.name}`;
+	    $('avatar-selector-background-name').textContent = `${pendingBackgroundHolographic ? 'ホログラム・' : ''}${background.name}`;
+      $('avatar-selector-frame-name').textContent = AVATAR_DECORATIONS.find(frame=>frame.id===(pendingAvatarFrameId ?? G.avatarDecoration))?.name || 'フレームなし';
+	  };
+	  const renderAvatarSelectorOptions = () => {
+	    const characterList = $('avatar-change-list');
+	    const backgroundList = $('avatar-background-list');
+      const frameList = $('avatar-frame-list');
+      [['characters',characterList],['backgrounds',backgroundList],['frames',frameList]].forEach(([tab,list])=>{
+        const active=avatarSelectorTab===tab;
+        list.classList.toggle('hidden',!active);
+        const button=$('btn-avatar-tab-'+tab);
+        button.classList.toggle('is-active',active);
+        button.setAttribute('aria-selected',String(active));
+        button.setAttribute('aria-controls',list.id);
+        list.setAttribute('aria-labelledby',button.id);
+        list.innerHTML='';
+      });
+      $('avatar-background-locked-note').classList.toggle('hidden',avatarSelectorTab!=='backgrounds');
+      const frameGroup=document.createElement('section');frameGroup.className='avatar-selector-group';
+      const frameHeading=document.createElement('h4');frameHeading.textContent='持っているフレーム';frameGroup.appendChild(frameHeading);
+      [{id:'',name:'フレームなし'},...AVATAR_DECORATIONS.filter(frame=>(G.unlockedDecorations || []).includes(frame.id) || G.avatarDecoration===frame.id)].forEach(frame=>{
+        const option=document.createElement('button');option.type='button';option.dataset.frameId=frame.id;
+        const selected=(pendingAvatarFrameId ?? G.avatarDecoration ?? '')===frame.id;
+        option.className='avatar-selector-option avatar-frame-option'+(selected?' is-active':'');
+        option.setAttribute('aria-pressed',String(selected));
+        if(frame.image){const image=document.createElement('img');image.src=av(frame.image);image.alt='';option.appendChild(image);}
+        else {const empty=document.createElement('span');empty.className='avatar-frame-empty';empty.textContent='なし';option.appendChild(empty);}
+        const name=document.createElement('span');name.textContent=frame.name;option.appendChild(name);
+        option.onclick=()=>{pendingAvatarFrameId=frame.id;renderAvatarSelectorOptions();};frameGroup.appendChild(option);
+      });frameList.appendChild(frameGroup);
+
+	    [['female', '女性キャラクター'], ['male', '男性キャラクター']].forEach(([gender, title]) => {
+	      const avatars = getSelectableAvatars().filter(avatar => avatar.gender === gender);
+	      if (!avatars.length) return;
+	      const group = document.createElement('section');
+	      group.className = 'avatar-selector-group';
+	      const heading = document.createElement('h4');
+	      heading.textContent = title;
+	      group.appendChild(heading);
+	      avatars.forEach(avatar => {
+	        const option = document.createElement('button');
+	        option.type = 'button';
+	        option.className = 'avatar-selector-option' + ((pendingAvatarId || G.avatar) === avatar.id && !pendingAvatarHolographic ? ' is-active' : '');
+	        option.setAttribute('aria-pressed', String((pendingAvatarId || G.avatar) === avatar.id && !pendingAvatarHolographic));
+	        const image = document.createElement('img');
+	        image.src = av(avatar.image);
+	        image.alt = '';
+	        if (isFireCharacter(avatar.id)) {
+	          option.classList.add('avatar-fire-stage');
+	          option.insertAdjacentHTML('afterbegin', '<span class="avatar-fire-aura" aria-hidden="true"></span>');
+	        }
+	        const name = document.createElement('span');
+	        name.textContent = avatar.name;
+	        option.append(image, name);
+	        option.onclick = () => { pendingAvatarId = avatar.id; pendingAvatarHolographic = false; updateAvatarSelectorPreview(); renderAvatarSelectorOptions(); };
+	        group.appendChild(option);
+	        if ((G.holographicSkins || []).includes(avatar.id)) {
+	          const holoOption = option.cloneNode(true);
+	          holoOption.classList.toggle('is-active', (pendingAvatarId || G.avatar) === avatar.id && pendingAvatarHolographic);
+	          holoOption.setAttribute('aria-pressed', String((pendingAvatarId || G.avatar) === avatar.id && pendingAvatarHolographic));
+	          const holoArt = document.createElement('span');
+          holoArt.className = 'avatar-selector-holo-art holo-character-prism';
+          holoArt.style.setProperty('--character-foil-mask', `url("${av(avatar.image)}")`);
+	          if (isFireCharacter(avatar.id)) {
+	            holoOption.querySelector('.avatar-fire-aura')?.remove();
+	            holoArt.classList.add('avatar-fire-stage');
+	            holoArt.insertAdjacentHTML('afterbegin', '<span class="avatar-fire-aura" aria-hidden="true"></span>');
+	          }
+	          const holoImage = holoOption.querySelector('img');
+	          holoImage.classList.add('avatar-holographic');
+	          holoArt.appendChild(holoImage);
+	          holoOption.insertBefore(holoArt, holoOption.querySelector('span'));
+	          holoOption.querySelector(':scope > span:last-child').textContent = `ホログラム・${avatar.name}`;
+	          holoOption.onclick = () => { pendingAvatarId = avatar.id; pendingAvatarHolographic = true; updateAvatarSelectorPreview(); renderAvatarSelectorOptions(); };
+	          group.appendChild(holoOption);
+	        }
+	      });
+	      characterList.appendChild(group);
+	    });
+
+	    const ownedBackgrounds = getSelectableAvatarBackgrounds();
+	    const lockedGachaCount = AVATAR_BACKGROUNDS.filter(background => background.image && !background.rewardSource && !ownedBackgrounds.some(owned => owned.id === background.id)).length;
+	    $('avatar-background-locked-note').textContent = [lockedGachaCount ? `未所持の背景 ${lockedGachaCount}種は背景スキンガチャで獲得できます。クリスマス限定背景はクリスマススキンガチャに登場します。` : '', !ownedBackgrounds.some(background => background.id === 'raid_magma') ? 'レイド限定背景はレイドコイン交換所で獲得できます。' : ''].filter(Boolean).join(' ');
+	    [{ title: '基本', entries: AVATAR_BACKGROUNDS.filter(background => !background.image) }, { title: 'テーマ背景', entries: AVATAR_BACKGROUNDS.filter(background => background.image && !background.rewardSource) }, { title: 'レイド交換所', entries: AVATAR_BACKGROUNDS.filter(background => background.rewardSource === 'raid') }, { title: 'クエスト限定', entries: AVATAR_BACKGROUNDS.filter(background => background.rewardSource === 'quest') }, { title: 'ハロウィン限定', entries: AVATAR_BACKGROUNDS.filter(background => background.rewardSource === 'halloween') }, { title: 'クリスマス限定', entries: AVATAR_BACKGROUNDS.filter(background => background.rewardSource === 'christmas') }, { title: 'メダル交換所限定', entries: AVATAR_BACKGROUNDS.filter(background => background.rewardSource === 'quest-medal') }].forEach(({ title, entries }) => {
+	      const group = document.createElement('section');
+	      group.className = 'avatar-selector-group';
+	      const heading = document.createElement('h4');
+	      heading.textContent = title;
+	      group.appendChild(heading);
+	      entries.forEach(background => {
+	        const owned = ownedBackgrounds.some(item => item.id === background.id);
+	        const option = document.createElement('button');
+	        option.type = 'button';
+	        option.disabled = !owned;
+	        option.className = 'avatar-selector-option avatar-background-option' + ((pendingAvatarBackgroundId || G.avatarBackground) === background.id && !pendingBackgroundHolographic ? ' is-active' : '') + (!owned ? ' is-locked' : '');
+	        option.setAttribute('aria-pressed', String(owned && (pendingAvatarBackgroundId || G.avatarBackground) === background.id && !pendingBackgroundHolographic));
+	        const swatch = document.createElement('span');
+	        swatch.className = 'avatar-selector-swatch';
+	        swatch.style.backgroundColor = background.color;
+	        if (background.image) swatch.style.backgroundImage = `url("${av(background.image)}")`;
+	        const name = document.createElement('span');
+	        name.textContent = background.name;
+	        option.append(swatch, name);
+	        option.onclick = () => { pendingAvatarBackgroundId = background.id; pendingBackgroundHolographic = false; updateAvatarSelectorPreview(); renderAvatarSelectorOptions(); };
+	        group.appendChild(option);
+	        if ((G.holographicAvatarBackgrounds || []).includes(background.id)) {
+	          const holoOption = option.cloneNode(true);
+	          holoOption.classList.toggle('is-active', (pendingAvatarBackgroundId || G.avatarBackground) === background.id && pendingBackgroundHolographic);
+	          holoOption.setAttribute('aria-pressed', String(owned && (pendingAvatarBackgroundId || G.avatarBackground) === background.id && pendingBackgroundHolographic));
+	          holoOption.querySelector('.avatar-selector-swatch').classList.add('holo-artwork');
+	          holoOption.querySelectorAll('span')[1].textContent = `ホログラム・${background.name}`;
+	          holoOption.onclick = () => { pendingAvatarBackgroundId = background.id; pendingBackgroundHolographic = true; updateAvatarSelectorPreview(); renderAvatarSelectorOptions(); };
+	          group.appendChild(holoOption);
+	        }
+	      });
+	      backgroundList.appendChild(group);
+	    });
+	    updateAvatarSelectorPreview();
+	  };
+	  const closeAvatarSelector = () => {
+	    pendingAvatarId = null;
+	    pendingAvatarBackgroundId = null;
+    pendingAvatarFrameId = null;
+	    $('avatar-confirm-popover').classList.add('hidden');
+	    $('avatar-change-modal').classList.add('hidden');
+	  };
+	  on('btn-avatar-change-close', closeAvatarSelector);
+	  on('btn-avatar-tab-characters', () => { avatarSelectorTab = 'characters'; renderAvatarSelectorOptions(); });
+	  on('btn-avatar-tab-backgrounds', () => { avatarSelectorTab = 'backgrounds'; renderAvatarSelectorOptions(); });
+      on('btn-avatar-tab-frames', () => { avatarSelectorTab = 'frames'; renderAvatarSelectorOptions(); });
+	  on('btn-avatar-preview-apply', () => $('avatar-confirm-popover').classList.remove('hidden'));
+	  on('btn-avatar-confirm-cancel', () => $('avatar-confirm-popover').classList.add('hidden'));
+	  on('btn-avatar-confirm-apply', () => {
+	    if (!pendingAvatarId || !pendingAvatarBackgroundId) return;
+	    G.avatar = pendingAvatarId;
+	    G.avatarBackground = pendingAvatarBackgroundId;
+      G.avatarDecoration = pendingAvatarFrameId ?? G.avatarDecoration ?? '';
+	    G.avatarHolographic = pendingAvatarHolographic;
+	    G.avatarBackgroundHolographic = pendingBackgroundHolographic;
+	    G.unlockedSkins = [...new Set([...(G.unlockedSkins || []), G.avatar])];
+	    G.unlockedAvatarBackgrounds = [...new Set([...(G.unlockedAvatarBackgrounds || ['default']), G.avatarBackground])];
+	    pendingAvatarId = null;
+	    pendingAvatarBackgroundId = null;
+    pendingAvatarFrameId = null;
+	    pendingAvatarHolographic = false;
+	    pendingBackgroundHolographic = false;
+	    $('avatar-change-modal').classList.add('hidden');
+	    save();
+	    updateHud();
+	    if ($('screen-status')?.classList.contains('active')) showStatus();
+	  });
+	  window.showAvatarChangeModal = function() {
+	    if (!G) return;
+	    pendingAvatarId = G.avatar;
+	    pendingAvatarBackgroundId = G.avatarBackground || 'default';
+      pendingAvatarFrameId = G.avatarDecoration || '';
+	    pendingAvatarHolographic = !!G.avatarHolographic;
+	    pendingBackgroundHolographic = !!G.avatarBackgroundHolographic;
+	    avatarSelectorTab = 'characters';
+	    $('avatar-confirm-popover').classList.add('hidden');
+	    renderAvatarSelectorOptions();
+	    $('avatar-change-modal').classList.remove('hidden');
+	  };
+
+  on('btn-change-avatar', showAvatarChangeModal);
+  on('home-player-avatar', showAvatarChangeModal);
+  on('room-player-avatar', showAvatarChangeModal);
+  on('home-avatar-window', showAvatarChangeModal);
+
+  on('btn-gacha-back', showHome);
+  on('btn-gacha-tab-skins', () => setGachaView('skins'));
+  on('btn-gacha-tab-items', () => setGachaView('items'));
+  on('btn-gacha-tab-halloween', () => setGachaView('halloween'));
+  on('btn-gacha-tab-christmas-skins', () => setGachaView('christmas-skins'));
+  on('btn-gacha-tab-christmas-items', () => setGachaView('christmas-items'));
+  on('btn-item-shop-back', showHome);
+  on('btn-item-shop-goto-use', showItems);
+  on('btn-weapon-shop-back', showHome);
+  on('btn-synthesis-back', showHome);
+  on('btn-synthesis-calc-quit', quitSynthesisFlow);
+  on('btn-quest-board-back', () => {
+    $('screen-quest-board').classList.add('hidden');
+  });
+
+  on('btn-admin-rewards-save', saveAdminRewardSettingsFromForm);
+  on('btn-admin-rewards-reset', () => {
+    rewardSettings = { ...REWARD_SETTINGS_DEFAULTS };
+    saveRewardSettings();
+    renderAdminRewardSettings();
+    const st = $('admin-rewards-status');
+    if (st) st.textContent = '✅ 初期値にもどしました';
+  });
+  on('btn-gacha-1', () => doGacha(1, 150));
+  on('btn-gacha-ticket', () => doGacha(10, 0, 'ticket'));
+  on('btn-gacha-6', () => doGacha(6, 750));
+  on('btn-gacha-13', () => doGacha(13, 1400));
+  on('btn-christmas-gacha-1', () => doChristmasEquipGacha(1,150));
+  on('btn-christmas-gacha-6', () => doChristmasEquipGacha(6,750));
+  on('btn-christmas-gacha-13', () => doChristmasEquipGacha(13,1400));
+  on('btn-christmas-gacha-ticket', () => doChristmasEquipGacha(10,0,'ticket'));
+  $('gacha-item-section').addEventListener('click', event => {
+    const target = event.target.closest('.equipment-gacha-preview');
+    if (target) openEquipmentGachaPreview(target.dataset.equipId);
+  });
+  $('christmas-equip-gacha-section').addEventListener('click', event => {
+    const target = event.target.closest('.equipment-gacha-preview');
+    if (target) openEquipmentGachaPreview(target.dataset.equipId);
+  });
+  on('btn-skin-gacha-draw', () => doSkinGacha('gold'));
+  on('btn-skin-gacha-ticket', () => doSkinGacha('ticket'));
+  on('btn-christmas-skin-gacha-draw', () => doChristmasSkinGacha('gold'));
+  on('btn-christmas-skin-gacha-ticket', () => doChristmasSkinGacha('ticket'));
+  on('btn-skin-gacha-preview-close', closeGachaArtworkPreview);
+  $('equipment-preview-rarities')?.addEventListener('click', event => {
+    const button = event.target.closest('button[data-rarity]');
+    if (!button) return;
+    equipmentPreviewRarity = Number(button.dataset.rarity);
+    renderEquipmentGachaPreviewRarity();
+  });
+  $('skin-gacha-section')?.addEventListener('click', event => {
+    const trigger = event.target.closest('.skin-gacha-preview-trigger');
+    if (trigger) openSkinGachaPreview(trigger.dataset.previewKind, trigger.dataset.previewId);
+  });
+  $('christmas-skin-gacha-section')?.addEventListener('click', event => {
+    const trigger = event.target.closest('.christmas-skin-preview-trigger');
+    if (trigger) openSkinGachaPreview(trigger.dataset.previewKind, trigger.dataset.previewId);
+  });
+  $('skin-gacha-preview-modal')?.addEventListener('click', event => {
+    if (event.target.id === 'skin-gacha-preview-modal') closeGachaArtworkPreview();
+  });
+
+  on('btn-clear-continue', () => {
+    hideTooltip();
+    showHome();
+  });
+  on('btn-gameover-continue', () => {
+    hideTooltip();
+    document.querySelector('.gameover-flow-overlay')?.remove();
+    showHome();
+  });
+
+  on('btn-training-quit', () => {
+    destroyChallenge();
+    if (trainingSkill) {
+      trainingSkill = null;
+      showSkills();
+    } else if (isTrainingSubquest) {
+      isTrainingSubquest = false;
+      showHome();
+    } else {
+      showStatus();
+    }
+  });
+  
+  on('btn-show-player-stats', openPlayerStatsModal);
+  on('btn-player-stats-close', () => $('player-stats-modal').classList.add('hidden'));
+  on('btn-show-kanji-stats', () => {
+    $('player-stats-modal').classList.add('hidden');
+    $('kanji-stats-modal').classList.remove('hidden');
+  });
+  on('btn-kanji-stats-close', () => {
+    $('kanji-stats-modal').classList.add('hidden');
+    $('player-stats-modal').classList.remove('hidden');
+  });
+
+  on('btn-admin-filter-all', () => { adminSelectedFilter = 'all'; updateAdminFilterUI('btn-admin-filter-all'); updateAdminStudyDisplay($('admin-stats-slot-select').value); });
+  on('btn-admin-filter-math', () => { adminSelectedFilter = 'math'; updateAdminFilterUI('btn-admin-filter-math'); updateAdminStudyDisplay($('admin-stats-slot-select').value); });
+  on('btn-admin-filter-kanji', () => { adminSelectedFilter = 'kanji'; updateAdminFilterUI('btn-admin-filter-kanji'); updateAdminStudyDisplay($('admin-stats-slot-select').value); });
+
+  on('btn-admin-start-testplay', startAdminTestPlay);
+
+  on('btn-admin-get-gold', () => {
+    if (G && G.player) {
+      G.player.gold += 10000;
+      save();
+      alert('10,000ゴールドを獲得しました！');
+    }
+  });
+
+  on('btn-admin-gift-send', sendAdminGiftFromUI);
+  on('btn-admin-gift-add-item', addAdminGiftItemRow);
+  
+  $('admin-gift-select-all')?.addEventListener('change', (e) => {
+    const listEl = $('admin-gift-target-list');
+    if (!listEl) return;
+    const isChecked = e.target.checked;
+    listEl.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = isChecked);
+  });
+  
+  $('admin-gift-target-search')?.addEventListener('input', () => {
+    renderAdminGiftTargets();
+  });
+
+  on('btn-admin-delete-save', () => {
+    $('admin-save-manage-modal').classList.remove('hidden');
+    renderAdminSaveManageList();
+  });
+
+  $('admin-save-search')?.addEventListener('input', renderAdminSaveManageList);
+  $('admin-save-sort')?.addEventListener('change', renderAdminSaveManageList);
+  $('load-save-search')?.addEventListener('input', () => renderLoadSaveSlots(loadSaveSelectCallback));
+  $('load-save-sort')?.addEventListener('change', () => renderLoadSaveSlots(loadSaveSelectCallback));
+  
+  on('btn-admin-cancel-delete-save', () => {
+    $('admin-save-manage-modal').classList.add('hidden');
+  });
+
+  on('btn-admin-archive-save', () => {
+    const checkboxes = document.querySelectorAll('.admin-save-checkbox:checked');
+    if (checkboxes.length === 0) {
+      alert('アーカイブする セーブデータが えらばれていません。');
+      return;
+    }
+    if (!confirm(`えらんだ ${checkboxes.length}こ の セーブデータを アーカイブしますか？\n「つづきから」には 表示されなくなります。`)) return;
+    let archivedCurrent = false;
+    checkboxes.forEach(cb => {
+      const key = cb.value;
+      const wasCurrent = key === currentSlotKey;
+      if (setSaveSlotArchived(key, true) && wasCurrent) archivedCurrent = true;
+    });
+    alert('アーカイブしました。');
+    renderAdminSaveManageList();
+    renderAdminStudyStats();
+    renderAdminTimeLimitList();
+    if (archivedCurrent) {
+      $('admin-save-manage-modal').classList.add('hidden');
+      showScreen('screen-title');
+    }
+  });
+
+  on('btn-admin-unarchive-save', () => {
+    const checkboxes = document.querySelectorAll('.admin-save-checkbox:checked');
+    if (checkboxes.length === 0) {
+      alert('もどす セーブデータが えらばれていません。');
+      return;
+    }
+    checkboxes.forEach(cb => setSaveSlotArchived(cb.value, false));
+    alert('アーカイブから戻しました。');
+    renderAdminSaveManageList();
+    renderAdminStudyStats();
+    renderAdminTimeLimitList();
+  });
+
+  let saveDeletionInProgress=false;
+  on('btn-admin-exec-delete-save', () => {
+    if(saveDeletionInProgress)return;
+    const checkboxes = document.querySelectorAll('.admin-save-checkbox:checked');
+    if (checkboxes.length === 0) {
+      $('admin-save-manage-status').textContent='削除するセーブデータを選んでください。';
+      return;
+    }
+    const keys=Array.from(checkboxes,cb=>cb.value),deleteButton=$('btn-admin-exec-delete-save');
+    const status=$('admin-save-manage-status');
+    const deleteSelected=createSaveDeletionWorkflow({
+      confirm:selected=>confirm(`選んだ${selected.length}件のセーブだけを削除します。\nアカウント・購入済みの保存枠・購入権は残ります。\n削除したセーブは元に戻せません。続けますか？`),
+      deleteRemote:async key=>{if(window.CloudSave&&typeof window.CloudSave.deleteSlot==='function')await window.CloudSave.deleteSlot(key);},
+      deleteLocal:key=>storageRemove(key),
+      setBusy:busy=>{saveDeletionInProgress=busy;deleteButton.disabled=busy;},
+      onResult:result=>{
+        if(result.cancelled){status.textContent='キャンセルしました。セーブは削除されていません。';return;}
+        let currentDeleted=false;
+        for(const key of result.deleted){if(key===currentSlotKey){currentDeleted=true;G=null;currentSlotKey=null;}}
+        if(result.deleted.length){status.textContent=`${result.deleted.length}件のセーブを削除しました。アカウントと購入済みの保存枠は残っています。`;updateContinueButtonVisibility();}
+        if(result.failed.length){status.textContent+=`${result.deleted.length?' ':''}${result.failed.length}件は通信に失敗したため削除していません。接続を確認して、もう一度お試しください。`;}
+        if(currentDeleted)showScreen('screen-title');
+        if(result.failed.length||!currentDeleted){renderAdminSaveManageList();}
+        if(result.deleted.length&&result.failed.length===0){$('admin-save-manage-modal').classList.add('hidden');}
+      },
+    });
+    void deleteSelected(keys);
+  });
+
+  on('btn-admin-back', () => {
+    if (currentSlotKey && G) showHome();
+    else showScreen('screen-title');
+  });
+
+  // 管理者設定の左側タブ切り替えボタン
+  document.querySelectorAll('.admin-nav-btn').forEach(btn => {
+    btn.onclick = () => {
+      setAdminTab(btn.dataset.adminTab);
+    };
+  });
+  on('btn-admin-challenges-refresh', renderAdminChallengeStageList);
+
+  const adminCat = $('admin-category-select');
+  if (adminCat) {
+    adminCat.onchange = renderAdminList;
+  }
+
+  on('btn-admin-difficulty-save', saveAdminDifficultyMultipliersFromUI);
+  on('btn-admin-difficulty-reset', resetAdminDifficultyMultipliers);
+
+  // 難易度倍率の一括プリセットボタン
+  document.querySelectorAll('.btn-diff-preset').forEach(btn => {
+    btn.onclick = () => {
+      const val = parseFloat(btn.dataset.preset);
+      if (isNaN(val)) return;
+      document.querySelectorAll('.admin-diff-row').forEach(row => {
+        const slider = row.querySelector('.admin-diff-slider');
+        const numInput = row.querySelector('.admin-diff-number');
+        const unitText = row.querySelector('.admin-diff-unit');
+        if (slider) slider.value = val.toFixed(1);
+        if (numInput) {
+          numInput.value = val.toFixed(1);
+          numInput.style.color = getDifficultyBadgeColor(val);
+        }
+        if (unitText) {
+          unitText.style.color = getDifficultyBadgeColor(val);
+        }
+      });
+      SM.playBeep('type');
+    };
+  });
+}
+
+function renderAdminSaveManageList() {
+  const listEl = $('admin-save-list');
+  if (!listEl) return;
+  const selectedKeys = new Set(Array.from(listEl.querySelectorAll('.admin-save-checkbox:checked'), input => input.value));
+  const searchText = ($('admin-save-search')?.value || '').trim().toLocaleLowerCase('ja');
+  const sortMode = $('admin-save-sort')?.value || 'recent';
+  let slots = listSaveSlots({ includeArchived: true })
+    .filter(slot => slot.name.toLocaleLowerCase('ja').includes(searchText));
+  if (sortMode === 'name') {
+    const collator = new Intl.Collator('ja', { numeric: true, sensitivity: 'base' });
+    slots.sort((a, b) => collator.compare(a.name, b.name));
+  } else {
+    slots.sort((a, b) => b.lastPlayedAt - a.lastPlayedAt);
+  }
+  if (slots.length === 0) {
+    listEl.innerHTML = `<div style="padding:10px;">${searchText ? 'あてはまる セーブデータが ありません。' : 'セーブデータが ありません。'}</div>`;
+    return;
+  }
+  
+  let html = '';
+  slots.forEach((s, idx) => {
+    const name = s.name || `セーブ ${idx + 1}`;
+    const lv = s.lvl || '?';
+    const currentMark = (s.key === currentSlotKey) ? '<span style="color:var(--good); font-weight:bold; margin-left:8px;">[いまあそんでいるデータ]</span>' : '';
+    const archiveMark = s.archived ? '<span style="color:#ffd166; font-weight:bold; margin-left:8px;">[アーカイブ中]</span>' : '';
+    const playedAt = s.lastPlayedAt ? new Date(s.lastPlayedAt).toLocaleString() : '記録なし';
+    let challengeDecision={label:'判定できません',reason:'セーブを読み取れません'};
+    try { const saveData=JSON.parse(storageGet(s.key)||'null'); if(saveData)challengeDecision=challengePrintDecisionForGame(saveData); } catch {}
+    html += `
+      <label style="display:flex; align-items:center; background:${s.archived ? 'rgba(255,209,102,0.12)' : 'rgba(0,0,0,0.2)'}; border:${s.archived ? '1px solid rgba(255,209,102,0.45)' : '1px solid transparent'}; padding:8px; border-radius:4px; margin-bottom:6px; cursor:pointer;">
+        <input type="checkbox" class="admin-save-checkbox" value="${s.key}" ${selectedKeys.has(s.key) ? 'checked' : ''} style="margin-right:12px; transform:scale(1.3);">
+        <div>
+          <strong style="color:var(--accent); font-size:16px;">${name}</strong> (Lv ${lv}) ${currentMark}${archiveMark}<br>
+          <span style="font-size:12px; color:#aaa;">さいごにプレイ: ${playedAt}</span>
+          <div class="admin-save-challenge-decision"><b>チャレンジ候補:</b> ${escapeHtml(challengeDecision.label)}<br><small>${escapeHtml(challengeDecision.reason)}</small></div>
+          ${s.archivedAt ? `<span style="font-size:12px; color:#ffd166; margin-left:8px;">アーカイブ: ${new Date(s.archivedAt).toLocaleString()}</span>` : ''}
+        </div>
+      </label>
+    `;
+  });
+  listEl.innerHTML = html;
+}
+
+function renderAdminChallengeStageList(){
+  const body=$('admin-challenge-stage-list');
+  if(!body)return;
+  const rows=[];
+  for(let i=0;i<storageLen();i++){
+    const key=storageK(i);
+    if(!key?.startsWith(SAVE_PREFIX))continue;
+    if(window.AccountSession&&!window.AccountSession.owns(key))continue;
+    try{
+      const data=JSON.parse(storageGet(key)||'null');
+      if(!data||data.isTestMode||data.playerName==='テスト勇者'||(data.playerName&&data.playerName.includes('[テスト]')))continue;
+      const decision=challengePrintDecisionForGame(data);
+      rows.push({name:data.playerName||'ぼうけんしゃ',archived:!!data.archived,decision,progress:adminChallengeProgressSummary(data)});
+    }catch{}
+  }
+  rows.sort((a,b)=>new Intl.Collator('ja',{numeric:true,sensitivity:'base'}).compare(a.name,b.name)||(a.archived===b.archived?0:a.archived?1:-1));
+  if(!rows.length){body.innerHTML='<tr><td colspan="4" style="text-align:center; padding:16px;">表示できるセーブデータがありません</td></tr>';return;}
+  body.innerHTML=rows.map(row=>`<tr${row.archived?' class="is-archived"':''}><td><strong>${escapeHtml(row.name)}</strong>${row.archived?'<small class="admin-challenge-archived">アーカイブ中</small>':''}</td><td>${escapeHtml(row.decision.label)}</td><td>${escapeHtml(row.decision.reason)}</td><td><ul class="admin-challenge-progress">${row.progress.map(item=>`<li>${escapeHtml(item)}</li>`).join('')}</ul></td></tr>`).join('');
+}
+
+function adminChallengeProgressSummary(game){
+  const progress=[];
+  const played=[];
+  for(const [areaId,area] of Object.entries(AREA_STAGES)){
+    area.stages.forEach((stage,stageIndex)=>{
+      const history=game?.studyStats?.stageHistory?.[`${areaId}_${stageIndex}`];
+      const answers=Number(history?.total)||history?.history?.length||0;
+      const clears=stageTotalClearCount(areaId,stageIndex,game);
+      if(answers>0||clears>0)played.push({areaId,stageIndex,label:`${area.name}・${stage.name}`,answers,clears});
+    });
+  }
+  played.sort((a,b)=>stageDropDifficulty(b.areaId,b.stageIndex)-stageDropDifficulty(a.areaId,a.stageIndex)||b.stageIndex-a.stageIndex);
+  if(played.length){
+    const highest=played[0];
+    progress.push(`通常ステージ最高到達: ${highest.label}（回答${highest.answers}回・クリア${highest.clears}回）`);
+  }else progress.push('通常ステージ: 記録なし');
+
+  const raid=game?.raidProgress;
+  if(raid?.participated||Number(raid?.challengeCount)>0||Number(raid?.totalDamage)>0){
+    const count=Number(raid.challengeCount)||0,damage=Number(raid.totalDamage)||0;
+    progress.push(`ボスレイド: ${raid.bossId||'参加記録あり'}${count?`・挑戦${count}回`:''}${damage?`・累積${damage.toLocaleString('ja-JP')}ダメージ`:''}`);
+  }else progress.push('ボスレイド: 参加記録なし');
+
+  const event=game?.halloweenEvent?.halloween_2026;
+  const mathRaid=event?.raid;
+  if(mathRaid?.participated||Number(mathRaid?.bestKills)>0||Number(mathRaid?.totalKills)>0){
+    progress.push(`イベント計算レイド: 最高${Number(mathRaid.bestKills)||0}体・累計${Number(mathRaid.totalKills)||0}体`);
+  }else progress.push('イベント計算レイド: 参加記録なし');
+
+  const kanjiRaid=event?.kanjiRaid;
+  if(kanjiRaid?.participated||Number.isInteger(Number(kanjiRaid?.lastKanjiStage))){
+    const stages=['area5','area6','area7','area8','area9','area10'].flatMap(areaId=>(AREA_STAGES[areaId]?.stages||[]).map((stage,stageIndex)=>({areaId,stageIndex,stage})));
+    const index=Math.max(0,Math.min(stages.length-1,Number(kanjiRaid.lastKanjiStage)||0));
+    const reached=stages[index];
+    progress.push(reached?`イベント漢字レイド最高到達: ${AREA_STAGES[reached.areaId].name}・${reached.stage.name}`:'イベント漢字レイド: 参加記録あり');
+  }else progress.push('イベント漢字レイド: 参加記録なし');
+  return progress;
+}
+
+/* ==========================================================
+   学習成績 ＆ 成長グラフ システム (Pure Canvas 2D)
+   ========================================================== */
+
+function getProblemUnitInfo(problem) {
+  if (!problem) return { key: 'other', label: 'その他' };
+  if (problem.tier && String(problem.tier).startsWith('kanji')) {
+    const tierStr = String(problem.tier);
+    const match = tierStr.match(/kanji_g(\d)/);
+    if (match) {
+      return { key: `kanji_${match[1]}`, label: `漢字 小${match[1]}年` };
+    }
+    const fallback = tierStr.replace('kanji', '').replace(/[^0-9]/g, '');
+    return { key: `kanji_${fallback}`, label: `漢字 小${fallback}年` };
+  }
+  if (explore && explore.areaId && explore.areaId.startsWith('area')) {
+    const areaNum = parseInt(explore.areaId.replace('area', ''), 10);
+    if (areaNum >= 5 && areaNum <= 10) {
+      return { key: `kanji_${areaNum - 4}`, label: `漢字 小${areaNum - 4}年` };
+    }
+  }
+  if (problem.tier) {
+    const t = String(problem.tier);
+    if (t.startsWith('add')) return { key: 'math_add', label: 'たし算' };
+    if (t.startsWith('sub')) return { key: 'math_sub', label: 'ひき算' };
+    if (t.startsWith('mul')) return { key: 'math_mul', label: '九九・かけ算' };
+    if (t.startsWith('div')) return { key: 'math_div', label: 'わり算' };
+    if (t.startsWith('dec')) return { key: 'math_dec', label: '小数' };
+    if (t.startsWith('frac')) return { key: 'math_frac', label: '分数' };
+    if (t.startsWith('elem5')) return { key: 'math_elem5', label: '小5算数' };
+    if (t.startsWith('elem6')) return { key: 'math_elem6', label: '小6算数' };
+  }
+  if (problem.text) {
+    if (problem.text.includes('+')) return { key: 'math_add', label: 'たし算' };
+    if (problem.text.includes('-') || problem.text.includes('－')) return { key: 'math_sub', label: 'ひき算' };
+    if (problem.text.includes('×')) return { key: 'math_mul', label: 'かけ算' };
+    if (problem.text.includes('÷')) return { key: 'math_div', label: 'わり算' };
+  }
+  return { key: 'math_calc', label: '計算' };
+}
+
+function recordRaidLearningAnswer(problem, isCorrect) {
+  if (!G || !explore?.isRaid || !problem?.raidLearningKey) return;
+  if (!G.raidLearning) G.raidLearning = {};
+  const key = problem.raidLearningKey;
+  const stat = G.raidLearning[key] || (G.raidLearning[key] = {
+    label: problem.raidLearningLabel || key,
+    attempts: 0,
+    correct: 0,
+    wrong: 0
+  });
+  stat.label = problem.raidLearningLabel || stat.label || key;
+  stat.attempts = (stat.attempts || 0) + 1;
+  if (isCorrect) stat.correct = (stat.correct || 0) + 1;
+  else stat.wrong = (stat.wrong || 0) + 1;
+  save();
+}
+
+/* ==========================================================
+   ピックアップステージ（「冒険に出る」で表示。レイドの復習おすすめから きまる）
+   やる！で すぐ挑戦し、クリアすると チャレンジボーナス（装備ガチャ10連チケット）。
+   「やらない」を選ぶか、クリアするまでの あいだ レイドボス1体ぶん（bossId）つづく
+   ========================================================== */
+const HALLOWEEN_EVENT = {
+  id: 'halloween_2026', startsAt: Date.parse('2026-10-01T00:00:00+09:00'),
+  endsAt: Date.parse('2026-11-01T00:00:00+09:00'),
+  season2StartsAt: Date.parse('2026-10-21T00:00:00+09:00'), firstClearRaidTickets: 2,
+  gachaGoldCost:2000, gachaTicketCost:1, ticketIcon:'assets/halloween/ticket_icon.png',
+  candyIcon:'assets/halloween/candy_token.png', battleBackground:'assets/halloween/battle_background.png',
+  ticketDropRates:{normal:0.05,boss:0.25}
+};
+const HALLOWEEN_MONSTERS = [
+  { id:'pumpkin_imp', name:'かぼちゃの こあくま' },
+  { id:'candy_slime', name:'キャンディスライム' },
+  { id:'witch_cat', name:'まじょの くろねこ' },
+  { id:'vampire_bat', name:'きゅうけつコウモリ' },
+  { id:'mummy_knight', name:'ミイラの きし' },
+  { id:'lantern_ghost', name:'ランタンのおばけ' },
+  { id:'candy_spider', name:'おかしの くも' },
+  { id:'scarecrow_king', name:'かぼちゃの かかしおう' }
+];
+
+const HALLOWEEN_SEASON2_WAVES = [Array.from({length:10},(_,index)=>index % 7)];
+const HALLOWEEN_SEASON2_STAGES = [
+  {id:'candy-path',name:'お菓子の小道',mathMode:'answer',tier:'add1',grade:1,questionGoal:5,description:'10体から答えを選ぶ・5問でクリア・最後はボス',waves:HALLOWEEN_SEASON2_WAVES},
+  {id:'moon-square',name:'月夜のおばけ広場',mathMode:'combine',tier:'add2',grade:1.2,questionGoal:5,description:'10体の数字を組み合わせる・5問でクリア・最後はボス',waves:HALLOWEEN_SEASON2_WAVES},
+  {id:'night-party',name:'かかし王の夜会',mathMode:'mixed',tier:'add3',grade:1.5,questionGoal:5,description:'2つの問題形式に挑戦・5問でクリア・最後はボス',waves:HALLOWEEN_SEASON2_WAVES},
+];
+const HALLOWEEN_MATH_OPERATIONS = {add:{label:'たし算',symbol:'＋'},sub:{label:'ひき算',symbol:'−'},mul:{label:'かけ算',symbol:'×'},div:{label:'わり算',symbol:'÷'}};
+const HALLOWEEN_PARTY_SKILLS = [{id:'pumpkin_wave',name:'かぼちゃの波',emoji:'assets/artist-weapon-samples/pumpkin-blade-handdrawn-v1.png',mp:5,dmgMult:1,targetAll:true,desc:'正解すると敵全員を攻撃するイベント専用特技。MP5。'}];
+function halloweenSeason2Tier(stage, operation = 'add') {
+  return operation === 'add' ? stage.tier : operation === 'sub' ? stage.tier.replace('add','sub') : operation === 'mul' ? 'mul1' : 'div1';
+}
+function createHalloweenMathQuestion(enemies, operation = 'add', mode = 'answer', random = Math.random) {
+  const op = HALLOWEEN_MATH_OPERATIONS[operation] ? operation : 'add';
+  const number = (min,max) => min + Math.floor(random() * (max-min+1));
+  let a = number(2,9), b = number(2,9);
+  if (op === 'sub') { if (a <= b) a += b; }
+  if (op === 'div') a *= b;
+  const calculate = (left,right) => op === 'add' ? left+right : op === 'sub' ? left-right : op === 'mul' ? left*right : left/right;
+  const target = calculate(a,b);
+  const actualMode = enemies.length >= 2 ? mode : 'answer';
+  const shuffled = [...enemies];
+  for (let i=shuffled.length-1;i>0;i--) { const j=number(0,i); [shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]]; }
+  const values = {};
+  if (actualMode === 'combine') {
+    shuffled.forEach((enemy,index) => { values[enemy.partyId] = index === 0 ? a : index === 1 ? b : number(1,12); });
+  } else {
+    const used = new Set([target]);
+    shuffled.forEach((enemy,index) => { let value = target; if (index) { value=number(1,30); while(used.has(value)) value++; used.add(value); } values[enemy.partyId]=value; });
+  }
+  return {operation:op,mode:actualMode,target,a,b,values,selected:[],symbol:HALLOWEEN_MATH_OPERATIONS[op].symbol};
+}
+function halloweenMathSelectionCorrect(question, selected) {
+  if (question.mode === 'answer') return selected.length === 1 && question.values[selected[0]] === question.target;
+  if (selected.length !== 2 || selected[0] === selected[1]) return false;
+  const a=question.values[selected[0]], b=question.values[selected[1]];
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return false;
+  const result=question.operation==='add'?a+b:question.operation==='sub'?a-b:question.operation==='mul'?a*b:b ? a/b : NaN;
+  return result===question.target;
+}
+
+function halloweenSeason2Stage(run) { return HALLOWEEN_SEASON2_STAGES.find(stage => stage.id === run?.halloweenStageId); }
+function halloweenWaves(run) { return halloweenSeason2Stage(run)?.waves || HALLOWEEN_SEASON2_WAVES; }
+
+function halloweenSeason(now = Date.now()) {
+  return isHalloweenActive(now) && now >= HALLOWEEN_EVENT.season2StartsAt ? 2 : 1;
+}
+function halloweenEncounterTotal(run) { return run?.halloweenSeason === 2 ? (halloweenSeason2Stage(run)?.questionGoal || 5) : HALLOWEEN_MONSTERS.length; }
+function halloweenWaveSize(run) { return run?.halloweenSeason === 2 ? halloweenWaves(run)[run.halloweenWave || 0].length : 1; }
+function generateHalloweenParty(run) {
+  if (run.halloweenSeason !== 2) return null;
+  return halloweenWaves(run)[run.halloweenWave || 0].map((index, position) => ({
+    ...generateHalloweenEnemy({...run, halloweenIndex:index}), partyId:position,
+  }));
+}
+
+function halloweenSeason2Title(run) {
+  const goal = halloweenEncounterTotal(run);
+  return `🎃 S2・${halloweenSeason2Stage(run)?.name || 'おばけの夜会'}　回答 ${Math.min(run.halloweenAnswers || 0,goal)}／${goal}問${run.halloweenBossSpawned ? '・最後の★ ボス戦！' : '・最後の★でボス出現'}${run.halloweenTest ? '（テスト）' : ''}`;
+}
+
+function grantHalloweenAnswerReward(run, correct) {
+  // Ten targets and unlimited replacements never multiply loot: up to four normal rolls + one boss roll for five questions.
+  const checkpoint = Math.floor(Math.min(run.halloweenAnswers || 0,halloweenEncounterTotal(run)-1) * Math.min(7,halloweenEncounterTotal(run)-1) / (halloweenEncounterTotal(run)-1));
+  if (!correct || (run.halloweenRewardRolls || 0) >= checkpoint) return;
+  run.halloweenRewardRolls = (run.halloweenRewardRolls || 0) + 1;
+  const enemy = generateHalloweenEnemy({...run,halloweenIndex:0});
+  const messages = [];
+  const drops = rollBattleDrops(enemy,messages);
+  const gold = rnd(enemy.goldMin,enemy.goldMax);
+  G.player.gold += gold;
+  const level = grantExp(enemy.exp, {fromEnemy:true});
+  run.sessionDrops.push(...drops); run.stageDrops.push(...drops);
+  run.sessionGold += gold; run.stageGold += gold; run.stageExp += enemy.exp;
+  messages.forEach(message => blog(message));
+  if (level.leveledUp) blog(`<span class="good">レベル${G.player.lvl}にあがった！</span>`);
+  save(true);
+}
+
+function finishHalloweenSeason2Action() {
+  if (!battle || battle.over || !explore) return;
+  const run = explore;
+  const result = battle.halloweenAnswerOutcome;
+  battle.halloweenAnswerOutcome = null;
+  battle.halloweenTurnQuestion = null; battle.currentTurnProblem = null;
+  const goal = halloweenEncounterTotal(run);
+  if (result?.submitted) run.halloweenAnswers = Math.min(goal-1,(run.halloweenAnswers || 0)+1);
+  grantHalloweenAnswerReward(run,!!result?.correct);
+  const boss = battle.enemies.find(enemy => enemy.isBoss);
+  if (run.halloweenBossSpawned && boss?.hp <= 0) {
+    run.halloweenAnswers = goal;
+    battle.enemy = boss;
+    winBattle(); return;
+  }
+  for (let i=0;i<battle.enemies.length;i++) {
+    const enemy = battle.enemies[i];
+    if (enemy.hp <= 0) battle.enemies[i] = {...generateHalloweenEnemy({...run,halloweenIndex:((run.halloweenSpawnCount || 0)+i)%7}),partyId:enemy.partyId};
+  }
+  run.halloweenSpawnCount = (run.halloweenSpawnCount || 0)+1;
+  if (!run.halloweenBossSpawned && (run.halloweenAnswers || 0) >= goal-1) {
+    run.halloweenBossSpawned = true;
+    const slot = battle.enemies.length - 1;
+    battle.enemies[slot] = {...generateHalloweenEnemy({...run,halloweenIndex:7}),partyId:battle.enemies[slot].partyId};
+    blog('<span class="bad">最後の★！ かかし王が現れた！</span>');
+    SM.playBGM('bgm_halloween_boss');
+  }
+  battle.enemy = battle.enemies.find(enemy => enemy.hp > 0);
+  battle.attackingEnemy = null; battle.targetLocked = false;
+  run.halloweenIndex = run.halloweenAnswers || 0;
+  $('battle-floor-title').textContent = halloweenSeason2Title(run);
+  renderBattleProgressStars(); updateBattleBars();
+  resumeBattle('player');
+}
+
+function isHalloweenActive(now = Date.now()) {
+  return now >= HALLOWEEN_EVENT.startsAt && now < HALLOWEEN_EVENT.endsAt;
+}
+
+let halloweenVisibilityTimer;
+function renderHalloweenEntry() {
+  clearTimeout(halloweenVisibilityTimer);
+  const active=isHalloweenActive();
+  $('hotspot-halloween')?.classList.toggle('hidden', !active);
+  $('btn-gacha-tab-halloween')?.classList.toggle('hidden', !active);
+  if(!active) {
+    if(gachaView==='halloween')setGachaView('skins');
+    document.querySelectorAll?.('.halloween-menu,.halloween-exchange-confirm,.halloween-season2-select').forEach(el=>el.remove());
+  }
+  // Refresh at the JST boundary even when the town is left open overnight.
+  const next=Date.now()<HALLOWEEN_EVENT.startsAt ? HALLOWEEN_EVENT.startsAt : HALLOWEEN_EVENT.endsAt;
+  if(next>Date.now())halloweenVisibilityTimer=setTimeout(renderHalloweenEntry,Math.min(next-Date.now()+10,2147483647));
+}
+
+
+const HALLOWEEN_GACHA_PRIZES = [
+  {id:'candy_spark',kind:'decoration',name:'キャンディのきらめき'},
+  {id:'moon_ribbon',kind:'decoration',name:'ちいさな月のリボン'},
+  {id:'halloween_candy_saber',kind:'equip',name:'お菓子のサーベル',rarity:2},
+  {id:'halloween_light_cape',kind:'equip',name:'こあくまの軽いケープ',rarity:2},
+  {id:'halloween_moon_pin',kind:'equip',name:'小さな月のピン',rarity:2},
+  {id:'halloween_bat_buckler',kind:'equip',name:'コウモリの小盾',rarity:2},
+  {id:'halloween_pumpkin_bell',kind:'equip',name:'かぼちゃの小鈴',rarity:2},
+  { id:'halloween_pumpkin_knight', kind:'skin', name:'かぼちゃの騎士', cost:40 },
+  { id:'halloween_moon_witch', kind:'skin', name:'月夜の魔女', cost:40 },
+  { id:'halloween_vampire_prince', kind:'skin', name:'吸血鬼の王子', cost:40 },
+  { id:'halloween_ghost_ranger', kind:'skin', name:'おばけの弓使い', cost:40 },
+  { id:'halloween_ballroom', kind:'background', name:'月夜のおばけ舞踏会', cost:30 },
+  { id:'halloween_candy_village', kind:'background', name:'ハロウィンのお菓子村', cost:30 },
+  { id:'halloween_pumpkin_blade', kind:'equip', name:'かぼちゃの魔剣', cost:25, rarity:4 },
+  { id:'halloween_witch_mantle', kind:'equip', name:'魔女のマント', cost:25, rarity:4 },
+  { id:'halloween_moon_charm', kind:'equip', name:'おばけ月のお守り', cost:25, rarity:4 }
+];
+
+const HALLOWEEN_EXCHANGE_PRIZES = [
+  { id:'halloween_festival_king', kind:'skin', name:'ハロウィンの王', cost:100 },
+  { id:'halloween_festival_queen', kind:'skin', name:'ハロウィンの女王', cost:100 },
+  { id:'halloween_moon_garden', kind:'background', name:'月灯りのハロウィン庭園', cost:80 },
+  { id:'halloween_lantern_staff', kind:'equip', name:'月灯りのランタン杖', cost:80, rarity:4 }
+];
+
+function halloweenTicketBalance(game = G) {
+  const value = Number(game?.halloweenTickets);
+  return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+}
+
+function halloweenCandyBalance(game = G) {
+  const value = Number(game?.halloweenCandy);
+  return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+}
+
+function halloweenEventState() {
+  G.halloweenEvent ||= {};
+  return G.halloweenEvent[HALLOWEEN_EVENT.id] ||= { clears:0, firstClearClaimed:false, collectedPrizes:[] };
+}
+
+function rollHalloweenCandyDrop(enemy) {
+  if (!G || !explore || !isHalloweenActive()) return null;
+  const eventBattle = !!explore.isHalloween;
+  let chance = eventBattle ? (enemy.isBoss ? 1 : 0.95) : 0.6;
+  if (!eventBattle && explore.stageMode && stageTotalClearCount(explore.areaId, explore.isBoss ? null : explore.stageIndex) >= rewardSettings.repeatThreshold) chance *= 0.25;
+  if (Math.random() >= chance) return null;
+  const baseCount = eventBattle ? (enemy.isBoss ? rnd(3,4) : rnd(1,2)) : 1;
+  const count = baseCount * (explore.halloweenCandyMultiplier || 1);
+  G.halloweenCandy = halloweenCandyBalance() + count;
+  return { kind:'halloween-candy', name:'ハロウィンのお菓子', icon:HALLOWEEN_EVENT.candyIcon, count };
+}
+
+function rollHalloweenTicketDrop(enemy) {
+  if (!G || !explore?.isHalloween || !isHalloweenActive()) return null;
+  if (Math.random() >= (enemy.isBoss ? HALLOWEEN_EVENT.ticketDropRates.boss : HALLOWEEN_EVENT.ticketDropRates.normal)) return null;
+  G.halloweenTickets = halloweenTicketBalance() + 1;
+  return { kind:'halloween-ticket', name:'ハロウィンチケット ×1', icon:HALLOWEEN_EVENT.ticketIcon, count:1 };
+}
+
+function halloweenPrizeOwned(prize) {
+  if(prize.kind==='decoration')return (G?.unlockedDecorations || []).includes(prize.id);
+  if (G?.halloweenEvent?.[HALLOWEEN_EVENT.id]?.collectedPrizes?.includes(prize.id)) return true;
+  if (prize.kind === 'skin') return (G?.unlockedSkins || []).includes(prize.id);
+  if (prize.kind === 'background') return (G?.unlockedAvatarBackgrounds || []).includes(prize.id);
+  return (G?.ownedEquips || []).some(equip => equip.id === prize.id);
+}
+
+function grantHalloweenPrize(prize) {
+  if(prize.kind==='decoration')G.unlockedDecorations=[...new Set([...(G.unlockedDecorations || []),prize.id])];
+  else if (prize.kind === 'skin') G.unlockedSkins = [...new Set([...(G.unlockedSkins || []), prize.id])];
+  else if (prize.kind === 'background') G.unlockedAvatarBackgrounds = [...new Set([...(G.unlockedAvatarBackgrounds || ['default']), prize.id])];
+  else {
+    G.ownedEquips ||= [];
+    G.ownedEquips.push({ uid:G.nextUid++, id:prize.id, rarity:prize.rarity, ability:eventEquipmentAbility(prize.id) });
+  }
+  const state = halloweenEventState();
+  state.collectedPrizes = [...new Set([...(state.collectedPrizes || []), prize.id])];
+}
+
+function exchangeHalloweenPrize(id) {
+  const prize = HALLOWEEN_EXCHANGE_PRIZES.find(entry => entry.id === id);
+  if (!G || !isHalloweenActive() || !prize) return { ok:false, message:'今は交換できません。' };
+  if (prize.kind !== 'equip' && halloweenPrizeOwned(prize)) return { ok:false, message:'この限定品は獲得済みです。' };
+  if (halloweenCandyBalance() < prize.cost) return { ok:false, message:'お菓子が足りません。' };
+  G.halloweenCandy = halloweenCandyBalance() - prize.cost;
+  grantHalloweenPrize(prize);
+  save(true); updateHud();
+  return { ok:true, prize, message:`${prize.name}を獲得！ お菓子${prize.cost}個を使いました。` };
+}
+
+function drawHalloweenGacha(payment = 'ticket', random = Math.random) {
+  if (!G || !isHalloweenActive() || !['ticket','gold'].includes(payment)) return { ok:false, message:'今はガチャを引けません。' };
+  const remaining = HALLOWEEN_GACHA_PRIZES.filter(prize => !halloweenPrizeOwned(prize));
+  if (!remaining.length) return { ok:false, message:'限定品をコンプリートしました！' };
+  if (payment === 'ticket') {
+    if (halloweenTicketBalance() < HALLOWEEN_EVENT.gachaTicketCost) return { ok:false, message:'ハロウィンチケットが足りません。' };
+    G.halloweenTickets = halloweenTicketBalance() - HALLOWEEN_EVENT.gachaTicketCost;
+  } else {
+    if (!(G.player.gold >= HALLOWEEN_EVENT.gachaGoldCost)) return { ok:false, message:'ゴールドが足りません。' };
+    G.player.gold -= HALLOWEEN_EVENT.gachaGoldCost;
+  }
+  const prize = remaining[Math.max(0, Math.min(remaining.length - 1, Math.floor(random() * remaining.length)))];
+  grantHalloweenPrize(prize);
+  save(true); updateHud();
+  return { ok:true, prize, message:prize.name + 'を獲得！' };
+}
+
+function showHalloweenGachaSummon(result) {
+  const previousFocus = document.activeElement;
+  const overlay = document.createElement('div');
+  overlay.className = 'halloween-summon';
+  overlay.dataset.phase = 'charging';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', 'ハロウィン限定品の召喚');
+  const type = result.prize.kind === 'decoration' ? '限定フレーム' : result.prize.kind === 'skin' ? '限定スキン' : result.prize.kind === 'background' ? '限定背景' : '★4 限定装備';
+  overlay.innerHTML = `<div class="halloween-summon-stars" aria-hidden="true">${Array.from({length:18}, (_, i) => `<i style="--angle:${i * 20}deg;--delay:${i % 5 * .12}s"></i>`).join('')}</div>
+    <section class="halloween-summon-stage">
+      <p class="halloween-summon-eyebrow">HALLOWEEN SUMMON</p>
+      <div class="halloween-summon-orbit" aria-hidden="true"></div>
+      <div class="halloween-summon-pumpkin"><img src="${av('assets/halloween/pumpkin_imp.png')}" alt=""></div>
+      <div class="halloween-summon-prize hidden">${stageRewardIcon(result.prize.kind, result.prize.id, result.prize.rarity || 1, 240)}</div>
+      <div class="halloween-summon-copy" role="status"><h2>おばけの魔力が集まっている…</h2><p>かぼちゃの中から、何が出る？</p></div>
+      <button class="btn" type="button" data-action="reveal">スキップ</button>
+      <button class="btn btn-primary hidden" type="button" data-action="close">ガチャへ戻る</button>
+    </section>`;
+  document.body.appendChild(overlay);
+  let timer;
+  const reveal = () => {
+    if (overlay.dataset.phase !== 'charging') return;
+    clearTimeout(timer);
+    overlay.dataset.phase = 'revealed';
+    overlay.querySelector('.halloween-summon-pumpkin').classList.add('hidden');
+    overlay.querySelector('.halloween-summon-prize').classList.remove('hidden');
+    overlay.querySelector('.halloween-summon-copy').innerHTML = `<p class="halloween-summon-type">${type} GET!</p><h2>${escapeHtml(result.prize.name)}</h2><p>ハロウィン限定コレクションに追加！</p>`;
+    overlay.querySelector('[data-action="reveal"]').classList.add('hidden');
+    const close = overlay.querySelector('[data-action="close"]');
+    close.classList.remove('hidden'); close.focus({preventScroll:true});
+    SM.play('se_gacha_result2');
+  };
+  const close = () => {
+    clearTimeout(timer); hideTooltip(); overlay.remove();
+    const target = previousFocus?.isConnected ? previousFocus : document.querySelector('#halloween-gacha-section [data-payment]:not(:disabled)') || $('btn-gacha-tab-halloween');
+    target?.focus({preventScroll:true});
+  };
+  overlay.querySelector('[data-action="reveal"]').onclick = reveal;
+  overlay.querySelector('[data-action="close"]').onclick = close;
+  overlay.onkeydown = event => {
+    if (event.key === 'Escape') { event.preventDefault(); overlay.dataset.phase === 'charging' ? reveal() : close(); }
+    if (event.key === 'Tab') {
+      const controls = [...overlay.querySelectorAll('button')].filter(button => !button.closest('.hidden'));
+      const index = controls.indexOf(document.activeElement);
+      event.preventDefault(); controls[(index + (event.shiftKey ? -1 : 1) + controls.length) % controls.length]?.focus();
+    }
+  };
+  bindStageRewardTooltips(overlay);
+  overlay.querySelector('[data-action="reveal"]').focus({preventScroll:true});
+  SM.play('se_decide');
+  timer = setTimeout(reveal, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 200 : 2800);
+}
+
+function renderHalloweenGacha(result = null) {
+  const panel = $('halloween-gacha-section');
+  if (!panel || !G) return;
+  const remaining = HALLOWEEN_GACHA_PRIZES.filter(prize => !halloweenPrizeOwned(prize));
+  const available = isHalloweenActive() && remaining.length > 0;
+  panel.innerHTML = `<div class="halloween-gacha-showcase"><img class="halloween-gacha-logo" src="${av('assets/halloween/gacha_logo.png')}" alt="ハロウィンガチャ"><p>ハロウィン限定のスキン・背景・装備が集まったガチャ！</p></div>
+    <div class="halloween-gacha-controls"><div class="skin-gacha-balance">${stageRewardIcon('ticket','halloween-ticket',1,40)} ハロウィンチケット：<b>${halloweenTicketBalance()}</b>枚</div>
+    <p>イベントステージでチケットがドロップ！ 通常敵5%・ボス25%で1枚。</p>
+    <div class="menu-grid"><button type="button" class="btn btn-primary" data-payment="ticket" ${!available || halloweenTicketBalance() < 1 ? 'disabled' : ''}>チケット1枚で引く</button><button type="button" class="btn" data-payment="gold" ${!available || G.player.gold < 2000 ? 'disabled' : ''}>2,000Gで引く</button></div>
+    <p class="halloween-panel-note">${!isHalloweenActive() ? '今年のイベントは終了しました。' : !remaining.length ? '限定品コンプリート！' : '未所持の' + remaining.length + '種から均等に抽選（各' + (100 / remaining.length).toFixed(2) + '%）。重複なし。'} お菓子交換限定の品は出ません。</p>
+    ${result ? `<div class="halloween-gacha-result" role="status">${result.ok ? stageRewardIcon(result.prize.kind,result.prize.id,result.prize.rarity || 1,110) : ''}<b>${escapeHtml(result.message)}</b></div>` : ''}
+    <div class="halloween-prize-grid">${HALLOWEEN_GACHA_PRIZES.map(prize => `<article class="halloween-prize-card${halloweenPrizeOwned(prize) ? ' is-owned' : ''}"><div class="halloween-prize-art">${stageRewardIcon(prize.kind,prize.equipId||prize.id,prize.rarity || 1,88)}</div><b>${escapeHtml(prize.name)}</b><span>${halloweenPrizeOwned(prize) ? '✓ 獲得済み' : prize.kind === 'skin' ? 'スキン' : prize.kind === 'background' ? '背景' : prize.kind==='decoration'?'フレーム':`★${prize.rarity || 4} 装備`}</span></article>`).join('')}</div></div>`;
+  bindStageRewardTooltips(panel);
+  panel.querySelectorAll('[data-payment]').forEach(button => {
+    button.onclick = () => {
+      if (document.querySelector('.halloween-summon')) return;
+      button.disabled = true;
+      const drawn = drawHalloweenGacha(button.dataset.payment);
+      if (drawn.ok) showHalloweenGachaSummon(drawn);
+      $('gacha-current-gold').textContent = G.player.gold;
+      renderHalloweenGacha(drawn); renderEquipmentGachaControls(); renderSkinGachaControls();
+    };
+  });
+}
+
+function halloweenInitialChallengeSource() {
+  const review = choosePickupStage();
+  if (review) return { ...review, reason: 'レイドで にがてだった もんだいを ふくしゅうしよう！' };
+  const attempted = Object.entries(G?.studyStats?.stageHistory || {})
+    .map(([key, stat]) => {
+      const match = key.match(/^(area\d+)_(\d+)$/);
+      if (!match || !(stat.total > 0)) return null;
+      const areaId = match[1], stageIndex = Number(match[2]);
+      return AREA_STAGES[areaId]?.stages[stageIndex] ? { areaId, stageIndex } : null;
+    }).filter(Boolean)
+    .sort((a, b) => stageDropDifficulty(b.areaId, b.stageIndex) - stageDropDifficulty(a.areaId, a.stageIndex));
+  return attempted.length
+    ? { ...attempted[0], reason: 'レイドの にがて記録が まだないので、取り組んだステージを ふくしゅうするよ。' }
+    : { areaId:'area1', stageIndex:0, reason:'はじめての人は、かんたんな たしざんで ちょうせんできるよ。' };
+}
+
+const RAID_STAGE_AREA_IDS = ['area1','area13','area2','area3','area4','area11','area12','area14','area15'];
+
+function halloweenChallengeSource() {
+  const state = G?.halloweenEvent?.[HALLOWEEN_EVENT.id];
+  const base = state?.baseSource && AREA_STAGES[state.baseSource.areaId]?.stages[state.baseSource.stageIndex]
+    ? state.baseSource : halloweenInitialChallengeSource();
+  const keys = RAID_STAGE_AREA_IDS.includes(base.areaId) ? RAID_STAGE_AREA_IDS
+    : ['area5','area6','area7','area8','area9','area10'];
+  const stages = keys.flatMap(areaId => (AREA_STAGES[areaId]?.stages || []).map((_, stageIndex) => ({areaId,stageIndex})));
+  const baseIndex = stages.findIndex(stage => stage.areaId === base.areaId && stage.stageIndex === base.stageIndex);
+  const level = Math.max(0, Math.floor(Number(state?.clears) || 0));
+  const selected = baseIndex < 0 ? base : stages[Math.min(stages.length - 1, baseIndex + level)];
+  return {...selected, level, reason:level === 0 ? base.reason : 'クリアするたびに次のステージへ！ 最後のステージ以降も敵は強くなるよ。'};
+}
+
+function halloweenEarlierChallengeSource(source) {
+  if (!source) return halloweenChallengeSource();
+  const keys = RAID_STAGE_AREA_IDS.includes(source.areaId) ? RAID_STAGE_AREA_IDS
+    : ['area5','area6','area7','area8','area9','area10'];
+  const stages = keys.flatMap(areaId => (AREA_STAGES[areaId]?.stages || []).map((_, stageIndex) => ({areaId,stageIndex})));
+  const index = stages.findIndex(stage => stage.areaId === source.areaId && stage.stageIndex === source.stageIndex);
+  if (index <= 0) return {...source, level:Math.max(0,(Number(source.level) || 0)-1), hasEarlierStage:false};
+  return {...stages[index-1], level:Math.max(0,(Number(source.level) || 0)-1), hasEarlierStage:true, reason:'1つ前のステージから始める、お菓子2倍チャレンジ！'};
+}
+
+function showHalloweenMenu(tab = 'stage', message = '') {
+  if (!G || !isHalloweenActive()) return;
+  document.querySelector('.halloween-menu')?.remove();
+  const source = halloweenChallengeSource();
+  const area = AREA_STAGES[source.areaId], stage = area.stages[source.stageIndex];
+  const easierSource = halloweenEarlierChallengeSource(source);
+  const easierArea = AREA_STAGES[easierSource.areaId], easierStage = easierArea.stages[easierSource.stageIndex];
+  const candy = halloweenCandyBalance();
+  const season = halloweenSeason();
+  const boostStartLabel = easierSource.hasEarlierStage ? '1つ前のステージから' : '現在のステージから';
+  const stageEntry = `<div class="halloween-source"><b>チャレンジ ${source.level + 1}：${escapeHtml(area.name)}・${escapeHtml(stage.name)}</b><p>従来ステージ · 1体ずつのバトル<br>クリアで次のステージへ · 敵の強さ ×${Math.pow(1.1,source.level).toFixed(2)}</p><small>お菓子2倍：${escapeHtml(easierArea.name)}・${escapeHtml(easierStage.name)}から</small></div>
+    <div class="halloween-start-actions"><button type="button" class="btn btn-primary halloween-start-button" data-action="start">⚔️ 従来ステージに挑戦</button><button type="button" class="btn halloween-start-button halloween-candy-boost-button" data-action="start-candy-boost">🍬 ${boostStartLabel}・お菓子ドロップ2倍</button></div>`;
+  const body = `<h3 id="halloween-exchange-title" class="halloween-panel-lead">🎁 景品を交換</h3>
+      <div class="halloween-prize-grid">${HALLOWEEN_EXCHANGE_PRIZES.map(prize => {
+        const owned = prize.kind !== 'equip' && halloweenPrizeOwned(prize);
+        return `<article class="halloween-prize-card halloween-exchange-card${owned ? ' is-owned' : ''}"><div class="halloween-prize-art">${stageRewardIcon(prize.kind,prize.equipId||prize.id,prize.rarity || 1,88)}</div><b>${escapeHtml(prize.name)}</b><div class="halloween-exchange-actions"><span class="halloween-prize-price" aria-label="必要なお菓子 ${prize.cost}個">${iconHtml(HALLOWEEN_EVENT.candyIcon,22)}<b>×${prize.cost}</b></span><button type="button" class="btn" data-exchange="${prize.id}" ${owned || candy < prize.cost ? 'disabled' : ''}>${owned ? '✓ 獲得済み' : candy < prize.cost ? '足りない' : '交換する'}</button></div></article>`;
+      }).join('')}</div>`;
+  const overlay = document.createElement('div');
+  overlay.className = 'confirm-overlay halloween-menu';
+  overlay.innerHTML = `<div class="panel halloween-event-card halloween-hub" role="dialog" aria-modal="true" aria-labelledby="halloween-title">
+    <div class="halloween-hero">
+    <header class="halloween-hub-header"><h2 id="halloween-title">🎃 ハロウィンの森</h2><span class="halloween-event-date">10月31日まで</span><div class="halloween-candy-balance">${stageRewardIcon('halloween-candy','halloween-candy',1,34)}<span>お菓子 <b>${candy}</b>個</span></div></header>
+    <div class="halloween-event-banner"><img src="${av('assets/halloween/event_banner.png')}" alt="たくさんのおばけから町を守る冒険者たち"><div><strong>お化けがたくさんやってくる！</strong><span>お化けから町を守れ！ お菓子を集めて限定品を手に入れよう。</span><em class="halloween-event-announcement">お知らせ：イベント挑戦画面の「お菓子2倍」を選ぶと、1つ前のステージ（初回は現在のステージ）から始まり、この挑戦中のドロップが2倍！ 11月1日0時からレイドに「月影の幽霊王」が登場。</em></div></div>
+    </div>
+    <section class="halloween-stage-entry" aria-label="従来のイベントステージ">${stageEntry}</section>
+    <div class="halloween-season2-entry"><button type="button" class="btn btn-primary" data-action="season2-stages" ${raidFeatureOpen() ? '' : 'disabled'}>${raidFeatureOpen() ? '👻 イベント専用レイド・ランキング' : '🔒 11月1日の新レイドまで休止'}</button><small>${raidFeatureOpen() ? 'おばけから町を守れ！ 討伐数の最高記録に挑戦' : 'レイドは新レイド開始まで封鎖中'}</small></div>
+    <section class="halloween-tab-panel" id="halloween-tab-panel" aria-labelledby="halloween-exchange-title">${message ? `<p class="halloween-action-message" role="status">${escapeHtml(message)}</p>` : ''}${body}</section>
+    <footer class="halloween-hub-footer"><button type="button" class="btn" data-action="open-gacha">🎃 ハロウィンガチャへ</button><button type="button" class="btn" data-action="close">とじる</button></footer>
+  </div>`;
+  document.body.appendChild(overlay);
+  bindStageRewardTooltips(overlay);
+  overlay.querySelector('[data-action="close"]').onclick = () => { hideTooltip(); overlay.remove(); };
+  if (raidFeatureOpen()) overlay.querySelector('[data-action="season2-stages"]').onclick = showHalloweenSeason2Stages;
+  overlay.querySelector('[data-action="start"]')?.addEventListener('click', () => { hideTooltip(); overlay.remove(); startHalloweenChallenge(source); });
+  overlay.querySelector('[data-action="start-candy-boost"]')?.addEventListener('click', () => { hideTooltip(); overlay.remove(); startHalloweenChallenge(easierSource,{easyStart:true,doubleCandy:true}); });
+  overlay.querySelectorAll('[data-exchange]').forEach(button => { button.onclick = () => confirmHalloweenExchange(button.dataset.exchange,button); });
+  overlay.querySelector('[data-action="open-gacha"]').onclick = () => { hideTooltip(); overlay.remove(); showGacha('halloween'); };
+  (tab === 'exchange' ? overlay.querySelector('[data-exchange]:not(:disabled)') || overlay.querySelector('[data-action="start"]') : overlay.querySelector('[data-action="start"]')).focus({preventScroll:true});
+}
+
+function confirmHalloweenExchange(id, opener) {
+  const prize=HALLOWEEN_EXCHANGE_PRIZES.find(entry=>entry.id===id);
+  if(!G || !prize || document.querySelector('.halloween-exchange-confirm')) return;
+  const owner=G, slot=currentSlotKey, candy=halloweenCandyBalance();
+  const dialog=document.createElement('div'); dialog.className='confirm-overlay halloween-exchange-confirm';
+  dialog.innerHTML=`<section class="panel" role="dialog" aria-modal="true" aria-labelledby="halloween-exchange-confirm-title"><h3 id="halloween-exchange-confirm-title">お菓子を使って交換しますか？</h3><div class="halloween-exchange-confirm-art">${stageRewardIcon(prize.kind,prize.equipId||prize.id,prize.rarity || 1,88)}</div><p><b>${escapeHtml(prize.name)}</b>を<br>お菓子 <strong>${prize.cost}個</strong>で交換します。</p><p class="flavor">所持 ${candy}個 → 交換後 ${Math.max(0,candy-prize.cost)}個</p><div class="halloween-exchange-confirm-actions"><button type="button" class="btn" data-cancel>やめる</button><button type="button" class="btn btn-primary" data-confirm>お菓子${prize.cost}個で交換する</button></div></section>`;
+  let settled=false;
+  function cancel() { if(settled)return; settled=true; dialog.remove(); opener?.focus({preventScroll:true}); }
+  dialog.querySelector('[data-cancel]').onclick=cancel;
+  dialog.querySelector('[data-confirm]').onclick=()=>{
+    if(settled)return; settled=true;
+    dialog.querySelector('[data-confirm]').disabled=true; dialog.remove();
+    if(G!==owner || currentSlotKey!==slot)return;
+    const result=exchangeHalloweenPrize(id);
+    if(result.ok)SM.play('se_clear');
+    hideTooltip(); showHalloweenMenu('exchange',result.message);
+  };
+  dialog.onkeydown=event=>{ if(event.key==='Escape'){event.stopPropagation();cancel();} };
+  hideTooltip(); document.body.appendChild(dialog);
+  dialog.querySelector('[data-cancel]').focus();
+}
+
+let eventRaidMenuRequest = 0;
+const EVENT_RAID_ID = 'halloween_2026_raid_v1';
+let eventRaidMenuMode='kanji';
+function eventRaidId(mode) { return mode==='kanji'?EVENT_RAID_ID+'_kanji':EVENT_RAID_ID; }
+
+function eventRaidState(mode = eventRaidMenuMode) {
+  const state=halloweenEventState();
+  state.raid ||= {bestKills:0,pendingBest:null};
+  state.kanjiRaid ||= {bestKills:0,pendingBest:null};
+  const bonusClaims={...state.raid.bonusClaims,...state.kanjiRaid.bonusClaims};
+  state.raid.bonusClaims=bonusClaims; state.kanjiRaid.bonusClaims=bonusClaims;
+  if(mode==='kanji') {
+    state.kanjiRaid ||= {bestKills:0,pendingBest:null};
+    const claims={...state.raid.rewardClaims,...state.kanjiRaid.rewardClaims};
+    state.raid.rewardClaims=claims; state.kanjiRaid.rewardClaims=claims;
+    return state.kanjiRaid;
+  }
+  if(state.kanjiRaid) {
+    const claims={...state.raid.rewardClaims,...state.kanjiRaid.rewardClaims};
+    state.raid.rewardClaims=claims; state.kanjiRaid.rewardClaims=claims;
+  }
+  return state.raid;
+}
+
+const EVENT_RAID_MATH_AREA_IDS=['area1','area13','area2','area3','area4','area11','area12'];
+function eventRaidKanjiSource(answerCount=0) {
+  const stages=['area5','area6','area7','area8','area9','area10'].flatMap((areaId,index)=>
+    AREA_STAGES[areaId].stages.map((_,stageIndex)=>({areaId,stageIndex,grade:index+1})));
+  const index=Math.min(stages.length-1,Math.floor(Math.max(0,answerCount)/5));
+  return {...stages[index],isLast:index===stages.length-1};
+}
+function eventRaidChallengeSource(source = halloweenChallengeSource()) {
+  const valid=entry=>EVENT_RAID_MATH_AREA_IDS.includes(entry?.areaId) && !!AREA_STAGES[entry.areaId]?.stages[entry.stageIndex];
+  if(valid(source)) return source;
+  const review=raidReviewCandidates().find(valid);
+  if(review) return {areaId:review.areaId,stageIndex:review.stageIndex};
+  const attempted=Object.entries(G?.studyStats?.stageHistory || {}).map(([key,stat])=>{
+    const match=key.match(/^(area\d+)_(\d+)$/);
+    return match && stat.total>0?{areaId:match[1],stageIndex:Number(match[2])}:null;
+  }).filter(valid).sort((a,b)=>stageDropDifficulty(b.areaId,b.stageIndex)-stageDropDifficulty(a.areaId,a.stageIndex));
+  return attempted[0] || {areaId:'area1',stageIndex:0};
+}
+
+function eventRaidEnemy(enemy) {
+  const monster=HALLOWEEN_MONSTERS[enemy.monsterIndex];
+  return applyEnemyAttackStatMultiplier(Object.assign(enemy,{name:monster.name,emoji:`assets/halloween/${monster.id}.png`,spd:0,isBoss:false}));
+}
+
+function eventRaidProfile(kills) {
+  const equipment={};
+  for(const type of ['weapon','armor','accessory']) {
+    const eq=G.ownedEquips?.find(item=>item.uid===G.equipment?.[type]?.uid);
+    if(eq) { equipment[type+'Id']=eq.id; equipment[type+'Rarity']=eq.rarity || 1; }
+  }
+  return {slotKey:currentSlotKey,bestKills:kills,totalKills:eventRaidState().totalKills ?? kills,playerName:G.playerName || '勇者',avatar:G.avatar || 'hero',
+    avatarBackground:G.avatarBackground || 'default',avatarHolographic:!!G.avatarHolographic,
+    avatarBackgroundHolographic:!!G.avatarBackgroundHolographic,avatarDecoration:G.avatarDecoration || '',level:G.player.lvl,equipment};
+}
+
+function applyEventRaidRewards(state, rewards, game = G) {
+  state.rewardClaims ||= {};
+  const oldAmounts={'kills:10':3,'kills:25':5,'kills:50':10};
+  for(const [id,amount] of Object.entries(oldAmounts)) if(state.rewardClaims[id]===true)state.rewardClaims[id]=amount;
+  if(state.rewardClaims['kills:25'])state.rewardClaims['kills:20']=Math.max(Number(state.rewardClaims['kills:20']) || 0,5);
+  let candy=0;
+  for(const [id,count] of Object.entries(rewards)) {
+    if(id==='kills:25')continue;
+    const paid=state.rewardClaims[id]===true?count:Number(state.rewardClaims[id]) || 0;
+    if(paid>=count) continue;
+    state.rewardClaims[id]=count; candy+=count-paid;
+  }
+  game.halloweenCandy=halloweenCandyBalance(game)+candy;
+  return candy;
+}
+
+function applyEventRaidBonuses(state, bonuses, game = G) {
+  state.bonusClaims ||= {};
+  const gained=[];
+  for(const [id,row] of Object.entries(bonuses)) {
+    if(state.bonusClaims[id])continue;
+    for(const key of ['halloweenTickets','skinGachaTickets','equipGachaTenPullTickets'])if(row[key])game[key]=(Number(game[key]) || 0)+row[key];
+    if(row.costSeeds) {
+      game.items ||= [];
+      const seed=game.items.find(item=>item.id==='cost_seed');
+      if(seed)seed.count+=row.costSeeds;
+      else game.items.push({uid:game.nextUid++,id:'cost_seed',count:row.costSeeds});
+    }
+    state.bonusClaims[id]=true; gained.push(row.kills);
+  }
+  return gained;
+}
+
+async function syncEventRaidRecord(mode = eventRaidMenuMode) {
+  if (!raidFeatureOpen()) return;
+  const game=G, slot=currentSlotKey, state=eventRaidState(mode), pending=state.pendingBest;
+  if(!pending) return;
+  if(!window.EventRaidAPI) throw new Error('イベントの通信を準備中です');
+  const remote=await window.EventRaidAPI.recordBest(eventRaidId(mode),slot,pending);
+  state.bestKills=Math.max(state.bestKills || 0,remote.bestKills || 0);
+  state.totalKills=Math.max(state.totalKills || 0,remote.totalKills || 0);
+  applyEventRaidRewards(state,remote.rewards || {},game);
+  applyEventRaidBonuses(state,remote.bonuses || {},game);
+  if(state.pendingBest===pending) state.pendingBest=null;
+  if(G===game && currentSlotKey===slot) save(true);
+  else { storageSet(slot,JSON.stringify(game)); window.CloudSave?.saveSlot(slot,game,true).catch(()=>{}); }
+}
+
+async function showEventRaidMenu(message = '', mode = eventRaidMenuMode) {
+  if (!raidFeatureOpen()) { showRaidClosedNotice(); return; }
+  if(!G) return;
+  mode='kanji'; eventRaidMenuMode=mode;
+  document.querySelector('.halloween-menu')?.remove();
+  hideTooltip();
+  const state=eventRaidState(mode), eventId=eventRaidId(mode);
+  let modal=$('screen-event-raid');
+  if(!modal) {
+    modal=$('screen-raid-boss').cloneNode(true);
+    modal.id='screen-event-raid';
+    modal.querySelectorAll('[id]').forEach(element=>element.id=element.id.replace(/^raid-/, 'event-raid-').replace(/^btn-raid-/, 'btn-event-raid-'));
+    modal.querySelector('.window-close-btn').removeAttribute('onclick');
+    modal.querySelector('.window-close-btn').onclick=()=>{ ++eventRaidMenuRequest; modal.classList.add('hidden'); showHalloweenMenu(); };
+    modal.querySelector('.raid-menu-title').id='event-raid-title';
+    modal.querySelector('.raid-menu-title').textContent='🎃 イベント専用レイド';
+    modal.setAttribute('role','dialog'); modal.setAttribute('aria-modal','true');
+    modal.setAttribute('aria-labelledby','event-raid-title');
+    modal.querySelector('#event-raid-rules').setAttribute('aria-labelledby','event-raid-how-to-play-title');
+    modal.querySelector('#btn-event-raid-history').remove();
+    modal.querySelector('#btn-event-raid-exchange')?.remove();
+    modal.querySelector('#event-raid-learning-recommendation').remove();
+    modal.querySelector('#event-raid-final-result').remove();
+    modal.querySelector('#event-raid-challenge-rewards').remove();
+    modal.querySelector('.raid-participation-reward').remove();
+    modal.querySelector('.raid-boss-portrait img').src=av('assets/halloween/event_banner.png');
+    modal.querySelector('.raid-boss-portrait img').alt='たくさんのおばけが町に押し寄せるハロウィンイベント';
+    modal.querySelector('#event-raid-boss-name').textContent='おばけから町を守れ！';
+    modal.querySelector('.raid-hp-labels span').textContent='あなたの最高討伐数';
+    modal.querySelector('.raid-hp-track').remove();
+    modal.querySelector('.raid-boss-summary').insertAdjacentHTML('afterend','<p id="event-raid-source" class="event-raid-source" role="status"></p>');
+    modal.querySelector('.raid-ranking-section h3').textContent='🏆 討伐数ランキング';
+    modal.querySelector('#event-raid-ranking-list').setAttribute('aria-label','最高討伐数のランキング');
+    modal.querySelector('#btn-event-raid-rules').setAttribute('aria-controls','event-raid-rules');
+    modal.querySelector('#btn-event-raid-rules').onclick=()=>{
+      const hidden=modal.querySelector('#event-raid-rules').classList.toggle('hidden');
+      modal.querySelector('#btn-event-raid-rules').setAttribute('aria-expanded',String(!hidden));
+    };
+    modal.querySelector('#btn-event-raid-sync-retry').onclick=()=>showEventRaidMenu();
+    modal.querySelector('#btn-event-raid-challenge').onclick=()=>startEventRaidBattle(modal._eventRaidSource,eventRaidMenuMode);
+    modal.querySelector('#btn-event-raid-challenge').insertAdjacentHTML('afterend','<button type="button" id="btn-event-raid-candy-boost" class="btn halloween-candy-boost-button">🍬 1ステージ前から挑戦・お菓子2倍</button>');
+    modal.querySelector('#btn-event-raid-candy-boost').onclick=()=>startEventRaidBattle(modal._eventRaidSource,eventRaidMenuMode,{easyStart:true,doubleCandy:true});
+    document.body.appendChild(modal);
+  }
+  modal.classList.remove('hidden');
+  let rewardPanel=modal.querySelector('.event-raid-rewards');
+  if(!rewardPanel) {
+    modal.querySelector('.raid-boss-overview').insertAdjacentHTML('beforeend','<section class="event-raid-rewards"><h3>討伐数突破ボーナス</h3><div></div></section>');
+    rewardPanel=modal.querySelector('.event-raid-rewards');
+  }
+  // Keep rewards beside the challenge controls, leaving the entire right column to ranks.
+  modal.querySelector('.raid-boss-overview').appendChild(rewardPanel);
+  const rewardCell=(kind,id,count)=>`<span class="event-raid-reward-item">${stageRewardIcon(kind,id,1,28)}<b>×${count}</b></span>`;
+  const renderRewards=()=>{rewardPanel.querySelector('div').innerHTML=`<div class="event-raid-candy-rates"><span>1体撃破 ${rewardCell('halloween-candy','halloween-candy',2)}</span><span>1日1回の参加 ${rewardCell('halloween-candy','halloween-candy',2)}</span></div><p class="event-raid-reward-note">突破ボーナスは各1回。挑戦終了時に自動で獲得。</p><div class="event-raid-bonus-list">`+EVENT_RAID_BONUSES.map(row=>{
+    const received=state.bonusClaims?.['breakthrough:'+row.kills] && Number(state.rewardClaims?.['kills:'+row.kills])>=row.candy;
+    const rewards=rewardCell('halloween-candy','halloween-candy',row.candy)
+      +(row.halloweenTickets?rewardCell('ticket','halloween-ticket',row.halloweenTickets):'')
+      +(row.skinGachaTickets?rewardCell('ticket','skin-ticket',row.skinGachaTickets):'')
+      +(row.equipGachaTenPullTickets?rewardCell('ticket','equip-ten-ticket',row.equipGachaTenPullTickets):'')
+      +(row.costSeeds?rewardCell('item','cost_seed',row.costSeeds):'');
+    return `<article class="event-raid-reward-row${received?' is-received':''}"><div class="event-raid-reward-goal"><b>${row.kills}体突破</b><strong>${received?'✓ 受取済み':state.bestKills>=row.kills?'達成・獲得待ち':`あと${row.kills-(state.bestKills || 0)}体`}</strong></div><div class="event-raid-reward-items">${rewards}</div></article>`;
+  }).join('')+'</div>';bindStageRewardTooltips(rewardPanel);};
+  renderRewards();
+  modal._eventRaidStartStage=raidResumeStage(state.lastKanjiStage || 0);
+  modal._eventRaidSource=eventRaidKanjiSource(modal._eventRaidStartStage*5);
+  modal._eventRaidEasySource=eventRaidKanjiSource(Math.max(0,modal._eventRaidStartStage-1)*5);
+  modal.querySelector('#btn-event-raid-candy-boost').textContent=modal._eventRaidStartStage>0
+    ? '🍬 1ステージ前から挑戦・お菓子2倍'
+    : '🍬 現在のステージから挑戦・お菓子2倍';
+  modal.querySelector('.raid-ranking-section h3').textContent='🏆 漢字・累計討伐数ランキング';
+  $('event-raid-rules').innerHTML=`<h3 id="event-raid-how-to-play-title">討伐数チャレンジのルール</h3><ol><li><b>町を守ろう</b><span>2分経過か自分のHPが0で終了。実際に倒したおばけの数を記録。種類はランダムで補充され、ボスは出ません。</span></li><li><b>正解すると攻撃</b><span>正解1回につき、ランダムな4体を攻撃します。回答の速さで一回の攻撃数は変わりません。</span></li><li><b>自動でとくぎ発動</b><span>5問正解でチャージ完了！ 次の正解でランダムな7体へ「かぼちゃの波」。まちがえてもチャージは残り、おばけ1体が反撃します。</span></li><li><b>最高記録に挑戦</b><span>1回の最高討伐数を記録。同数は同順位。敵の初期HPは10。ダメージは攻撃力・装備・会心で決まります。参加費はありません。</span></li><li><b>お菓子を集めよう</b><span>1日1回の参加報酬2個。最高討伐数5・10・20・30・50体で突破ボーナス。お菓子5・10・20・30・50個に、ガチャチケットやコストプラスのたねを各1回もらえます。倒すたびにお菓子を2個獲得します。次回は前回の2ステージ前から再開します。</span></li></ol>`;
+  $('event-raid-boss-damage').textContent=`${state.bestKills || 0}体`;
+  const sourceArea=AREA_STAGES[modal._eventRaidSource.areaId];
+  $('event-raid-ticket-count').textContent='参加費なし';
+  const easyArea=AREA_STAGES[modal._eventRaidEasySource.areaId];
+  $('event-raid-source').textContent=`${message?message+' ／ ':''}通常：${sourceArea.name}・${sourceArea.stages[modal._eventRaidSource.stageIndex].name} ／ お菓子2倍：${modal._eventRaidStartStage>0?'1ステージ前の':''}${easyArea.name}・${easyArea.stages[modal._eventRaidEasySource.stageIndex].name}から（5問回答で次へ）`;
+  $('event-raid-rules').insertAdjacentHTML('beforeend','<p>漢字の読みをひらがなで入力します。おばけ7体は横一列に並び、攻撃は1体ずつテンポよく順番に当たります。1体倒すごとに、補充される敵のHPが5、攻撃力・守備力が1ずつ上がります。敵のレベルは初期Lv.1、補充時点の討伐数＋1です。</p>');
+  $('event-raid-rules').insertAdjacentHTML('beforeend','<p>11月1日0時の累計討伐数ランキングで1〜3位に専用フレーム。参加者全員に低コストの限定武器を配布します。同順位は同じ報酬。従来の最高討伐数を累計の初期値として引き継ぎます。</p>');
+  const button=$('btn-event-raid-challenge');
+  button.textContent='⚔ 漢字レイドに参加';
+  $('event-raid-rules').insertAdjacentHTML('beforeend','<p>前回終了時の2ステージ前から再開します。初回は1年生の最初から。正解・誤答を含め5問回答すると次のステージへ進み、1年生から6年生まで順に難しくなります。最終ステージ到達後はその問題を続けます。</p>');
+  $('event-raid-rules').insertAdjacentHTML('beforeend','<p>「1ステージ前から挑戦・お菓子2倍」を選ぶと、通常よりさらに1ステージ前から始まり、挑戦中の撃破ドロップが1体につき2個から4個になります。</p>');
+  button.disabled=!isHalloweenActive();
+  const request=++eventRaidMenuRequest, slot=currentSlotKey;
+  const status=$('event-raid-sync-status'), list=$('event-raid-ranking-list');
+  status.textContent='ランキングを同期中…';
+  list.setAttribute('aria-busy','true');
+  try {
+    await syncEventRaidRecord(mode);
+    if(!window.EventRaidAPI) throw new Error('offline');
+    const records=await window.EventRaidAPI.getRankings(eventId);
+    if(request!==eventRaidMenuRequest || slot!==currentSlotKey) return;
+    storageSet('event_raid_rankings_'+eventId,JSON.stringify(records));
+    $('event-raid-boss-damage').textContent=`${state.bestKills || 0}体`;
+    renderEventRaidRankings(list,records);
+    renderRewards();
+    status.textContent='共有ランキングを同期しました';
+  } catch(error) {
+    if(request!==eventRaidMenuRequest || slot!==currentSlotKey) return;
+    let cached=[];
+    try { cached=JSON.parse(storageGet('event_raid_rankings_'+eventId) || '[]'); } catch(_) {}
+    if(state.participated) {
+      const cachedMine=cached.find(row=>row.slotKey===slot);
+      if(!cachedMine || cachedMine.bestKills<=state.bestKills) cached=[...cached.filter(row=>row.slotKey!==slot),state.pendingBest || eventRaidProfile(state.bestKills)];
+    }
+    renderEventRaidRankings(list,cached);
+    status.textContent=state.pendingBest?'通信待ち：最高記録は保存済みです。再同期で送信できます。':'通信できません。保存済みのランキングを表示しています。';
+  } finally { if(request===eventRaidMenuRequest) list.setAttribute('aria-busy','false'); }
+}
+
+let finalEventRewardChecking=false;
+async function checkEventRaidFinalReward() {
+  if(!raidFeatureOpen() || Date.now()<EVENT_RAID_FINAL_AT || !G || !currentSlotKey || G.isTestMode || finalEventRewardChecking || G.claimedAdminGiftIds?.includes('halloween_2026_final') || !window.EventRaidAPI?.claimFinalReward)return;
+  const game=G,slot=currentSlotKey;finalEventRewardChecking=true;
+  try {
+    const gift=await window.EventRaidAPI.claimFinalReward(eventRaidId('kanji'),slot,game);
+    if(!gift)return;
+    applyGiftPayload(game,gift);game.updatedAt=Date.now();storageSet(slot,JSON.stringify(game));
+    if(G===game && currentSlotKey===slot){save(true);updateHud();showAdminGiftNotice([gift]);document.querySelector('#admin-gift-notice-title').textContent='🏆 ハロウィン最終報酬';document.querySelector('.admin-gift-notice-sub').textContent=`累計討伐数ランキング ${gift.rank}位の報酬です。`;}
+    else window.CloudSave?.saveSlot(slot,game,true).catch(()=>{});
+  }catch(error){console.warn('Halloween final reward:',error);}finally{finalEventRewardChecking=false;}
+}
+
+function renderEventRaidRankings(list,records) {
+  const rows=rankEventRaidRecords(records,'totalKills');
+  if(!rows.length) { list.innerHTML='<div class="raid-empty-ranking">討伐数の記録はまだありません。</div>'; return; }
+  renderRaidRankingList(list,rows,true,'totalKills');
+}
+
+function playEventRaidUltimate(owner) {
+  if(battle!==owner || owner.over || !explore?.isEventRaid) return;
+  $('result-overlay')?.classList?.add('hidden');
+  $('battle-challenge')?.classList?.add('hidden');
+  owner.eventRaidUltimate?.remove();
+  const effect=document.createElement('div');
+  effect.className='event-raid-ultimate'; effect.setAttribute('aria-hidden','true');
+  effect.innerHTML=`<div class="event-raid-ultimate-vortex"></div><div class="event-raid-ultimate-title">🎃 かぼちゃの波<span>全体攻撃！</span></div>${Array.from({length:12},(_,i)=>`<i class="event-raid-ultimate-spark" style="--angle:${i*30}deg;--delay:${i%3*70}ms">✦</i>`).join('')}${Array.from({length:9},(_,i)=>`<img class="event-raid-ultimate-ghost" src="${av('assets/halloween/'+(i%2?'lantern_ghost':'pumpkin_imp')+'.png')}" alt="" style="--lane:${12+i%3*12};--delay:${i*65}ms;--tilt:${i%2?-18:18}deg">`).join('')}`;
+  $('screen-battle').appendChild(effect); owner.eventRaidUltimate=effect;
+  SM.play('se_crit');
+  setTimeout(()=>{effect.remove();if(owner.eventRaidUltimate===effect)owner.eventRaidUltimate=null;},1500);
+}
+
+function startEventRaidBattle(source = null, mode = eventRaidMenuMode, options = {}) {
+  if (!raidFeatureOpen()) { showRaidClosedNotice(); return; }
+  if(!G || !isHalloweenActive()) return;
+  mode='kanji';
+  const raidState=eventRaidState(mode);
+  const startStage=Math.max(0,raidResumeStage(raidState.lastKanjiStage || 0)-(options.easyStart ? 1 : 0));
+  source=eventRaidKanjiSource(startStage*5);
+  ++eventRaidMenuRequest;
+  $('screen-event-raid')?.classList.add('hidden');
+  const run=new EventRaidRun(Date.now()+1000);
+  run.runId=newSlotId();run.mode=mode;run.startAnswerCount=startStage*5;run.candyEarned=0;run.candyMultiplier=options.doubleCandy?2:1;
+  run.enemies.forEach(eventRaidEnemy);
+  explore={stageMode:true,isHalloween:true,isEventRaid:true,halloweenSeason:2,areaId:source.areaId,stageIndex:source.stageIndex,
+    halloweenIndex:0,halloweenOperation:'add',eventRaid:run,sessionDrops:[],sessionGold:0,stageDrops:[],stageGold:0,stageExp:0,usedProblems:new Set()};
+  startBattle(false);
+  const owner=battle;
+  $('battle-floor-title').innerHTML=`<div class="event-raid-battle-hud"><strong id="event-raid-kill-counter" role="status" aria-live="polite">0体討伐！</strong>${run.candyMultiplier===2?'<b class="event-raid-candy-boost">🍬 お菓子ドロップ2倍</b>':''}<time id="event-raid-digital-timer" role="timer" aria-label="イベントレイドの残り時間">02:00</time></div>`;
+  renderEventRaidBattleHud(run);
+  owner.eventRaidTick=setInterval(()=>{
+    if(battle!==owner || !explore?.isEventRaid) { clearInterval(owner.eventRaidTick); return; }
+    if(!run.remaining(Date.now())) { endEventRaidBattle(); return; }
+    renderEventRaidBattleHud(run);
+  },100);
+}
+
+function renderEventRaidBattleHud(run) {
+  const counter=$('event-raid-kill-counter'), timer=$('event-raid-digital-timer');
+  if(counter) counter.textContent=`${run.kills}体討伐！`;
+  if(timer) {
+    timer.textContent=formatEventRaidTime(Math.min(run.rules.durationMs,run.remaining(Date.now())));
+    timer.classList.toggle('is-urgent',run.remaining(Date.now())<=15000);
+  }
+}
+
+function clearEventRaidSidePanel() {
+  const toggle=$('kanji-input-toggle');
+  if(toggle?.closest?.('.event-raid-status')) $('kanji-problem-center').insertBefore(toggle,$('kanji-battle-commands'));
+  document.querySelector('.event-raid-status')?.remove();
+}
+
+function startEventRaidQuestion() {
+  if(!explore?.isEventRaid || !battle || battle.over) return;
+  const owner=battle, run=explore.eventRaid;
+  if(owner.eventRaidQuestion) return;
+  if(!run.remaining(Date.now()) || G.player.hp<=0) { endEventRaidBattle(); return; }
+  destroyChallenge(); hideBattleMenus();
+  run.beginQuestion(Date.now());
+  if(run.mode==='kanji') {
+    const source=eventRaidKanjiSource((run.startAnswerCount || 0)+run.answers);
+    if(explore.areaId!==source.areaId || explore.stageIndex!==source.stageIndex) {
+      explore.usedProblems.clear(); owner.currentTurnProblem=null;
+      blog(`<span class="heal">${source.grade}年生・${AREA_STAGES[source.areaId].stages[source.stageIndex].name}の問題へ！</span>`);
+    }
+    explore.areaId=source.areaId; explore.stageIndex=source.stageIndex;
+  }
+  const question={};
+  owner.eventRaidQuestion=question; owner.season2Question=null; owner.targetLocked=true;
+  const {problem,timeLimit}=getOrGenerateTurnProblem();
+  const container=$('battle-challenge');
+  const active=()=>battle===owner && !owner.over && owner.eventRaidQuestion===question;
+  document.querySelector('.event-raid-learning-stage')?.remove();
+  clearEventRaidSidePanel();
+  startChallenge(container,{problem,timeLimit,prompt:getChallengePrompt(problem,true),showBattleCommands:false,isActive:active,onAnswered:(elapsed)=>{question.elapsedMs=elapsed;}},finish);
+  const host=isKanjiProblem(problem)?$('kanji-problem-center'):container.querySelector('.challenge-main');
+  const side=document.createElement('aside'); side.className='event-raid-status event-raid-side';
+  side.setAttribute('aria-label','攻撃対象数と特技の状況');
+  side.innerHTML='<div id="event-raid-target-label" class="event-raid-target-label" role="status"></div><div id="event-raid-gauge" class="halloween-attack-gauge" role="progressbar" aria-label="次の攻撃で狙う敵の数" aria-valuemin="2" aria-valuemax="4"><i></i></div><p id="event-raid-charge" class="event-raid-charge" role="status"></p><button type="button" class="btn" id="event-raid-end">🏳 この挑戦を終了する</button>';
+  $('screen-battle').appendChild(side);
+  $('event-raid-end').onclick=()=>endEventRaidBattle();
+  if(run.mode==='kanji') {
+    const source=eventRaidKanjiSource((run.startAnswerCount || 0)+run.answers);
+    host.insertAdjacentHTML('afterbegin',`<p class="event-raid-learning-stage">${source.grade}年生・${escapeHtml(AREA_STAGES[source.areaId].stages[source.stageIndex].name)} ／ ${source.isLast?'最終ステージ':`${run.answers%5+1}問目・5問で次のステージ`}</p>`);
+  }
+  const gauge=$('event-raid-gauge');
+  const update=()=>{
+    if(!active()) return;
+    const ready=run.charge>=EVENT_RAID_RULES.chargeGoal;
+    const elapsed=question.elapsedMs ?? Date.now()-run.questionAt;
+    const count=ready?EVENT_RAID_RULES.specialTargets:eventRaidTargetCount(elapsed);
+    $('event-raid-target-label').textContent=ready?'✨ 次の正解でとくぎ！ ランダムな7体を攻撃':`次の正解で ${count}体を攻撃`;
+    gauge.setAttribute('aria-valuenow',String(count));
+    gauge.setAttribute('aria-valuemax',String(ready?7:4));
+    gauge.querySelector('i').style.width=`${(ready?1:eventRaidGaugeRatio(elapsed))*100}%`;
+    gauge.classList.toggle('is-urgent',count===2);
+    $('event-raid-charge').textContent=ready?'🎃 かぼちゃの波：チャージ完了！':`🎃 とくぎチャージ ${run.charge}／5 正解`;
+  };
+  owner.eventRaidQuestionTimer=setInterval(update,100);
+  function finish(result) {
+    if(!active()) return;
+    const outcome=run.answer(result.success,Date.now(),Math.random,result.elapsedMs ?? Date.now()-run.questionAt);
+    if(!outcome) { if(!run.remaining(Date.now())) endEventRaidBattle(); return; }
+    clearInterval(owner.eventRaidQuestionTimer); owner.eventRaidQuestion=null;
+    clearEventRaidSidePanel();
+    hideBattleMenus(); container.classList.remove('hidden');
+    if(!result.success) {
+      blog('<span class="bad">まちがい！ チャージはそのまま。次の問題に挑戦！</span>');
+      container.innerHTML='<div class="event-raid-judgement is-wrong">まちがい！</div>';
+      eventRaidCounterattack(owner);
+      setTimeout(next,250);
+    } else {
+      blog(`<span class="good">${outcome.special?'✨ かぼちゃの波！':'正解！'} ${outcome.targets.length}体を攻撃！</span>`);
+      container.innerHTML=`<div class="event-raid-judgement${outcome.special?' is-special':''}">${outcome.special?'🎃 かぼちゃの波！':'正解！'}</div>`;
+      if(outcome.special) {
+        playEventRaidUltimate(owner);
+        setTimeout(()=>{if(battle===owner && !owner.over)strikeEventRaidTargets(owner,outcome,()=>setTimeout(next,180));},240);
+      } else strikeEventRaidTargets(owner,outcome,()=>setTimeout(next,180));
+    }
+    function next() {
+      if(battle!==owner || owner.over) return;
+      run.refill(); run.enemies.forEach(eventRaidEnemy); owner.enemies=run.enemies;
+      owner.enemy=owner.enemies[0]; owner.currentTurnProblem=null;
+      renderHalloweenParty(); updateBattleBars(); startEventRaidQuestion();
+    }
+  }
+  renderHalloweenParty(); update();
+}
+
+function strikeEventRaidTargets(owner,outcome,done) {
+  const run=explore.eventRaid;
+  let index=0, hitIndex=0;
+  function strike() {
+    if(battle!==owner || owner.over || run.over) return;
+    if(!run.remaining(Date.now())) { endEventRaidBattle(); return; }
+    if(index>=outcome.targets.length) { done(); return; }
+    const enemy=outcome.targets[index];
+    if(enemy.hp>0 && owner.enemies.includes(enemy)) {
+      owner.enemy=enemy;
+      const frame=document.querySelector(`[data-party-id="${enemy.partyId}"] .enemy-sprite`);
+      const atk=effectiveAtk(), double=equippedAncientIds().has('anc_w1');
+      const base=double?Math.max(1,Math.round(Math.max(atk*0.8*BALANCE.atkMinRatio,atk*0.8-(enemy.def || 0)))):basicAttackDamage(atk,enemy.def || 0);
+      const crit=Math.random()<Math.min(0.95,calcSpdRate(totalStat('spd'))+(equippedAbilities().has('crit_up')?0.10:0)+ancientCritBonus());
+      let damage=base;
+      if(crit) damage=Math.floor(damage*BALANCE.critMult);
+      const dealt=Math.min(enemy.hp,damage);
+      if(run.hit(enemy,Date.now(),damage)){
+        const candy=2*(run.candyMultiplier || 1);
+        G.halloweenCandy=halloweenCandyBalance()+candy;
+        run.candyEarned=(run.candyEarned || 0)+candy;
+        save();
+      }
+      if(equippedAbilities().has('lifesteal')) G.player.hp=Math.min(totalMaxHp(),G.player.hp+Math.max(1,Math.round(dealt*.15)));
+      SM.play(crit || (outcome.special && index===0 && hitIndex===0)?'se_crit':'se_slash',1.8);
+      playPlayerAttackAnim();
+      if(frame) {
+        frame.classList.remove('enemy-damage-hit','event-raid-special-hit'); void frame.offsetWidth;
+        frame.classList.add(outcome.special?'event-raid-special-hit':'enemy-damage-hit');
+        spawnFloatingDamage(frame,dealt,`enemy-dmg${crit?' crit':''}${outcome.special?' skill-dmg':''}`);
+      }
+      renderHalloweenParty(); updateBattleBars(); renderEventRaidBattleHud(run);
+      if(double && hitIndex===0 && enemy.hp>0) hitIndex=1;
+      else { index++; hitIndex=0; }
+    } else { index++; hitIndex=0; }
+    if(index>=outcome.targets.length) done();
+    else setTimeout(strike,EVENT_RAID_RULES.hitIntervalMs);
+  }
+  strike();
+}
+
+function endEventRaidBattle(showMenu = true) {
+  if(!explore?.isEventRaid || !battle) return;
+  const run=explore.eventRaid;
+  if(!run.end()) return;
+  const owner=battle;
+  owner.over=true; owner.running=false;
+  owner.eventRaidUltimate?.remove(); owner.eventRaidUltimate=null;
+  clearInterval(owner.eventRaidTick); clearInterval(owner.eventRaidQuestionTimer);
+  owner.eventRaidQuestion=null; destroyChallenge();
+  clearEventRaidSidePanel();
+  hideBattleMenus();
+  document.querySelector('.event-raid-learning-stage')?.remove();
+  const mode=run.mode || 'math', state=eventRaidState(mode);
+  state.totalKills=(Number(state.totalKills) || Number(state.bestKills) || 0)+run.kills;
+  state.lastKanjiStage=Math.min(['area5','area6','area7','area8','area9','area10'].reduce((n,id)=>n+AREA_STAGES[id].stages.length,0)-1,Math.floor(((run.startAnswerCount || 0)+run.answers)/5));
+  state.participated=true; state.bestKills=Math.max(state.bestKills || 0,run.kills);
+  const day=new Date(run.startedAt+9*60*60*1000).toISOString().slice(0,10);
+  const candy=applyEventRaidRewards(state,eventRaidRewardEntitlements(state.bestKills,day));
+  const bonuses=applyEventRaidBonuses(state,eventRaidBonusEntitlements(state.bestKills));
+  state.pendingBest={...eventRaidProfile(state.bestKills),runs:[...(state.pendingBest?.runs || []),{id:run.runId,kills:run.kills,finishedAt:Math.min(Date.now(),EVENT_RAID_FINAL_AT-1)}],participationDay:day,
+    participationDays:Object.keys(state.rewardClaims || {}).filter(id=>id.startsWith('participation:')).map(id=>id.slice(14))};
+  const reason=G.player.hp<=0?'HPが0になりました。':Date.now()>=run.endsAt?'2分間終了！':'挑戦終了。';
+  save(true); CM.stop(); explore=null; battle=null;
+  showHome();
+  if(showMenu) showEventRaidFinish({reason,kills:run.kills,bestKills:state.bestKills,candy:(run.candyEarned || 0)+candy,bonuses},()=>showEventRaidMenu(`${reason} 今回 ${run.kills}体 ／ 最高 ${state.bestKills}体${candy?`・お菓子 +${candy}個`:''}${bonuses.length?`・${bonuses.join('／')}体突破ボーナス獲得！`:''}`,mode));
+}
+
+function showEventRaidFinish(result,onDone) {
+  const overlay=document.createElement('div');overlay.className='confirm-overlay event-raid-finish';
+  overlay.innerHTML=`<section class="panel event-raid-finish-card" role="dialog" aria-modal="true" aria-label="ハロウィンレイド終了"><p class="event-raid-finish-signal">TIME UP / FINISH</p><h2>${escapeHtml(result.reason)}</h2><p>今回の討伐数</p><strong class="event-raid-finish-count">${result.kills}<small>体</small></strong><p>最高記録 ${result.bestKills}体</p><p>${iconHtml(HALLOWEEN_EVENT.candyIcon,32)} お菓子 ＋${result.candy}個</p><button type="button" class="btn btn-primary">結果・ランキングへ</button></section>`;
+  document.body.appendChild(overlay);SM.play('se_clear');const button=overlay.querySelector('button');button.onclick=()=>{overlay.remove();onDone();};button.focus();
+}
+
+function eventRaidCounterattack(owner) {
+  if(battle!==owner || owner.over || !explore?.isEventRaid) return;
+  const living=owner.enemies.filter(enemy=>enemy.hp>0);
+  if(!living.length) return;
+  owner.attackingEnemy=living[Math.floor(Math.random()*living.length)];
+  playEnemyAttackAnim();
+  let damage=Math.max(1,Math.round(owner.attackingEnemy.atk*2.25)-totalStat('def'));
+  if(equippedAbilities().has('guard')) damage=Math.max(1,Math.round(damage*.95));
+  damage=ancientDamageReduction(damage);
+  G.player.hp=Math.max(0,G.player.hp-damage);
+  SM.playBeep('damage'); flashScreenRed();
+  spawnFloatingDamage($('battle-player-hp'),damage,'player-dmg');
+  blog(`<span class="bad">${owner.attackingEnemy.name}の反撃！ ${damage}ダメージ！</span>`);
+  owner.attackingEnemy=null; updateBattleBars();
+  if(G.player.hp<=0) endEventRaidBattle();
+}
+
+function showHalloweenSeason2Stages() {
+  showEventRaidMenu();
+}
+
+// Kept for legacy data and combat reuse; the hub now leads to the dedicated raid.
+function showLegacyHalloweenSeason2Stages() {
+  if (!G || !isHalloweenActive()) return;
+  document.querySelector('.halloween-season2-select')?.remove();
+  hideTooltip();
+  const preview = halloweenSeason() < 2;
+  const clears = G.halloweenEvent?.[HALLOWEEN_EVENT.id]?.season2StageClears || {};
+  const overlay = document.createElement('div');
+  overlay.className = 'confirm-overlay halloween-season2-select';
+  overlay.innerHTML = `<section class="panel halloween-season2-panel" role="dialog" aria-modal="true" aria-labelledby="halloween-season2-title"><h2 id="halloween-season2-title">👻 シーズン2${preview ? ' 先行テスト' : ''}</h2><p class="flavor">10体から数字を選んで計算。倒した敵はすぐ補充。<br>回答するごとに★が進み、最後の★で現れるボスを倒してクリア。<br>まちがえると、生き残った敵全員が反撃します。</p><label class="halloween-operation-select">計算の種類 <select id="halloween-season2-operation">${Object.entries(HALLOWEEN_MATH_OPERATIONS).map(([key,op]) => `<option value="${key}">${op.label}</option>`).join('')}</select></label><div class="halloween-season2-stage-list">${HALLOWEEN_SEASON2_STAGES.map(stage => `<button type="button" class="halloween-season2-stage" data-season2-stage="${stage.id}"><b>${stage.name}</b><span>${stage.description}</span><small>${stage.mathMode === 'answer' ? '答えの敵を選ぶ' : stage.mathMode === 'combine' ? '2体を組み合わせる' : '両方の問題'} · ${stage.questionGoal}問・5問目はボス · クリア ${clears[stage.id] || 0}回</small><strong>${preview ? 'テストで遊ぶ' : 'このステージに挑戦'}</strong></button>`).join('')}</div><button type="button" class="btn" data-close>もどる</button></section>`;
+  const close = () => { overlay.remove(); document.querySelector('[data-action="season2-stages"]')?.focus({preventScroll:true}); };
+  overlay.querySelector('[data-close]').onclick = close;
+  overlay.querySelectorAll('[data-season2-stage]').forEach(button => {
+    button.onclick = () => { const operation = overlay.querySelector('#halloween-season2-operation').value; overlay.remove(); document.querySelector('.halloween-menu')?.remove(); startHalloweenSeason2Challenge(button.dataset.season2Stage, preview, operation); };
+  });
+  overlay.onkeydown = event => { if (event.key === 'Escape') { event.stopPropagation(); close(); } };
+  document.body.appendChild(overlay);
+  overlay.querySelector('[data-season2-stage]').focus({preventScroll:true});
+}
+
+function startHalloweenSeason2Challenge(stageId, preview = false, operation = 'add') {
+  const stage = HALLOWEEN_SEASON2_STAGES.find(entry => entry.id === stageId);
+  if (!stage || !G || !isHalloweenActive() || (halloweenSeason() < 2 && !preview)) return false;
+  startHalloweenChallenge({areaId:'area1',stageIndex:0}, {season:2,stageId:stage.id,test:preview,operation});
+  return true;
+}
+
+function startHalloweenChallenge(source = halloweenChallengeSource(), options = {}) {
+  if (!G || !isHalloweenActive() || !AREA_STAGES[source.areaId]?.stages[source.stageIndex]) return;
+  const state = halloweenEventState();
+  if (options.season !== 2) state.baseSource ||= {...halloweenInitialChallengeSource()};
+  const season2Stage = HALLOWEEN_SEASON2_STAGES.find(stage => stage.id === options.stageId);
+  explore = {
+    stageMode:true, isHalloween:true, halloweenSeason:options.season === 2 ? 2 : 1, halloweenWave:0,
+    halloweenStageId:season2Stage?.id || null, halloweenTest:!!options.test,
+    halloweenAnswers:0, halloweenRewardRolls:0, halloweenBossSpawned:false,
+    halloweenOperation:HALLOWEEN_MATH_OPERATIONS[options.operation] ? options.operation : 'add', areaId:source.areaId, stageIndex:source.stageIndex,
+    halloweenLevel:options.season === 2 ? 0 : Math.max(0, Math.floor(Number(state.clears) || 0) - (options.easyStart ? 1 : 0)),
+    halloweenCandyMultiplier:options.doubleCandy ? 2 : 1,
+    halloweenBaseAreaId:options.season === 2 ? 'area1' : state.baseSource.areaId,
+    isBoss:false, halloweenIndex:0, sessionDrops:[], sessionGold:0,
+    stageDrops:[], stageGold:0, stageExp:0, usedProblems:new Set()
+  };
+  save(true);
+  startBattle(false);
+}
+
+function generateHalloweenEnemy(run) {
+  const index = Math.max(0, Math.min(HALLOWEEN_MONSTERS.length - 1, run.halloweenIndex || 0));
+  const monster = HALLOWEEN_MONSTERS[index];
+  const grade = halloweenSeason2Stage(run)?.grade || getDefaultAreaDifficultyMultiplier(run.halloweenBaseAreaId || run.areaId);
+  const isBoss = index === HALLOWEEN_MONSTERS.length - 1;
+  const multiplier = Math.pow(1.1, run.halloweenLevel || 0);
+  const hp = Math.round(((isBoss ? 32 : 8) + grade * (isBoss ? 14 : 4)) * multiplier);
+  return applyEnemyAttackStatMultiplier({ name:monster.name, emoji:`assets/halloween/${monster.id}.png`,
+    maxHp:hp, hp, atk:Math.max(1, Math.round((isBoss ? 3 + grade * 3 : grade * 2) * multiplier)),
+    def:isBoss ? Math.max(1, Math.round(grade * multiplier)) : 0, spd:5 * multiplier,
+    goldMin:2, goldMax:isBoss ? 12 : 5, exp:isBoss ? 12 : 5, isBoss });
+}
+
+function grantHalloweenClearReward() {
+  G.halloweenEvent ||= {};
+  const state = G.halloweenEvent[HALLOWEEN_EVENT.id] ||= { clears:0, firstClearClaimed:false };
+  state.clears = (Number(state.clears) || 0) + 1;
+  if (state.firstClearClaimed) return null;
+  state.firstClearClaimed = true;
+  return null;
+}
+
+function proceedHalloweenBattle() {
+  const run = explore;
+  const count = run.halloweenSeason === 2 ? halloweenEncounterTotal(run) : run.halloweenIndex + halloweenWaveSize(run);
+  const total = halloweenEncounterTotal(run);
+  showKillProgressPopup(count, count === total ? count + 1 : count, total, () => {
+    if (explore !== run) return;
+    if (count < total) {
+      run.halloweenIndex = count;
+      run.halloweenWave++;
+      startBattle(false);
+      return;
+    }
+    let bonus = null;
+    if (run.halloweenSeason === 2) {
+      const state = halloweenEventState();
+      state.season2StageClears ||= {};
+      const key = run.halloweenStageId || 'night-party';
+      state.season2StageClears[key] = (state.season2StageClears[key] || 0) + 1;
+    } else { bonus = grantHalloweenClearReward(); }
+    const rewards = { gold:run.sessionGold, exp:run.stageExp, drops:run.sessionDrops, milestoneRewards:bonus ? [bonus] : [] };
+    G.player.hp = totalMaxHp(); G.player.mp = totalMaxMp();
+    explore = null;
+    save(true);
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay halloween-menu';
+    overlay.innerHTML = `<div class="panel halloween-event-card"><h2>🎃 ハロウィンの森 クリア！</h2><p>${run.halloweenSeason === 2 ? `${total}問クリア！ ボスを倒した！` : `${total}たいの おばけを たおした！`}${run.halloweenSeason === 2 ? ' シーズン2クリア！' : ''}</p>${stageClearRewardsHtml(rewards)}<p class="flavor">${run.halloweenSeason === 2 ? 'シーズン2の別ステージにも挑戦してみよう！' : 'ふくしゅう がんばったね！'}</p><button type="button" class="btn btn-primary" data-action="return-home">きょてんに もどる</button></div>`;
+    document.body.appendChild(overlay);
+    bindDropItemTooltips(overlay);
+    overlay.querySelector('[data-action="return-home"]').onclick = () => { hideTooltip(); overlay.remove(); showHome(); showHalloweenMenu('stage'); };
+  });
+}
+
+const PICKUP_STAGE_MAP = {
+  kanji_1:{ areaId:'area5' }, kanji_2:{ areaId:'area6' }, kanji_3:{ areaId:'area7' },
+  kanji_4:{ areaId:'area8' }, kanji_5:{ areaId:'area9' }, kanji_6:{ areaId:'area10' },
+  math_add:{ areaId:'area1' }, math_sub:{ areaId:'area13' }, math_mul:{ areaId:'area2' },
+  math_div:{ areaId:'area3' }, math_dec:{ areaId:'area11', stages:[0,1] }, math_frac:{ areaId:'area11', stages:[2,3] },
+  math_elem5:{ areaId:'area11' }, math_elem6:{ areaId:'area12' }, math_calc:{ areaId:'area4' },
+};
+
+function raidReviewCandidates(game = G){
+  return Object.entries(game?.raidLearning || {})
+    .filter(([, stat]) => stat.attempts >= 3 && stat.wrong >= 2)
+    .sort((a, b) => (b[1].wrong / b[1].attempts) - (a[1].wrong / a[1].attempts) || b[1].wrong - a[1].wrong || b[1].attempts - a[1].attempts)
+    .map(([key, stat]) => {
+      const match = key.match(/^(area\d+)_(\d+)$/);
+      const legacy = PICKUP_STAGE_MAP[key];
+      const areaId = match ? match[1] : legacy?.areaId;
+      const area = AREA_STAGES[areaId];
+      if (!area?.stages?.length) return null;
+      const stageIndex = match ? Number(match[2]) : leastClearedStage(areaId, legacy.stages, game);
+      if (!area.stages[stageIndex]) return null;
+      return { key, stat, areaId, stageIndex };
+    }).filter(Boolean);
+}
+
+/* エリアの中で いちばん クリア回数が少ない（おなじなら 前の）ステージを えらぶ */
+function leastClearedStage(areaId, allowed, game = G){
+  const counts = game === G ? getStageClearCounts(areaId) : (game?.stageClearCounts?.[areaId] || []);
+  const idxs = (allowed && allowed.length ? allowed : (AREA_STAGES[areaId].stages || []).map((_, i) => i));
+  return idxs.reduce((best, i) => ((counts[i] || 0) < (counts[best] || 0) ? i : best), idxs[0]);
+}
+
+function choosePickupStage(game = G){
+  const rec = raidReviewCandidates(game)[0];
+  if (!rec) return null;
+  return { areaId: rec.areaId, stageIndex: rec.stageIndex, learningKey: rec.key, reason: `れいどで まちがえた「${rec.stat.label}」の ふくしゅう！` };
+}
+
+function isValidPickup(pk){
+  if (!pk || pk.bossId !== (getRaidData().bossId || RAID_BOSS_ID)) return false;
+  return raidReviewCandidates().some(rec => {
+    if (rec.key !== pk.learningKey || rec.areaId !== pk.areaId || !AREA_STAGES[pk.areaId]?.stages[pk.stageIndex]) return false;
+    const legacy = PICKUP_STAGE_MAP[rec.key];
+    return legacy ? (!legacy.stages || legacy.stages.includes(pk.stageIndex)) : rec.stageIndex === pk.stageIndex;
+  });
+}
+
+/* いま ゆうこうな ピックアップ（なければ null）。レイドボスが かわると あたらしく きまる */
+function getActivePickup(){
+  if (!G) return null;
+  const bossId = getRaidData().bossId || RAID_BOSS_ID;
+  if (G.pickup?.bossId === bossId && G.pickup.status !== 'open') return null;
+  if (G.pickup?.status === 'open' && isValidPickup(G.pickup)) return G.pickup;
+  const stage = choosePickupStage();
+  G.pickup = stage ? { bossId, ...stage, status: 'open' } : null;
+  return G.pickup;
+}
+
+/* ピックアップを クリアしたら ボーナスを わたす（recordStageClear から呼ぶ）。{title, gold, drops, luxury} を かえす */
+function grantPickupBonusIfAny(areaId, stageIndex){
+  const pk = G && G.pickup;
+  if (!pk || pk.status !== 'open' || !isValidPickup(pk) || pk.areaId !== areaId || pk.stageIndex !== stageIndex) return null;
+  const b = pickupBonusAmounts();
+  pk.status = 'claimed';
+  const drops = [];
+  if (b.equip > 0) { G.equipGachaTenPullTickets = (G.equipGachaTenPullTickets || 0) + b.equip; drops.push({ kind:'equip-ticket', name:`装備ガチャ10連チケット ×${b.equip}`, icon:'🎫', count:b.equip }); }
+  if (b.raid > 0) { G.raidTickets = (G.raidTickets || 0) + b.raid; drops.push({ kind:'raid-ticket', name:`レイドチケット ×${b.raid}`, icon:'🎟️', count:b.raid }); }
+  if (b.gold > 0) G.player.gold += b.gold;
+  if (!drops.length && b.gold <= 0) return null;
+  return { title:'ピックアップ チャレンジボーナス', gold:b.gold, luxury:true, drops };
+}
+
+function pickupBonusAmounts(){
+  const num = k => Math.max(0, Math.round(Number(rewardSettings[k]) || 0));
+  return { equip:num('pickupBonusTickets'), raid:0, gold:num('pickupBonusGold') };
+}
+
+function pickupTicketRowHtml(lost){
+  const b = pickupBonusAmounts();
+  const cell = (iconHtml, label) => `<div class="pickup-bonus-cell"><div class="pickup-ticket-icons">${iconHtml}${lost ? '<span class="pickup-lost-mark" aria-hidden="true">✖</span>' : ''}</div><b>${label}</b></div>`;
+  const cells = [];
+  if (b.equip > 0) cells.push(cell(stageRewardIcon('ticket', 'equip-ten-ticket', 1, 60), `装備ガチャ10連チケット ×${b.equip}`));
+  if (b.raid > 0) cells.push(cell(stageRewardIcon('ticket', 'raid-ticket', 1, 60), `レイドチケット ×${b.raid}`));
+  if (b.gold > 0) cells.push(cell('<span class="pickup-gold-icon" aria-hidden="true">💰</span>', `${b.gold.toLocaleString()} ゴールド`));
+  return `<div class="pickup-tickets pickup-bonus-row${lost ? ' is-lost' : ''}">${cells.join('')}</div>`;
+}
+
+/* 「冒険に出る」：ピックアップが あれば まず それを 見せる */
+function openAdventure(){
+  const pk = getActivePickup();
+  if (!pk) { showStageSelect(); return; }
+  showPickupOverlay(pk);
+}
+
+function showPickupOverlay(pk){
+  document.querySelector('.pickup-overlay')?.remove();
+  const area = AREA_STAGES[pk.areaId];
+  const stage = area.stages[pk.stageIndex];
+  const numPrefix = area.displayNum || pk.areaId.replace('area', '');
+  if (SM.initialized) SM.play('se_clear');
+  const overlay = document.createElement('div');
+  overlay.className = 'pickup-overlay';
+  overlay.innerHTML = `
+    <div class="panel pickup-panel" role="dialog" aria-modal="true" aria-labelledby="pickup-title">
+      <div class="pickup-ribbon">✨ ピックアップ ステージ ✨</div>
+      <h2 id="pickup-title">${area.name}　${numPrefix}-${pk.stageIndex + 1}</h2>
+      <p class="pickup-stage-name">${stage.name}</p>
+      <p class="flavor">${pk.reason}</p>
+      <div class="pickup-bonus">
+        <div class="pickup-bonus-title">🎁 チャレンジボーナス 🎁</div>
+        ${pickupTicketRowHtml(false)}
+        <div class="pickup-bonus-note">いま クリアすると もらえる！</div>
+      </div>
+      <div class="pickup-actions">
+        <button class="btn btn-primary pickup-yes" id="btn-pickup-yes">やる！</button>
+        <button class="btn pickup-no" id="btn-pickup-no">やらない</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  bindStageRewardTooltips(overlay);
+  $('btn-pickup-yes').onclick = () => { hideTooltip(); overlay.remove(); enterAreaStage(pk.areaId, pk.stageIndex); };
+  $('btn-pickup-no').onclick = () => { hideTooltip(); overlay.remove(); showPickupDeclineConfirm(pk); };
+}
+
+function showPickupDeclineConfirm(pk){
+  document.querySelector('.pickup-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'pickup-overlay';
+  overlay.innerHTML = `
+    <div class="panel pickup-panel pickup-confirm" role="alertdialog" aria-modal="true" aria-labelledby="pickup-confirm-title">
+      <h2 id="pickup-confirm-title">⚠ ほんとうに いいかな？</h2>
+      <p class="pickup-confirm-text">いま やらないと、<br><b>この ボーナスは もらえなくなるよ！</b></p>
+      ${pickupTicketRowHtml(true)}
+      <div class="pickup-actions">
+        <button class="btn btn-primary pickup-yes" id="btn-pickup-confirm-yes">やっぱり やる！</button>
+        <button class="btn pickup-no" id="btn-pickup-confirm-no">もらわなくて いい</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  bindStageRewardTooltips(overlay);
+  $('btn-pickup-confirm-yes').onclick = () => { hideTooltip(); overlay.remove(); enterAreaStage(pk.areaId, pk.stageIndex); };
+  $('btn-pickup-confirm-no').onclick = () => {
+    hideTooltip();
+    overlay.remove();
+    if (G.pickup) G.pickup.status = 'declined';
+    save();
+    showStageSelect();
+  };
+}
+
+function renderRaidLearningRecommendation() {
+  const el = document.getElementById('raid-learning-recommendation');
+  if (!el) return;
+  const candidates = raidReviewCandidates();
+  const pk = getActivePickup();
+  const recommended = (pk && candidates.find(rec => rec.key === pk.learningKey)) || candidates[0];
+  if (!recommended) {
+    el.textContent = Object.keys(G?.raidLearning || {}).length
+      ? '復習おすすめは、もう少しレイドに参加すると表示されます。'
+      : 'レイドでまちがえた問題のステージは、このセーブデータの復習ヒントに活用します。';
+    el.classList.remove('has-recommendation');
+    return;
+  }
+  const { stat } = recommended;
+  const { areaId, stageIndex } = pk || recommended;
+  const area = AREA_STAGES[areaId];
+  const accuracy = Math.round((stat.correct / stat.attempts) * 100);
+  const n = pk ? Math.max(0, Math.round(rewardSettings.pickupBonusTickets)) : 0;
+  const bonus = n > 0 ? `クリアで装備ガチャ10連チケット ×${n}（このレイドボスにつき1回）` : '今回のチャレンジボーナスは終了しています。復習には挑戦できます。';
+  el.innerHTML = `<b>このセーブの復習おすすめ</b><span>${escapeHtml(area.name)}・${escapeHtml(area.stages[stageIndex].name)}</span><small>${stat.attempts}問中 ${stat.wrong}問まちがい・正解率 ${accuracy}%</small><small class="raid-review-bonus">${bonus}</small><button type="button" class="btn btn-primary" id="btn-raid-review">このステージに挑戦する</button>`;
+  el.classList.add('has-recommendation');
+  $('btn-raid-review').onclick = () => {
+    save();
+    $('screen-raid-boss').classList.add('hidden');
+    enterAreaStage(areaId, stageIndex);
+  };
+}
+
+function recordStudyAnswer(problem, isCorrect, timeMs = 0, assistUsed = false, timeLimitMs = 8000) {
+  if (!G) return;
+  if (!G.studyStats) {
+    G.studyStats = { totalAnswers: 0, totalCorrect: 0, units: {}, stageHistory: {} };
+  }
+  const stats = G.studyStats;
+  stats.totalAnswers = (stats.totalAnswers || 0) + 1;
+  if (isCorrect) stats.totalCorrect = (stats.totalCorrect || 0) + 1;
+
+  const { key, label } = getProblemUnitInfo(problem);
+  if (!stats.units) stats.units = {};
+  if (!stats.units[key]) {
+    stats.units[key] = { label, total: 0, correct: 0, initialTotal: 0, initialCorrect: 0, history: [] };
+  }
+  const u = stats.units[key];
+  u.total++;
+  if (isCorrect) u.correct++;
+  u.totalTimeMs = (Number(u.totalTimeMs)||0) + Math.max(0,Number(timeMs)||0);
+  u.timeCount = (Number(u.timeCount)||0) + 1;
+  if (u.total <= 8) {
+    u.initialTotal = u.total;
+    u.initialCorrect = u.correct;
+  }
+  
+  if (key.startsWith('kanji_')) {
+    if (!stats.kanjiWords) stats.kanjiWords = {};
+    const word = problem.text;
+    if (!stats.kanjiWords[word]) {
+      stats.kanjiWords[word] = { total: 0, correct: 0 };
+    }
+    stats.kanjiWords[word].total++;
+    if (isCorrect) stats.kanjiWords[word].correct++;
+  }
+  u.history.push({ t: Date.now(), ok: isCorrect ? 1 : 0, ms:Math.max(0,Number(timeMs)||0) });
+  if (u.history.length > 50) u.history.shift();
+
+  // ステージ別履歴
+  if (explore && explore.areaId && !explore.isRaid) {
+    if (!stats.stageHistory) stats.stageHistory = {};
+    const stageKey = `${explore.areaId}_${explore.stageIndex !== undefined ? explore.stageIndex : 'boss'}`;
+    if (!stats.stageHistory[stageKey]) {
+      const area = AREA_STAGES[explore.areaId];
+      const sName = explore.stageIndex !== undefined && area && area.stages[explore.stageIndex] ? area.stages[explore.stageIndex].name : (area ? area.name : explore.areaId);
+      stats.stageHistory[stageKey] = { label: `${area ? area.name : explore.areaId} (${sName})`, total: 0, correct: 0, history: [] };
+    }
+    const sHist = stats.stageHistory[stageKey];
+    if(!sHist.days) {
+      sHist.days={};
+      // 旧セーブの直近履歴から、日別記録へ移せる分だけ移す。
+      for(const old of sHist.history||[]) {
+        const key=studyDateKey(old.t),day=sHist.days[key]||(sHist.days[key]={total:0,correct:0,totalTimeMs:0,timeCount:0});
+        day.total++;day.correct+=old.ok?1:0;
+        if(Number.isFinite(Number(old.ms))&&Number(old.ms)>0){day.totalTimeMs+=Number(old.ms);day.timeCount++;}
+      }
+    }
+    sHist.total++;
+    if (isCorrect) sHist.correct++;
+    const answeredAt=Date.now(),answerMs=Math.max(0,Number(timeMs)||0),dayKey=studyDateKey(answeredAt);
+    const day=sHist.days[dayKey]||(sHist.days[dayKey]={total:0,correct:0,totalTimeMs:0,timeCount:0});
+    day.total++;day.correct+=isCorrect?1:0;
+    if(answerMs>0){day.totalTimeMs+=answerMs;day.timeCount++;}
+    sHist.totalTimeMs=(Number(sHist.totalTimeMs)||0)+answerMs;
+    sHist.timeCount=(Number(sHist.timeCount)||0)+(answerMs>0?1:0);
+    sHist.history.push({ t: answeredAt, ok: isCorrect ? 1 : 0, ms:answerMs, limitMs:Math.max(1,Number(timeLimitMs)||8000) });
+    if (sHist.history.length > 30) sHist.history.shift();
+  }
+  save();
+}
+
+function studyDateKey(timestamp) {
+  const date=new Date(Number(timestamp)||Date.now());
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+
+function renderStudySummary(prefix, stats) {
+  const totalEl = $(`${prefix}-stat-total-answers`);
+  const overallEl = $(`${prefix}-stat-overall-rate`);
+  const growthEl = $(`${prefix}-stat-growth-rate`);
+  const unitCountEl = $(`${prefix}-stat-unit-count`);
+
+  const total = stats.totalAnswers || 0;
+  const correct = stats.totalCorrect || 0;
+  const overallRate = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+  if (totalEl) totalEl.textContent = total;
+  if (overallEl) overallEl.textContent = overallRate;
+
+  // 平均タイムとアシスト回数の算出
+  const units = Object.values(stats.units || {});
+  let totalTime = 0;
+  let totalTimeCount = 0;
+  let totalAssist = 0;
+  units.forEach(u => {
+    if (u.totalTimeMs) {
+      totalTime += u.totalTimeMs;
+      totalTimeCount += Number(u.timeCount) || u.total; // Use recorded timed answers when available
+    }
+    if (u.assistUsed) {
+      totalAssist += u.assistUsed;
+    }
+  });
+  
+  const avgTimeEl = $(`${prefix}-stat-avg-time`);
+  const assistEl = $(`${prefix}-stat-assist-uses`);
+  if (avgTimeEl) {
+    if (totalTimeCount > 0) {
+      avgTimeEl.textContent = (totalTime / totalTimeCount / 1000).toFixed(1);
+    } else {
+      avgTimeEl.textContent = '-';
+    }
+  }
+  if (assistEl) {
+    assistEl.textContent = totalAssist;
+  }
+
+  // 平均成長率の算出
+  let totalGrowth = 0;
+  let growthCount = 0;
+  units.forEach(u => {
+    if (u.total >= 2) {
+      const initRate = u.initialTotal > 0 ? (u.initialCorrect / u.initialTotal) * 100 : 0;
+      const curRate = (u.correct / u.total) * 100;
+      totalGrowth += (curRate - initRate);
+      growthCount++;
+    }
+  });
+  const avgGrowth = growthCount > 0 ? Math.max(0, Math.round(totalGrowth / growthCount)) : Math.min(25, Math.round(overallRate * 0.25));
+  if (growthEl) {
+    growthEl.textContent = `+${avgGrowth}`;
+  }
+  if (unitCountEl) {
+    unitCountEl.textContent = units.length;
+  }
+}
+
+function drawStudyBarChart(canvasId, unitsList) {
+  const canvas = $(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const width = rect.width || 600;
+  const height = Math.max(220, Math.min(360, (unitsList.length || 1) * 44 + 40));
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  canvas.style.height = `${height}px`;
+  ctx.scale(dpr, dpr);
+
+  ctx.clearRect(0, 0, width, height);
+
+  if (!unitsList || unitsList.length === 0) {
+    ctx.fillStyle = '#a0a0c0';
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('まだ学習データがありません。バトルで問題を解くとグラフが表示されます！', width / 2, height / 2);
+    return;
+  }
+
+  const labelW = 120;
+  const rightW = 80;
+  const barMaxW = width - labelW - rightW - 20;
+  const rowH = 40;
+  const startY = 20;
+
+  unitsList.forEach((u, idx) => {
+    const y = startY + idx * rowH;
+    const initRate = u.initialTotal > 0 ? Math.round((u.initialCorrect / u.initialTotal) * 100) : Math.round((u.correct / Math.max(1, u.total)) * 80);
+    const latestRate = u.total > 0 ? Math.round((u.correct / u.total) * 100) : 0;
+    const growth = latestRate - initRate;
+
+    // 単元ラベル
+    ctx.fillStyle = '#efdfc0';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(u.label || '単元', labelW - 10, y + 18);
+
+    // バー背景
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.fillRect(labelW, y + 4, barMaxW, 20);
+
+    // 初回バー（青）
+    const initW = Math.max(2, (initRate / 100) * barMaxW);
+    ctx.fillStyle = '#3498db';
+    ctx.fillRect(labelW, y + 4, initW, 8);
+
+    // 最新バー（金）
+    const latestW = Math.max(2, (latestRate / 100) * barMaxW);
+    ctx.fillStyle = '#f1c40f';
+    ctx.fillRect(labelW, y + 14, latestW, 10);
+
+    // 数値ラベル
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${latestRate}%`, labelW + latestW + 6, y + 22);
+
+    // 成長率 (UP!)
+    ctx.fillStyle = growth >= 0 ? '#2ecc71' : '#e74c3c';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(growth >= 0 ? `+${growth}% ⬆` : `${growth}%`, width - 10, y + 18);
+  });
+}
+
+function stageDailyGraphRows(stageLogs) {
+  if(!stageLogs)return [];
+  if(stageLogs.days&&Object.keys(stageLogs.days).length) {
+    return Object.entries(stageLogs.days).sort(([a],[b])=>a.localeCompare(b)).map(([date,day])=>({
+      date,total:Number(day.total)||0,correct:Number(day.correct)||0,
+      avgSeconds:Number(day.timeCount)>0?(Number(day.totalTimeMs)||0)/Number(day.timeCount)/1000:null,
+    }));
+  }
+  const grouped={};
+  for(const entry of stageLogs.history||[]) {
+    if(!Number(entry.t))continue;
+    const date=studyDateKey(entry.t),day=grouped[date]||(grouped[date]={date,total:0,correct:0,totalTimeMs:0,timeCount:0});
+    day.total++;day.correct+=entry.ok?1:0;
+    if(Number(entry.ms)>0){day.totalTimeMs+=Number(entry.ms);day.timeCount++;}
+  }
+  return Object.values(grouped).sort((a,b)=>a.date.localeCompare(b.date)).map(day=>({...day,avgSeconds:day.timeCount?day.totalTimeMs/day.timeCount/1000:null}));
+}
+
+function drawStageLineChart(canvasId, stageLogs, showAnswerTime = false) {
+  const canvas = $(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const width = rect.width || 600;
+  const height = 220;
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  canvas.style.height = `${height}px`;
+  ctx.scale(dpr, dpr);
+
+  ctx.clearRect(0, 0, width, height);
+
+  const logs=stageDailyGraphRows(stageLogs);
+  if (!logs.length) {
+    ctx.fillStyle = '#a0a0c0';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('このステージの履歴データがありません', width / 2, height / 2);
+    return;
+  }
+
+  const hasTimedData=showAnswerTime&&logs.some(log=>Number.isFinite(log.avgSeconds));
+  const padL = 48, padR = hasTimedData?50:20, padT = 30, padB = 42;
+  const graphW = width - padL - padR;
+  const graphH = height - padT - padB;
+
+  // グリッド線
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const gy = padT + (graphH / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(padL, gy);
+    ctx.lineTo(width - padR, gy);
+    ctx.stroke();
+    ctx.fillStyle = '#8888aa';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(`${100 - i * 25}%`, padL - 6, gy + 3);
+    if(hasTimedData) {
+      const maxSeconds=Math.max(1,Math.ceil(Math.max(...logs.map(log=>Number(log.avgSeconds)||0))));
+      ctx.textAlign='left';ctx.fillText(`${(maxSeconds*(4-i)/4).toFixed(0)}秒`,width-padR+5,gy+3);
+    }
+  }
+
+  const timestamps=logs.map(log=>{const [year,month,day]=log.date.split('-').map(Number);return new Date(year,month-1,day,12).getTime();});
+  const firstDate=timestamps[0],lastDate=timestamps[timestamps.length-1],dateSpan=lastDate-firstDate;
+  const xForIndex=idx=>dateSpan===0?padL+graphW/2:padL+((timestamps[idx]-firstDate)/dateSpan)*graphW;
+  const accuracyPoints=logs.map((log,idx)=>({x:xForIndex(idx),y:padT+graphH-(log.total?log.correct/log.total:0)*graphH,rate:log.total?Math.round(log.correct/log.total*100):0}));
+  const maxSeconds=Math.max(1,Math.ceil(Math.max(...logs.map(log=>Number(log.avgSeconds)||0))));
+  const timePoints=logs.map((log,idx)=>({x:xForIndex(idx),y:Number.isFinite(log.avgSeconds)?padT+graphH-(log.avgSeconds/maxSeconds)*graphH:null,seconds:log.avgSeconds}));
+
+  if (accuracyPoints.length > 0) {
+    ctx.beginPath();
+    ctx.moveTo(accuracyPoints[0].x, padT + graphH);
+    accuracyPoints.forEach(pt => ctx.lineTo(pt.x, pt.y));
+    ctx.lineTo(accuracyPoints[accuracyPoints.length - 1].x, padT + graphH);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(241, 196, 15, 0.15)';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#f1c40f';
+    ctx.lineWidth = 3;
+    accuracyPoints.forEach((pt, i) => {
+      if (i === 0) ctx.moveTo(pt.x, pt.y);
+      else ctx.lineTo(pt.x, pt.y);
+    });
+    ctx.stroke();
+
+    accuracyPoints.forEach(pt => {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#ff9f43';
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
+  }
+
+  if(hasTimedData) {
+    ctx.beginPath();ctx.strokeStyle='#48dbfb';ctx.lineWidth=2.5;
+    let started=false;
+    timePoints.forEach(pt=>{if(pt.y===null){started=false;return;}if(!started){ctx.moveTo(pt.x,pt.y);started=true;}else ctx.lineTo(pt.x,pt.y);});ctx.stroke();
+    timePoints.filter(pt=>pt.y!==null).forEach(pt=>{ctx.beginPath();ctx.arc(pt.x,pt.y,3.5,0,Math.PI*2);ctx.fillStyle='#48dbfb';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.stroke();});
+  }
+
+  // 日付ラベルと凡例
+  ctx.fillStyle='#d2d7e5';ctx.font='11px sans-serif';
+  const midpoint=(firstDate+lastDate)/2;
+  let middleIndex=0;for(let i=1;i<timestamps.length;i++)if(Math.abs(timestamps[i]-midpoint)<Math.abs(timestamps[middleIndex]-midpoint))middleIndex=i;
+  const dateLabelIndexes=[...new Set([0,middleIndex,logs.length-1])];
+  dateLabelIndexes.forEach(index=>{
+    ctx.textAlign=index===0?'left':index===logs.length-1?'right':'center';
+    const [year,month,day]=logs[index].date.split('-').map(Number);
+    ctx.fillText(`${month}/${day}`,xForIndex(index),height-14);
+  });
+  ctx.textAlign='left';ctx.font='11px sans-serif';ctx.fillStyle='#f1c40f';ctx.fillText('● 正答率',padL,13);
+  if(hasTimedData){ctx.fillStyle='#48dbfb';ctx.fillText('● 回答時間',padL+78,13);}
+}
+
+function openPlayerStatsModal() {
+  showStatus();
+  setRoomTab('stats');
+}
+
+function renderPlayerStudyStats() {
+  if (!G.studyStats) {
+    G.studyStats = { totalAnswers: 0, totalCorrect: 0, units: {}, stageHistory: {} };
+  }
+  
+  // 古い漢字キー（kanji_g1_1 等）を新しいキー（kanji_1 等）にマージするクリーンアップ
+  if (G.studyStats.units) {
+    Object.keys(G.studyStats.units).forEach(k => {
+      if (k.startsWith('kanji_') && !['kanji_1','kanji_2','kanji_3','kanji_4','kanji_5','kanji_6'].includes(k)) {
+        const match = k.match(/g?(\d)/); // kanji_g1_1 -> 1
+        if (match) {
+          const targetKey = `kanji_${match[1]}`;
+          if (k !== targetKey) {
+            const oldU = G.studyStats.units[k];
+            if (!G.studyStats.units[targetKey]) {
+              G.studyStats.units[targetKey] = { label: `漢字 小${match[1]}年`, total: 0, correct: 0, initialTotal: 0, initialCorrect: 0, history: [] };
+            }
+            const tgt = G.studyStats.units[targetKey];
+            tgt.total += oldU.total || 0;
+            tgt.correct += oldU.correct || 0;
+            tgt.initialTotal += oldU.initialTotal || 0;
+            tgt.initialCorrect += oldU.initialCorrect || 0;
+            tgt.history = tgt.history.concat(oldU.history || []).sort((a,b)=>a.t-b.t).slice(-50);
+            delete G.studyStats.units[k];
+          }
+        }
+      }
+    });
+  }
+
+  renderStudySummary('player', G.studyStats);
+
+  const unitsList = Object.values(G.studyStats.units || {});
+  drawStudyBarChart('player-study-chart', unitsList);
+
+  const select = $('player-stats-stage-select');
+  const timeToggle=$('player-stage-time-toggle');
+  if (select) {
+    select.innerHTML = '';
+    const stages = Object.entries(G.studyStats.stageHistory || {});
+    if (stages.length === 0) {
+      select.innerHTML = '<option value="">履歴なし</option>';
+      drawStageLineChart('player-stage-chart', null,!!timeToggle?.checked);
+    } else {
+      stages.forEach(([k, s]) => {
+        const opt = document.createElement('option');
+        opt.value = k;
+        opt.textContent = s.label || k;
+        select.appendChild(opt);
+      });
+      select.onchange = () => {
+        const selected=G.studyStats.stageHistory[select.value];
+        drawStageLineChart('player-stage-chart', selected,!!timeToggle?.checked);
+      };
+      drawStageLineChart('player-stage-chart', stages[0][1],!!timeToggle?.checked);
+    }
+  }
+  if(timeToggle)timeToggle.onchange=()=>drawStageLineChart('player-stage-chart',G.studyStats?.stageHistory?.[select?.value],timeToggle.checked);
+
+  const kanjiList = $('player-kanji-stats-list');
+  if (kanjiList) {
+    const kw = G.studyStats.kanjiWords || {};
+    let html = '';
+    
+    for (let g = 1; g <= 6; g++) {
+      const poolKey = `kanji_g${g}`;
+      const pool = window.KANJI_POOLS && window.KANJI_POOLS[poolKey] ? window.KANJI_POOLS[poolKey] : [];
+      if (pool.length === 0) continue;
+      
+      let solvedCount = 0;
+      let gradeHtml = '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">';
+      
+      pool.forEach(item => {
+        const word = item.text;
+        const st = kw[word];
+        let color = '#555';
+        let bg = 'rgba(255,255,255,0.05)';
+        let rateText = '未挑戦';
+        
+        if (st && st.total > 0) {
+          solvedCount++;
+          const rate = Math.round((st.correct / st.total) * 100);
+          if (rate <= 50) color = '#ff6b6b';
+          else if (rate === 100) color = '#feca57';
+          else if (rate >= 80) color = '#1dd1a1';
+          else color = '#3498db';
+          rateText = `${rate}% (${st.correct}/${st.total}回)`;
+          bg = 'rgba(255,255,255,0.1)';
+        }
+        
+        gradeHtml += `<div style="background:${bg}; border-left:3px solid ${color}; padding:4px 8px; border-radius:3px; min-width:80px;">
+          <strong style="font-size:15px; color:${st ? '#fff' : '#888'};">${word}</strong><br>
+          <span style="font-size:11px; color:${color};">${rateText}</span>
+        </div>`;
+      });
+      gradeHtml += '</div>';
+      
+      const isOpen = solvedCount > 0 ? 'open' : '';
+      html += `<details ${isOpen} style="margin-bottom:10px; background:rgba(0,0,0,0.2); padding:8px; border-radius:6px;">
+        <summary style="cursor:pointer; font-weight:bold; font-size:16px; color:var(--accent); user-select:none; outline:none;">
+          小学${g}年の漢字 <span style="font-size:12px; font-weight:normal; color:#ccc;">(挑戦: ${solvedCount}/${pool.length})</span>
+        </summary>
+        ${gradeHtml}
+      </details>`;
+    }
+    
+    if (!html) html = '（漢字データが見つかりません）';
+    kanjiList.innerHTML = html;
+  }
+}
+
+let adminSelectedFilter = 'all';
+
+function renderAdminStudyStats() {
+  const compensationButton = $('btn-admin-ancient-compensation');
+  if (compensationButton) compensationButton.onclick = () => {
+    const selected = $('admin-stats-slot-select')?.value;
+    if (!G || selected !== currentSlotKey || G.isTestMode) {
+      showConfirmModal('対象の確認','対象の子のセーブデータを開いてから、保護者設定で同じ子を選択してください。',null); return;
+    }
+    if (G.ancientAwakeningCompensation?.completed) {
+      showConfirmModal('引き継ぎ済み','この子の既存装備はすでに引き継ぎ済みです。新しく入手した装備はLv1から育成します。',null); return;
+    }
+    const game = G, slotKey = currentSlotKey;
+    const existing = game.ownedEquips.filter(isAncientEquipment).map(equip=>equip.uid);
+    if (!existing.length) { showConfirmModal('対象の確認','所持しているエンシェント装備がありません。',null); return; }
+    showConfirmModal('既存装備のLv50引き継ぎ',`${escapeHtml(game.playerName || game.name || '選択中の子')}の、現在所持しているエンシェント装備${existing.length}個を完全覚醒にします。今後入手する装備はLv1です。実行しますか？`,()=>{
+      if (G !== game || currentSlotKey !== slotKey || $('admin-stats-slot-select')?.value !== slotKey || game.ancientAwakeningCompensation?.completed) return;
+      masterExistingAncients({ownedEquips:game.ownedEquips.filter(equip=>existing.includes(equip.uid))});
+      game.ancientAwakeningCompensation={completed:true,equipmentUids:existing,appliedAt:Date.now()};
+      save(true); updateHud();
+      showConfirmModal('引き継ぎ完了','対象の既存装備を覚醒Lv50にしました。',null);
+    });
+  };
+  const slotSelect = $('admin-stats-slot-select');
+  const slots = listSaveSlots();
+  if (slotSelect) {
+    slotSelect.innerHTML = '';
+    slots.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.key;
+      opt.textContent = `${s.name} (Lv${s.lvl || 1})`;
+      if (s.key === currentSlotKey) opt.selected = true;
+      slotSelect.appendChild(opt);
+    });
+    slotSelect.onchange = () => updateAdminStudyDisplay(slotSelect.value);
+  }
+  updateAdminStudyDisplay(currentSlotKey || (slots[0] && slots[0].key));
+}
+
+function updateAdminStudyDisplay(slotKey) {
+  if (!slotKey) return;
+  const raw = storageGet(slotKey);
+  const data = raw ? JSON.parse(raw) : null;
+  const stats = (data && data.studyStats) ? data.studyStats : { totalAnswers: 0, totalCorrect: 0, units: {}, stageHistory: {} };
+
+  renderStudySummary('admin', stats);
+
+  let units = Object.entries(stats.units || {}).map(([k, v]) => ({ key: k, ...v }));
+  if (adminSelectedFilter === 'math') units = units.filter(u => u.key.startsWith('math'));
+  if (adminSelectedFilter === 'kanji') units = units.filter(u => u.key.startsWith('kanji'));
+
+  drawStudyBarChart('admin-study-chart', units);
+
+  // テーブル更新
+  const table = $('admin-study-table');
+  if (table) {
+    let html = `
+      <thead>
+        <tr>
+          <th>単元名</th>
+          <th>解答数</th>
+          <th>初期正答率</th>
+          <th>最新正答率</th>
+          <th>平均正答率</th>
+          <th>成長度</th>
+          <th>評価</th>
+        </tr>
+      </thead>
+      <tbody>
+    `;
+    if (units.length === 0) {
+      html += `<tr><td colspan="7" style="text-align:center; color:#888; padding:12px;">学習履歴がまだありません</td></tr>`;
+    } else {
+      units.forEach(u => {
+        const initRate = u.initialTotal > 0 ? Math.round((u.initialCorrect / u.initialTotal) * 100) : 0;
+        const recentAnswers=(u.history||[]).slice(-8);
+        const curRate = recentAnswers.length ? Math.round(recentAnswers.reduce((sum,entry)=>sum+(entry.ok?1:0),0)/recentAnswers.length*100) : (u.total > 0 ? Math.round((u.correct / u.total) * 100) : 0);
+        const averageRate = u.total > 0 ? Math.round((u.correct / u.total) * 100) : 0;
+        const growth = curRate - initRate;
+        const badge = curRate >= 80 ? '🌟 とくい！' : (growth >= 15 ? '🔥 せいちょう中！' : '📖 れんしゅう中');
+        html += `
+          <tr>
+            <td><strong>${u.label}</strong></td>
+            <td>${u.total}問</td>
+            <td>${initRate}%</td>
+            <td><strong style="color:#f1c40f;">${curRate}%</strong></td>
+            <td>${averageRate}%</td>
+            <td><span style="color:${growth >= 0 ? '#2ecc71' : '#e74c3c'}; font-weight:bold;">${growth >= 0 ? '+' : ''}${growth}%</span></td>
+            <td>${badge}</td>
+          </tr>
+        `;
+      });
+    }
+    html += `</tbody>`;
+    table.innerHTML = html;
+  }
+
+  // ステージセレクト
+  const stageSelect = $('admin-stats-stage-select');
+  const timeToggle=$('admin-stage-time-toggle');
+  if (stageSelect) {
+    stageSelect.innerHTML = '';
+    const stages = Object.entries(stats.stageHistory || {});
+    if (stages.length === 0) {
+      stageSelect.innerHTML = '<option value="">履歴なし</option>';
+      drawStageLineChart('admin-stage-chart', null,!!timeToggle?.checked);
+    } else {
+      stages.forEach(([k, s]) => {
+        const opt = document.createElement('option');
+        opt.value = k;
+        opt.textContent = s.label || k;
+        stageSelect.appendChild(opt);
+      });
+      stageSelect.onchange = () => {
+        const selected=stats.stageHistory[stageSelect.value];
+        drawStageLineChart('admin-stage-chart', selected,!!timeToggle?.checked);
+      };
+      drawStageLineChart('admin-stage-chart', stages[0][1],!!timeToggle?.checked);
+    }
+  }
+  if(timeToggle)timeToggle.onchange=()=>drawStageLineChart('admin-stage-chart',stats.stageHistory?.[stageSelect?.value],timeToggle.checked);
+}
+
+function updateAdminFilterUI(activeId) {
+  ['btn-admin-filter-all', 'btn-admin-filter-math', 'btn-admin-filter-kanji'].forEach(id => {
+    const btn = $(id);
+    if (btn) btn.classList.toggle('is-active', id === activeId);
+  });
+}
+
+/* ==========================================================
+   管理者用 テスト用プレイモード
+   ・全アイテム所持 (x99)
+   ・スキルポイント 9999
+   ・所持金 99,999,999G
+   ========================================================== */
+function ensureTestModeSupplies(){
+  if (!G || !G.isTestMode || !G.player) return;
+  if ((G.player.points || 0) < 9999) G.player.points = 9999;
+  if ((G.player.gold || 0) < 99999999) G.player.gold = 99999999;
+  // ステータスは初回だけ設定（以降はステータス画面の数値入力で自由に変更できるよう、上書きしない）
+  if (!G.testStatsInit) {
+    G.testStatsInit = true;
+    G.player.maxMp = 999; G.player.mp = 999;
+    G.player.maxHp = 999; G.player.hp = 999;
+    G.player.atk = 999;
+    G.player.def = 999;
+  }
+
+  // 全スキル習得済み（戦闘テストで即使用可能）
+  if (!G.skills) G.skills = {};
+  if (typeof SKILL_DB !== 'undefined' && Array.isArray(SKILL_DB)) {
+    for (const s of SKILL_DB) {
+      if (!G.skills[s.id] || G.skills[s.id].level < 1) {
+        G.skills[s.id] = { level: 1, progress: s.trainReq || 10 };
+      }
+    }
+  }
+
+  const allEquipDefs = [...EQUIP_DB, ...ANCIENT_EQUIP_DB, ...LIMITED_EQUIP_DB, ...HALLOWEEN_EQUIP_DB,
+    ...Object.keys(customEquips || {}).map(id => ({ id }))];
+  if (!G.ownedEquips) G.ownedEquips = [];
+  const ownedEquipIds = new Set(G.ownedEquips.map(equip => equip.id));
+  for (const db of allEquipDefs) {
+    if (!db.id || ownedEquipIds.has(db.id)) continue;
+    const rarity = ANCIENT_EQUIP_DB.some(equip => equip.id === db.id) ? 6 : (db.rarity || 1);
+    G.ownedEquips.push({ uid:G.nextUid++, id:db.id, rarity, ability:eventEquipmentAbility(db.id) || null });
+    ownedEquipIds.add(db.id);
+  }
+
+  const allItemDefs = [
+    ...ITEM_DB,
+    ...BLUEPRINT_DB,
+    ...Object.keys(customItems || {}).map(id => ({ id }))
+  ];
+  const seen = new Set();
+  if (!G.items) G.items = [];
+  for (const itemDef of allItemDefs){
+    if (!itemDef || !itemDef.id || seen.has(itemDef.id)) continue;
+    seen.add(itemDef.id);
+    let it = G.items.find(i => i.id === itemDef.id);
+    if (it){
+      if (it.count < 99) it.count = 99;
+    } else {
+      G.items.push({ uid: G.nextUid++, id: itemDef.id, count: 99 });
+    }
+  }
+}
+
+function startAdminTestPlay(){
+  currentSlotKey = 'TEST_MODE_TEMP';
+  G = newGameState('テスト勇者');
+  G.isTestMode = true;
+  G.player.gold = 99999999;
+  G.player.points = 9999;
+  ensureTestModeSupplies();
+  updateHud();
+  alert('🎮 テスト用プレイモードを開始しました！\n・すべてのアイテム所持 (各99個)\n・すべての装備所持（限定・古代装備を含む）\n・スキルポイント: 9999\n・所持金: 99,999,999G\n※テストモードのデータは保存されず、終了時に自動破棄されます。');
+  showHome();
+}
+
+/* ==========================================================
+   管理者設定（敵カスタマイズ ＆ 保護者向けレポート）
+   ========================================================== */
+let editingEnemyKey = null;
+let editingEnemyZone = null;
+
+let currentAdminTab = 'report';
+
+function setAdminTab(tabKey){
+  currentAdminTab = tabKey || 'report';
+  document.querySelectorAll('.admin-nav-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.adminTab === currentAdminTab);
+  });
+  document.querySelectorAll('.admin-tab-pane').forEach(p => {
+    p.classList.toggle('active', p.id === `admin-tab-pane-${currentAdminTab}`);
+  });
+
+  if (currentAdminTab === 'report') {
+    renderAdminStudyStats();
+  } else if (currentAdminTab === 'timelimit') {
+    renderAdminTimeLimitList();
+    checkTimeLimit();
+  } else if (currentAdminTab === 'challenges') {
+    renderAdminChallengeStageList();
+  } else if (currentAdminTab === 'data-edit') {
+    $('admin-list-view').classList.remove('hidden');
+    $('admin-edit-view').classList.add('hidden');
+    renderAdminList();
+    renderAdminDifficultyList();
+  } else if (currentAdminTab === 'rewards') {
+    renderAdminRewardSettings();
+  } else if (currentAdminTab === 'tools') {
+    const goldBtn = $('btn-admin-get-gold');
+    if (goldBtn) goldBtn.classList.toggle('hidden', !(currentSlotKey && G));
+    renderAdminGiftPanel();
+    renderAdminGiftHistory();
+  }
+}
+
+function showAdmin() {
+  showScreen('screen-admin');
+  setAdminTab(currentAdminTab || 'report');
+}
+
+/* 難易度倍率に応じたバッジカラー */
+function getDifficultyBadgeColor(v){
+  if (v < 0.9) return '#55efc4'; // 易化（青緑）
+  if (v <= 1.1) return '#fbc531'; // 標準（黄）
+  if (v <= 2.5) return '#ff9f43'; // 強化（オレンジ）
+  if (v <= 5.0) return '#ee5253'; // 難関（赤）
+  return '#e84393'; // 極限（マゼンタ）
+}
+
+/* エリア別 難易度倍率一覧の描画 */
+/* 管理者メニュー「報酬・ドロップ」：設定の入力フォーム */
+const ADMIN_REWARD_FIELDS = [
+  { group:'ドロップ率（全体）', items:[
+    { key:'dropMultItem', label:'アイテムのドロップ倍率', min:0, max:3, step:0.05, help:'1.0で これまでと同じ。0.5で はんぶん' },
+    { key:'dropMultEquip', label:'そうびのドロップ倍率（通常の敵）', min:0, max:3, step:0.05, help:'レジェンドは ドロップでは出ません' },
+    { key:'dropMultBlueprint', label:'挑戦状のドロップ倍率', min:0, max:3, step:0.05 },
+    { key:'dropMultTicket', label:'背景スキンガチャチケットのドロップ倍率', min:0, max:3, step:0.05 },
+    { key:'frontierDropMult', label:'最高クリア難易度を更新するステージの倍率', min:0, max:5, step:0.1 },
+    { key:'pastStageDropMult', label:'同じ難易度・過去ステージ・復習の倍率', min:0, max:1, step:0.01 },
+    { key:'bossEquipDrop', label:'ボスの そうびドロップ確率（0〜1）', min:0, max:1, step:0.01, help:'0で ボスは そうびを落とさない' },
+    { key:'bossBlueprintRate', label:'ボスの 挑戦状ドロップ確率（0〜1）', min:0, max:1, step:0.01 },
+  ]},
+  { group:'おなじステージの くりかえし', items:[
+    { key:'repeatThreshold', label:'この回数いじょうクリア済みで ドロップ低下', min:1, max:99, step:1 },
+    { key:'repeatMult', label:'低下後の ドロップ倍率', min:0, max:1, step:0.01, help:'0で まったく出ない。0.1で 10分の1' },
+  ]},
+  { group:'ステージのクリア報酬（初回＝ぶき／3回＝ゴールド＋アイテム）', items:[
+    { key:'firstWeaponRarity', label:'初回クリア：ぶきの レアリティ（1〜4）', min:1, max:4, step:1 },
+    { key:'thirdGoldBase', label:'3回クリア：ゴールド（さいしょのステージ）', min:0, max:1000000, step:10 },
+    { key:'thirdGoldStep', label:'3回クリア：ステージごとの ゴールド加算', min:0, max:100000, step:5 },
+    { key:'thirdItemId', label:'3回クリア：アイテム', type:'item' },
+    { key:'thirdItemCount', label:'3回クリア：アイテム個数', min:0, max:99, step:1 },
+  ]},
+  { group:'ボス', items:[
+    { key:'bossFirstTickets', label:'初回クリア：背景スキンガチャチケット枚数', min:0, max:99, step:1 },
+    { key:'bossThirdTickets', label:'3回クリア：装備ガチャ10連チケット枚数', min:0, max:99, step:1 },
+    { key:'pickupBonusTickets', label:'ピックアップ チャレンジボーナス：装備ガチャ10連チケット枚数', min:0, max:99, step:1 },
+    { key:'pickupBonusGold', label:'ピックアップ チャレンジボーナス：ゴールド', min:0, max:99999, step:100 },
+    { key:'bossLevelUp', label:'たおすたびに あがる 強化レベル', min:0, max:20, step:1 },
+    { key:'bossGrowthPct', label:'ステージボス：強化Lv.1ごとの上昇（％）', min:0, max:100, step:1 },
+    { key:'zoneClearLegend', label:'エリア制覇で レジェンド装備を わたす（1=する／0=しない）', min:0, max:1, step:1 },
+  ]},
+];
+
+function renderAdminRewardSettings(){
+  const form = $('admin-rewards-form');
+  if (!form) return;
+  const inputStyle = 'width:120px; padding:6px 8px; text-align:right;';
+  form.innerHTML = ADMIN_REWARD_FIELDS.map(g => `
+    <div style="margin-bottom:16px; padding:12px 14px; background:rgba(0,0,0,.3); border:1.5px solid var(--panel-border); border-radius:10px;">
+      <strong style="color:var(--accent);">${g.group}</strong>
+      ${g.items.map(f => {
+        const val = rewardSettings[f.key];
+        const input = f.type === 'item'
+          ? `<select data-reward-key="${f.key}" style="${inputStyle} width:170px; text-align:left;">${ITEM_DB.filter(d => !d.internal && d.id !== 'ticket').map(d => `<option value="${d.id}"${d.id === val ? ' selected' : ''}>${d.name}</option>`).join('')}</select>`
+          : `<input type="number" data-reward-key="${f.key}" min="${f.min}" max="${f.max}" step="${f.step}" value="${val}" style="${inputStyle}">`;
+        return `<label style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; flex-wrap:wrap;"><span>${f.label}${f.help ? `<small style="display:block; opacity:.7;">${f.help}</small>` : ''}</span>${input}</label>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function saveAdminRewardSettingsFromForm(){
+  const form = $('admin-rewards-form');
+  if (!form) return;
+  form.querySelectorAll('[data-reward-key]').forEach(el => {
+    const key = el.dataset.rewardKey;
+    if (el.tagName === 'SELECT') { rewardSettings[key] = el.value; return; }
+    const v = Number(toHalfWidth(String(el.value)));
+    if (!Number.isFinite(v)) return;
+    rewardSettings[key] = Math.min(Number(el.max), Math.max(Number(el.min), v));
+  });
+  saveRewardSettings();
+  renderAdminRewardSettings();
+  const st = $('admin-rewards-status');
+  if (st) st.textContent = '✅ ほぞんしました';
+}
+
+function renderAdminDifficultyList(){
+  const listEl = $('admin-difficulty-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+
+  Object.entries(AREA_STAGES).forEach(([areaId, area]) => {
+    const currentMult = getAreaDifficultyMultiplier(areaId);
+    const row = document.createElement('div');
+    row.className = 'admin-diff-row';
+    row.style.background = 'rgba(0, 0, 0, 0.35)';
+    row.style.border = '1.5px solid var(--panel-border)';
+    row.style.borderRadius = '10px';
+    row.style.padding = '10px 14px';
+    row.style.display = 'flex';
+    row.style.alignItems = 'center';
+    row.style.justifyContent = 'space-between';
+    row.style.flexWrap = 'wrap';
+    row.style.gap = '10px';
+
+    const color = getDifficultyBadgeColor(currentMult);
+
+    row.innerHTML = `
+      <div style="flex: 1; min-width: 180px;">
+        <strong style="color:var(--accent); font-size:14.5px;">${area.name}</strong>
+        <span class="tag" style="margin-left:6px; font-size:11px;">🧮 ${area.opLabel}</span>
+        <div style="font-size:11.5px; color:var(--text-light); margin-top:2px;">推奨Lv.${area.recLv || 1} / 全${(area.stages || []).length}問</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <input type="range" class="admin-diff-slider" data-area-id="${areaId}" min="0.1" max="10.0" step="0.1" value="${currentMult.toFixed(1)}" style="width:140px; cursor:pointer;">
+        <input type="number" class="admin-diff-number" data-area-id="${areaId}" min="0.1" max="10.0" step="0.1" value="${currentMult.toFixed(1)}" style="width:68px; text-align:center; padding:3px 4px; font-weight:bold; font-size:14px; border-radius:6px; border:1px solid var(--panel-border); background:rgba(0,0,0,0.5); color:${color};">
+        <span class="admin-diff-unit" style="font-size:13px; font-weight:bold; color:${color};">倍</span>
+      </div>
+    `;
+
+    const slider = row.querySelector('.admin-diff-slider');
+    const numInput = row.querySelector('.admin-diff-number');
+    const unitText = row.querySelector('.admin-diff-unit');
+
+    const updateDisplay = (val) => {
+      const c = getDifficultyBadgeColor(val);
+      numInput.style.color = c;
+      unitText.style.color = c;
+    };
+
+    slider.oninput = () => {
+      const v = parseFloat(slider.value) || 1.0;
+      numInput.value = v.toFixed(1);
+      updateDisplay(v);
+    };
+
+    numInput.oninput = () => {
+      let v = parseFloat(numInput.value);
+      if (isNaN(v)) return;
+      if (v < 0.1) v = 0.1;
+      if (v > 10.0) v = 10.0;
+      slider.value = v;
+      updateDisplay(v);
+    };
+
+    listEl.appendChild(row);
+  });
+}
+
+function saveAdminDifficultyMultipliersFromUI(){
+  const rows = document.querySelectorAll('.admin-diff-row');
+  rows.forEach(r => {
+    const slider = r.querySelector('.admin-diff-slider');
+    const numInput = r.querySelector('.admin-diff-number');
+    if (!slider) return;
+    const areaId = slider.dataset.areaId;
+    let v = numInput ? parseFloat(numInput.value) : parseFloat(slider.value);
+    if (areaId && !isNaN(v)) {
+      v = Math.max(0.1, Math.min(10.0, v));
+      areaDifficultyMultipliers[areaId] = Math.round(v * 10) / 10;
+    }
+  });
+  saveAreaDifficultyMultipliers();
+  renderAdminDifficultyList();
+  SM.playBeep('heal');
+  alert('✅ エリアごとの難易度倍率（0.1〜10.0倍）を保存しました！\nステージの敵ステータスに反映されます。');
+}
+
+function resetAdminDifficultyMultipliers(){
+  Object.keys(AREA_STAGES).forEach(areaId => {
+    areaDifficultyMultipliers[areaId] = getDefaultAreaDifficultyMultiplier(areaId);
+  });
+  saveAreaDifficultyMultipliers();
+  renderAdminDifficultyList();
+  SM.playBeep('type');
+  alert('🔄 すべてのエリアの倍率を標準設定（算数・国語ともにエリアごとに+1.0倍）に戻しました！');
+}
+
+function saveSingleEnemyFromRow(zone, key, row) {
+  const hp = parseInt(row.querySelector('[data-stat="hp"]').value) || 1;
+  const atk = parseInt(row.querySelector('[data-stat="atk"]').value) || 0;
+  const def = parseInt(row.querySelector('[data-stat="def"]').value) || 0;
+  const spd = parseInt(row.querySelector('[data-stat="spd"]').value) || 0;
+  const exp = parseInt(row.querySelector('[data-stat="exp"]').value) || 0;
+  const gmin = parseInt(row.querySelector('[data-stat="gmin"]').value) || 0;
+  const gmax = parseInt(row.querySelector('[data-stat="gmax"]').value) || 0;
+  const nameInput = row.querySelector('[data-stat="name"]');
+  const base = getBaseEnemy(zone, key);
+  const name = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : base.name;
+
+  if (!customEnemies[zone]) customEnemies[zone] = {};
+  customEnemies[zone][key] = {
+    ...base,
+    ...(customEnemies[zone][key] || {}),
+    name: name,
+    hp: hp,
+    atk: atk,
+    def: def,
+    spd: spd,
+    exp: exp,
+    gold: [gmin, gmax]
+  };
+
+  saveCustomData();
+  row.classList.remove('is-modified');
+  row.style.borderLeft = '3px solid var(--accent)';
+  SM.playBeep('heal');
+}
+
+function resetSingleEnemy(zone, key) {
+  if (customEnemies[zone] && customEnemies[zone][key] !== undefined) {
+    delete customEnemies[zone][key];
+    saveCustomData();
+  }
+  renderAdminList();
+  SM.playBeep('type');
+}
+
+function saveAllEnemiesInTable(zone) {
+  const rows = document.querySelectorAll('.admin-enemy-row');
+  rows.forEach(r => {
+    const key = r.dataset.enemyKey;
+    if (key !== undefined) {
+      const hp = parseInt(r.querySelector('[data-stat="hp"]').value) || 1;
+      const atk = parseInt(r.querySelector('[data-stat="atk"]').value) || 0;
+      const def = parseInt(r.querySelector('[data-stat="def"]').value) || 0;
+      const spd = parseInt(r.querySelector('[data-stat="spd"]').value) || 0;
+      const exp = parseInt(r.querySelector('[data-stat="exp"]').value) || 0;
+      const gmin = parseInt(r.querySelector('[data-stat="gmin"]').value) || 0;
+      const gmax = parseInt(r.querySelector('[data-stat="gmax"]').value) || 0;
+      const nameInput = r.querySelector('[data-stat="name"]');
+      const base = getBaseEnemy(zone, key);
+      const name = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : base.name;
+
+      if (!customEnemies[zone]) customEnemies[zone] = {};
+      customEnemies[zone][key] = {
+        ...base,
+        ...(customEnemies[zone][key] || {}),
+        name: name,
+        hp: hp,
+        atk: atk,
+        def: def,
+        spd: spd,
+        exp: exp,
+        gold: [gmin, gmax]
+      };
+      r.classList.remove('is-modified');
+      r.style.borderLeft = '3px solid var(--accent)';
+    }
+  });
+
+  saveCustomData();
+  SM.playBeep('heal');
+  alert('✅ このエリアの敵ステータスをすべて保存しました！');
+}
+
+function resetAllEnemiesInZone(zone) {
+  if (confirm('このエリアの敵ステータスをすべて初期状態に戻しますか？')) {
+    if (customEnemies[zone]) {
+      delete customEnemies[zone];
+      saveCustomData();
+    }
+    renderAdminList();
+    SM.playBeep('type');
+    alert('🔄 初期状態に戻しました。');
+  }
+}
+
+function renderAdminList() {
+  const zone = $('admin-category-select').value;
+  const listEl = $('admin-enemy-list');
+  listEl.innerHTML = '';
+  
+  let source, keys;
+  const isEnemyZone = ['tower', 'dungeon', 'crypt', 'bandit', 'boss'].includes(zone);
+
+  if (zone === 'boss') {
+    source = BOSSES;
+    keys = Object.keys(source);
+  } else if (zone === 'equipment') {
+    source = EQUIP_DB;
+    keys = source.map(d => d.id);
+  } else if (zone === 'item') {
+    source = ITEM_DB;
+    keys = source.map(d => d.id);
+  } else {
+    source = ENEMY_POOLS[zone];
+    keys = source.map((_, i) => i);
+  }
+
+  // 敵モンスターの場合は縦並び＆ステータス横並びテーブルで表示
+  if (isEnemyZone) {
+    const toolbar = document.createElement('div');
+    toolbar.style.display = 'flex';
+    toolbar.style.alignItems = 'center';
+    toolbar.style.justifyContent = 'space-between';
+    toolbar.style.flexWrap = 'wrap';
+    toolbar.style.gap = '10px';
+    toolbar.style.marginTop = '10px';
+    toolbar.style.marginBottom = '6px';
+    toolbar.innerHTML = `
+      <div style="font-size:12px; color:var(--text-light);">
+        💡 数値を直接編集できます。変更後は「💾 すべて保存」または行の「💾」を押してください。
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button id="btn-admin-enemy-save-all" class="btn good btn-sm" style="padding:5px 12px; font-size:12px;">💾 すべて保存</button>
+        <button id="btn-admin-enemy-reset-all" class="btn btn-sm" style="padding:5px 12px; font-size:12px;">🔄 初期値に戻す</button>
+      </div>
+    `;
+    listEl.appendChild(toolbar);
+
+    const tableWrap = document.createElement('div');
+    tableWrap.className = 'admin-enemy-table-wrap';
+    
+    const table = document.createElement('table');
+    table.className = 'admin-enemy-table';
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th style="text-align:left; min-width:180px; padding-left:12px;">👾 モンスター</th>
+          <th style="min-width:76px;"><span style="color:#ff7675;">❤️ HP</span></th>
+          <th style="min-width:68px;"><span style="color:#ff9f43;">⚔️ 攻撃</span></th>
+          <th style="min-width:68px;"><span style="color:#54a0ff;">🛡️ 防御</span></th>
+          <th style="min-width:68px;"><span style="color:#1dd1a1;">⚡ 早さ</span></th>
+          <th style="min-width:72px;"><span style="color:#feca57;">⭐ 経験</span></th>
+          <th style="min-width:125px;"><span style="color:#ffdd59;">💰 G (最小~最大)</span></th>
+          <th style="min-width:100px;">操作</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    `;
+
+    const tbody = table.querySelector('tbody');
+    keys.forEach(k => {
+      const tmpl = getEnemyTemplate(zone, k);
+      const isCustom = !!(customEnemies[zone] && customEnemies[zone][k]);
+      const gold = tmpl.gold || [tmpl.goldMin || 0, tmpl.goldMax || 0];
+
+      let iconHTML = `<span style="font-size:26px;">${tmpl.emoji}</span>`;
+      if (tmpl.emoji && (tmpl.emoji.startsWith('http') || tmpl.emoji.startsWith('data:') || tmpl.emoji.includes('.png'))) {
+        iconHTML = `<img src="${av(tmpl.emoji)}" class="admin-enemy-img" style="width:34px; height:34px;">`;
+      }
+
+      const tr = document.createElement('tr');
+      tr.className = 'admin-enemy-row';
+      tr.dataset.enemyKey = k;
+      if (isCustom) tr.style.borderLeft = '3px solid var(--accent)';
+
+      tr.innerHTML = `
+        <td style="text-align:left; padding-left:12px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            ${iconHTML}
+            <div style="display:flex; align-items:center; gap:4px; flex:1;">
+              <input type="text" data-stat="name" value="${tmpl.name}" style="width:110px; font-weight:bold; font-size:12.5px; padding:3px 6px;">
+              <button type="button" class="btn btn-sm btn-admin-edit-detail" title="画像URLや詳細設定" style="padding:3px 6px; font-size:11px;">✏️</button>
+            </div>
+          </div>
+        </td>
+        <td>
+          <input type="number" data-stat="hp" min="1" max="99999" value="${tmpl.hp}" style="width:64px; color:#ff7675;">
+        </td>
+        <td>
+          <input type="number" data-stat="atk" min="0" max="9999" value="${tmpl.atk}" style="width:54px; color:#ff9f43;">
+        </td>
+        <td>
+          <input type="number" data-stat="def" min="0" max="9999" value="${tmpl.def}" style="width:54px; color:#54a0ff;">
+        </td>
+        <td>
+          <input type="number" data-stat="spd" min="0" max="9999" value="${tmpl.spd}" style="width:54px; color:#1dd1a1;">
+        </td>
+        <td>
+          <input type="number" data-stat="exp" min="0" max="99999" value="${tmpl.exp || 0}" style="width:60px; color:#feca57;">
+        </td>
+        <td>
+          <div style="display:flex; align-items:center; justify-content:center; gap:3px;">
+            <input type="number" data-stat="gmin" min="0" max="9999" value="${gold[0] || 0}" style="width:48px; color:#ffdd59;">
+            <span style="font-size:11px; color:var(--text-light);">~</span>
+            <input type="number" data-stat="gmax" min="0" max="9999" value="${gold[1] || 0}" style="width:48px; color:#ffdd59;">
+          </div>
+        </td>
+        <td>
+          <div style="display:flex; align-items:center; justify-content:center; gap:4px;">
+            <button type="button" class="btn btn-sm good btn-row-save" title="この行を保存" style="padding:4px 7px; font-size:12px;">💾</button>
+            <button type="button" class="btn btn-sm btn-row-reset" title="初期値に戻す" style="padding:4px 7px; font-size:12px;">🔄</button>
+          </div>
+        </td>
+      `;
+
+      tr.querySelectorAll('input').forEach(inp => {
+        inp.oninput = () => {
+          tr.classList.add('is-modified');
+        };
+      });
+
+      tr.querySelector('.btn-row-save').onclick = () => {
+        saveSingleEnemyFromRow(zone, k, tr);
+      };
+
+      tr.querySelector('.btn-row-reset').onclick = () => {
+        resetSingleEnemy(zone, k);
+      };
+
+      tr.querySelector('.btn-admin-edit-detail').onclick = () => {
+        openAdminEdit(zone, k, tmpl);
+      };
+
+      tbody.appendChild(tr);
+    });
+
+    tableWrap.appendChild(table);
+    listEl.appendChild(tableWrap);
+
+    toolbar.querySelector('#btn-admin-enemy-save-all').onclick = () => {
+      saveAllEnemiesInTable(zone);
+    };
+    toolbar.querySelector('#btn-admin-enemy-reset-all').onclick = () => {
+      resetAllEnemiesInZone(zone);
+    };
+    return;
+  }
+
+  // 装備・アイテムの場合は従来のカードリスト表示
+  for (const k of keys) {
+    let tmpl, iconHTML, statsText;
+    if (zone === 'equipment' || zone === 'item') {
+      tmpl = zone === 'equipment' ? getEquipTemplate(k) : getItemTemplate(k);
+      iconHTML = `<span style="font-size:32px;">${tmpl.emoji || '📦'}</span>`;
+      if (tmpl.emoji && (tmpl.emoji.startsWith('http') || tmpl.emoji.startsWith('data:') || tmpl.emoji.includes('.png'))) {
+        iconHTML = `<img src="${av(tmpl.emoji)}" class="admin-enemy-img">`;
+      }
+      statsText = zone === 'equipment' 
+        ? Object.entries(tmpl.stat).map(([sk,sv])=>`${sk}:${sv}`).join(' ')
+        : `効果量:${tmpl.value}`;
+    }
+
+    const item = document.createElement('div');
+    item.className = 'inventory-item';
+    item.innerHTML = `
+      <div style="display:flex; align-items:center; gap:10px;">
+        ${iconHTML}
+        <div>
+          <strong>${tmpl.name}</strong><br>
+          <small>${statsText}</small>
+        </div>
+      </div>
+      <button class="btn">へんしゅう</button>
+    `;
+    item.querySelector('button').onclick = () => openAdminEdit(zone, k, tmpl);
+    listEl.appendChild(item);
+  }
+}
+
+function openAdminEdit(zone, key, tmpl) {
+  editingEnemyZone = zone;
+  editingEnemyKey = key;
+  $('admin-list-view').classList.add('hidden');
+  $('admin-edit-view').classList.remove('hidden');
+  
+  $('admin-edit-name').value = tmpl.name;
+  $('admin-edit-emoji').value = tmpl.emoji || '';
+  
+  $('admin-edit-hp').value = tmpl.hp || (tmpl.stat && tmpl.stat.hp) || 0;
+  $('admin-edit-atk').value = tmpl.atk || (tmpl.stat && tmpl.stat.atk) || 0;
+  $('admin-edit-def').value = tmpl.def || (tmpl.stat && tmpl.stat.def) || 0;
+  $('admin-edit-spd').value = tmpl.spd || (tmpl.stat && tmpl.stat.spd) || 0;
+  $('admin-edit-exp').value = tmpl.exp || 0;
+  $('admin-edit-value').value = tmpl.value || (tmpl.stat && tmpl.stat.mp) || 0;
+
+  const gold = tmpl.gold || [0,0];
+  $('admin-edit-gmin').value = gold[0] !== undefined ? gold[0] : tmpl.goldMin || 0;
+  $('admin-edit-gmax').value = gold[1] !== undefined ? gold[1] : tmpl.goldMax || 0;
+
+  const battleCont = $('admin-edit-for-battle-container');
+  if (battleCont) battleCont.style.display = zone === 'item' ? 'flex' : 'none';
+  if ($('admin-edit-for-battle')) {
+    $('admin-edit-for-battle').checked = isBattleItem(tmpl);
+  }
+}
+
+$('btn-admin-cancel').onclick = () => {
+  $('admin-list-view').classList.remove('hidden');
+  $('admin-edit-view').classList.add('hidden');
+};
+
+$('btn-admin-save').onclick = () => {
+  const z = editingEnemyZone;
+  const k = editingEnemyKey;
+  
+  if (z === 'equipment') {
+    if (!customEquips[k]) customEquips[k] = {};
+    customEquips[k].name = $('admin-edit-name').value;
+    customEquips[k].emoji = $('admin-edit-emoji').value;
+    customEquips[k].stat = {};
+    if (parseInt($('admin-edit-atk').value)) customEquips[k].stat.atk = parseInt($('admin-edit-atk').value);
+    if (parseInt($('admin-edit-def').value)) customEquips[k].stat.def = parseInt($('admin-edit-def').value);
+    if (parseInt($('admin-edit-spd').value)) customEquips[k].stat.spd = parseInt($('admin-edit-spd').value);
+    if (parseInt($('admin-edit-value').value)) customEquips[k].stat.mp = parseInt($('admin-edit-value').value);
+  } else if (z === 'item') {
+    if (!customItems[k]) customItems[k] = {};
+    customItems[k].name = $('admin-edit-name').value;
+    customItems[k].emoji = $('admin-edit-emoji').value;
+    customItems[k].value = parseInt($('admin-edit-value').value)||0;
+    const isBattle = $('admin-edit-for-battle') ? $('admin-edit-for-battle').checked : false;
+    customItems[k].tags = isBattle ? ['戦闘用'] : [];
+  } else {
+    if (!customEnemies[z]) customEnemies[z] = {};
+    customEnemies[z][k] = {
+      name: $('admin-edit-name').value,
+      emoji: $('admin-edit-emoji').value,
+      hp: parseInt($('admin-edit-hp').value)||1,
+      atk: parseInt($('admin-edit-atk').value)||0,
+      def: parseInt($('admin-edit-def').value)||0,
+      spd: parseInt($('admin-edit-spd').value)||0,
+      exp: parseInt($('admin-edit-exp').value)||0,
+      gold: [parseInt($('admin-edit-gmin').value)||0, parseInt($('admin-edit-gmax').value)||0]
+    };
+  }
+  
+  saveCustomData();
+  $('admin-list-view').classList.remove('hidden');
+  $('admin-edit-view').classList.add('hidden');
+  renderAdminList();
+};
+
+$('btn-admin-reset').onclick = () => {
+  const z = editingEnemyZone;
+  const k = editingEnemyKey;
+  if (z === 'equipment') {
+    delete customEquips[k];
+  } else if (z === 'item') {
+    delete customItems[k];
+  } else if (customEnemies[z] && customEnemies[z][k]) {
+    delete customEnemies[z][k];
+  }
+  saveCustomData();
+  $('admin-list-view').classList.remove('hidden');
+  $('admin-edit-view').classList.add('hidden');
+  renderAdminList();
+};
+
+/* ==========================================================
+   じかんせいげん（セーブデータごとの プレイ時間の管理）＋ アナログ時計
+   ========================================================== */
+const TIME_LIMIT_KEY = 'typing_rpg_timelimit_v2'; // { [slotKey]: {enabled, minutes} }
+const TIME_LIMIT_SESSION_KEY = 'typing_rpg_timelimit_session_v1'; // { [slotKey]: セッションしゅうりょうtimestamp }
+
+function getAllTimeLimitSettings(){
+  try {
+    const raw = storageGet(TIME_LIMIT_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch(e){ return {}; }
+}
+function saveAllTimeLimitSettings(map){
+  storageSet(TIME_LIMIT_KEY, JSON.stringify(map));
+}
+function getTimeLimitForSlot(slotKey){
+  const all = getAllTimeLimitSettings();
+  return all[slotKey] || { enabled: false, minutes: 30 };
+}
+function setTimeLimitForSlot(slotKey, settings){
+  const all = getAllTimeLimitSettings();
+  all[slotKey] = settings;
+  saveAllTimeLimitSettings(all);
+}
+
+function getAllTimeLimitSessions(){
+  try {
+    const raw = storageGet(TIME_LIMIT_SESSION_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch(e){ return {}; }
+}
+function saveAllTimeLimitSessions(map){
+  storageSet(TIME_LIMIT_SESSION_KEY, JSON.stringify(map));
+}
+/* セーブデータを 読み込んだ（あそびはじめた）タイミングで呼ぶ。じかんせいげんが
+   ゆうこうなら、その時点から せっていぶんの 分数だけ カウントダウンする
+   セッションしゅうりょう時刻を あたらしく セットする */
+function startTimeLimitSession(slotKey){
+  if (!slotKey) return;
+  const settings = getTimeLimitForSlot(slotKey);
+  const sessions = getAllTimeLimitSessions();
+  if (settings.enabled && settings.minutes > 0) {
+    sessions[slotKey] = Date.now() + settings.minutes * 60000;
+  } else {
+    delete sessions[slotKey];
+  }
+  saveAllTimeLimitSessions(sessions);
+}
+function getSessionEndForSlot(slotKey){
+  if (!slotKey) return null;
+  return getAllTimeLimitSessions()[slotKey] || null;
+}
+function isSlotPastTimeLimit(slotKey){
+  if (!slotKey) return false;
+  const settings = getTimeLimitForSlot(slotKey);
+  if (!settings.enabled) return false;
+  const endAt = getSessionEndForSlot(slotKey);
+  if (!endAt) return false;
+  return Date.now() >= endAt;
+}
+
+function buildClockTicks(){
+  const g = $('clock-ticks');
+  if (!g || g.childElementCount > 0) return;
+  for (let i = 0; i < 12; i++){
+    const deg = i * 30;
+    const major = i % 3 === 0;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', '50');
+    line.setAttribute('y1', major ? '6' : '9');
+    line.setAttribute('x2', '50');
+    line.setAttribute('y2', '14');
+    line.setAttribute('class', 'clock-tick');
+    line.setAttribute('transform', `rotate(${deg} 50 50)`);
+    if (major) line.style.strokeWidth = '2.6';
+    g.appendChild(line);
+  }
+}
+
+function updateAnalogClock(){
+  const now = new Date();
+  const h = now.getHours() % 12;
+  const m = now.getMinutes();
+  const s = now.getSeconds();
+
+  const hourDeg = h * 30 + m * 0.5;
+  const minuteDeg = m * 6 + s * 0.1;
+  const secondDeg = s * 6;
+
+  const hourHand = $('clock-hand-hour');
+  const minuteHand = $('clock-hand-minute');
+  const secondHand = $('clock-hand-second');
+  if (hourHand) hourHand.style.transform = `rotate(${hourDeg}deg)`;
+  if (minuteHand) minuteHand.style.transform = `rotate(${minuteDeg}deg)`;
+  if (secondHand) secondHand.style.transform = `rotate(${secondDeg}deg)`;
+
+  const digital = $('clock-digital-time');
+  if (digital) digital.textContent = `${String(now.getHours()).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+
+  const endMarker = $('clock-end-marker');
+  const endLabel = $('clock-end-label');
+  const settings = currentSlotKey ? getTimeLimitForSlot(currentSlotKey) : null;
+  const endAt = currentSlotKey ? getSessionEndForSlot(currentSlotKey) : null;
+  if (settings && settings.enabled && endAt) {
+    const endDate = new Date(endAt);
+    const eh = endDate.getHours();
+    const em = endDate.getMinutes();
+    const endDeg = (eh % 12) * 30 + em * 0.5;
+    if (endMarker) {
+      endMarker.style.transform = `rotate(${endDeg}deg)`;
+      endMarker.classList.remove('hidden');
+    }
+    if (endLabel) {
+      endLabel.textContent = `🔚 ${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')} まで`;
+      endLabel.classList.remove('hidden');
+    }
+  } else {
+    if (endMarker) endMarker.classList.add('hidden');
+    if (endLabel) endLabel.classList.add('hidden');
+  }
+}
+
+function checkTimeLimit(){
+  const overlay = $('time-limit-overlay');
+  if (!overlay) return;
+  const adminScreenActive = $('screen-admin') && $('screen-admin').classList.contains('active');
+  if (currentSlotKey && isSlotPastTimeLimit(currentSlotKey) && !adminScreenActive) {
+    overlay.classList.remove('hidden');
+  } else {
+    overlay.classList.add('hidden');
+  }
+}
+
+function updateAdminTimeLimitBulkCount(){
+  const count = document.querySelectorAll('.admin-timelimit-select:checked').length;
+  const countEl = $('admin-timelimit-bulk-count');
+  if (countEl) countEl.textContent = count;
+}
+
+function renderAdminTimeLimitList(){
+  const listEl = $('admin-timelimit-slot-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  const slots = listSaveSlots();
+  if (slots.length === 0) {
+    listEl.innerHTML = '<div class="flavor">セーブデータが ありません。</div>';
+    updateAdminTimeLimitBulkCount();
+    return;
+  }
+  for (const slot of slots) {
+    const settings = getTimeLimitForSlot(slot.key);
+    const row = document.createElement('div');
+    row.className = 'inventory-item admin-timelimit-row';
+    row.dataset.slotKey = slot.key;
+    row.innerHTML = `
+      <div style="display:flex; align-items:center; gap:10px; flex:1;">
+        <input type="checkbox" class="admin-timelimit-select" title="せんたく">
+        <div style="flex:1;">
+          <strong>${slot.name}</strong> <span class="tag" style="margin-left:6px;">Lv${slot.lvl}</span>
+          <div class="admin-timelimit-row-controls" style="display:flex; align-items:center; gap:8px; margin-top:6px; flex-wrap:wrap;">
+            <label style="display:flex; align-items:center; gap:4px; font-size:12px;">
+              <input type="checkbox" class="admin-timelimit-row-enabled" ${settings.enabled ? 'checked' : ''}>ゆうこう
+            </label>
+            <input type="number" class="admin-time-input admin-timelimit-row-minutes" min="1" value="${settings.minutes || 30}">分
+            <button class="btn good admin-timelimit-row-save" style="padding:6px 10px; font-size:12px; width:auto;">ほぞん</button>
+            <small class="admin-timelimit-row-status">${settings.enabled ? settings.minutes + '分に せっていちゅう' : 'オフ'}</small>
+          </div>
+        </div>
+      </div>
+    `;
+    row.querySelector('.admin-timelimit-select').onchange = updateAdminTimeLimitBulkCount;
+    row.querySelector('.admin-timelimit-row-save').onclick = () => {
+      const enabled = row.querySelector('.admin-timelimit-row-enabled').checked;
+      const minutes = Math.max(1, parseInt(row.querySelector('.admin-timelimit-row-minutes').value) || 30);
+      setTimeLimitForSlot(slot.key, { enabled, minutes });
+      row.querySelector('.admin-timelimit-row-status').textContent = enabled ? `${minutes}分に せっていちゅう` : 'オフ';
+      updateAnalogClock();
+      checkTimeLimit();
+    };
+    listEl.appendChild(row);
+  }
+  updateAdminTimeLimitBulkCount();
+}
+
+/* ==========================================================
+   かんりしゃせってい パスワードゲート（きょうの日づけ4けた：MMDD）
+   ========================================================== */
+function computeTodayPasscode(){
+  const now = new Date();
+  return String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
+}
+
+let adminAccessGrantedCallback = null;
+
+/* パスワードにゅうりょくモーダルを表示し、せいかいしたら onSuccess を呼ぶ */
+function requestAdminAccess(onSuccess){
+  const overlay = $('admin-password-overlay');
+  const input = $('admin-password-input');
+  const errorEl = $('admin-password-error');
+  if (!overlay || !input) { onSuccess(); return; }
+  adminAccessGrantedCallback = onSuccess;
+  input.value = '';
+  if (errorEl) errorEl.textContent = '';
+  overlay.classList.remove('hidden');
+  setTimeout(() => input.focus(), 50);
+}
+
+function closeAdminPasswordModal(){
+  const overlay = $('admin-password-overlay');
+  if (overlay) overlay.classList.add('hidden');
+  adminAccessGrantedCallback = null;
+}
+
+function submitAdminPassword(){
+  const input = $('admin-password-input');
+  const errorEl = $('admin-password-error');
+  if (!input) return;
+  if (input.value === computeTodayPasscode()) {
+    const cb = adminAccessGrantedCallback;
+    closeAdminPasswordModal();
+    if (cb) cb();
+  } else {
+    if (errorEl) errorEl.textContent = 'パスワードが ちがいます。';
+    input.value = '';
+    input.focus();
+  }
+}
+
+function initAdminPasswordGate(){
+  const submitBtn = $('btn-admin-password-submit');
+  const cancelBtn = $('btn-admin-password-cancel');
+  const input = $('admin-password-input');
+  if (submitBtn) submitBtn.onclick = submitAdminPassword;
+  if (cancelBtn) cancelBtn.onclick = closeAdminPasswordModal;
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitAdminPassword();
+    });
+  }
+}
+
+function initTimeLimitFeature(){
+  buildClockTicks();
+  updateAnalogClock();
+  checkTimeLimit();
+  setInterval(() => { updateAnalogClock(); checkTimeLimit(); }, 1000);
+
+  const bulkApplyBtn = $('btn-admin-timelimit-bulk-apply');
+  if (bulkApplyBtn) {
+    bulkApplyBtn.onclick = () => {
+      const selectedKeys = Array.from(document.querySelectorAll('.admin-timelimit-select:checked'))
+        .map(cb => cb.closest('.admin-timelimit-row').dataset.slotKey);
+      if (selectedKeys.length === 0) {
+        alert('セーブデータを 1つ以上 えらんでください。');
+        return;
+      }
+      const enabled = $('admin-timelimit-bulk-enabled').checked;
+      const minutes = Math.max(1, parseInt($('admin-timelimit-bulk-minutes').value) || 30);
+      for (const key of selectedKeys) {
+        setTimeLimitForSlot(key, { enabled, minutes });
+      }
+      renderAdminTimeLimitList();
+      updateAnalogClock();
+      checkTimeLimit();
+    };
+  }
+
+  const overlayAdminBtn = $('btn-time-limit-admin');
+  if (overlayAdminBtn) {
+    overlayAdminBtn.onclick = () => {
+      requestAdminAccess(() => {
+        $('time-limit-overlay').classList.add('hidden');
+        showAdmin();
+      });
+    };
+  }
+}
+
+let initDone = false;
+function init(){
+  if (initDone) return; // init()が二重に呼ばれてもミュートボタンの二重登録を防ぐ
+  initDone = true;
+
+  try {
+    startBootLoader();   // タイトルの うえに かぶさっている ロード画面を うごかす
+  } catch (e) {
+    console.warn('startBootLoader error:', e);
+  }
+
+  try {
+    bindEvents();
+    if (!window.AccountSession && !LOCAL_ART_PREVIEW) migrateLegacySaveIfNeeded();
+    if (listSaveSlots().length > 0) {
+      const continueBtn = $('btn-continue');
+      if (continueBtn) continueBtn.classList.remove('hidden');
+    }
+    // Firestore リアルタイム同期リスナーを登録（他端末の更新を即時受信）
+    if (window.CloudSave && typeof window.CloudSave.onCloudUpdate === 'function') {
+      window.CloudSave.onCloudUpdate((cloudSlots) => {
+        applyCloudSlots(cloudSlots);
+        const statusEl = $('save-sync-status');
+        if (statusEl) {
+          statusEl.textContent = '☁️ クラウド同期済み';
+          statusEl.style.color = '#2ecc71';
+        }
+      });
+    }
+    // バックグラウンドでクラウドセーブを同期（初回取得 ＆ 未同期ローカルデータのアップロード）
+    syncCloudSaves(() => {
+      if (listSaveSlots().length > 0) {
+        const continueBtn = $('btn-continue');
+        if (continueBtn) continueBtn.classList.remove('hidden');
+      }
+    });
+    showScreen('screen-title');
+    initTimeLimitFeature();
+    initAdminPasswordGate();
+  } catch (err) {
+    console.error('Init error:', err);
+  }
+
+  // ミュートボタンのセットアップ
+  let muteBtn = $('btn-mute');
+  if (!muteBtn) {
+    muteBtn = document.createElement('button');
+    muteBtn.id = 'btn-mute';
+    muteBtn.className = 'mute-button';
+    muteBtn.title = 'BGM/SE をミュート';
+    muteBtn.textContent = '🔊';
+    // スタイルを個別に設定
+    muteBtn.style.position = 'fixed';
+    muteBtn.style.top = '20px';
+    muteBtn.style.right = '20px';
+    muteBtn.style.width = '80px';
+    muteBtn.style.height = '80px';
+    muteBtn.style.borderRadius = '50%';
+    muteBtn.style.background = 'linear-gradient(135deg, #FF6B35 0%, #FF9F1C 100%)';
+    muteBtn.style.border = '4px solid #FFF';
+    muteBtn.style.fontSize = '45px';
+    muteBtn.style.cursor = 'pointer';
+    muteBtn.style.zIndex = '99999';
+    muteBtn.style.display = 'flex';
+    muteBtn.style.alignItems = 'center';
+    muteBtn.style.justifyContent = 'center';
+    muteBtn.style.boxShadow = '0 6px 20px rgba(255, 159, 28, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5)';
+    muteBtn.style.padding = '0';
+    muteBtn.style.fontWeight = 'bold';
+    muteBtn.style.transition = 'all 0.2s ease';
+    document.body.appendChild(muteBtn);
+  }
+
+  if (muteBtn) {
+    muteBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (!SM.initialized) SM.init();
+
+      SM.setMuted(!SM.muted);
+
+      if (SM.muted) {
+        muteBtn.textContent = '🔇';
+        muteBtn.classList.add('muted');
+        SM.stopBGM();
+      } else {
+        muteBtn.textContent = '🔊';
+        muteBtn.classList.remove('muted');
+        const activeScreen = document.querySelector('.screen.active');
+        if (activeScreen) SM.playBGM(bgmKeyForScreen(activeScreen.id));
+      }
+    };
+  }
+
+  // 音量スライダーのセットアップ
+  const volSlider = $('volume-slider');
+  const volText = $('volume-text');
+  if (volSlider && volText) {
+    // 起動時に初期値を反映
+    SM.setGlobalVolume(parseInt(volSlider.value, 10) / 100);
+    
+    volSlider.addEventListener('input', (e) => {
+      const v = parseInt(e.target.value, 10);
+      volText.textContent = v + '%';
+      SM.setGlobalVolume(v / 100);
+      
+      // ミュート解除連動
+      if (v > 0 && SM.muted) {
+        SM.setMuted(false);
+        if (muteBtn) {
+          muteBtn.textContent = '🔊';
+          muteBtn.classList.remove('muted');
+        }
+        const activeScreen = document.querySelector('.screen.active');
+        if (activeScreen) SM.playBGM(bgmKeyForScreen(activeScreen.id));
+      } else if (v === 0 && !SM.muted) {
+        SM.setMuted(true);
+        if (muteBtn) {
+          muteBtn.textContent = '🔇';
+          muteBtn.classList.add('muted');
+        }
+        SM.stopBGM();
+      }
+    });
+  }
+
+  // メニューボタンのセットアップ
+  const menuBtn = $('btn-menu');
+  const menuDropdown = $('menu-dropdown');
+  if (menuBtn && menuDropdown) {
+    menuBtn.onclick = (e) => {
+      e.stopPropagation();
+      menuDropdown.classList.toggle('hidden');
+      const saveTitleBtn = $('btn-menu-save-title');
+      if (saveTitleBtn) {
+        if (G && G.isTestMode) {
+          saveTitleBtn.textContent = '🚪 そのまま終了';
+        } else {
+          saveTitleBtn.textContent = '💾 セーブして タイトルへ';
+        }
+      }
+    };
+    document.addEventListener('click', (e) => {
+      if (!menuDropdown.classList.contains('hidden') && !$('menu-container').contains(e.target)) {
+        menuDropdown.classList.add('hidden');
+      }
+    });
+  }
+  $('btn-menu-home').onclick = () => {
+    menuDropdown.classList.add('hidden');
+    if(explore?.readingQuest){finishReadingQuestBattle(false);return;}
+    if (explore) {
+      // 探索中の場合は確認ダイアログを出す
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.style.zIndex = '2000';
+      overlay.innerHTML = `
+        <div class="modal-panel" style="text-align:center;">
+          <h3 style="color:var(--accent); margin-bottom:15px;">きょてんに もどりますか？</h3>
+          <p style="margin-bottom:20px;">※今回のたんさくで てにいれたアイテムは もちかえれます</p>
+          <div style="display:flex; gap:10px; justify-content:center;">
+            <button class="btn btn-primary" id="btn-return-yes">はい</button>
+            <button class="btn" id="btn-return-no">いいえ</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+
+      document.getElementById('btn-return-no').onclick = () => {
+        overlay.remove();
+      };
+
+      document.getElementById('btn-return-yes').onclick = () => {
+        overlay.remove();
+        
+        let dropsHtml = '';
+        if (explore) {
+          dropsHtml = generateDropsSummaryHtml(explore.sessionDrops, explore.sessionGold);
+        }
+
+        const proceedReturn = () => {
+          if (battle && !battle.over) endBattleLoop();
+          if (trainingSkill) { destroyChallenge(); trainingSkill = null; }
+          explore = null;
+          showHome();
+        };
+
+        if (dropsHtml) {
+          const resOverlay = document.createElement('div');
+          resOverlay.className = 'modal-overlay';
+          resOverlay.style.zIndex = '2000';
+          resOverlay.innerHTML = `
+            <div class="modal-panel" style="text-align:center; max-width:480px;">
+              ${dropsHtml}
+              <button class="btn btn-primary" id="btn-return-ok" style="margin-top:20px; width:100%;">もどる</button>
+            </div>
+          `;
+          document.body.appendChild(resOverlay);
+          bindDropItemTooltips(resOverlay);
+          document.getElementById('btn-return-ok').onclick = () => {
+            hideTooltip();
+            resOverlay.remove();
+            proceedReturn();
+          };
+        } else {
+          proceedReturn();
+        }
+      };
+    } else {
+      // 探索中以外なら即座に戻る
+      if (battle && !battle.over) endBattleLoop();
+      if (trainingSkill) { destroyChallenge(); trainingSkill = null; }
+      explore = null;
+      showHome();
+    }
+  };
+
+  $('btn-menu-save-title').onclick = () => suggestChallengePrintBeforeSave(() => {
+    menuDropdown.classList.add('hidden');
+    if (battle && !battle.over) endBattleLoop();
+    if (trainingSkill) { destroyChallenge(); trainingSkill = null; }
+    explore = null;
+    if (G && G.isTestMode) {
+      G = null;
+      currentSlotKey = null;
+      updateHud();
+      if (listSaveSlots().length > 0) $('btn-continue').classList.remove('hidden');
+      else $('btn-continue').classList.add('hidden');
+      showScreen('screen-title');
+      return;
+    }
+    save(true);
+    if (listSaveSlots().length > 0) $('btn-continue').classList.remove('hidden');
+    showScreen('screen-title');
+  });
+}
+
+/* ==========================================================
+   きどう時の ロード画面（NOW LOADING → スタートボタン）
+   ・ゲームでつかう全アセット（画像・BGM・SE）を初回ロード画面で一括プリロード
+   ・Service Worker / ブラウザキャッシュに完全保存されるため、
+     ゲーム本編中の画面遷移・戦闘・演出が一切引っかからず即座に表示される
+   ・スタートボタンは「音声を初期化するためのユーザー操作」を兼ねている
+   ========================================================== */
+function startBootLoader(){
+  const screen = $('boot-loader-screen');
+  if (!screen) return;
+  const pctEl   = $('boot-load-percent');
+  const fillEl  = $('boot-progress-fill');
+  const barArea = $('boot-loading-bar-area');
+  const startArea = $('boot-start-area');
+  const startBtn  = $('btn-boot-start');
+
+  let ready = false;
+
+  const setPct = (p) => {
+    const v = Math.max(0, Math.min(100, Math.round(p)));
+    if (pctEl)  pctEl.textContent = v + '%';
+    if (fillEl) fillEl.style.width = v + '%';
+  };
+  setPct(0);
+
+  /* よみこみ かんりょう → スタートボタンを だす */
+  const showStart = () => {
+    if (ready) return;
+    ready = true;
+    setPct(100);
+    setTimeout(() => {
+      if (barArea)   barArea.classList.add('hidden');
+      if (startArea) startArea.classList.remove('hidden');
+
+      // ロード完了（100%）後に初めてクリック/タップを解禁
+      if (startBtn) {
+        startBtn.onclick = begin;
+        startBtn.ontouchend = begin;
+      }
+      screen.addEventListener('click', begin);
+      screen.addEventListener('touchend', begin);
+    }, 200);
+  };
+
+  // 1. 優先アセット（タイトル画面まわり）
+  const PRIORITY_KEYS = [
+    '画像/title_sky_v2.png',
+    '画像/title_foreground_v2.png',
+    '画像/title_logo_transparent.png',
+    'assets/artist-stage-samples/komorebi-village-aerial-v2.png',
+    'assets/bg/my_room.jpg',
+    '画像/bg_training.jpg',
+  ];
+  const priorityUrls = [];
+  PRIORITY_KEYS.forEach(k => {
+    const url = av(k);
+    if (url && !priorityUrls.includes(url)) priorityUrls.push(url);
+  });
+
+  // 2. 音声ファイル（全BGM & SE）
+  const AUDIO_URLS = [
+    'assets_audio/bgm_title.m4a',
+    'assets_audio/bgm_home_kaisei.mp3',
+    'assets_audio/bgm_room.m4a',
+    'assets_audio/bgm_stage1.m4a',
+    'assets_audio/bgm_area_boss.mp3',
+    'assets_audio/bgm_raid_boss.mp3',
+    'assets_audio/bgm_training.m4a',
+    'assets_audio/se_crit.mp3',
+    'assets_audio/se_clear.mp3',
+    'assets_audio/se_type.mp3',
+    'assets_audio/se_slash.mp3',
+    'assets_audio/se_decide.mp3',
+    'assets_audio/se_gameover.m4a',
+    'assets_audio/se_gacha_result.mp3',
+    'assets_audio/se_gacha_result2.mp3',
+  ];
+
+  // 3. バンドルされた全画像アセット
+  const otherUrls = [];
+  if (typeof window !== 'undefined' && window.__ASSET_MAP__) {
+    Object.values(window.__ASSET_MAP__).forEach(url => {
+      if (url && typeof url === 'string' && !url.startsWith('data:') && !url.startsWith('blob:')) {
+        if (!priorityUrls.includes(url) && !otherUrls.includes(url)) {
+          otherUrls.push(url);
+        }
+      }
+    });
+  }
+
+  const allUrls = [...priorityUrls, ...AUDIO_URLS, ...otherUrls];
+  const total = allUrls.length || 1;
+  let done = 0;
+
+  function loadSingleAsset(url) {
+    return new Promise((resolve) => {
+      const isAudio = /\.(m4a|mp3|ogg|wav)$/i.test(url);
+      const timer = setTimeout(() => resolve(), 8000); // 1アセットあたり最大8秒でスキップ
+      if (isAudio) {
+        fetch(url)
+          .then(() => { clearTimeout(timer); resolve(); })
+          .catch(() => { clearTimeout(timer); resolve(); });
+      } else {
+        const img = new Image();
+        img.onload = img.onerror = () => {
+          clearTimeout(timer);
+          resolve();
+        };
+        img.src = url;
+      }
+    });
+  }
+
+  // 並列ダウンロードワーカー（同時6並列でスムーズにロード）
+  const concurrency = 6;
+  let cursor = 0;
+
+  async function downloadWorker() {
+    while (cursor < allUrls.length) {
+      const currentUrl = allUrls[cursor++];
+      await loadSingleAsset(currentUrl);
+      done++;
+      setPct((done / total) * 100);
+    }
+  }
+
+  // 全アセットの読み込みが完全に完了するまで待つ
+  Promise.all(Array.from({ length: concurrency }, downloadWorker)).then(() => {
+    showStart();
+  });
+
+  /* スタート：全アセット読み込み完了（ready === true）後にのみ実行可能 */
+  const begin = (e) => {
+    if (e) e.stopPropagation();
+    if (!ready) return; // ロード未完了時は絶対に遷移させない（クリック誤爆防止）
+    if (screen.classList.contains('fade-out')) return; // 二重クリック よけ
+    try {
+      if (!SM.initialized) SM.init();
+    } catch (err) {
+      console.warn('SM.init error:', err);
+    }
+    screen.classList.add('fade-out');
+    const fade = $('title-white-fade');
+    if (fade){
+      fade.classList.remove('hidden');
+      setTimeout(() => fade.classList.add('hidden'), 2200); // アニメーションと おなじ ながさ
+    }
+    showScreen('screen-title');
+    setTimeout(() => { if (screen.parentNode) screen.parentNode.removeChild(screen); }, 600);
+  };
+}
+
+// DOMがロードされたら実行
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+
+
+function openUnifiedCodeEntry() {
+  cleanupOldPrints();
+  const modal = $('modal-unified-code');
+  if (modal) {
+    modal.classList.remove('hidden');
+    $('unified-print-id').value = '';
+    $('unified-code-section').style.display = 'block';
+    $('unified-problems-section').style.display = 'none';
+    $('unified-result').innerHTML = '';
+    
+    const listEl = $('unified-prints-list');
+    listEl.innerHTML = '';
+    
+    let prints = (G && G.activePrints) ? G.activePrints : {};
+    if (!G) {
+      try {
+        prints = JSON.parse(storageGet('guest_active_prints') || '{}');
+      } catch(e){}
+    }
+    
+    const pIds = Object.keys(prints);
+    if (pIds.length === 0) {
+      listEl.innerHTML = '<div style="text-align:center; padding:12px; color:#aaa;">まだ 発行されたプリントが ありません。</div>';
+    } else {
+      pIds.forEach(pId => {
+        const meta = prints[pId],row=document.createElement('div');
+        row.className='unified-print-entry';
+        const select=document.createElement('button');select.type='button';select.className='btn unified-print-select';
+        select.innerHTML=`<span style="font-size:18px;">🖨️ <b>番号: ${escapeHtml(pId)}</b> （${escapeHtml(meta.name||'プリント')}）</span><span class="tag">全${meta.problems ? meta.problems.length : '?'}問</span>`;
+        select.addEventListener('click',()=>selectUnifiedPrint(pId));row.append(select);
+        if(meta.type==='blueprint'&&meta.formatVersion===2&&meta.itemConsumedAtPrint){
+          const reprint=document.createElement('button');reprint.type='button';reprint.className='btn unified-print-reprint';reprint.textContent='この挑戦状を再印刷';
+          reprint.addEventListener('click',()=>reprintAncientBlueprint(pId));row.append(reprint);
+        }
+        listEl.append(row);
+      });
+    }
+  }
+}
+
+function selectUnifiedPrint(pId) {
+  $('unified-print-id').value = pId;
+  fetchUnifiedPrint();
+}
+
+// We change the unified flow: they enter Print ID -> click "問題を表示" -> shows the inputs -> they grade.
+window.unifiedCurrentPrint = null;
+
+function fetchUnifiedPrint() {
+  const pId = $('unified-print-id').value.trim();
+  const resEl = $('unified-result');
+  if (!pId) {
+    resEl.innerHTML = '<span style="color:#ff5c5c;">プリント番号を入力してね！</span>';
+    return;
+  }
+  
+  let prints = (G && G.activePrints) ? G.activePrints : {};
+  if (!G) {
+    try {
+      prints = JSON.parse(storageGet('guest_active_prints') || '{}');
+    } catch(e){}
+  }
+  
+  const meta = prints[pId];
+  window.currentUnifiedMeta = meta;
+  window.currentUnifiedPrintId = pId;
+  if (!meta || !meta.problems) {
+    resEl.innerHTML = '<span style="color:#ff5c5c;">プリントが見つかりません。古いプリントの場合は諦めるか、もう一度プリントを発行してね。</span>';
+    return;
+  }
+  
+  window.unifiedCurrentPrint = { printId: pId, meta };
+  
+  $('unified-code-section').style.display = 'none';
+  const probSec = $('unified-problems-section');
+  probSec.style.display = 'flex';
+  
+  const area = AREA_STAGES[meta.areaId];
+  const title = area ? `${area.name} ${area.stages[meta.stageIndex]?.name || 'ボス戦'}` : meta.name;
+  $('unified-problems-title').textContent = `${title} ／ No.${pId} ／ ${meta.problems.length}問`;
+  
+  const listEl = $('unified-problems-list');
+  listEl.innerHTML = '';
+  listEl.style.setProperty('--unified-count',meta.problems.length);
+  listEl.style.setProperty('--unified-rows',Math.ceil(meta.problems.length/2));
+  listEl.classList.toggle('unified-many-problems',meta.problems.length>10);
+  meta.problems.forEach((p, i) => {
+    const isKanji = typeof p.answer === 'string' && isNaN(parseInt(p.answer, 10)); // crude check for kanji string vs number
+    const remainderInput=p.remainder != null;
+    const answerInput=remainderInput ? `<div class="unified-rem-inputs"><input type="text" id="unified-ans-${i}" class="challenge-input" data-math-parts="remainder" aria-label="${i+1}問目の商" inputmode="numeric" autocomplete="off"><span>あまり</span><input type="text" id="unified-rem-${i}" class="challenge-input" aria-label="${i+1}問目の余り" inputmode="numeric" autocomplete="off"></div>` : `<input type="text" id="unified-ans-${i}" class="challenge-input" aria-label="${i+1}問目の答え" autocomplete="off" ${!isKanji ? (/^-?\d+$/.test(String(p.answer)) ? 'inputmode="numeric"' : 'inputmode="text"') : ''}>`;
+    listEl.innerHTML += `<div class="unified-prob-row${remainderInput ? ' unified-prob-remainder' : ''}">
+      <label class="unified-prob-number" for="unified-ans-${i}">${i+1}.</label>
+      <label class="unified-prob-expression" for="unified-ans-${i}">${fractionTextHtml(p.text)}${isKanji ? '' : ' ='}</label>
+      ${answerInput}
+      <span id="unified-mark-${i}" class="unified-prob-mark"></span>
+    </div>`;
+  });
+
+  listEl.onkeydown = event => {
+    if(event.key !== 'Enter' || event.isComposing || !event.target.matches('input.challenge-input'))return;
+    event.preventDefault();
+    const inputs = [...listEl.querySelectorAll('input.challenge-input')];
+    const next = inputs[inputs.indexOf(event.target)+1];
+    (next || $('unified-grade-btn-area').querySelector('button')).focus();
+  };
+  
+    if ($('unified-grade-btn-area')) $('unified-grade-btn-area').style.display = 'grid';
+  if ($('admin-grade-btn-area')) $('admin-grade-btn-area').style.display = 'none';
+
+  resEl.innerHTML = '';
+}
+
+function gradeUnifiedPrint() {
+  const cur = window.unifiedCurrentPrint;
+  if (!cur || cur.scoreShowing || cur.rewardsGranted) return;
+  const meta = cur.meta;
+  const probs = meta.problems;
+  let correct = 0;
+  cur.answerReview = [];
+  
+  probs.forEach((p, i) => {
+    const field=$(`unified-ans-${i}`);
+    const inp = field.dataset?.mathParts==='remainder' ? `${field.value.trim()}あまり${$(`unified-rem-${i}`).value.trim()}` : field.value.trim();
+    const ok = isPrintAnswerCorrect(p,inp);
+    cur.answerReview.push({number:i+1,problem:p.printChoices?.length?p.printChoices.join(' ／ '):p.text,prompt:p.sentenceChoice?p.prompt:'',input:inp,expected:formatPrintAnswer(p),correct:ok});
+    
+    if (ok) {
+      correct++;
+      $(`unified-mark-${i}`).innerHTML = '<span style="color:#2ecc71;">〇</span>';
+    } else {
+      $(`unified-mark-${i}`).innerHTML = '<span style="color:#e74c3c;">❌</span>';
+    }
+  });
+  
+  const rate = correct / probs.length;
+  
+  showPrintScoreResult(cur, correct, probs.length);
+}
+
+function showPrintScoreResult(cur, correct, total) {
+  if(cur.scoreShowing || cur.rewardsGranted || !total)return;
+  cur.scoreShowing = true;
+  const rate = correct/total, score = Math.round(rate*100);
+  const perfect = correct === total;
+  const title = perfect ? '全問正解！' : rate>=0.8 ? 'よくできました！' : rate>=0.5 ? 'がんばったね！' : '挑戦おつかれさま！';
+  const cleared = ['stage','boss','stage_boss'].includes(cur.meta.type) && rate>=0.8;
+  const game = G, slot = currentSlotKey;
+  const overlay = document.createElement('div');
+  overlay.className = `print-score-overlay${perfect ? ' is-perfect' : ''}`;
+  overlay.innerHTML = `<section class="print-score-panel" role="dialog" aria-modal="true" aria-labelledby="print-score-title" aria-describedby="print-score-summary">
+    <p class="print-score-kicker">プリント No.${escapeHtml(cur.printId)}</p>
+    <h2 id="print-score-title">${title}</h2>
+    <div class="print-score-value" aria-hidden="true"><strong>0</strong><span>点</span></div>
+    <p id="print-score-summary" class="print-score-summary">${score}点 ／ ${total}問中 <b>${correct}問</b>正解</p>
+    <div class="print-score-marks" aria-label="問題順の正誤">${(cur.answerReview||[]).map((r,i)=>`<span style="--i:${i}" aria-label="${i+1}問目 ${r.correct?'正解':'不正解'}">${r.correct ? '○' : '×'}</span>`).join('')}</div>
+    ${perfect ? '<div class="print-score-stamp">満点</div>' : ''}
+    <p class="print-score-clear">${cleared ? 'ステージクリア 1回分！' : '答え合わせ 完了！'}</p>
+    <section class="print-answer-review" tabindex="0" aria-label="各問題の答え合わせ"><h3>どこが あっていたかな？</h3>${(cur.answerReview||[]).map(r=>`<article class="print-answer-review-row ${r.correct?'is-correct':'is-wrong'}"><h4>${r.number}問目 <span>${r.correct?'○ 正解':'× もう一度確認'}</span></h4>${r.prompt?`<p>${escapeHtml(r.prompt)}</p>`:''}<p class="print-review-problem">問題：${escapeHtml(r.problem)}</p><p>あなたの答え：<b>${escapeHtml(r.input||'（未回答）')}</b></p><p>正しい答え：<b>${escapeHtml(r.expected)}</b></p></article>`).join('')}</section>
+    <button type="button" class="btn btn-primary print-score-continue">報酬を見る</button>
+    ${rate>=0.8 ? `<div class="print-score-confetti" aria-hidden="true">${Array.from({length:20},(_,i)=>`<i style="--i:${i};--x:${(i*37)%100}%;--color:${['#ffda67','#7de6b9','#fa8b9b','#86d4ff'][i%4]}"></i>`).join('')}</div>` : ''}
+  </section>`;
+  $('unified-result').textContent = `${score}点 ／ ${total}問中 ${correct}問正解`;
+  document.body.appendChild(overlay);
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const number = overlay.querySelector('.print-score-value strong');
+  const button = overlay.querySelector('button');
+  let frame = 0, finished = false;
+  const start = performance.now();
+  const animate = now => {
+    if(!overlay.isConnected)return;
+    const progress = reduced ? 1 : Math.min(1,(now-start)/1000);
+    number.textContent = Math.round(score*(1-Math.pow(1-progress,3)));
+    if(progress<1) frame = requestAnimationFrame(animate);
+    else overlay.classList.add('is-revealed');
+  };
+  frame = requestAnimationFrame(animate);
+  if(SM.initialized && rate>=0.8)SM.play('se_clear');
+  button.onclick = () => {
+    if(finished)return;
+    finished = true;
+    cancelAnimationFrame(frame);
+    overlay.remove();
+    cur.scoreShowing = false;
+    if(G===game && currentSlotKey===slot)grantPrintRewards(cur,correct,total,rate);
+  };
+  overlay.onkeydown = event => {
+    if(event.key === 'Tab'){
+      const review=overlay.querySelector('.print-answer-review');
+      event.preventDefault();
+      (document.activeElement===button?review:button).focus();
+    }
+  };
+  button.focus();
+}
+
+function grantPrintRewards(cur, correct, total, rate) {
+  const meta = cur.meta;
+  if(cur.rewardsGranted)return;
+  if(meta.challengePrint && G?.claimedChallengePrintIds?.includes(cur.printId))return;
+  cur.rewardsGranted = true;
+  if(meta.challengePrint && G){G.claimedChallengePrintIds ||= [];G.claimedChallengePrintIds.push(cur.printId);}
+  removeResolvedPrint({ printId: cur.printId });
+  $('modal-unified-code').classList.add('hidden');
+  
+  if (!G && meta.targetId === 'demon_castle') {
+    if (rate >= 0.5) {
+      showConfirmModal('👑 試練突破！', '魔王の試練 を クリアした！\nセーブデータをつくって ログインすれば、\nでんせつの けんが てにはいるぞ！', null);
+    } else {
+      showConfirmModal('💀 しっぱい…', '正解数が 足りなかったみたいだ。\nもういちど プリントを出して チャレンジしよう！', null);
+    }
+    return;
+  }
+  
+  let rewards = [];
+  
+  // Every correctly graded print question earns one medal, independent of challenge multipliers.
+  const printMedals=Math.max(0,Math.min(Number(total)||0,Math.floor(Number(correct)||0)));
+  if(printMedals){G.questMedals=(Number(G.questMedals)||0)+printMedals;rewards.push({kind:'medal',id:'quest-medal',name:`クエストメダル ×${printMedals}`,icon:'🏅',count:printMedals});}
+  // Base rewards
+  const rewardMult = meta.challengePrint ? 3 : 1;
+  const baseExp = correct * 20 * rewardMult;
+  const baseGold = correct * 10 * rewardMult;
+  G.player.gold += baseGold;
+  if (baseExp > 0) rewards.push({ kind:'item', name:`経験値 ${baseExp} EXP`, icon:'✨' });
+  if (baseGold > 0) rewards.push({ kind:'item', name:`ゴールド ${baseGold} G`, icon:'💰' });
+  
+  // Rate bonuses
+  if (rate >= 0.5) {
+    // 50%+: random basic item
+    const pot = ITEM_DB.find(x => x.id === 'potion');
+    addItem('potion', rewardMult);
+    rewards.push({ kind:'item', name:`${pot.name} x${rewardMult}`, icon:pot.emoji });
+  }
+  if (rate >= 0.8) {
+    // 80%+: hipotion or ether
+    const pool = ['hipotion', 'ether'];
+    const itId = pick(pool);
+    const db = ITEM_DB.find(x => x.id === itId);
+    const count = (itId === 'hipotion' ? 3 : 1)*rewardMult;
+    addItem(itId, count);
+    rewards.push({ kind:'item', name:`${db.name} x${count}`, icon:db.emoji });
+  }
+  if (rate >= 1.0) {
+    // 100%: Cost Seed!
+    const seed = ITEM_DB.find(x => x.id === 'cost_seed');
+    addItem('cost_seed', rewardMult);
+    rewards.push({ kind:'item', name:`${seed.name} x${rewardMult}`, icon:seed.emoji });
+    
+    G.player.gold += 500*rewardMult;
+    rewards.push({ kind:'item', name:`全問正解ボーナス ${500*rewardMult} G`, icon:'💰' });
+  }
+  
+  if(meta.challengePrint && rate>=0.8){G.equipGachaTenPullTickets=(G.equipGachaTenPullTickets || 0)+1;rewards.push({kind:'equip-ticket',name:'チャレンジ達成！ 装備ガチャ10連チケット',icon:'🎫',count:1});}
+  // Target rewards
+  let title = '修行の成果！';
+  if (meta.targetId === 'demon_castle' && rate >= 0.5) {
+      G.player.exp += 1000;
+      G.player.gold += 10000;
+      const ability = rollAbility(5);
+      const equip = { uid: G.nextUid++, id: 'demon_sword', rarity: 5, ability };
+      G.ownedEquips.push(equip);
+      rewards.push({ kind:'item', name:'魔王の特別報酬 10,000 G', icon:'💰' });
+      rewards.push({ kind:'item', name:'魔王の特別報酬 1,000 EXP', icon:'✨' });
+      rewards.push({ kind:'equip', name:'魔王の覇剣 (★5 レジェンド)', icon:'⚔️', rarity:5, ability });
+      title = '魔王の秘宝 解放！！';
+  } else if (meta.targetId === 'levelup' && rate >= 0.8) {
+      G.player.lvl += 5;
+      G.player.points += 15;
+      G.player.maxHp += LEVEL_UP_HP_GAIN * 5;
+      G.player.maxMp += LEVEL_UP_MP_GAIN * 5;
+      G.player.hp = totalMaxHp();
+      G.player.mp = totalMaxMp();
+      title = 'レベルアップ修行 達成！';
+  } else if (meta.type === 'skill' && rate >= 0.8) {
+      if (!G.skills[meta.targetId]) G.skills[meta.targetId] = { progress:0, level:0 };
+      G.skills[meta.targetId].level = 1;
+      G.skills[meta.targetId].progress = 10;
+      const s = SKILL_DB.find(x => x.id === meta.targetId);
+      rewards.push({ kind:'item', name:`とくぎ「${s.name}」を習得！`, icon:'📖' });
+  } else if (meta.type === 'blueprint' && rate >= 0.8) {
+      const equipDb = rollAncientBlueprintReward();
+      if(!meta.itemConsumedAtPrint)removeItem(meta.uid, 1);
+      const ability = rollAbility(6);
+      G.ownedEquips.push({ uid: G.nextUid++, id:equipDb.id, rarity:6, ability });
+      rewards.push({ kind:'equip', id:equipDb.id, name:equipDb.name, icon:equipDb.emoji, rarity:6, ability });
+      title = `${equipDb.name}を手に入れた！`;
+  } else if (meta.type === 'stage' && rate >= 0.8) {
+      const r = recordStageClear(meta.areaId, meta.stageIndex);
+      title = 'ステージ クリア！';
+      rewards.push({ kind:'item', name:`${meta.name} をクリア！（★${r.currentStars}／${STAGE_STARS_TO_UNLOCK_NEXT}）`, icon:'🚩' });
+      for (const entry of r.milestoneRewards) pushMilestoneRewardCards(rewards, entry);
+  } else if ((meta.type === 'boss' || meta.type === 'stage_boss') && rate >= 0.8) {
+      /* ボスのプリント：戦闘でたおしたときと おなじ処理を通す（★・救助・ごほうび・ボス強化） */
+      const area = AREA_STAGES[meta.areaId];
+      const bossState = grantBossClearState(meta.areaId);
+      applyZoneClearState(area.rewardZone, [], { suppressNextUnlock:true, displayName:area.name });
+      if (!G.clearedAreaBosses) G.clearedAreaBosses = {};
+      G.clearedAreaBosses[meta.areaId] = true;
+      if (!G.rescued) G.rescued = [];
+      const npcAreaIdMap = { area1:'baker_sara', area13:'farmer_tom', area2:'blacksmith_ken', area3:'fisherman_dan', area4:'merchant_lina', area11:'adventurer', area12:'wiseman_gondo' };
+      const npcId = npcAreaIdMap[meta.areaId];
+      if (npcId && !G.rescued.includes(npcId)) G.rescued.push(npcId);
+      title = 'エリア 制覇！';
+      rewards.push({ kind:'item', name:`${meta.name} を完全クリア！（★${G.areaBossClearCounts[meta.areaId]}／${STAGE_STARS_TO_UNLOCK_NEXT}）`, icon:'👑' });
+      for (const entry of bossState.entries) pushMilestoneRewardCards(rewards, entry);
+      for (const note of bossState.notes) rewards.push({ kind:'item', name:note, icon:'💪' });
+  }
+  
+  const { leveledUp, lvlBefore, pointsGained, maxHpBefore, maxMpBefore } = grantExp(baseExp);
+
+  save();
+  playItemRevealSequence(rewards, {
+    badge: '💮 採点完了',
+    title: title,
+    showSummary: true,
+    onDone: () => {
+      if (leveledUp) {
+        const unlockedSkills = SKILL_DB.filter(s => (s.reqLvl || 1) > lvlBefore && (s.reqLvl || 1) <= G.player.lvl);
+        showLevelUpModal({
+          fromLvl: lvlBefore, toLvl: G.player.lvl,
+          hpBefore: maxHpBefore, hpAfter: totalMaxHp(),
+          mpBefore: maxMpBefore, mpAfter: totalMaxMp(),
+          pointsGained, unlockedSkills,
+        }, showHome);
+      } else {
+        showHome();
+      }
+    }
+  });
+}
+
+// Make print functions available to HTML onclick attributes
+window.openUnifiedCodeEntry = openUnifiedCodeEntry;
+window.fetchUnifiedPrint = fetchUnifiedPrint;
+window.gradeUnifiedPrint = gradeUnifiedPrint;
+window.selectUnifiedPrint = selectUnifiedPrint;
+
+
+function generatePrintId() {
+  let id;
+  do { id = String(rnd(1000, 9999)); } while (G && G.activePrints && G.activePrints[id]);
+  return id;
+}
+
+
+function hasPrintCode(id) {
+  if (!G) {
+    if (id === 'demon_castle') {
+      try {
+        const prints = JSON.parse(storageGet('guest_active_prints') || '{}');
+        return Object.values(prints).some(p => p.targetId === id);
+      } catch(e) {}
+    }
+    return false;
+  }
+  if (!G.activePrints) return false;
+  return Object.values(G.activePrints).some(p => p.targetId === id);
+}
+
+
+function cleanupOldPrints() {
+  const PRINT_LIFETIME = 30 * 24 * 60 * 60 * 1000; // プリントの暗号を入力できる期限（1か月）
+  const now = Date.now();
+  
+  if (G && G.activePrints) {
+    let changed = false;
+    for (const pId in G.activePrints) {
+      const createdAt = G.activePrints[pId].createdAt || now; // default to now if missing (keep old ones for 1 month from today)
+      if (now - createdAt > PRINT_LIFETIME) {
+        delete G.activePrints[pId];
+        changed = true;
+      }
+    }
+    if (changed) save();
+  }
+  
+  try {
+    let guestStr = storageGet('guest_active_prints');
+    if (guestStr) {
+      let guestPrints = JSON.parse(guestStr);
+      let guestChanged = false;
+      for (const pId in guestPrints) {
+        const createdAt = guestPrints[pId].createdAt || now;
+        if (now - createdAt > PRINT_LIFETIME) {
+          delete guestPrints[pId];
+          guestChanged = true;
+        }
+      }
+      if (guestChanged) {
+        storageSet('guest_active_prints', JSON.stringify(guestPrints));
+      }
+    }
+  } catch(e) {}
+}
+
+function addPrintCode(id, newCode, meta = {}, requestedPrintId = null) {
+  meta.createdAt = Date.now();
+  const printId = requestedPrintId || generatePrintId();
+  if(G?.activePrints?.[printId])return null;
+  meta.targetId = id;
+  meta.code = newCode;
+  
+  if (!G) {
+    if (id === 'demon_castle') {
+      try {
+        let prints = JSON.parse(storageGet('guest_active_prints') || '{}');
+        prints[printId] = meta;
+        storageSet('guest_active_prints', JSON.stringify(prints));
+      } catch(e){}
+    }
+    return printId;
+  }
+  
+  if (!G.activePrints) G.activePrints = {};
+  G.activePrints[printId] = meta;
+  return printId;
+}
+
+function checkUnifiedCode(printId, codeVal) {
+  // 1. 新システム (プリント番号指定)
+  if (printId) {
+    if (!G) {
+      try {
+        const prints = JSON.parse(storageGet('guest_active_prints') || '{}');
+        if (prints[printId] && prints[printId].code === codeVal) {
+          return { match: true, meta: prints[printId], printId: printId };
+        }
+      } catch(e){}
+      return { match: false, diff: generateDiff(codeVal, null) }; 
+    }
+    if (G.activePrints && G.activePrints[printId]) {
+      const meta = G.activePrints[printId];
+      if (meta.code === codeVal) {
+        return { match: true, meta: meta, printId: printId };
+      } else {
+        return { match: false, diff: generateDiff(codeVal, meta.code) };
+      }
+    }
+    return { match: false, diff: 'プリント番号が見つかりません。' };
+  }
+
+  // 2. 旧システム ＆ 番号なし検索 (暗号だけで検索)
+  if (!G) {
+    let guestOld = storageGet('guest_demon_castle_codes');
+    if (guestOld) {
+      try {
+        let codes = JSON.parse(guestOld);
+        if (codes.includes(codeVal)) return { match: true, meta: { targetId: 'demon_castle', code: codeVal }, oldCode: codeVal, oldType: 'guest_demon_castle' };
+      } catch(e){}
+    }
+    return { match: false, diff: '暗号が一致するプリントが見つかりません。' };
+  }
+  
+  if (G.activePrints) {
+    for (const [pId, meta] of Object.entries(G.activePrints)) {
+      if (meta.code === codeVal) return { match: true, meta: meta, printId: pId };
+    }
+  }
+  
+  if (G.printSheetCodes) {
+    for (const [targetId, codes] of Object.entries(G.printSheetCodes)) {
+      if (Array.isArray(codes) && codes.includes(codeVal)) {
+        return { match: true, meta: { targetId: targetId, code: codeVal }, oldCode: codeVal, oldType: 'skill_or_bp' };
+      }
+      if (typeof codes === 'string' && codes === codeVal) {
+        return { match: true, meta: { targetId: targetId, code: codeVal }, oldCode: codeVal, oldType: 'skill_or_bp' };
+      }
+    }
+  }
+
+  return { match: false, diff: '番号なしで検索しましたが、一致する暗号がありませんでした。' };
+}
+
+function generateDiff(input, expected) {
+  if (!expected) return '';
+  let res = [];
+  for (let i = 0; i < expected.length; i++) {
+    if (i >= input.length) {
+      res.push('❌');
+    } else {
+      res.push(input[i] === expected[i] ? '〇' : '❌');
+    }
+  }
+  return res.join('');
+}
+
+function removeResolvedPrint(result) {
+  if (result.printId) {
+    if (!G) {
+      try {
+        const prints = JSON.parse(storageGet('guest_active_prints') || '{}');
+        delete prints[result.printId];
+        storageSet('guest_active_prints', JSON.stringify(prints));
+      } catch(e){}
+    } else {
+      delete G.activePrints[result.printId];
+      save();
+    }
+  } else if (result.oldCode) {
+    if (!G && result.oldType === 'guest_demon_castle') {
+      try {
+        let codes = JSON.parse(storageGet('guest_demon_castle_codes') || '[]');
+        codes = codes.filter(c => c !== result.oldCode);
+        storageSet('guest_demon_castle_codes', JSON.stringify(codes));
+      } catch(e){}
+    } else if (G && G.printSheetCodes && result.meta.targetId) {
+      let current = G.printSheetCodes[result.meta.targetId];
+      if (Array.isArray(current)) {
+        G.printSheetCodes[result.meta.targetId] = current.filter(c => c !== result.oldCode);
+        if (G.printSheetCodes[result.meta.targetId].length === 0) delete G.printSheetCodes[result.meta.targetId];
+      } else {
+        delete G.printSheetCodes[result.meta.targetId];
+      }
+      save();
+    }
+  }
+}
+
+
+
+function openAdminGrade() {
+  requestAdminAccess(() => {
+    const listEl = $('unified-problems-list');
+    const cur = window.unifiedCurrentPrint;
+    if (!cur || !cur.meta || !cur.meta.problems) return;
+    const problems = cur.meta.problems;
+    
+    // Change inputs to checkboxes for admin and show the answer
+    const inputs = listEl.querySelectorAll('input.challenge-input');
+    inputs.forEach((input, i) => {
+      const ans = formatPrintAnswer(problems[i]);
+      input.outerHTML = `<div class="unified-admin-answer"><b>${escapeHtml(ans)}</b><label><input type="checkbox" class="admin-grade-chk" data-idx="${i}">正解</label></div>`;
+    });
+
+    const markSpans = listEl.querySelectorAll('span[id^="unified-mark-"]');
+    markSpans.forEach(span => span.style.display = 'none');
+
+    $('unified-grade-btn-area').style.display = 'none';
+    $('admin-grade-btn-area').style.display = 'grid';
+  });
+}
+
+function adminGradeAllCorrect() {
+  const chks = document.querySelectorAll('.admin-grade-chk');
+  chks.forEach(c => c.checked = true);
+}
+
+function submitAdminGrade() {
+  const cur = window.unifiedCurrentPrint;
+  if (!cur || !cur.meta || !cur.meta.problems || cur.scoreShowing || cur.rewardsGranted) return;
+  const meta = cur.meta;
+  const chks = document.querySelectorAll('.admin-grade-chk');
+  let correctCount = 0;
+  const count = meta.problems.length;
+  
+  chks.forEach(chk => {
+    if (chk.checked) correctCount++;
+  });
+  
+  showPrintScoreResult(cur, correctCount, count);
+}
+
+window.openAdminGrade = openAdminGrade;
+window.adminGradeAllCorrect = adminGradeAllCorrect;
+window.submitAdminGrade = submitAdminGrade;
+
+
+
+
+function showKanaChoicePrintVariants({generateProblem,printName,targetId,meta,onPrinted}){
+ const variants=['Aセット','Bセット','Cセット'].map(label=>{
+  const problems=[];
+  const seen=new Set();
+  for(let attempt=0;attempt<600&&problems.length<REVIEW_SETTINGS.regularPrintQuestions;attempt++){
+   const p=generateProblem(problems.length),choice=kanaPrintChoice(p,createKanaChoiceProblem(p));
+   if(!choice||seen.has(p.answer))continue;
+   seen.add(p.answer);problems.push({...p,printChoices:[...choice.options],printChoiceCount:choice.options.length});
+  }
+  if(!problems.length)throw new Error('かなの選択肢を作れませんでした');
+
+  return {problems,opLabel:label,choiceLabel:label,previewHtml:problems.map((p,i)=>`<div class="print-choice-row">${i+1}. ${p.printChoices.map(escapeHtml).join(' ／ ')}</div>`).join(''),onSelect(){
+   const code=Array.from({length:6},()=>Math.floor(Math.random()*10)).join('');
+   const printId=addPrintCode(targetId,code,{...meta,kanjiMode:'choice',problems,name:printName});save();
+   openPrintWindow(kanaChoicePrintHtml({problems,title:printName,playerName:G?.playerName||'',printId,rewardsHtml:printRewardStripHtml({challengePrint:meta.challengePrint,questionCount:problems.length})}),null,true);onPrinted?.();
+  }};
+ });showPrintChoiceModal(variants);
+}
+
+function showKanjiPrintVariants({generateProblem, printName, sheetTitle = printName, targetId, meta, onPrinted}) {
+  const variants = [
+    {label:'A 漢字の読み', type:'yomi'},
+    {label:'B 書き取り', type:'kaki'},
+    {label:'C ミックス', type:'mix'},
+  ].map(variant => {
+    const problems = uniqueKanjiPrintProblems(generateProblem);
+    const previewHtml = problems.map((problem,index) => {
+      const part = kanjiPrintQuestionParts(problem,index,variant.type,problems.length);
+      const blanks = part.mode === 'yomi' ? '（　　　　）' : part.runs.map(run => run.kind === 'kanji' ? '□'.repeat(run.text.length) : run.kind === 'kana' ? '（　）' : escapeHtml(run.text)).join('');
+      return `<div class="kanji-print-preview-row"><small>${index+1}. ${part.mode === 'yomi' ? '読み' : '書き取り'}</small><div>${escapeHtml(part.before)}<u>${escapeHtml(part.prompt)}</u>${escapeHtml(part.after)}<br><span class="kanji-print-preview-blanks">${blanks}</span></div></div>`;
+    }).join('');
+    return {problems, opLabel:sheetTitle, choiceLabel:variant.label, previewHtml, onSelect() {
+      const code = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
+      const printId = addPrintCode(targetId, code, {...meta, problems, name:printName, kanjiMode:variant.type});
+      save();
+      const area = AREA_STAGES[meta.areaId];
+      const areaNumber = area?.displayNum || meta.areaId.replace('area','');
+      const stageLabel = `エリア${areaNumber}${Number.isInteger(meta.stageIndex) ? '-'+(meta.stageIndex+1) : ' ボス戦'}`;
+      openPrintWindow(kanjiPrintSheetHtml(problems, variant.type, sheetTitle, G?.playerName || '', printId,
+        {stageLabel, challengePrint:meta.challengePrint, blueprint:meta.type === 'blueprint'}), null, true);
+      onPrinted?.();
+    }};
+  });
+  showPrintChoiceModal(variants);
+}
+
+function printRewardStripHtml({challengePrint = false, blueprint = false, questionCount = 10} = {}) {
+  const mult = challengePrint ? 3 : 1;
+  const half = `${Math.ceil(questionCount*0.5)}問以上正解`;
+  const pass = `${Math.ceil(questionCount*0.8)}問以上正解`;
+  const perfect = `${questionCount}問正解`;
+  const entries = [
+    {icon:'🏅',name:'クエストメダル',amount:'1問1枚',condition:'正解した分'},
+    {icon:'✨',name:'経験値',amount:`1問 ${20*mult} EXP`,condition:'正解した分'},
+    {icon:'💰',name:'ゴールド',amount:`1問 ${10*mult} G`,condition:'正解した分'},
+    {image:'assets/items/potion.png',name:'傷薬',amount:`×${mult}`,condition:half},
+    {image:'assets/items/hipotion.png',name:'秘薬',amount:`×${3*mult}`,condition:`${pass}：またはエーテル×${mult}`},
+    {image:'assets/items/cost_seed_pixel.png',name:'コストプラスのたね',amount:`×${mult}`,condition:perfect},
+    {icon:'💰',name:'全問正解ボーナス',amount:`${500*mult} G`,condition:perfect},
+  ];
+  if (challengePrint) entries.push({icon:'🎫',name:'装備ガチャ10連チケット',amount:'×1',condition:pass});
+  if (blueprint) entries.push({image:'assets/artist-weapon-samples/ancient-dual-handdrawn-v1.png',name:'エンシェント装備',amount:'×1',condition:`${pass}：ランダムで1つ`});
+  return `<style>
+    .print-rewards { margin:2mm 0 3mm; padding:2mm 0; border-top:1px solid #777; border-bottom:1px solid #777; color:#111; font:8pt/1.4 sans-serif; break-inside:avoid; }
+    .print-rewards-title { display:block; margin-bottom:1mm; font-size:8pt; }
+    .print-reward-list { display:flex; flex-wrap:wrap; align-items:flex-start; gap:2mm 4mm; }
+    .print-reward { display:flex; align-items:center; gap:1.5mm; max-width:100%; }
+    .print-reward-icon { box-sizing:border-box; display:flex; align-items:center; justify-content:center; width:7mm; height:7mm; aspect-ratio:1; flex:0 0 7mm; padding:0.6mm; border:1px solid #555; border-radius:0; overflow:hidden; font-size:13pt; line-height:1; }
+    .print-reward-icon img { display:block; width:100%; height:100%; object-fit:contain; }
+    .print-reward-text { min-width:0; }
+    .print-reward-text b { font-weight:600; }
+    .print-reward-text small { display:block; font-size:7pt; }
+  </style><section class="print-rewards" aria-label="プリント報酬"><strong class="print-rewards-title">${challengePrint ? 'チャレンジ報酬（経験値・G・消耗品3倍）' : 'プリント報酬'}</strong><div class="print-reward-list">${entries.map(entry => {
+    const path = entry.image && (typeof av === 'function' ? av(entry.image) : entry.image);
+    const src = path && (typeof location !== 'undefined' ? new URL(path,location.href).href : path);
+    const icon = src ? `<img src="${escapeHtml(src)}" alt="">` : entry.icon;
+    return `<div class="print-reward"><span class="print-reward-icon" aria-hidden="true">${icon}</span><span class="print-reward-text"><b>${entry.name} ${entry.amount}</b><small>${entry.condition}</small></span></div>`;
+  }).join('')}</div></section>`;
+}
+
+function uniqueKanjiPrintProblems(generateProblem) {
+  const problems = [], words = new Set(), readings = new Set(), tiers = new Set();
+  const key = value => String(value ?? '').normalize('NFKC').replace(/\s/gu,'').replace(/[ァ-ヶ]/gu, c => String.fromCharCode(c.charCodeAt(0)-0x60));
+  const add = problem => {
+    const word = key(problem.text), reading = key(problem.answer);
+    if (!word || !reading || words.has(word) || readings.has(reading)) return;
+    words.add(word); readings.add(reading);
+    problems.push({...problem, printContext:kanjiPrintContext(problem)});
+  };
+  for (let attempt=0; attempt<400 && problems.length<REVIEW_SETTINGS.regularPrintQuestions; attempt++) {
+    const problem = generateProblem(attempt % 10);
+    if (problem.tier) tiers.add(problem.tier);
+    add(problem);
+  }
+  // Finish from the same stage pools if random sampling repeatedly chose duplicates.
+  for (const tier of tiers) {
+    const pool = typeof window !== 'undefined' ? window.KANJI_POOLS?.[tier] || [] : [];
+    for (const problem of pool) {
+      if (problems.length >= REVIEW_SETTINGS.regularPrintQuestions) break;
+      add({...problem,tier});
+    }
+  }
+  return problems;
+}
+
+function kanjiPrintQuestionParts(problem, index, variant, count = REVIEW_SETTINGS.regularPrintQuestions) {
+  const mode = variant === 'mix' ? (index < count/2 ? 'yomi' : 'kaki') : variant;
+  const text = String(problem.text ?? '');
+  const runs = (text.match(/[\u3400-\u9fff々]+|[\u3041-\u3096\u30a1-\u30faー]+|./gu) || []).map(text => ({
+    text, kind:/^[\u3400-\u9fff々]+$/u.test(text) ? 'kanji' : /^[\u3041-\u3096\u30a1-\u30faー]+$/u.test(text) ? 'kana' : 'literal',
+  }));
+  return {mode, prompt:String(mode === 'kaki' ? problem.answer : text), runs, ...kanjiPrintContext(problem)};
+}
+
+function kanjiPrintSheetHtml(problems, variant, title, playerName, printId, options = {}) {
+  const grade=Number(String(problems[0]?.tier??'').match(/kanji_g(\d)/)?.[1])||2;
+  return renderKanjiStagePrint(problems,variant,options.stageLabel?`【${options.stageLabel}】${title}`:title,playerName,printId,{...options,grade});
+}
+
+function challengePrintSource(game = G) {
+  return recentWeakStudyStageSource(Date.now(),game) || choosePickupStage(game) || playedStageChallengeSource(game) || {areaId:'area1',stageIndex:0,reason:'first-stage'};
+}
+
+function challengePrintDecisionForGame(game) {
+  const source=challengePrintSource(game),area=AREA_STAGES[source.areaId],stage=area?.stages?.[source.stageIndex];
+  if(!stage)return {label:'判定できません',reason:'ステージ情報なし'};
+  let reason='';
+  if(source.reason==='accuracy')reason=`挑戦済み・直近正答率が40%以上100%未満（${Math.round(source.accuracy*100)}%）`;
+  else if(source.reason==='slow')reason=`挑戦済み・直近正答率が40%以上100%未満で、遅い回答が${source.slowStreak}回連続`;
+  else if(source.learningKey)reason=`レイドの誤答記録を復習（${source.reason}）`;
+  else if(source.reason==='hardest-played')reason='苦手候補なし → 取り組み済みの最難関';
+  else reason='学習履歴なし → 最初のステージ';
+  return {areaId:source.areaId,stageIndex:source.stageIndex,label:`${area.name}・${stage.name}`,reason};
+}
+
+/* 直近90日・直近10回答を見て、正答率40%以上100%未満の挑戦済みステージを候補にする。 */
+function recentWeakStudyStageSource(now = Date.now(), game = G) {
+  const cutoff=now-90*24*60*60*1000, candidates=[];
+  for(const [key,stat] of Object.entries(game?.studyStats?.stageHistory || {})) {
+    const match=key.match(/^(area\d+)_(\d+)$/);
+    if(!match || !AREA_STAGES[match[1]]?.stages[Number(match[2])])continue;
+    const history=(Array.isArray(stat.history)?stat.history:[])
+      .filter(entry=>Number(entry?.t)>=cutoff && Number(entry?.t)<=now)
+      .slice(-10);
+    if(history.length<3)continue;
+    const accuracy=history.reduce((sum,entry)=>sum+(entry.ok?1:0),0)/history.length;
+    let slowStreak=0;
+    for(const entry of history) {
+      const ms=Number(entry?.ms),limitMs=Number(entry?.limitMs);
+      slowStreak=Number.isFinite(ms)&&ms>=0&&Number.isFinite(limitMs)&&limitMs>0&&ms/limitMs>=0.7 ? slowStreak+1 : 0;
+    }
+    if(accuracy<0.4||accuracy>=1)continue;
+    candidates.push({areaId:match[1],stageIndex:Number(match[2]),accuracy,slowStreak,lastAttempt:Math.max(...history.map(entry=>Number(entry.t)||0)),reason:slowStreak>=3?'slow':'accuracy'});
+  }
+  candidates.sort((a,b)=>a.accuracy-b.accuracy||b.slowStreak-a.slowStreak||stageDropDifficulty(b.areaId,b.stageIndex)-stageDropDifficulty(a.areaId,a.stageIndex)||b.lastAttempt-a.lastAttempt);
+  return candidates[0]||null;
+}
+
+/* 苦手が見つからない場合は、実際に回答またはクリアしたステージから最難関を選ぶ。 */
+function playedStageChallengeSource(game = G) {
+  const played=[];
+  for(const [areaId,area] of Object.entries(AREA_STAGES))for(let stageIndex=0;stageIndex<area.stages.length;stageIndex++) {
+    const history=game?.studyStats?.stageHistory?.[`${areaId}_${stageIndex}`];
+    const attempts=Number(history?.total)||history?.history?.length||0;
+    if(attempts>0||stageTotalClearCount(areaId,stageIndex,game)>0)played.push({areaId,stageIndex,lastAttempt:Math.max(0,...(history?.history||[]).map(entry=>Number(entry.t)||0))});
+  }
+  played.sort((a,b)=>stageDropDifficulty(b.areaId,b.stageIndex)-stageDropDifficulty(a.areaId,a.stageIndex)||b.lastAttempt-a.lastAttempt||a.areaId.localeCompare(b.areaId)||b.stageIndex-a.stageIndex);
+  return played[0]?{...played[0],reason:'hardest-played'}:null;
+}
+
+function suggestChallengePrintBeforeSave(onSave) {
+  if(!G || G.isTestMode){onSave();return;}
+  const source=challengePrintSource();
+  const stage=AREA_STAGES[source.areaId]?.stages[source.stageIndex];
+  if(!stage){onSave();return;}
+  const overlay=document.createElement('div');overlay.className='confirm-overlay';
+  overlay.innerHTML=`<section class="panel challenge-print-suggestion" role="dialog" aria-modal="true" aria-label="おすすめチャレンジプリント"><h2>🖨 おすすめプリント</h2><p>${escapeHtml(AREA_STAGES[source.areaId].name)} · ${escapeHtml(stage.name)}</p><div class="challenge-print-rewards" aria-label="チャレンジプリントの報酬">
+    <div class="challenge-print-reward"><span class="challenge-print-reward-art" aria-hidden="true">${iconHtml('✨',40)}</span><span>経験値</span><b>3倍</b></div>
+    <div class="challenge-print-reward"><span class="challenge-print-reward-art" aria-hidden="true">${iconHtml('💰',40)}</span><span>ゴールド</span><b>3倍</b></div>
+    <div class="challenge-print-reward"><span class="challenge-print-reward-art" aria-hidden="true">${iconHtml(getItemTemplate('potion').emoji,40)}</span><span>消耗品</span><b>3倍</b></div>
+    <div class="challenge-print-reward challenge-print-ticket"><span class="challenge-print-reward-art">${stageRewardIcon('ticket','equip-ten-ticket',1,48)}</span><span>装備ガチャ10連チケット</span><b>×1枚</b><small>80%以上の正解で確定！</small></div>
+    </div><p class="challenge-print-reward-note">経験値・ゴールド・消耗品は通常の3倍。正解数・正答率に応じて獲得できます。</p><button type="button" class="btn btn-primary" data-print>印刷してセーブする</button><button type="button" class="btn" data-save>印刷せずセーブする</button><button type="button" class="btn" data-cancel>もどる</button></section>`;
+  overlay.querySelector('[data-print]').onclick=()=>{overlay.remove();printAreaStage(source.areaId,source.stageIndex,true,null,onSave);};
+  overlay.querySelector('[data-save]').onclick=()=>{overlay.remove();onSave();};
+  overlay.querySelector('[data-cancel]').onclick=()=>overlay.remove();document.body.appendChild(overlay);bindStageRewardTooltips(overlay);overlay.querySelector('[data-print]').focus();
+}
+
+function printAreaStage(areaId, idx, challengePrint = false, blueprint = null, onPrinted = null) {
+  const area = AREA_STAGES[areaId];
+  const stage = area.stages[idx];
+  const count = REVIEW_SETTINGS.regularPrintQuestions;
+  const numPrefix = area.displayNum || areaId.replace('area', '');
+  const printName = `${blueprint ? '古代からの挑戦状 · ' : ''}${challengePrint ? 'チャレンジプリント（経験値・G・消耗品3倍／80%以上で装備10連券） ' : ''}${area.name} ${stage.name}`;
+
+  const sampleP = stage.generateProblem();
+  const isKanji = isKanjiProblem(sampleP) || ['area5','area6','area7','area8','area9','area10','area14','area15'].includes(areaId);
+
+  if (String(sampleP.tier||'').startsWith('kana')&&createKanaChoiceProblem(sampleP)){
+    showKanaChoicePrintVariants({generateProblem:()=>stage.generateProblem(),printName,targetId:blueprint?blueprint.bp.id:areaId+'_'+idx,
+      meta:{type:blueprint?'blueprint':'stage',...(blueprint?{uid:blueprint.uid}:{}),challengePrint,areaId,stageIndex:idx},onPrinted});return;
+  }
+
+  if (isKanji && !String(sampleP.tier || '').startsWith('kana')) {
+    showKanjiPrintVariants({generateProblem:() => stage.generateProblem(), printName, sheetTitle:`${area.name} ${stage.name}`,
+      targetId:blueprint ? blueprint.bp.id : areaId+'_'+idx,
+      meta:{type:blueprint ? 'blueprint' : 'stage', ...(blueprint ? {uid:blueprint.uid} : {}), challengePrint, areaId, stageIndex:idx}, onPrinted});
+    return;
+  }
+
+  if (isKanji) {
+    const variants = [
+      { label: '読み（よみ）', type: 'yomi' },
+      { label: '書き（かき）', type: 'kaki' },
+      { label: '読み書きミックス', type: 'mix' }
+    ].map(variant => {
+      const problems = [];
+      problems.push(...uniquePrintProblems(()=>stage.generateProblem(),count));
+      return {
+        problems,
+        opLabel: stage.name,
+        onSelect: () => {
+          const makeRow = (p, i) => {
+            let mode = variant.type;
+            if (mode === 'mix') mode = (i % 2 === 0) ? 'yomi' : 'kaki';
+            
+            const cellCount = Math.max(3, p.answer ? p.answer.length : 3);
+            let cells = '';
+            for (let c = 0; c < cellCount; c++) {
+              cells += '<div class="p-cell"></div>';
+            }
+            
+            const tierStr = String(p.tier || '');
+            let displayText = mode === 'yomi' ? p.text : p.answer;
+            let hintHtml = '';
+            
+            if (tierStr.startsWith('kana')) {
+              const locProb = typeof createKanaLocationProblem === 'function' ? createKanaLocationProblem(p) : null;
+              if (locProb) {
+                displayText = locProb.baseChars.join('　');
+                hintHtml = `<div class="p-hint">「${locProb.specialChar}」をいれる</div>`;
+              }
+            }
+            
+            return `<div class="p-item"><div class="p-num">(${i + 1})</div><div class="p-word">${displayText}</div>${hintHtml}<div class="p-arrow">↓</div><div class="p-answer-box">${cells}</div></div>`;
+          };
+          const p1 = problems.slice(0, Math.ceil(count/2)).map((p, i) => makeRow(p, i)).join('');
+          const p2 = problems.slice(Math.ceil(count/2)).map((p, i) => makeRow(p, i + Math.ceil(count/2))).join('');
+          
+          const playerName = (typeof G !== "undefined" && G) ? (G.playerName || "") : "";
+          const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
+          const printId = addPrintCode(blueprint ? blueprint.bp.id : areaId + '_' + idx, pCode, { type: blueprint ? 'blueprint' : 'stage', ...(blueprint ? {uid:blueprint.uid} : {}), challengePrint, problems, name: printName, areaId, stageIndex: idx, kanjiMode: variant.type });
+          save();
+          const instrText = variant.type === 'yomi' ? 'つぎのことばをひらがなで　かきましょう' : variant.type === 'kaki' ? 'つぎのことばを　かんじで　かきましょう' : 'つぎのことば　よみ・かきに　こたえましょう';
+          openPrintWindow(`<style>
+              body { margin: 0; padding: 0; font-family: "Yu Mincho","MS Mincho","Hiragino Mincho ProN",serif; display: flex; flex-direction: row; width: 297mm; height: 210mm; box-sizing: border-box; }
+              .p-sidebar { width: 55px; border-left: 2px solid #333; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 8px 4px; writing-mode: vertical-rl; }
+              .p-sidebar-title { font-size: 14px; font-weight: bold; }
+              .p-sidebar-meta { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+              .p-name-label { font-size: 13px; }
+              .p-name-value { border-top: 1px solid #333; width: 90px; font-size: 16px; min-height: 14px; }
+              .p-print-id { font-size: 10px; color: #999; }
+              .p-cols-area { flex: 1; display: flex; flex-direction: row; padding: 8px; gap: 6px; overflow: hidden; }
+              .p-instruction { width: 70px; writing-mode: vertical-rl; font-size: 14px; display: flex; align-items: center; justify-content: center; color: #333; border-right: 1px solid #ccc; padding-right: 6px; flex-shrink: 0; }
+              .p-col-group { display: flex; flex-direction: row-reverse; gap: 6px; flex: 1; justify-content: flex-end; }
+              .p-item { display: flex; flex-direction: column; align-items: center; border-left: 1px dotted #bbb; padding: 4px 6px; min-width: 50px; }
+              .p-num { font-size: 13px; color: #888; writing-mode: vertical-rl; margin-bottom: 4px; }
+              .p-word { writing-mode: vertical-rl; font-size: 24px; font-weight: bold; letter-spacing: 0.2em; text-orientation: upright; margin-bottom: 8px; }
+              .p-arrow { font-size: 12px; margin-bottom: 4px; }
+              .p-answer-box { display: flex; flex-direction: column; border: 2px solid #3a9fdd; }
+              .p-cell { width: 36px; height: 36px; border-bottom: 1px dashed #3a9fdd; box-sizing: border-box; position: relative; }
+              .p-cell:last-child { border-bottom: none; }
+              .p-cell::before { content:""; position:absolute; top:50%; left:0; right:0; border-top:1px dotted #c0dff0; }
+              .p-cell::after { content:""; position:absolute; top:0; bottom:0; left:50%; border-left:1px dotted #c0dff0; }
+              .p-hint { writing-mode: vertical-rl; font-size: 12px; border: 1px solid #666; padding: 2px; border-radius: 3px; margin-bottom: 4px; }
+              @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
+            </style>
+            <div class="p-cols-area">
+              <div class="p-instruction">${instrText}</div>
+              <div class="p-col-group">${p1}${p2}</div>
+            </div>
+            <div class="p-sidebar">
+              <div class="p-sidebar-title">【エリア${numPrefix}-${idx+1}】${printName}${variant.label}</div>
+              <div class="p-sidebar-meta">
+                <div class="p-name-label">なまえ</div>
+                <div class="p-name-value">${playerName}</div>
+                <div class="p-print-id">No.${printId}</div>
+              </div>
+            </div>`, null, true);
+          onPrinted?.();
+        }
+      };
+    });
+    showPrintChoiceModal(variants);
+  } else {
+    // 算数の場合
+    const variants = ['Aセット', 'Bセット', 'Cセット'].map((label, vi) => {
+      const problems = [];
+      if (areaId === 'area2' && sampleP.op === '×') {
+        for (let n = 0; n < count; n++) { const b=n%10+1; problems.push(stageProblem(sampleP.a, b, '×', sampleP.a * b)); }
+        for (let i = problems.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [problems[i], problems[j]] = [problems[j], problems[i]];
+        }
+      } else {
+        problems.push(...uniquePrintProblems(()=>stage.generateProblem(),count));
+      }
+      return {
+        problems,
+        opLabel: stage.name,
+        onSelect: () => {
+          const p1 = problems.slice(0, Math.ceil(count/2)).map((p, i) =>
+            `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
+          ).join('');
+          const p2 = problems.slice(Math.ceil(count/2)).map((p, i) =>
+            `<div class="p-row"><span class="p-num">${i + 1 + Math.ceil(count/2)}.</span><span class="p-expr">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
+          ).join('');
+          const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
+          const printId = addPrintCode(blueprint ? blueprint.bp.id : areaId + '_' + idx, pCode, { type: blueprint ? 'blueprint' : 'stage', ...(blueprint ? {uid:blueprint.uid} : {}), challengePrint, problems, name: printName, areaId, stageIndex: idx });
+          save();
+          openPrintWindow(`
+            <div class="p-title">【エリア${numPrefix}-${idx+1}】 ${area.name} ${stage.name} ${label}</div>
+            ${printRewardStripHtml({challengePrint,blueprint:!!blueprint,questionCount:problems.length})}
+            <div class="p-name-box">なまえ：<span class="p-name-line" style="position:relative;"><span style="position:absolute; bottom:2px; left:4px; font-size:18px;">${(typeof G !== "undefined" && G) ? (G.playerName || "") : ""}</span></span></div>
+            <div class="p-desc">プリント番号: ${printId}</div>
+            <div class="p-cols">
+              <div class="p-col">${p1}</div>
+              <div class="p-col">${p2}</div>
+            </div>`, area.bgImage ? (typeof av === 'function' ? av(area.bgImage) : area.bgImage) : null);
+          onPrinted?.();
+        }
+      };
+    });
+    showPrintChoiceModal(variants);
+  }
+}
+
+function printAreaBoss(areaId) {
+  const area = AREA_STAGES[areaId];
+  const count = REVIEW_SETTINGS.regularPrintQuestions;
+  const numPrefix = area.displayNum || areaId.replace('area', '');
+  const printName = `${area.name} ボス戦`;
+
+  const sampleP = area.bossPhase1Problem();
+  const isKanji = isKanjiProblem(sampleP) || ['area5','area6','area7','area8','area9','area10','area14','area15'].includes(areaId);
+
+  if(String(sampleP.tier||'').startsWith('kana')&&createKanaChoiceProblem(sampleP)){
+    const pool=Array.from({length:count},(_,i)=>i<count/2?area.bossPhase1Problem():area.bossPhase2Problem());
+    if(pool.every(p=>createKanaChoiceProblem(p))){showKanaChoicePrintVariants({generateProblem:i=>pool[i%pool.length],printName,targetId:areaId+'_boss',meta:{type:'boss',areaId}});return;}
+  }
+
+  if (isKanji && !String(sampleP.tier || '').startsWith('kana')) {
+    showKanjiPrintVariants({generateProblem:i => i < 5 ? area.bossPhase1Problem() : area.bossPhase2Problem(),
+      printName, targetId:areaId+'_boss', meta:{type:'boss', areaId}});
+    return;
+  }
+
+  if (isKanji) {
+    const variants = [
+      { label: '読み（よみ）', type: 'yomi' },
+      { label: '書き（かき）', type: 'kaki' },
+      { label: '読み書きミックス', type: 'mix' }
+    ].map(variant => {
+      const problems = [];
+      problems.push(...uniquePrintProblems((i,attempt)=>attempt%2?area.bossPhase2Problem():area.bossPhase1Problem(),count));
+      return {
+        problems,
+        opLabel: 'ボス戦',
+        onSelect: () => {
+          const makeRow = (p, i) => {
+            let mode = variant.type;
+            if (mode === 'mix') mode = (i % 2 === 0) ? 'yomi' : 'kaki';
+            
+            const cellCount = Math.max(3, p.answer ? p.answer.length : 3);
+            let cells = '';
+            for (let c = 0; c < cellCount; c++) {
+              cells += '<div class="p-cell"></div>';
+            }
+            
+            const tierStr = String(p.tier || '');
+            let displayText = mode === 'yomi' ? p.text : p.answer;
+            let hintHtml = '';
+            
+            if (tierStr.startsWith('kana')) {
+              const locProb = typeof createKanaLocationProblem === 'function' ? createKanaLocationProblem(p) : null;
+              if (locProb) {
+                displayText = locProb.baseChars.join('　');
+                hintHtml = `<div class="p-hint">「${locProb.specialChar}」をいれる</div>`;
+              }
+            }
+            
+            return `<div class="p-item"><div class="p-num">(${i + 1})</div><div class="p-word">${displayText}</div>${hintHtml}<div class="p-arrow">↓</div><div class="p-answer-box">${cells}</div></div>`;
+          };
+          const p1 = problems.slice(0, Math.ceil(count/2)).map((p, i) => makeRow(p, i)).join('');
+          const p2 = problems.slice(Math.ceil(count/2)).map((p, i) => makeRow(p, i + Math.ceil(count/2))).join('');
+          
+          const playerName = (typeof G !== "undefined" && G) ? (G.playerName || "") : "";
+          const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
+          const printId = addPrintCode(areaId + '_boss', pCode, { type: 'boss', problems, name: printName, areaId, kanjiMode: variant.type });
+          save();
+          const instrText = variant.type === 'yomi' ? 'つぎのことばをひらがなで　かきましょう' : variant.type === 'kaki' ? 'つぎのことばを　かんじで　かきましょう' : 'つぎのことば　よみ・かきに　こたえましょう';
+          openPrintWindow(`<style>
+              body { margin: 0; padding: 0; font-family: "Yu Mincho","MS Mincho","Hiragino Mincho ProN",serif; display: flex; flex-direction: row; width: 297mm; height: 210mm; box-sizing: border-box; }
+              .p-sidebar { width: 55px; border-left: 2px solid #333; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 8px 4px; writing-mode: vertical-rl; }
+              .p-sidebar-title { font-size: 14px; font-weight: bold; }
+              .p-sidebar-meta { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+              .p-name-label { font-size: 13px; }
+              .p-name-value { border-top: 1px solid #333; width: 90px; font-size: 16px; min-height: 14px; }
+              .p-print-id { font-size: 10px; color: #999; }
+              .p-cols-area { flex: 1; display: flex; flex-direction: row; padding: 8px; gap: 6px; overflow: hidden; }
+              .p-instruction { width: 70px; writing-mode: vertical-rl; font-size: 14px; display: flex; align-items: center; justify-content: center; color: #333; border-right: 1px solid #ccc; padding-right: 6px; flex-shrink: 0; }
+              .p-col-group { display: flex; flex-direction: row-reverse; gap: 6px; flex: 1; justify-content: flex-end; }
+              .p-item { display: flex; flex-direction: column; align-items: center; border-left: 1px dotted #bbb; padding: 4px 6px; min-width: 50px; }
+              .p-num { font-size: 13px; color: #888; writing-mode: vertical-rl; margin-bottom: 4px; }
+              .p-word { writing-mode: vertical-rl; font-size: 24px; font-weight: bold; letter-spacing: 0.2em; text-orientation: upright; margin-bottom: 8px; }
+              .p-arrow { font-size: 12px; margin-bottom: 4px; }
+              .p-answer-box { display: flex; flex-direction: column; border: 2px solid #3a9fdd; }
+              .p-cell { width: 36px; height: 36px; border-bottom: 1px dashed #3a9fdd; box-sizing: border-box; position: relative; }
+              .p-cell:last-child { border-bottom: none; }
+              .p-cell::before { content:""; position:absolute; top:50%; left:0; right:0; border-top:1px dotted #c0dff0; }
+              .p-cell::after { content:""; position:absolute; top:0; bottom:0; left:50%; border-left:1px dotted #c0dff0; }
+              .p-hint { writing-mode: vertical-rl; font-size: 12px; border: 1px solid #666; padding: 2px; border-radius: 3px; margin-bottom: 4px; }
+              @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
+            </style>
+            <div class="p-cols-area">
+              <div class="p-instruction">${instrText}</div>
+              <div class="p-col-group">${p1}${p2}</div>
+            </div>
+            <div class="p-sidebar">
+              <div class="p-sidebar-title">【エリア${numPrefix}】${printName}${variant.label}</div>
+              <div class="p-sidebar-meta">
+                <div class="p-name-label">なまえ</div>
+                <div class="p-name-value">${playerName}</div>
+                <div class="p-print-id">No.${printId}</div>
+              </div>
+            </div>`, null, true);
+        }
+      };
+    });
+    showPrintChoiceModal(variants);
+  } else {
+    const variants = ['Aセット', 'Bセット', 'Cセット'].map((label, vi) => {
+      const problems = [];
+      problems.push(...uniquePrintProblems((i,attempt)=>attempt%2?area.bossPhase2Problem():area.bossPhase1Problem(),count));
+      return {
+        problems,
+        opLabel: 'ボス戦',
+        onSelect: () => {
+          const p1 = problems.slice(0, Math.ceil(count/2)).map((p, i) =>
+            `<div class="p-row"><span class="p-num">${i + 1}.</span><span class="p-expr">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
+          ).join('');
+          const p2 = problems.slice(Math.ceil(count/2)).map((p, i) =>
+            `<div class="p-row"><span class="p-num">${i + 1 + Math.ceil(count/2)}.</span><span class="p-expr">${fractionTextHtml(p.text)} = </span>${printBlankHtml(p)}</div>`
+          ).join('');
+          const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
+          const printId = addPrintCode(areaId + '_boss', pCode, { type: 'boss', problems, name: printName, areaId });
+          save();
+          openPrintWindow(`
+            <div class="p-title">【エリア${numPrefix}】 ${printName} ${label}</div>
+            ${printRewardStripHtml({questionCount:problems.length})}
+            <div class="p-name-box">なまえ：<span class="p-name-line" style="position:relative;"><span style="position:absolute; bottom:2px; left:4px; font-size:18px;">${(typeof G !== "undefined" && G) ? (G.playerName || "") : ""}</span></span></div>
+            <div class="p-desc">プリント番号: ${printId}</div>
+            <div class="p-cols">
+              <div class="p-col">${p1}</div>
+              <div class="p-col">${p2}</div>
+            </div>`, area.bgImage ? (typeof av === 'function' ? av(area.bgImage) : area.bgImage) : null);
+        }
+      };
+    });
+    showPrintChoiceModal(variants);
+  }
+}
+
+
+
+/* ==========================================================
+   レイドボス機能（クラウド共有＋未送信記録のローカル保存）
+   ========================================================== */
+const RAID_SETTLEMENT_MS = 60 * 1000; // 討伐後の集計時間（1分。cloud client と同じ値）
+const RAID_BOSS_ID = 'boss1';
+const RAID_STORAGE_KEY = 'raid_boss_v1_boss1';
+// レイドボスの見た目を変えるときは、ここで使用するIDを切り替える。
+// 新しい候補は RAID_BOSS_APPEARANCES に追加すれば、メニュー・戦闘・討伐履歴で共通して使われる。
+const RAID_BOSS_PRE_GHOST_APPEARANCE_ID = 'darkBahamutFinal';
+const RAID_GHOST_KING_STARTS_AT = Date.parse('2026-11-01T00:00:00+09:00');
+function activeRaidBossAppearanceId(now = Date.now()) {
+  return now >= RAID_GHOST_KING_STARTS_AT ? 'moonWraith' : RAID_BOSS_PRE_GHOST_APPEARANCE_ID;
+}
+const RAID_BOSS_APPEARANCES = Object.freeze({
+  // 既存ボスはカタログに残す。RAID_BOSS_PRE_GHOST_APPEARANCE_ID と日付設定で再登場できる。
+  darkBahamut: Object.freeze({
+    id: 'darkBahamut',
+    menuName: '暗黒竜 ダークバハムート',
+    battleName: '【レイドボス】ダークバハムート',
+    image: 'assets/raid/raid_boss_dark_bahamut_blueflame_pixel_v2.png',
+    alt: '青い炎をまとう暗黒竜ダークバハムートの顔',
+    battleBackground: 'assets/raid/raid_bg_magma_pixel.jpg',
+    portraitBackground: 'assets/raid/raid_bg_magma_pixel.jpg'
+  }),
+  darkBahamutFinal: Object.freeze({
+    id: 'darkBahamutFinal',
+    menuName: '暗黒竜 ダークバハムート【最終形態】',
+    battleName: '【最終形態】ダークバハムート',
+    image: 'assets/raid/raid_boss_dark_bahamut_final_form.png',
+    alt: '黒い炎をまとった青い体のダークバハムート最終形態',
+    battleBackground: 'assets/raid/raid_bg_magma_pixel.jpg',
+    portraitBackground: 'assets/raid/raid_bg_magma_pixel.jpg'
+  }),
+  halloweenPumpkinCount: Object.freeze({
+    id: 'halloweenPumpkinCount',
+    menuName: '夜霧のカボチャ伯爵',
+    battleName: '【レイドボス】夜霧のカボチャ伯爵',
+    image: 'assets/raid/raid_boss_halloween_pumpkin_count.png',
+    alt: '青白い鬼火をまとった、王冠姿のカボチャ伯爵',
+    battleBackground: 'assets/halloween/battle_background.png',
+    portraitBackground: 'assets/halloween/background_haunted_ballroom.png'
+  }),
+  moonWraith: Object.freeze({
+    id: 'moonWraith',
+    menuName: '月影の幽霊王',
+    battleName: '【レイドボス】月影の幽霊王',
+    image: 'assets/raid/raid_boss_halloween_moon_wraith.png',
+    alt: '三日月の冠と青白い鬼火をまとった、浮遊する幽霊王',
+    battleBackground: GHOST_RAID_BACKGROUND.image,
+    portraitBackground: GHOST_RAID_BACKGROUND.image
+  })
+});
+function getRaidBossAppearance(id = activeRaidBossAppearanceId()) {
+  return RAID_BOSS_APPEARANCES[id] || RAID_BOSS_APPEARANCES[activeRaidBossAppearanceId()] || RAID_BOSS_APPEARANCES.darkBahamut;
+}
+function getRaidBossAppearanceForHistory(entry) {
+  return getRaidBossAppearance(entry?.monsterId || 'darkBahamut');
+}
+function isCurrentMonthlyRaidData(data=getRaidData()) {
+  const period = raidJstMonthKey(Date.now());
+  return data.periodKey === period && String(data.bossId || '').startsWith(`boss_m${period}_`);
+}
+function getRaidMaxHp() {
+  if (activeRaidBossAppearanceId() === 'moonWraith' && !isCurrentMonthlyRaidData()) return raidInitialHp('moonWraith');
+  return raidConfiguredHp(getRaidData(),activeRaidBossAppearanceId());
+}
+let raidSyncStatus = 'idle';
+let raidSyncPromise = null;
+let raidSyncSlotKey = null;
+let raidRefreshRequested = false;
+let raidWatchStop = null;
+let raidLastSuccessfulSyncAt = 0;
+const raidChallengeStartGate = createRaidChallengeStartGate();
+let raidSettlementTimer = null;
+let raidCountdownTimer = null;
+
+function raidPlayerProfile() {
+  const equipment = {};
+  for (const slot of EQUIP_SLOTS) {
+    const owned = G.ownedEquips?.find(item => item.uid === G.equipment?.[slot]?.uid);
+    equipment[`${slot}Id`] = owned?.id || null;
+    equipment[`${slot}Rarity`] = owned?.rarity || 1;
+  }
+  return { playerName: G.playerName || '勇者', avatar: G.avatar, avatarDecoration: G.avatarDecoration || '', avatarBackground: G.avatarBackground || 'default', avatarHolographic: !!G.avatarHolographic, avatarBackgroundHolographic: !!G.avatarBackgroundHolographic, level: G.player?.lvl || 1, equipment };
+}
+
+function raidPlayerProgress(bossId = getRaidData().bossId || RAID_BOSS_ID) {
+  if (!G.raidProgress || G.raidProgress.bossId !== bossId) {
+    const local = getRaidData();
+    const entry = local.rankings?.[currentSlotKey];
+    G.raidProgress = { bossId, participated: !!entry, participationAt: 0, legacyDamage: local.cloudSynced ? 0 : (entry?.totalDamage || 0), totalDamage: entry?.totalDamage || 0, pendingEvents: [] };
+  }
+  return G.raidProgress;
+}
+
+function scheduleRaidSettlement(settlesAt) {
+  clearTimeout(raidSettlementTimer);
+  if (!settlesAt || getRaidData().finalizedAt) return;
+  raidSettlementTimer = setTimeout(() => {
+    raidSettlementTimer = null;
+    if (G) syncRaidState();
+  }, Math.max(250, settlesAt - Date.now() + 250));
+}
+
+/* レイド画面の「チャレンジ報酬」：1回目＝マグマ背景／2回目＝装備10連チケット／3回目＝スキンチケット。もらいずみは「受け取り済み」 */
+function renderRaidChallengeRewards(){
+  const el=$('raid-challenge-rewards'); if(el){el.innerHTML='';el.style.display='none';}
+}
+function raidChallengeNoticeHtml(){return '';}
+
+async function syncRaidState() {
+  if (!raidFeatureOpen()) { raidSyncStatus='offline'; renderRaidSyncStatus(); return false; }
+  if (!G || !currentSlotKey || G.isTestMode) return false;
+  if (raidSyncPromise) {
+    const waitingSlot = raidSyncSlotKey;
+    await raidSyncPromise;
+    if (currentSlotKey !== waitingSlot || (raidSyncStatus === 'ready' && G?.raidProgress?.pendingEvents?.length)) return syncRaidState();
+    return raidSyncStatus === 'ready';
+  }
+  const game = G;
+  const slotKey = currentSlotKey;
+  let progress = raidPlayerProgress();
+  const profile = raidPlayerProfile();
+  const local = getRaidData();
+  if (!local.cloudSynced && !local.legacyImports) {
+    local.legacyImports = Object.fromEntries(Object.entries(local.rankings || {}).filter(([key])=>key!==TEST_SLOT_KEY).map(([key, entry]) => [key, { profile: entry, legacyDamage: key === slotKey ? progress.legacyDamage || 0 : entry.totalDamage || 0 }]));
+    saveRaidData(local);
+  }
+  raidSyncStatus = 'loading';
+  raidSyncSlotKey = slotKey;
+  renderRaidSyncStatus();
+  raidSyncPromise = (async () => {
+    await Promise.resolve();
+    let payoutNotice = null;
+    try {
+      if (!window.RaidBossAPI?.syncPlayer) throw new Error('Raid cloud API unavailable');
+      for (const [key, entry] of Object.entries(local.legacyImports || {})) {
+        if (window.AccountSession && !window.AccountSession.owns(key)) continue;
+        await window.RaidBossAPI.syncPlayer(key, entry.profile, { bossId:local.bossId || 'boss_50', participated: true, legacyDamage: entry.legacyDamage, claimed: local.claimed?.[key]?.applied ? local.claimed[key] : null });
+        delete local.legacyImports[key];
+        const latest = getRaidData();
+        latest.legacyImports = local.legacyImports;
+        saveRaidData(latest);
+      }
+      const events = [...(progress.pendingEvents || [])];
+      const localClaim = local.claimed?.[`${progress.bossId}:${slotKey}`] || (local.bossId === progress.bossId ? local.claimed?.[slotKey] : null);
+      const result = await window.RaidBossAPI.syncPlayer(slotKey, profile, { bossId: progress.bossId, monsterId: activeRaidBossAppearanceId(), participated: progress.participated, participationAt: progress.participationAt, legacyDamage: progress.legacyDamage || 0, events, claimed: localClaim?.applied ? localClaim : null, state: game });
+      progress.pendingEvents = (progress.pendingEvents || []).filter(event => !result.acknowledged.includes(event.id));
+      progress.excludedFromRanking=!!result.excludedFromRanking;
+      if(progress.excludedFromRanking)progress.totalDamage=0;
+      progress.challengeCount = Math.max(Number(progress.challengeCount) || 0, Number(result.challengeCount) || 0);
+      // Participation-count rewards have ended; keep all previously owned items.
+      const cheerGold = await window.RaidBossAPI.receiveCheers(slotKey, game);
+      let global = await window.RaidBossAPI.getGlobalBoss();
+      if (G !== game || currentSlotKey !== slotKey) return false;
+      const rankingBossId = global.bossId || result.bossId || progress.bossId;
+      const fetchedRankings = await window.RaidBossAPI.getRankings(rankingBossId);
+      const rankingPeriod = global.periodKey || result.periodKey || null;
+      const monthlyRankings = rankingPeriod && window.RaidBossAPI.getMonthlyRankings
+        ? await window.RaidBossAPI.getMonthlyRankings(rankingPeriod)
+        : [];
+      let payout = null;
+      const rewardBossId = result.settledBossId || (global.finalizedAt ? global.bossId : null);
+      if (rewardBossId && window.RaidBossAPI.settleReward) {
+        payout = await window.RaidBossAPI.settleReward(slotKey, rewardBossId, game);
+      }
+      const latestGlobal = await window.RaidBossAPI.getGlobalBoss();
+      if (G !== game || currentSlotKey !== slotKey) return false;
+      const rankingSnapshotMatches = !latestGlobal.bossId || latestGlobal.bossId === rankingBossId;
+      global = latestGlobal;
+      if (!rankingSnapshotMatches) raidRefreshRequested = true;
+      const rankings = rankingSnapshotMatches ? fetchedRankings : [];
+      if (payout?.eligible) {
+        const rewardState=payout.state;
+        if(Number.isFinite(rewardState?.player?.gold))game.player.gold=rewardState.player.gold;
+        if(Number.isFinite(rewardState?.raidCoins))game.raidCoins=rewardState.raidCoins;
+        if(Number.isFinite(rewardState?.equipGachaTenPullTickets))game.equipGachaTenPullTickets=rewardState.equipGachaTenPullTickets;
+        if(Number.isFinite(rewardState?.skinGachaTickets))game.skinGachaTickets=rewardState.skinGachaTickets;
+        if(Array.isArray(rewardState?.unlockedDecorations))game.unlockedDecorations=[...rewardState.unlockedDecorations];
+        const seed=rewardState?.items?.find(item=>item?.id==='cost_seed');
+        if(seed){game.items||=[];const ownedSeed=game.items.find(item=>item.id==='cost_seed');if(ownedSeed)ownedSeed.count=seed.count;else game.items.push({uid:Number.isFinite(game.nextUid)?game.nextUid++:Date.now(),id:'cost_seed',count:seed.count});}
+        if (game.raidProgress?.bossId === rewardBossId) game.raidProgress.pendingEvents = [];
+        if(payout.coinAwarded)showConfirmModal('レイドコインを獲得！',`${payout.rank}位の追加報酬：${payout.coinAwarded}コイン`,null);
+        if (!payout.alreadyClaimed) {
+          game.raidPayoutNotice = { ...payout.reward, rank: payout.rank, at: Date.now() };
+          payoutNotice = game.raidPayoutNotice;
+        }
+        progress.pendingEvents = [];
+      }
+      if (cheerGold) G.player.gold += cheerGold;
+      const currentBossId = global.bossId || result.bossId || rankingBossId;
+      if (currentBossId && progress.bossId !== currentBossId) {
+        game.raidProgress = { bossId: currentBossId, participated: false, participationAt: 0, legacyDamage: 0, totalDamage: 0, pendingEvents: [] };
+        progress = game.raidProgress;
+      }
+      const data = getRaidData();
+      data.rankings = Object.fromEntries(rankings.map(entry => [entry.slotKey, entry]));
+      data.rankingsBossId = currentBossId;
+      const monthlySnapshotMatches = !global.periodKey || global.periodKey === rankingPeriod;
+      data.monthlyRankings = monthlySnapshotMatches ? Object.fromEntries(monthlyRankings.map(entry => [entry.slotKey, entry])) : {};
+      data.periodKey = global.periodKey || rankingPeriod;
+      data.bossId = currentBossId;
+      data.monsterId = global.monsterId || result.monsterId || activeRaidBossAppearanceId();
+      data.bossLevel = global.bossLevel || result.bossLevel || 50;
+      data.maxHp = raidConfiguredHp({...global,maxHp:global.maxHp || result.maxHp},activeRaidBossAppearanceId());
+      data.totalDamage = (global.totalDamageDealt || 0) + progress.pendingEvents.filter(event => event.bossId === currentBossId).reduce((sum, event) => sum + event.damage, 0);
+      data.finalRankings = rankingSnapshotMatches && global.finalRankings ? global.finalRankings.map(entry => Array.isArray(entry) ? entry : [entry.slotKey, entry.totalDamage || 0]) : null;
+      data.defeatedAt = global.defeatedAt || null;
+      data.settlesAt = global.settlesAt || null;
+      data.finalizedAt = global.finalizedAt || null;
+      data.finisherSlotKeys = global.finisherSlotKeys || [];
+      data.finalHitters = global.finalHitters || [];
+      data.cloudSynced = true;
+      data.legacyImports = local.legacyImports;
+      if (result.claimed || payout?.eligible) {
+        data.claimed ||= {};
+        data.claimed[`${rewardBossId || data.bossId}:${slotKey}`] = { version: 2, applied: true, rank: payout?.rank || null, rewards: payout?.reward || null };
+      }
+      const own = data.rankings[slotKey];
+      if (own) { progress.participated = true; progress.totalDamage = own.totalDamage || 0; }
+      saveRaidData(data);
+      if (data.defeatedAt && !data.finalizedAt) scheduleRaidSettlement(data.settlesAt || data.defeatedAt + RAID_SETTLEMENT_MS);
+      else clearTimeout(raidSettlementTimer);
+      save(true);
+      raidSyncStatus = 'ready';
+      raidLastSuccessfulSyncAt = Date.now();
+      return true;
+    } catch (error) {
+      console.warn('[Raid] Shared data unavailable; keeping local records:', error);
+      if (G === game) raidSyncStatus = error.code === 'permission-denied' ? 'denied' : 'offline';
+      return false;
+    } finally {
+      const refreshAgain = raidRefreshRequested;
+      raidRefreshRequested = false;
+      raidSyncPromise = null;
+      const raidMenuOpen = G === game && !$('screen-raid-boss').classList.contains('hidden');
+      if (raidMenuOpen) {
+        renderRaidBossMenu();
+        if (payoutNotice) showConfirmModal('レイド報酬を獲得！', `${payoutNotice.rank}位の報酬<br>🪙 ${payoutNotice.coins || 0}レイドコイン<br>💰 ${payoutNotice.gold.toLocaleString()}G<br>🌱 コストプラスのたね ×${payoutNotice.seeds}${payoutNotice.tickets ? `<br>🎟 背景スキンガチャチケット ×${payoutNotice.tickets}${payoutNotice.finisherBonus ? '（撃破ボーナスを含む）' : ''}` : ''}${payoutNotice.bonusDecoration === GHOST_RAID_DEFEAT_DECORATION.id ? `<br>✨ 討伐記念：${GHOST_RAID_DEFEAT_DECORATION.name}` : ''}`, () => { save(true); showRaidBossMenu(); });
+      }
+      if (refreshAgain && raidMenuOpen) setTimeout(() => syncRaidState(), 0);
+    }
+  })();
+  return raidSyncPromise;
+}
+
+function renderRaidSyncStatus() {
+  const label = $('raid-sync-status');
+  if (label) label.textContent = raidSyncStatus === 'ready' ? 'クラウド共有' : raidSyncStatus === 'denied' ? '共有へのアクセスが許可されていません。記録はこの端末に保存済み' : raidSyncStatus === 'offline' ? '通信できません。記録は保存済み・再接続時に同期' : 'ランキングを同期中…';
+}
+
+window.addEventListener('online', () => { if (raidFeatureOpen() && G) syncRaidState(); });
+
+function grantRaidParticipationBackground() {
+  if(!G||!currentSlotKey||G.isTestMode)return false;
+  const progress=raidPlayerProgress();progress.participated=true;
+  if(!progress.participationAt)progress.participationAt=Date.now();
+  save(true);return false; // Participation is recorded, no automatic cosmetic grant.
+}
+
+const RAID_EXCHANGE_PRIZES = [...GHOST_RAID_PRIZES].sort((a,b)=>a.kind==='equip'&&b.kind==='equip'?a.rarity-b.rarity:a.kind==='equip'?-1:b.kind==='equip'?1:0);
+function raidPrizeOwned(prize,game=G){return ownsRaidPrize(game,prize);}
+function exchangeRaidPrize(id) {
+ const prize=RAID_EXCHANGE_PRIZES.find(entry=>entry.id===id);
+ if(!purchaseRaidPrize(G,prize))return false;
+ save(true);updateHud();return true;
+}
+function showRaidExchange(message='') {
+ if (!raidFeatureOpen()) { showRaidClosedNotice(); return; }
+ if(!G)return;
+ document.querySelector('.raid-exchange-overlay')?.remove();hideTooltip();
+ const overlay=document.createElement('div');overlay.className='confirm-overlay raid-exchange-overlay';
+ overlay.innerHTML=`<section class="panel raid-exchange-panel" role="dialog" aria-modal="true" aria-labelledby="raid-exchange-title"><header><h2 id="raid-exchange-title">🪙 レイドコイン交換所</h2><b>${Number(G.raidCoins)||0} コイン</b></header><p>参加報酬は10ダメージごとに1枚。討伐順位の追加報酬は1位20・2位15・3位10・4〜10位5枚！</p>${message?`<p role="status">${escapeHtml(message)}</p>`:''}<div class="raid-exchange-grid">${RAID_EXCHANGE_PRIZES.map(prize=>{const owned=raidPrizeOwned(prize);return `<article class="halloween-prize-card"><div class="halloween-prize-art">${stageRewardIcon(prize.kind,prize.equipId||prize.id,prize.rarity || 1,88)}</div><b>${escapeHtml(prize.name)}</b>${prize.kind==='equip'?`<span class="raid-prize-rarity rarity-${prize.rarity}">★${prize.rarity} ${RARITY_NAME[prize.rarity]} ／ ${SLOT_LABELS[getEquipTemplate(prize.equipId||prize.id)?.slot]||'装備'}</span>`:''}<small>${prize.ability?`✨ ${getAbility(prize.ability)?.name || prize.ability}`:prize.kind==='skin'?'キャラスキン':prize.kind==='background'?'背景スキン':'フレーム'}</small><span>🪙 ×${prize.cost}</span><button type="button" class="btn" data-raid-prize="${prize.id}" ${owned || (G.raidCoins || 0)<prize.cost?'disabled':''}>${owned?'獲得済み':'交換する'}</button></article>`;}).join('')}</div><button type="button" class="btn" data-close>レイドへもどる</button></section>`;
+ bindStageRewardTooltips(overlay);
+ overlay.querySelectorAll('[data-raid-prize]').forEach(button=>button.onclick=()=>{const prize=RAID_EXCHANGE_PRIZES.find(entry=>entry.id===button.dataset.raidPrize);showConfirmModal('交換しますか？',`${escapeHtml(prize.name)}${prize.rarity?`（${RARITY_NAME[prize.rarity]}）`:''}を${prize.cost}コインで交換します。`,()=>{if(exchangeRaidPrize(prize.id)){SM.play('se_gacha_result2');showRaidExchange(`${prize.name}を獲得！`);}});});
+ overlay.querySelector('[data-close]').onclick=()=>overlay.remove();document.body.appendChild(overlay);
+}
+
+function showRaidBattleResult(damage, defeated) {
+  damage=validRaidDamage(damage) ?? 0;
+  document.querySelector('.raid-result-overlay')?.remove();
+  const showBackground = false; // All cosmetic rewards are now exchanged for coins.
+  const background = getAvatarBackground('raid_magma');
+  const rankings = getRaidRankings();
+  const myRank = rankings.findIndex(entry => entry.slotKey === currentSlotKey) + 1;
+  const rankLabel = myRank > 0 ? `${myRank === 1 ? '🥇' : myRank === 2 ? '🥈' : myRank === 3 ? '🥉' : '🏅'} ${myRank}位` : '集計中';
+  save(true);
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay raid-result-overlay';
+  overlay.innerHTML = `
+    <section class="raid-result-panel" role="dialog" aria-modal="true" aria-labelledby="raid-result-title">
+      <div class="raid-result-confetti" aria-hidden="true">${Array.from({ length: 18 }, (_, i) => `<i style="--i:${i};left:${(i * 37) % 100}%;animation-delay:${(i % 7) * 45}ms"></i>`).join('')}</div>
+      <span class="raid-result-label">${showBackground ? 'レイド参加特典' : defeated ? 'レイドボス討伐！' : '今回のレイド結果'}</span>
+      <h2 id="raid-result-title">${showBackground ? '背景スキンを ゲット！' : defeated ? 'みんなで ボスを たおした！' : 'ナイスチャレンジ！'}</h2>
+      ${showBackground ? `<img class="raid-result-background" src="${av(background.image)}" alt="獲得したマグマの火山の背景"><h3>${background.name}</h3><p>きみのキャラクターの背景に えらべるよ！</p>` : ''}
+      <p class="raid-result-summary">今回のダメージ <b>${Math.max(0, Math.round(damage)).toLocaleString()}</b></p>
+      <p class="raid-best-single">1回の自己最高ダメージ <b>${(validRaidDamage(G?.raidBestSingleDamage) ?? 0).toLocaleString()}</b></p>
+      <p class="raid-coin-payout">🪙 参加報酬 ＋${raidParticipationCoins(damage)}レイドコイン（10ダメージごとに1枚）</p>
+      <p class="raid-gold-payout">💰 ダメージ報酬 +${Math.max(0, Math.round(damage)).toLocaleString()}G</p>
+
+      <div class="raid-result-rank"><span>${defeated ? '暫定ランキング' : '現在のランキング'}</span><strong>${rankLabel}</strong></div>
+      <p class="raid-result-encouragement">${defeated ? '最終順位は1分後に確定！討伐前から進行中だった戦闘も集計するよ。' : '開催期間中は何度でも挑戦して、ランキング上位を目指そう！'}</p>
+      <button type="button" id="btn-raid-result-close" class="btn btn-primary">レイドに もどる</button>
+    </section>`;
+  const close = () => {
+    if (!overlay.isConnected) return;
+    if (showBackground) { G.raidMagmaNoticeSeen = true; save(true); }
+    G.raidChallenge3Notice = false;
+    G.raidChallenge2Notice = false;
+    overlay.remove();
+    showRaidBossMenu();
+    $('btn-raid-challenge')?.focus();
+  };
+  overlay.querySelector('button').onclick = close;
+  overlay.addEventListener('keydown', event => {
+    if (event.key === 'Escape') { event.preventDefault(); close(); }
+    if (event.key === 'Tab') { event.preventDefault(); overlay.querySelector('button').focus(); }
+  });
+  document.body.appendChild(overlay);
+  overlay.querySelector('button').focus();
+  if (showBackground) SM.playBeep('heal');
+}
+
+// --- ローカルRAIDデータ操作ユーティリティ ---
+
+function getRaidData() {
+  try {
+    return JSON.parse(localStorage.getItem(RAID_STORAGE_KEY) || '{}');
+  } catch(e) { return {}; }
+}
+
+function saveRaidData(data) {
+  localStorage.setItem(RAID_STORAGE_KEY, JSON.stringify(data));
+}
+
+// 自分のダメージを記録し、総ダメージも更新する
+function recordRaidDamage(slotKey, playerName, dmg, avatar, level, equipment, avatarBackground) {
+  if(slotKey===TEST_SLOT_KEY)return;
+  if(battle?.raidResultRecorded && slotKey===currentSlotKey)return;
+  dmg = validRaidDamage(dmg);
+  if(dmg===null)return;
+  const runId = battle?.raidRunId || crypto.randomUUID();
+  if(G && slotKey===currentSlotKey) {
+    const receipt=grantRaidRun(G,{id:runId,damage:dmg,bossId:battle?.raidBossId});
+    if(!receipt?.applied)return;
+    if(battle) { battle.raidRunId=runId; battle.raidResultRecorded=true; }
+    // Test rewards are visible only in memory, never saved or sent to shared rankings.
+    if(G.isTestMode)return;
+  }
+  if (G && slotKey === currentSlotKey) {
+    const progress = raidPlayerProgress();
+    progress.participated = true;
+    const id = runId;
+    progress.pendingEvents.push({ id, bossId: battle?.raidBossId || progress.bossId, damage: dmg, fightStartedAt: battle?.raidStartedAt || Date.now(), createdAt: Date.now() });
+    progress.totalDamage += dmg;
+    if(battle)battle.raidResultRecorded=true;
+    progress.challengeCount = (Number(progress.challengeCount) || 0) + 1;
+    if (!battle?.raidGoldPaid) {
+      G.player.gold = (Number(G.player.gold) || 0) + dmg;
+      if (battle) battle.raidGoldPaid = true;
+    }
+  }
+  const data = getRaidData();
+  if (!data.rankings) data.rankings = {};
+  if (!data.totalDamage) data.totalDamage = 0;
+
+  const prev = data.rankings[slotKey] || { playerName, totalDamage: 0 };
+  prev.playerName = playerName || prev.playerName;
+  prev.totalDamage = (prev.totalDamage || 0) + dmg;
+  prev.slotKey = slotKey;
+  if (avatar) prev.avatar = avatar;
+  if (avatarBackground) prev.avatarBackground = avatarBackground;
+  if (level !== undefined) prev.level = level;
+  if (equipment) prev.equipment = equipment;
+  data.rankings[slotKey] = prev;
+  data.totalDamage = (data.totalDamage || 0) + dmg;
+  saveRaidData(data);
+  if (G && slotKey === currentSlotKey) { save(true); syncRaidState(); }
+}
+
+// ランキング配列を取得（ダメージ降順）
+function getRaidRankings() {
+  const data = getRaidData();
+  if (activeRaidBossAppearanceId() === 'moonWraith' && !isCurrentMonthlyRaidData(data)) return [];
+  const currentBossId = data.bossId || RAID_BOSS_ID;
+  if (data.rankingsBossId && data.rankingsBossId !== currentBossId) return [];
+  const rankings = Object.values(data.rankings || {}).filter(row=>!row.excludedFromRanking);
+  if (G && currentSlotKey && G.raidProgress?.participated && !G.raidProgress.excludedFromRanking && G.raidProgress.bossId === currentBossId && !rankings.some(entry => entry.slotKey === currentSlotKey)) {
+    rankings.push({ ...raidPlayerProfile(), slotKey: currentSlotKey, totalDamage: G.raidProgress?.totalDamage || 0, participated: true });
+  }
+  if (Array.isArray(data.finalRankings)) {
+    return data.finalRankings.map(([slotKey]) => rankings.find(entry => entry.slotKey === slotKey)).filter(Boolean);
+  }
+  return rankings.sort((a, b) => (b.totalDamage || 0) - (a.totalDamage || 0) || String(a.slotKey || '').localeCompare(String(b.slotKey || '')));
+}
+
+function getRaidMonthlyRankings() {
+  const data = getRaidData();
+  const currentPeriod = raidJstMonthKey(Date.now());
+  if (data.periodKey !== currentPeriod) return [];
+  const rows = Object.values(data.monthlyRankings || {}).filter(row => !row.excludedFromRanking).map(row => ({ ...row }));
+  const progress = G?.raidProgress;
+  const currentBossId = data.bossId || RAID_BOSS_ID;
+  if (G && currentSlotKey && progress?.participated && progress.bossId === currentBossId) {
+    const pendingDamage = (progress.pendingEvents || []).filter(event => event.bossId === currentBossId).reduce((sum, event) => sum + (validRaidDamage(event.damage) || 0), 0);
+    const own = rows.find(row => row.slotKey === currentSlotKey);
+    if (own) own.totalDamage = (Number(own.totalDamage) || 0) + pendingDamage;
+    else if (pendingDamage > 0) rows.push({ ...raidPlayerProfile(), slotKey: currentSlotKey, totalDamage: pendingDamage, participated: true });
+  }
+  return rows.sort((a, b) => (b.totalDamage || 0) - (a.totalDamage || 0) || String(a.slotKey || '').localeCompare(String(b.slotKey || '')));
+}
+
+// 総ダメージ（討伐進捗）を取得
+function getRaidTotalDamage() {
+  const data = getRaidData();
+  if (activeRaidBossAppearanceId() === 'moonWraith' && !isCurrentMonthlyRaidData(data)) return 0;
+  return data.totalDamage || 0;
+}
+
+// 報酬受け取り済み確認
+function isRaidRewardClaimed(slotKey, bossId = getRaidData().bossId || RAID_BOSS_ID) {
+  const data = getRaidData();
+  const claimed = data.claimed && (data.claimed[`${bossId}:${slotKey}`] || (data.bossId === bossId ? data.claimed[slotKey] : null));
+  return !!(claimed && typeof claimed === 'object' && claimed.version === 2 && claimed.applied);
+}
+
+// 報酬受け取りをマーク
+function markRaidRewardClaimed(slotKey, reward = {}) {
+  const data = getRaidData();
+  if (!data.claimed) data.claimed = {};
+  data.claimed[slotKey] = {
+    version: 2,
+    applied: true,
+    claimedAt: Date.now(),
+    ...reward
+  };
+  saveRaidData(data);
+}
+
+// --- 他の勇者へのエール（いいね！）機能 ---
+async function sendRaidCheer(targetSlotKey, targetPlayerName, btnElement) {
+  if (!G || !currentSlotKey) return;
+  if (!targetSlotKey || targetSlotKey === currentSlotKey) return;
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  if (!G.cheerHistory || G.cheerHistory.date !== todayStr) {
+    G.cheerHistory = { date: todayStr, targets: [] };
+  }
+
+  if (G.cheerHistory.targets.includes(targetSlotKey)) {
+    return;
+  }
+  const game = G;
+  if (btnElement) btnElement.disabled = true;
+  try {
+    if (!await window.RaidBossAPI.sendCheer(currentSlotKey, targetSlotKey, todayStr)) { await syncRaidState(); return; }
+  } catch (error) {
+    if (btnElement) btnElement.disabled = false;
+    raidSyncStatus = 'offline'; renderRaidSyncStatus();
+    return;
+  }
+  if (G !== game) return;
+
+  const cheerReward = 50; // 送信者・受信者ともに50G
+  G.player.gold = (G.player.gold || 0) + cheerReward;
+  G.cheerHistory.targets.push(targetSlotKey);
+  save();
+  updateHud();
+
+  // 相手のレイドランキングデータにエール回数 & 未受取ゴールドを加算
+  const rData = getRaidData();
+  let updatedCount = 1;
+  if (rData.rankings && rData.rankings[targetSlotKey]) {
+    const targetEntry = rData.rankings[targetSlotKey];
+    targetEntry.cheerCount = (targetEntry.cheerCount || 0) + 1;
+    updatedCount = targetEntry.cheerCount;
+    saveRaidData(rData);
+  }
+
+
+  SM.playBeep('heal');
+  if (btnElement) {
+    btnElement.disabled = true;
+    btnElement.innerHTML = `✅ 送信済 (👏 ${updatedCount})`;
+    btnElement.style.background = 'rgba(255,255,255,0.08)';
+    btnElement.style.color = '#888';
+    btnElement.style.borderColor = 'rgba(255,255,255,0.18)';
+    btnElement.style.cursor = 'default';
+    spawnFloatingDamage(btnElement, `+${cheerReward}G`, 'player-miss');
+  }
+}
+
+function renderRaidFinalResult() {
+  const el = document.getElementById('raid-final-result');
+  if (!el) return;
+  clearTimeout(raidCountdownTimer);
+  const data = getRaidData();
+  if (activeRaidBossAppearanceId() === 'moonWraith' && !isCurrentMonthlyRaidData(data)) { el.innerHTML = ''; el.classList.add('hidden'); return; }
+  if (!data.defeatedAt) { el.innerHTML = ''; el.classList.add('hidden'); return; }
+  el.classList.remove('hidden');
+  if (!data.finalizedAt) {
+    const secondsLeft = Math.max(0, Math.ceil(((data.settlesAt || data.defeatedAt + RAID_SETTLEMENT_MS) - Date.now()) / 1000));
+    const countdown = `${String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:${String(secondsLeft % 60).padStart(2, '0')}`;
+    el.innerHTML = `<b>🎉 レイド討伐！ 討伐後1分間、集計中</b><span>同時に挑戦していた戦闘を確認中。最終ランキング発表まで <strong>${countdown}</strong></span>`;
+    raidCountdownTimer = setTimeout(renderRaidFinalResult, 1000);
+    return;
+  }
+  const rankings = (data.finalRankings || []).slice(0, 3).map(([slotKey, damage], index) => {
+    const player = data.rankings?.[slotKey];
+    const medal = ['🥇', '🥈', '🥉'][index];
+    return `<li><span>${medal} ${escapeHtml(player?.playerName || '勇者')}</span><b>${Number(damage || 0).toLocaleString()} ダメージ</b></li>`;
+  }).join('');
+  const hitters = (data.finalHitters || []).map(player => escapeHtml(player.playerName || '勇者')).join('・') || '記録なし';
+  const bonusNote = data.monsterId === 'moonWraith'
+    ? `参加してダメージを与えた勇者には、交換所のフレームとは別の討伐記念「${GHOST_RAID_DEFEAT_DECORATION.name}」を贈ります。`
+    : '撃破者には撃破ボーナスチケットをプレゼント！';
+  el.innerHTML = `<b>🏆 レイド最終結果</b><ol>${rankings || '<li>ランキング記録なし</li>'}</ol><span class="raid-final-hitters">⚔ 最後の一撃：${hitters}</span><small>${bonusNote}</small>`;
+}
+
+// --- 画面表示 ---
+
+function showRaidBossMenu() {
+  if (!raidFeatureOpen()) { $('screen-raid-boss')?.classList.add('hidden'); showRaidClosedNotice(); return; }
+  $('raid-rules').classList.add('hidden');
+  $('btn-raid-rules').setAttribute('aria-expanded', 'false');
+  syncRaidState();
+  renderRaidBossMenu();
+  if (!raidWatchStop && window.RaidBossAPI?.watchBoss) {
+    raidWatchStop = window.RaidBossAPI.watchBoss(() => {
+      if (G && !$('screen-raid-boss').classList.contains('hidden')) {
+        if (raidSyncPromise) raidRefreshRequested = true;
+        else syncRaidState();
+      }
+    }, error => { raidSyncStatus = error.code === 'permission-denied' ? 'denied' : 'offline'; renderRaidSyncStatus(); });
+  }
+}
+
+let raidHistoryEntries = [];
+let raidHistoryIndex = 0;
+let raidHistoryRequest = 0;
+const raidHistoryRankingCache = new Map();
+
+async function showRaidHistory() {
+  if (!raidFeatureOpen()) { showRaidClosedNotice(); return; }
+  $('raid-history-modal').classList.remove('hidden');
+  raidHistoryEntries = [];
+  raidHistoryIndex = 0;
+  const request = ++raidHistoryRequest;
+  $('raid-history-summary').textContent = '';
+  $('raid-history-position').textContent = '';
+  $('btn-raid-history-older').disabled = true;
+  $('btn-raid-history-newer').disabled = true;
+  $('btn-raid-history-retry').classList.add('hidden');
+  $('raid-history-list').setAttribute('aria-busy', 'true');
+  $('raid-history-list').innerHTML = '<div class="raid-empty-ranking">よみこみ中…</div>';
+  try {
+    const entries = await window.RaidBossAPI.getHistory();
+    if (request !== raidHistoryRequest) return;
+    raidHistoryEntries = entries || [];
+    await renderRaidHistory();
+  } catch (error) {
+    if (request !== raidHistoryRequest) return;
+    $('raid-history-list').innerHTML = '<div class="raid-empty-ranking">履歴をよみこめませんでした。</div>';
+    $('raid-history-list').setAttribute('aria-busy', 'false');
+    $('btn-raid-history-retry').classList.remove('hidden');
+    console.error(error);
+  }
+}
+
+function changeRaidHistory(direction) {
+  const next = raidHistoryIndex + direction;
+  if (next < 0 || next >= raidHistoryEntries.length) return;
+  raidHistoryIndex = next;
+  return renderRaidHistory();
+}
+
+function mergeRaidHistoryRankings(entry, details) {
+  if (!entry.finalRankings?.length) return [...details].sort((a, b) => (b.totalDamage || 0) - (a.totalDamage || 0));
+  const profiles = new Map(details.map(row => [row.slotKey, row]));
+  return entry.finalRankings.map(row => ({ ...profiles.get(row.slotKey), ...row }));
+}
+
+async function renderRaidHistory() {
+  if (!raidHistoryEntries.length) {
+    $('raid-history-list').innerHTML = '<div class="raid-empty-ranking">まだ討伐履歴がありません。</div>';
+    $('raid-history-list').setAttribute('aria-busy', 'false');
+    return;
+  }
+  const entry = raidHistoryEntries[raidHistoryIndex];
+  const request = ++raidHistoryRequest;
+  const list = $('raid-history-list');
+  $('btn-raid-history-older').disabled = raidHistoryIndex >= raidHistoryEntries.length - 1;
+  $('btn-raid-history-newer').disabled = raidHistoryIndex === 0;
+  $('btn-raid-history-retry').classList.add('hidden');
+  $('raid-history-position').textContent = `${raidHistoryIndex + 1} / ${raidHistoryEntries.length}`;
+  const date = entry.defeatedAt ? new Date(entry.defeatedAt).toLocaleString('ja-JP') : '記録なし';
+  const finishers = (entry.finalHitters || []).map(row => row.playerName || '勇者').join('、') || '記録なし';
+  const appearance = getRaidBossAppearanceForHistory(entry);
+  $('raid-history-summary').textContent = `${appearance.menuName} Lv.${entry.bossLevel || 50} ｜ 討伐：${date} ｜ 最大HP：${(entry.maxHp || 1000).toLocaleString()} ｜ 🔥 最後の一撃：${finishers}`;
+  list.innerHTML = '<div class="raid-empty-ranking">ランキングをよみこみ中…</div>';
+  list.setAttribute('aria-busy', 'true');
+  try {
+    let rankings = raidHistoryRankingCache.get(entry.bossId);
+    if (!rankings) {
+      const complete = entry.finalRankings?.length && entry.finalRankings.every(row => row.playerName !== undefined);
+      const details = complete ? [] : await window.RaidBossAPI.getRankings(entry.bossId);
+      rankings = mergeRaidHistoryRankings(entry, details);
+      raidHistoryRankingCache.set(entry.bossId, rankings);
+    }
+    if (request !== raidHistoryRequest) return;
+    renderRaidRankingList(list, rankings, true);
+    list.scrollTop = 0;
+  } catch (error) {
+    if (request !== raidHistoryRequest) return;
+    list.innerHTML = '<div class="raid-empty-ranking">ランキングをよみこめませんでした。もう一度お試しください。</div>';
+    $('btn-raid-history-retry').classList.remove('hidden');
+    console.error(error);
+  } finally {
+    if (request === raidHistoryRequest) list.setAttribute('aria-busy', 'false');
+  }
+}
+
+function renderRaidRankingList(listEl, rankings, historical = false, metric = 'damage') {
+  if (listEl) {
+    listEl.innerHTML = '';
+    if (rankings.length === 0) {
+      if (historical) { listEl.innerHTML = '<div class="raid-empty-ranking">この討伐のランキング記録はありません。</div>'; return; }
+      const hasParticipation = (G?.unlockedAvatarBackgrounds || []).includes('raid_magma') || G?.raidProgress?.participated;
+      listEl.innerHTML = `<div class="raid-empty-ranking">${raidSyncStatus === 'loading' || raidSyncStatus === 'idle' ? '参加記録を同期しています…' : raidSyncStatus === 'denied' ? 'アクセス権限のため、共有ランキングを確認できません。' : raidSyncStatus === 'offline' ? '通信できないため、共有ランキングを確認できません。' : hasParticipation ? '参加済みです。戦闘を終えるとダメージが記録されます。' : 'ランキングのダメージ記録はまだありません。'}</div>`;
+    } else {
+      const allSlots = (!historical && typeof listSaveSlots === 'function') ? listSaveSlots() : [];
+      const todayStr = new Date().toISOString().slice(0, 10);
+
+      rankings.forEach((r, i) => {
+        const rank = metric === 'kills' ? (r.rank || i+1) : i+1;
+        let rankMedal = `${rank}位`;
+        if (rank===1) rankMedal = '🥇1位';
+        if (rank===2) rankMedal = '🥈2位';
+        if (rank===3) rankMedal = '🥉3位';
+
+        const isMe = (r.slotKey === currentSlotKey) || (!r.slotKey && r.playerName === G?.playerName);
+        let nameColor = rank <= 3 ? '#feca57' : '#fff';
+        if (isMe) nameColor = '#74b9ff';
+
+        // プレイヤー情報補完
+        let avatarId = r.avatar;
+        let avatarBackgroundId = r.avatarBackground;
+        let avatarFrameId = r.avatarDecoration || '';
+        let avatarHolographic = !!r.avatarHolographic;
+        let avatarBackgroundHolographic = !!r.avatarBackgroundHolographic;
+        let level = r.level;
+        let weaponId = r.equipment?.weaponId;
+        let weaponRarity = r.equipment?.weaponRarity || 1;
+        let armorId = r.equipment?.armorId;
+        let armorRarity = r.equipment?.armorRarity || 1;
+        let accessoryId = r.equipment?.accessoryId;
+        let accessoryRarity = r.equipment?.accessoryRarity || 1;
+
+        if (!historical && isMe && G) {
+          avatarId = G.avatar || avatarId;
+          avatarBackgroundId = G.avatarBackground || 'default';
+          avatarHolographic = !!G.avatarHolographic;
+          avatarBackgroundHolographic = !!G.avatarBackgroundHolographic;
+          level = G.player?.lvl ?? level;
+          const eqW = G.ownedEquips?.find(o => o.uid === G.equipment?.weapon?.uid);
+          const eqA = G.ownedEquips?.find(o => o.uid === G.equipment?.armor?.uid);
+          const eqAcc = G.ownedEquips?.find(o => o.uid === G.equipment?.accessory?.uid);
+          if (eqW) { weaponId = eqW.id; weaponRarity = eqW.rarity || 1; }
+          if (eqA) { armorId = eqA.id; armorRarity = eqA.rarity || 1; }
+          if (eqAcc) { accessoryId = eqAcc.id; accessoryRarity = eqAcc.rarity || 1; }
+        } else {
+          const matchedSlot = allSlots.find(s => s.key === r.slotKey || s.name === r.playerName);
+          if (matchedSlot) {
+            avatarId = avatarId || matchedSlot.avatar;
+            avatarBackgroundId = avatarBackgroundId || matchedSlot.avatarBackground;
+            avatarFrameId = avatarFrameId || matchedSlot.avatarDecoration;
+            level = level ?? matchedSlot.lvl;
+            if (matchedSlot.equippedWeapon) { weaponId = matchedSlot.equippedWeapon.id; weaponRarity = matchedSlot.equippedWeapon.rarity || 1; }
+            if (matchedSlot.equippedArmor) { armorId = matchedSlot.equippedArmor.id; armorRarity = matchedSlot.equippedArmor.rarity || 1; }
+            if (matchedSlot.equippedAccessory) { accessoryId = matchedSlot.equippedAccessory.id; accessoryRarity = matchedSlot.equippedAccessory.rarity || 1; }
+          }
+        }
+
+        // デフォルトフォールバック
+        if (!avatarId && !historical && G) avatarId = G.avatar;
+        level = level || 1;
+
+        // アバター画像の解決
+        let heroDef = getHeroAvatar(avatarId);
+        if (!heroDef || !heroDef.image) heroDef = HERO_AVATARS[0];
+        const avatarImgSrc = av(heroDef.image);
+
+        // 装備アイコン生成ヘルパー
+        const makeEquipBox = (eqId, slotType, rarity) => {
+          const emptyIcons = { weapon: '⚔️', armor: '🛡️', accessory: '💍' };
+          const emptyLabels = { weapon: '武器', armor: '防具', accessory: 'アクセ' };
+          if (!eqId) {
+            return `<div class="equip-icon raid-ranking-equip is-empty" style="background:rgba(15,12,25,0.7); border:1px dashed rgba(255,255,255,0.2); opacity:0.35;" title="${emptyLabels[slotType]}: 未装備">${emptyIcons[slotType]}</div>`;
+          }
+          const item = getEquipTemplate(eqId);
+          if (!item) {
+            return `<div class="equip-icon raid-ranking-equip is-empty" style="background:rgba(15,12,25,0.7); border:1px dashed rgba(255,255,255,0.2); opacity:0.35;">${emptyIcons[slotType]}</div>`;
+          }
+          const innerHtml = item.emoji && item.emoji.indexOf('/') >= 0
+            ? `<img src="${av(item.emoji)}" style="width:80%; height:80%; object-fit:contain;" alt="">`
+            : `<span style="line-height:1;">${item.emoji || '🎁'}</span>`;
+
+          return `<div class="equip-icon raid-ranking-equip rarity-${rarity}" data-equip-id="${eqId}" data-equip-rarity="${rarity}" aria-label="${emptyLabels[slotType]}: ${item.name}">${innerHtml}</div>`;
+        };
+
+        // エールアクション表示
+        const hasCheeredToday = (G?.cheerHistory?.date === todayStr) && (G?.cheerHistory?.targets?.includes(r.slotKey));
+        const cheerCount = r.cheerCount || 0;
+
+        let cheerActionHtml = '';
+        if (metric === 'kills' || metric === 'totalKills') {
+          cheerActionHtml = `<span class="raid-history-cheers">${metric==='totalKills'?'累計討伐数':'最高記録'}</span>`;
+        } else if (historical) {
+          cheerActionHtml = `<span class="raid-history-cheers">👏 ${cheerCount} エール獲得</span>`;
+        } else if (isMe) {
+          cheerActionHtml = `
+            <div style="display:flex; align-items:center; gap:3px; background:rgba(254, 202, 87, 0.15); border:1px solid #feca57; border-radius:12px; padding:2px 8px; font-size:11px; color:#feca57; font-weight:bold; white-space:nowrap;">
+              <span>👏</span> <span>${cheerCount} エール獲得</span>
+            </div>
+          `;
+        } else {
+          if (hasCheeredToday) {
+            cheerActionHtml = `
+              <button disabled style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:12px; padding:2px 8px; font-size:11px; color:#888; font-weight:bold; cursor:default; white-space:nowrap;">
+                ✅ 送信済 (👏 ${cheerCount})
+              </button>
+            `;
+          } else {
+            cheerActionHtml = `
+              <button class="btn-cheer-action" data-slot="${r.slotKey || ''}" data-name="${encodeURIComponent(r.playerName || '')}" style="background:linear-gradient(135deg, #f39c12 0%, #e67e22 100%); border:1px solid #f1c40f; border-radius:12px; padding:2px 9px; font-size:11px; color:#fff; font-weight:bold; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.4); white-space:nowrap;">
+                👏 エール (+50G)
+              </button>
+            `;
+          }
+        }
+
+        const row = document.createElement('div');
+        row.className = `raid-ranking-row${isMe ? ' is-me' : ''}`;
+        row.style.borderColor = isMe ? '#74b9ff' : (rank <= 3 ? '#feca57' : '#666');
+
+        row.innerHTML = `
+          <!-- スキン（アバター） -->
+          <div class="raid-ranking-avatar${avatarBackgroundHolographic ? ' holo-surface' : ''}${avatarHolographic ? ' holo-character-stage' : ''}" style="background-color:${getAvatarBackground(avatarBackgroundId).color}; ${getAvatarBackground(avatarBackgroundId).image ? `background-image:url('${av(getAvatarBackground(avatarBackgroundId).image)}'); background-size:cover; background-position:center;` : ''} border-color:${nameColor};">
+            <img src="${avatarImgSrc}" class="${avatarHolographic ? 'avatar-holographic' : ''}" style="width: 100%; height: 100%; object-fit: contain; object-position: center;">
+          </div>
+          <!-- プレイヤー情報 -->
+          <div class="raid-ranking-info">
+            <!-- 1行目: 順位、名前、レベル、ダメージ -->
+            <div class="raid-ranking-main">
+              <div class="raid-ranking-player">
+                <span class="raid-ranking-name" style="color:${nameColor}"></span>
+                <span class="raid-ranking-level">Lv.${level}</span>
+              </div>
+              <div style="flex-shrink: 0;">
+                <span class="raid-ranking-damage">
+                  ${(metric === 'totalKills' ? r.totalKills ?? r.bestKills ?? 0 : metric === 'kills' ? r.bestKills || 0 : r.totalDamage || 0).toLocaleString()}<span class="raid-ranking-damage-unit">${metric === 'totalKills' ? '体（累計）' : metric === 'kills' ? '体討伐' : metric === 'bossDamage' ? '累計ダメージ' : 'ダメージ'}</span>
+                </span>
+              </div>
+            </div>
+            <!-- 2行目: 3種の装備（横並び） & エールアクション -->
+            <div class="raid-ranking-secondary">
+              <div style="display: flex; align-items: center; gap: 5px;">
+                <span style="font-size: 10px; color: #aaa; white-space: nowrap;">装備:</span>
+                <div style="display: flex; gap: 4px;">
+                  ${makeEquipBox(weaponId, 'weapon', weaponRarity)}
+                  ${makeEquipBox(armorId, 'armor', armorRarity)}
+                  ${makeEquipBox(accessoryId, 'accessory', accessoryRarity)}
+                </div>
+              </div>
+              <div style="flex-shrink: 0;">
+                ${cheerActionHtml}
+              </div>
+            </div>
+          </div>
+        `;
+        applyAvatarComposition(row.querySelector('.raid-ranking-avatar'),row.querySelector('.raid-ranking-avatar > img'),{avatar:heroDef.id,avatarBackground:avatarBackgroundId,avatarHolographic,avatarBackgroundHolographic,avatarDecoration:!historical && isMe?G.avatarDecoration:avatarFrameId});
+        row.querySelector('.raid-ranking-name').textContent = `${rankMedal} ${r.playerName || '勇者'}`;
+        row.querySelectorAll('.raid-ranking-equip[data-equip-id]').forEach(element => {
+          bindEquipDetailTooltip(element, getEquipTemplate(element.dataset.equipId), { rarity: Number(element.dataset.equipRarity) });
+        });
+        listEl.appendChild(row);
+      });
+
+      // エールボタンのイベント登録
+      listEl.querySelectorAll('.btn-cheer-action').forEach(b => {
+        b.onclick = (e) => {
+          e.stopPropagation();
+          const targetKey = b.dataset.slot;
+          const targetName = decodeURIComponent(b.dataset.name || '');
+          sendRaidCheer(targetKey, targetName, b);
+        };
+      });
+    }
+  }
+
+}
+
+function renderRaidBossMenu() {
+  const modal = document.getElementById('screen-raid-boss');
+  if (!raidFeatureOpen()) { modal?.classList.add('hidden'); return; }
+  if (!modal) return;
+  modal.classList.remove('hidden');
+
+  const hpBar = document.getElementById('raid-boss-hp-bar');
+  renderRaidSyncStatus();
+  const dmgText = document.getElementById('raid-boss-damage');
+  const listEl = document.getElementById('raid-ranking-list');
+  const btn = document.getElementById('btn-raid-challenge');
+  if (getRaidData().rankings?.[currentSlotKey]) grantRaidParticipationBackground();
+  let bestRecord = $('raid-best-single');
+  if(!bestRecord) { bestRecord=document.createElement('p'); bestRecord.id='raid-best-single'; bestRecord.style.cssText='font-size:13px;margin:6px 0;color:#ffe08a'; $('raid-boss-name')?.parentElement.append(bestRecord); }
+  bestRecord.textContent=`🏆 1回の自己最高ダメージ：${(validRaidDamage(G?.raidBestSingleDamage) ?? 0).toLocaleString()}`;
+  const participationStatus = $('raid-participation-status');
+  const bossName = $('raid-boss-name');
+  const raidData = getRaidData();
+  const appearance = getRaidBossAppearance();
+  const isFinalPushRaid = appearance.id === 'darkBahamutFinal';
+  const rankingPeriod = raidJstMonthKey(Date.now());
+  const raidRankingTitle = modal.querySelector('.raid-ranking-section h3');
+  if (raidRankingTitle) {
+    const label = rankingPeriod && /^\d{6}$/.test(rankingPeriod) ? `${Number(rankingPeriod.slice(4))}月` : '今月';
+    raidRankingTitle.textContent = appearance.id === 'moonWraith' ? 'このボスへの累計ダメージランキング' : 'ダメージランキング';
+    listEl?.setAttribute('aria-label', appearance.id === 'moonWraith' ? `${label}のこのボスへの累計ダメージ順ランキング` : '合計ダメージ順のランキング');
+  }
+  const bossLevel = Math.max(50, Number(appearance.id === 'moonWraith' && !isCurrentMonthlyRaidData(raidData) ? 50 : raidData.bossLevel) || 50);
+  if (bossName) bossName.textContent = `${appearance.menuName} Lv.${bossLevel}${isFinalPushRaid ? ' MAX' : ''}`;
+  const finalPushAnnouncement = $('raid-final-push-announcement');
+  if (finalPushAnnouncement) finalPushAnnouncement.classList.toggle('hidden', !isFinalPushRaid);
+  const finalPushDetails = $('raid-final-push-details');
+  if (finalPushDetails) finalPushDetails.textContent = `Lv.${bossLevel}最終決戦。1問で2ステージ進み、誤答は回避・軽減なしの固定9999ダメージ！`;
+  const progressionRule = $('raid-rule-progression');
+  if (progressionRule) progressionRule.textContent = isFinalPushRaid
+    ? '1問ごとに2ステージ進む最終決戦。まちがえると回避・軽減できない9999ダメージの反撃。HPが0になっても、あたえたダメージは記録されるよ。'
+    : '1問ごとに次のステージの問題へ。まちがえると反撃されるよ。自分のHPが0になっても、あたえたダメージは記録されるよ。';
+  const portraitFrame = modal.querySelector('.raid-boss-portrait');
+  if (portraitFrame && appearance.portraitBackground) portraitFrame.style.backgroundImage = `url("${av(appearance.portraitBackground)}")`;
+  const portrait = modal.querySelector('.raid-boss-portrait img');
+  if (portrait) { portrait.src = av(appearance.image); portrait.alt = appearance.alt; }
+  if (participationStatus) { participationStatus.textContent=''; participationStatus.closest('.raid-participation-reward').style.display='none'; }
+  renderRaidChallengeRewards();
+  renderRaidTicketCount();
+
+  // 現在のプレイヤーが既にランキングにいれば、最新のアバター・レベル・装備情報を自動同期
+  if (currentSlotKey && G) {
+    const rData = getRaidData();
+    if (rData.rankings && rData.rankings[currentSlotKey]) {
+      const myEntry = rData.rankings[currentSlotKey];
+      myEntry.playerName = G.playerName || myEntry.playerName || '勇者';
+      myEntry.avatar = G.avatar;
+      myEntry.avatarBackground = G.avatarBackground || 'default';
+      myEntry.avatarHolographic = !!G.avatarHolographic;
+      myEntry.avatarBackgroundHolographic = !!G.avatarBackgroundHolographic;
+      myEntry.level = G.player?.lvl || 1;
+      const eqW = G.ownedEquips?.find(o => o.uid === G.equipment?.weapon?.uid);
+      const eqA = G.ownedEquips?.find(o => o.uid === G.equipment?.armor?.uid);
+      const eqAcc = G.ownedEquips?.find(o => o.uid === G.equipment?.accessory?.uid);
+      myEntry.equipment = {
+        weaponId: eqW?.id || null,
+        weaponRarity: eqW?.rarity || 1,
+        armorId: eqA?.id || null,
+        armorRarity: eqA?.rarity || 1,
+        accessoryId: eqAcc?.id || null,
+        accessoryRarity: eqAcc?.rarity || 1
+      };
+      saveRaidData(rData);
+    }
+  }
+
+  const totalDmg = getRaidTotalDamage();
+  const maxHp = getRaidMaxHp();
+  const remainHp = Math.max(0, maxHp - totalDmg);
+  const defeated = remainHp <= 0;
+
+  // HPバー更新
+  if (dmgText) {
+    dmgText.parentElement.firstElementChild.textContent = '残りHP';
+    if (defeated) {
+      dmgText.textContent = '🎊 討伐完了！';
+      dmgText.style.color = '#feca57';
+    } else {
+      dmgText.textContent = `${remainHp.toLocaleString()} / ${maxHp.toLocaleString()}`;
+      dmgText.style.color = '#ff7675';
+    }
+  }
+  if (hpBar) hpBar.style.width = `${Math.max(0, Math.min(100, (remainHp / maxHp) * 100))}%`;
+
+  renderRaidRankingList(listEl, getRaidRankings(), false, appearance.id === 'moonWraith' ? 'bossDamage' : 'damage');
+
+  renderRaidLearningRecommendation();
+  renderRaidFinalResult();
+
+  // ボタン状態
+  if (btn) {
+    btn.style.display = 'block';
+    if (!defeated) {
+      const availability = raidChallengeAvailability({syncStatus:raidSyncStatus,isTestMode:!!G?.isTestMode,hasTicket:(G?.raidTickets||0)>0,bossActive:true,busy:raidChallengeStartGate.busy});
+      btn.disabled = !availability.enabled;
+      btn.textContent = availability.reason === 'busy' || availability.reason === 'sync-unavailable' && raidSyncStatus !== 'offline' && raidSyncStatus !== 'denied' ? '討伐状況を確認中…'
+        : availability.reason === 'sync-unavailable' ? '共有状況を確認できません'
+        : isFinalPushRaid ? '🔥 最終決戦に挑む' : '⚔ レイドボスに挑戦する';
+      btn.style.background = availability.enabled ? 'linear-gradient(to bottom, #d35400, #c0392b)' : '#555';
+      btn.onclick = availability.enabled ? confirmRaidStart : null;
+    } else {
+      // 討伐済み --- 報酬確認
+      const rankings = getRaidRankings();
+      const myRank = rankings.findIndex(r => r.slotKey === currentSlotKey) + 1;
+      const claimed = isRaidRewardClaimed(currentSlotKey);
+
+      if (myRank > 0 && !claimed) {
+        btn.disabled = true;
+        btn.textContent = raidSyncStatus === 'denied' ? '共有設定を確認できません' : `🎁 ${myRank}位・報酬を配布中`;
+        btn.style.background = '#555';
+        btn.onclick = null;
+      } else if (claimed) {
+        btn.disabled = true;
+        btn.textContent = '🎁 報酬配布済み';
+        btn.style.background = '#555';
+      } else {
+        btn.disabled = true;
+        btn.textContent = '討伐済み（未参加）';
+        btn.style.background = '#555';
+      }
+    }
+  }
+}
+
+async function claimRaidReward() {
+  // 報酬は討伐確定後の同期処理で自動配布する。
+  await syncRaidState();
+  renderRaidBossMenu();
+}
+
+/* レイドチケットの数を、レイド画面の ボタンの上に 見せる */
+function renderRaidTicketCount(){
+  if($('btn-raid-exchange'))$('btn-raid-exchange').textContent=`🪙 コイン交換所（${Number(G?.raidCoins)||0}枚）`;
+  const el = $('raid-ticket-count');
+  if (!el || !G) return;
+  el.textContent = '参加費なし・何度でも挑戦できます';
+  bindStageRewardTooltips(el);
+}
+
+/* ボスの レベルが あがったあと、はじめて 拠点に入ったときに レイドチケットを 1まい わたす（真ん中に おしらせ） */
+let raidTicketChecking = false;
+let raidTicketCheckedAt = 0;
+async function checkRaidLevelTicket(){ /* Ticket system retired. */ }
+
+function confirmRaidStart(){
+  if (!raidFeatureOpen()) { showRaidClosedNotice(); return; }
+  if (!G || raidChallengeStartGate.busy) return;
+  showConfirmModal('レイドボスに挑戦！','参加費なしで挑戦できます。',()=>startRaidBattle());
+}
+
+/* 戦闘中の「わからない」：負けずに レイドを おえる（ここまでのダメージは きろくされる） */
+function confirmRaidRetreat(){
+  if (!battle || !battle.enemy?.isRaid || battle.over) return;
+  showConfirmModal('🏳 わからない？', 'ここで レイドを おわるよ。<br>ここまでの ダメージは ちゃんと きろくされるよ！', () => {
+    if (!battle || battle.over) return;
+    loseBattle();
+  });
+}
+
+async function startRaidBattle() {
+  if (!raidFeatureOpen()) { showRaidClosedNotice(); return; }
+  if (!G || !currentSlotKey || raidChallengeStartGate.busy) return;
+  const game = G;
+  const slotKey = currentSlotKey;
+  const canStart = () => {
+    if (G !== game || currentSlotKey !== slotKey) return false;
+    const defeated = !!getRaidData().defeatedAt || getRaidTotalDamage() >= getRaidMaxHp();
+    return raidChallengeAvailability({syncStatus:raidSyncStatus,isTestMode:!!game.isTestMode,hasTicket:(game.raidTickets||0)>0,bossActive:!defeated}).enabled;
+  };
+  let introBgmTransition=null;
+  let started=false;
+  try {
+    started = await raidChallengeStartGate.begin({
+    canStart,
+    syncState: () => canReuseRaidChallengeSnapshot({
+      syncStatus:raidSyncStatus,
+      lastSyncedAt:raidLastSuccessfulSyncAt,
+      pendingEvents:game.raidProgress?.pendingEvents?.length||0,
+    }) ? Promise.resolve(true) : syncRaidState(),
+    start: async () => {
+      if (!canStart()) return false;
+      const introBossId=getRaidData().bossId||RAID_BOSS_ID;
+      const introAppearance=getRaidBossAppearance();
+      const controller=new AbortController();raidIntroAbort=controller;
+      let introResult;
+      try{
+        introBgmTransition=raidIntroBgm.begin();
+        introResult=await raidBossIntro.play({
+          name:introAppearance.menuName,image:av(introAppearance.image),
+          level:Math.max(50,Number(getRaidData().bossLevel)||50),
+          hp:Math.max(0,getRaidMaxHp()-getRaidTotalDamage()),maxHp:getRaidMaxHp(),
+        },{signal:controller.signal});
+      }catch(error){console.warn('Raid boss intro could not finish',error);introResult={status:'cancelled'};}
+      finally{if(raidIntroAbort===controller)raidIntroAbort=null;}
+      if(!['completed','skipped'].includes(introResult?.status)||!canStart()||(getRaidData().bossId||RAID_BOSS_ID)!==introBossId){
+        introBgmTransition?.restore();introBgmTransition=null;
+        return false;
+      }
+
+      grantRaidParticipationBackground();
+      syncRaidState();
+      hideBattleMenus();
+      document.getElementById('screen-raid-boss').classList.add('hidden');
+
+      const totalDmg = getRaidTotalDamage();
+      const remainHp = Math.max(1, getRaidMaxHp() - totalDmg);
+
+  explore = {
+    isRaid: true,
+    stageMode: true,
+    raidAreaKeys: [...RAID_STAGE_AREA_IDS],
+    raidAreaIdx: 0,
+    raidStageIdx: 0,
+    raidProbCount: 0,
+    areaId: 'area1',
+    stageIndex: 0,
+    isBoss: false
+  };
+
+  const appearance = getRaidBossAppearance();
+  const enemy = applyEnemyAttackStatMultiplier({
+    name: appearance.battleName,
+    emoji: appearance.image,
+    maxHp: getRaidMaxHp(),
+    hp: remainHp,
+    atk: 100,
+    def: 15,
+    spd: 20,
+    goldMin: 0, goldMax: 0, exp: 0,
+    isBoss: true,
+    isRaid: true
+  });
+
+  battle = {
+    enemy,
+    pGauge: 0, eGauge: 0,
+    running: false,
+    tickId: null,
+    over: false,
+    currentTurnProblem: null,
+    raidDamageDealt: 0,
+    raidRunId: crypto.randomUUID(),
+    raidStartedAt: Date.now(),
+    raidBossId: getRaidData().bossId || RAID_BOSS_ID,
+    raidMonsterId: appearance.id
+  };
+
+  showScreen('screen-battle');
+  $('screen-battle').classList.add('raid-battle-screen');
+  document.getElementById('screen-battle').style.backgroundImage = `url("${av(appearance.battleBackground)}")`;
+  document.getElementById('battle-floor-title').innerHTML = appearance.id === 'darkBahamutFinal'
+    ? '🔥 最後の力を振り絞れ！ レイド最終決戦！'
+    : '👿 レイドボス挑戦！ 全力でダメージを与えろ！';
+  renderBattleProgressStars();
+
+  updateBattleBars();
+  $('battle-enemy-name').textContent = enemy.name;
+  $('battle-enemy-emoji').innerHTML = `<img src="${av(enemy.emoji)}" alt="${enemy.name}">`;
+  $('battle-enemy-emoji').className = 'enemy-sprite boss-sprite';
+  $('battle-enemy-emoji').classList.toggle('ghost-boss-motion', appearance.id === 'moonWraith');
+
+  SM.playBGM('bgm_raid_boss');
+  introBgmTransition?.retainForBattle();introBgmTransition=null;
+
+      battle.running = true;
+      CM.start();
+      const battleOwner = battle;
+      requestAnimationFrame(() => {
+        if (battle !== battleOwner || battleOwner.over) return;
+        openActionMenu();
+      });
+      return true;
+    }
+    });
+  } catch(error) {
+    introBgmTransition?.restore();introBgmTransition=null;
+    throw error;
+  }
+  if (!started) { introBgmTransition?.restore();introBgmTransition=null; }
+  if (!started && G === game && !$('screen-raid-boss').classList.contains('hidden')) renderRaidBossMenu();
+}
+
+
+let adminGiftCheckSlotKey = null;
+let adminGiftLastCheck = 0;
+let adminGiftChecking = false;
+
+function getGiftableItemDefs() {
+  return [...ITEM_DB, ...BLUEPRINT_DB].filter(d => !d.internal && d.id !== 'ticket');
+}
+
+/* プレゼントの 1項目：{ kind:'item'|'ticket'|'equip'|'medal', id, count, rarity? }（kind なし＝むかしの どうぐ） */
+const GIFT_TICKETS = [
+  { id: 'equip-ten-ticket', name: '装備ガチャ10連チケット' },
+  { id: 'skin-ticket', name: '背景スキンガチャチケット' },
+];
+function giftEntryKind(e) { return e && e.kind ? e.kind : 'item'; }
+function giftEntryName(e) {
+  const kind = giftEntryKind(e);
+  if (kind === 'equip') { const db = getEquipTemplate(e.id); return `${db?.name || e.id}（${RARITY_NAME[e.rarity] || '★' + e.rarity}）`; }
+  if (kind === 'ticket') return GIFT_TICKETS.find(t => t.id === e.id)?.name || e.id;
+  if (kind === 'medal') return 'クエストメダル';
+  if (kind === 'decoration') return AVATAR_DECORATIONS.find(item=>item.id===e.id)?.name || e.id;
+  return getItemTemplate(e.id)?.name || e.id;
+}
+function giftEntryIconHtml(e, size = 32) {
+  const kind = giftEntryKind(e);
+  try {
+    if (kind === 'equip') return stageRewardIcon('equip', e.id, Number(e.rarity) || 1, size);
+    if (kind === 'ticket') return stageRewardIcon('ticket', e.id, 1, size);
+    if (kind === 'medal') return stageRewardIcon('medal', 'quest-medal', 1, size);
+    if (kind === 'decoration') return stageRewardIcon('decoration',e.id,1,size);
+    return stageRewardIcon('item', e.id, 1, size);
+  } catch (_) { return '📦'; }
+}
+/* うけとった プレゼント1項目を セーブデータに 入れる */
+function applyGiftEntry(game, e) {
+  const n = Math.max(0, Math.floor(Number(e?.count) || 0));
+  if (!e?.id || n <= 0) return;
+  const kind = giftEntryKind(e);
+  if (kind === 'equip') {
+    const rarity = Math.min(6, Math.max(1, Math.floor(Number(e.rarity) || 1)));
+    for (let i = 0; i < n; i++) game.ownedEquips.push({ uid: game.nextUid++, id: e.id, rarity, ability: rollAbility(rarity) });
+  } else if (kind === 'ticket') {
+    if (e.id === 'equip-ten-ticket') game.equipGachaTenPullTickets = (game.equipGachaTenPullTickets || 0) + n;
+    else if (e.id === 'skin-ticket') game.skinGachaTickets = (game.skinGachaTickets || 0) + n;
+    else if (e.id === 'raid-ticket') game.raidTickets = (game.raidTickets || 0) + n;
+  } else if (kind === 'medal') {
+    game.questMedals = (game.questMedals || 0) + n;
+  } else {
+    addItem(e.id, n);
+  }
+}
+function giftEntryOptionsHtml() {
+  const equipGroup = (label, slot) => {
+    const list = [...EQUIP_DB, ...ANCIENT_EQUIP_DB, ...LIMITED_EQUIP_DB].filter(d => d.slot === slot);
+    return list.length ? `<optgroup label="${label}">${list.map(d => `<option value="equip:${d.id}">${escapeHtml(d.name)}</option>`).join('')}</optgroup>` : '';
+  };
+  return `<option value="">-- えらぶ --</option>
+    <optgroup label="🎫 チケット・メダル">${GIFT_TICKETS.map(t => `<option value="ticket:${t.id}">${escapeHtml(t.name)}</option>`).join('')}<option value="medal:quest-medal">クエストメダル</option></optgroup>
+    <optgroup label="🧪 どうぐ">${getGiftableItemDefs().map(d => `<option value="item:${d.id}">${escapeHtml(d.name)}</option>`).join('')}</optgroup>
+    ${equipGroup('⚔ そうび（ぶき）', 'weapon')}${equipGroup('🛡 そうび（よろい）', 'armor')}${equipGroup('💍 そうび（アクセサリ）', 'accessory')}`;
+}
+
+let accountAdminGiftTargets = null;
+function renderAdminGiftTargets() {
+  const listEl = $('admin-gift-target-list');
+  if (!listEl) return;
+  const selected = new Set(Array.from(listEl.querySelectorAll('input:checked'), input => input.value));
+  const search = ($('admin-gift-target-search')?.value || '').trim().toLocaleLowerCase('ja');
+  if(window.AccountSession && accountAdminGiftTargets===null){listEl.textContent='管理権限を確認しています…';return;}
+  const slots = (window.AccountSession ? accountAdminGiftTargets : listSaveSlots()).filter(slot => slot.name.toLocaleLowerCase('ja').includes(search));
+  if (slots.length === 0) {
+    listEl.innerHTML = `<div class="admin-gift-empty">${search ? 'あてはまる セーブデータが ありません。' : 'セーブデータが ありません。'}</div>`;
+    return;
+  }
+  listEl.innerHTML = slots.map(slot => `
+    <label class="admin-gift-target">
+      <input type="checkbox" class="admin-gift-target-cb" value="${escapeHtml(slot.key)}" data-name="${escapeHtml(slot.name)}" ${selected.has(slot.key) ? 'checked' : ''}>
+      <span>${escapeHtml(slot.name)}</span><small>Lv ${slot.lvl}${slot.key === TEST_SLOT_KEY ? '・テスト' : ''}</small>
+    </label>`).join('');
+  const all = $('admin-gift-select-all');
+  if (all) all.checked = slots.length > 0 && slots.every(slot => selected.has(slot.key));
+}
+
+async function renderAdminGiftHistory() {
+  const el = $('admin-gift-history-list');
+  if (!el || !window.AdminGiftAPI) return;
+  el.innerHTML = '<div class="admin-gift-empty">よみこみ中...</div>';
+  try {
+    const rows = await window.AdminGiftAPI.listRecent(30);
+    if (!rows.length) { el.innerHTML = '<div class="admin-gift-empty">まだ履歴がありません。</div>'; return; }
+    el.innerHTML = rows.map(r => `<div class="admin-gift-history-item">
+      <div class="meta">${new Date(r.createdAt).toLocaleString('ja-JP')} 宛先: <b>${escapeHtml(r.playerName)}</b></div>
+      <div class="details">
+        ${r.gold ? `<span>💰${Number(r.gold).toLocaleString()}G</span>` : ''}
+        ${(r.items || []).map(it => `<span>${giftEntryIconHtml(it, 24)} ${escapeHtml(giftEntryName(it))} x${it.count}</span>`).join('')}
+      </div>
+      <div class="status">${r.claimed ? '✅ 受取済' : '⏳ 未受取'}</div>
+    </div>`).join('');
+    bindStageRewardTooltips(el);
+  } catch(e) {
+    el.textContent = e.message==='admin_required' ? 'この操作には管理者の権限が必要です。' : 'エラーが発生しました';
+  }
+}
+
+function giftItemIconHtml(def) {
+  if (!def) return '📦';
+  if (def.emoji) return def.emoji;
+  return '📦';
+}
+
+function addAdminGiftItemRow() {
+  const container = $('admin-gift-item-rows');
+  if (!container) return;
+  const row = document.createElement('div');
+  row.className = 'admin-gift-item-row';
+  row.innerHTML = `
+    <select class="admin-gift-item-select">${giftEntryOptionsHtml()}</select>
+    <select class="admin-gift-rarity-select" hidden title="そうびの レアリティ">${[1,2,3,4,5,6].map(r => `<option value="${r}"${r === 1 ? ' selected' : ''}>★${r} ${RARITY_NAME[r]}</option>`).join('')}</select>
+    <input type="number" class="admin-gift-item-count" min="1" max="999" value="1" inputmode="numeric">
+    <button type="button" class="btn admin-gift-small-btn admin-gift-del-btn">×</button>
+  `;
+  const sel = row.querySelector('.admin-gift-item-select');
+  const raritySel = row.querySelector('.admin-gift-rarity-select');
+  sel.onchange = () => { raritySel.hidden = !sel.value.startsWith('equip:'); };
+  row.querySelector('.admin-gift-del-btn').onclick = () => row.remove();
+  container.appendChild(row);
+}
+
+function renderAdminGiftPanel() {
+  if(window.AccountSession){accountAdminGiftTargets=null;const button=$('btn-admin-gift-send');if(button)button.disabled=true;}
+  if(window.AccountSession && !window.AdminGiftAPI){
+    const list=$('admin-gift-target-list');
+    if(list)list.textContent='このログイン方式では、プレゼント機能はまだ利用できません。';
+    return;
+  }
+  renderAdminGiftTargets();
+  const rows = $('admin-gift-item-rows');
+  if (rows && !rows.children.length) addAdminGiftItemRow();
+  if(window.AccountSession){
+    window.AdminGiftAPI.listTargets().then(rows=>{accountAdminGiftTargets=rows;renderAdminGiftTargets();const button=$('btn-admin-gift-send');if(button)button.disabled=false;}).catch(error=>{
+      accountAdminGiftTargets=[];const list=$('admin-gift-target-list');if(list)list.textContent=error.message==='admin_required'?'この操作には管理者の権限が必要です。':'宛先を取得できませんでした。';
+    });
+  } else if (typeof syncCloudSaves === 'function') syncCloudSaves(() => renderAdminGiftTargets());
+}
+
+async function sendAdminGiftFromUI() {
+  const status = $('admin-gift-status');
+  const setStatus = (text, kind = '') => { if (status) { status.textContent = text; status.dataset.kind = kind; } };
+  const targets = Array.from(document.querySelectorAll('#admin-gift-target-list input:checked'), input => ({ slotKey: input.value, playerName: input.dataset.name || '' }));
+  const gold = Math.max(0, Math.floor(Number($('admin-gift-gold')?.value) || 0));
+  const itemMap = new Map();
+  document.querySelectorAll('#admin-gift-item-rows .admin-gift-item-row').forEach(row => {
+    const val = row.querySelector('.admin-gift-item-select').value;
+    const count = Math.max(0, Math.floor(Number(row.querySelector('.admin-gift-item-count').value) || 0));
+    if (!val || count <= 0) return;
+    const [kind, ...rest] = val.split(':');
+    const id = rest.join(':');
+    const rarity = kind === 'equip' ? Number(row.querySelector('.admin-gift-rarity-select').value) || 1 : undefined;
+    const key = `${kind}:${id}:${rarity || ''}`;
+    const cur = itemMap.get(key) || { kind, id, count: 0, ...(rarity ? { rarity } : {}) };
+    cur.count += count;
+    itemMap.set(key, cur);
+  });
+  const items = [...itemMap.values()];
+  const message = ($('admin-gift-message')?.value || '').trim();
+
+  if (!targets.length) { setStatus('宛先が ありません。', 'error'); return; }
+  if (!gold && !items.length) { setStatus('ゴールド か アイテムを 1つ以上 えらんでね。', 'error'); return; }
+  if (!window.AdminGiftAPI) { setStatus('クラウドに接続できません。', 'error'); return; }
+
+  const btn = $('btn-admin-gift-send');
+  if (btn) btn.disabled = true;
+  setStatus('そうしん中...', 'working');
+
+  try {
+    await window.AdminGiftAPI.send(targets, { gold, items, message });
+    setStatus(`${targets.length}人に プレゼントを おくりました！`, 'success');
+    $('admin-gift-gold').value = 0;
+    $('admin-gift-item-rows').innerHTML = '';
+    addAdminGiftItemRow();
+    $('admin-gift-message').value = '';
+    renderAdminGiftHistory();
+    adminGiftLastCheck=0;checkAdminGifts();
+  } catch (err) {
+    console.error('AdminGift send error:', err);
+    setStatus(`エラーが おきました。（${err && err.message ? err.message : err}）`, 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function showAdminGiftNotice(gifts, onReceive = null) {
+  document.querySelector('.admin-gift-notice-overlay')?.remove();
+  const totalGold = gifts.reduce((sum, gift) => sum + (Number(gift.gold) || 0), 0);
+  const itemTotals = new Map();
+  gifts.forEach(gift => (gift.items || []).forEach(item => {
+    const key = `${giftEntryKind(item)}:${item.id}:${item.rarity || ''}`;
+    const cur = itemTotals.get(key) || { ...item, count: 0 };
+    cur.count += Number(item.count) || 0;
+    itemTotals.set(key, cur);
+  }));
+  const recallDebt=gifts.reduce((sum,gift)=>sum+(Number(G?.giftRecallDebts?.[gift.replacesGiftId])||0),0);
+  const messages = gifts.map(gift => String(gift.message || '').trim()).filter(Boolean);
+  const rows = [
+    totalGold ? `<li><span class="admin-gift-item-icon">💰</span><span>ゴールド</span><b>${totalGold.toLocaleString()} G</b></li>` : '',
+    ...[...itemTotals.values()].map(e => `<li>${giftEntryIconHtml(e, 48)}<span>${escapeHtml(giftEntryName(e))}</span><b>x ${e.count}</b></li>`)
+  ].join('');
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay admin-gift-notice-overlay active';
+  overlay.innerHTML = `
+    <section class="modal-panel admin-gift-notice" role="dialog" aria-modal="true" aria-labelledby="admin-gift-notice-title" style="max-width: 400px; text-align: center;">
+      <div class="admin-gift-notice-badge" aria-hidden="true" style="font-size: 3rem; margin-bottom: 10px;">🎁</div>
+      <h2 id="admin-gift-notice-title">プレゼントが届いた！</h2>
+      <p class="admin-gift-notice-sub">${onReceive ? 'アイテムを確認して「受け取る」を押してね。' : 'プレゼントを受け取りました。'}</p>
+      <ul class="admin-gift-notice-list" style="text-align: left; list-style: none; padding: 0; margin: 15px 0;">${rows}</ul>
+      ${recallDebt?`<p class="admin-gift-recall-note">再配布の精算：${recallDebt.toLocaleString()}G（回収前に使った分）を差し引いて受け取ります。</p>`:''}
+      ${messages.length ? `<div class="admin-gift-notice-message" style="margin-bottom: 15px;">${messages.map(text => `<p>💌 ${escapeHtml(text)}</p>`).join('')}</div>` : ''}
+      <button type="button" class="btn btn-primary" id="btn-admin-gift-notice-ok">受け取る</button>
+    </section>`;
+  
+  const app = document.getElementById('app') || document.body;
+  app.appendChild(overlay);
+  bindStageRewardTooltips(overlay);
+  
+  if (typeof SM !== 'undefined' && SM.playBeep) SM.playBeep('heal');
+  const ok = overlay.querySelector('#btn-admin-gift-notice-ok');
+  ok.onclick = async () => {
+    if(!onReceive){overlay.remove();return;}
+    ok.disabled=true;ok.textContent='受け取り中…';
+    try {await onReceive();overlay.remove();}
+    catch(error){overlay.querySelector('.admin-gift-notice-sub').textContent='受け取れませんでした。通信を確認してもう一度押してください。';ok.disabled=false;ok.textContent='受け取る';console.warn('[AdminGift] claim failed:',error);}
+  };
+  ok.focus();
+}
+
+async function checkAdminGifts(force = false) {
+  if (!G || !currentSlotKey || adminGiftChecking || !window.AdminGiftAPI || document.querySelector('.admin-gift-notice-overlay')) return;
+  if (!force && adminGiftCheckSlotKey === currentSlotKey && Date.now()-adminGiftLastCheck<15000) return;
+  const game=G, slotKey=currentSlotKey;adminGiftChecking=true;
+  try {
+    const pending=await window.AdminGiftAPI.fetchPending(slotKey);
+    if(G!==game || currentSlotKey!==slotKey)return;
+    adminGiftCheckSlotKey=slotKey;adminGiftLastCheck=Date.now();
+    if(!pending.length)return;
+    let recalled=false;for(const gift of pending)recalled=recallGiftPayload(game,gift)||recalled;
+    if(recalled){save(true);updateHud();}
+    showAdminGiftNotice(pending,async()=>{
+      if(G!==game || currentSlotKey!==slotKey)throw new Error('セーブデータが変わりました');
+      if(!window.AdminGiftAPI.claimToSave)throw new Error('再読み込みしてください');
+      for(const gift of pending){
+        const delivered=await window.AdminGiftAPI.claimToSave(gift.id,slotKey,game);
+        if(!delivered)continue;
+        applyGiftPayload(game,delivered);game.updatedAt=Date.now();storageSet(slotKey,JSON.stringify(game));
+        save(true);
+      }
+      updateHud();SM.playBeep('heal');
+    });
+  }catch(error){console.warn('[AdminGift] check failed:',error);}
+  finally{adminGiftChecking=false;}
+}
+
+/* 開発サーバー（npm run dev）のときだけ、ブラウザのコンソールから テストできるようにする */
+if (import.meta.env && import.meta.env.DEV) {
+  window.render_game_to_text = () => JSON.stringify({screen:document.querySelector('.screen.active')?.id,awakening:equippedAncients(G).map(equip=>({id:equip.id,...awakeningState(equip)})),raidCoins:Number(G?.raidCoins)||0,raidTickets:G?.raidTickets||0,decoration:G?.avatarDecoration||'',eventRaid:explore?.isEventRaid?{kills:explore.eventRaid.kills,remainingMs:Math.max(0,explore.eventRaid.endsAt-Date.now())}:null});
+  window.__dbg = {
+    get G(){ return G; }, get explore(){ return explore; }, set explore(v){ explore = v; },
+    get rewardSettings(){ return rewardSettings; },
+    recordStageClear, grantBossClearState, generateStageEnemy, rollBattleDrops, grantPrintRewards,
+    stageTotalClearCount, stageRepeatDropMult, AREA_STAGES, stageAreaCleared, showBossClearOverlay, grantQuestExtras, QUEST_MEDAL_MILESTONES, showQuestRewardToast, generateStoryQuest, questRewardFor, questAllowedTiers, QUEST_STEP_ITEMS, getActivePickup, choosePickupStage, openAdventure, showStageClearOverlay, recordStageClear2:recordStageClear, startChallenge, enterAreaStage, enterAreaBoss, applyGiftEntry, giftEntryName, giftEntryOptionsHtml, showAdminGiftNotice,
+  };
+}
+
+setInterval(()=>{if(G && document.querySelector('#screen-home.active'))checkAdminGifts();},20000);
+
+if (LOCAL_ART_PREVIEW) {
+  const beginLocalArtPreview = async () => {
+    const {openLocalArtGamePreview} = await import('./local_art_game_preview.js');
+    const characterIds=['skin_fire_lancer_m','skin_tide_cleric_f','skin_forest_scout_m','ai_hero_alchemist','halloween_festival_queen','raid_star_guardian'];
+    const weaponIds=['w1','halloween_pumpkin_blade','halloween_lantern_staff','anc_w1'];
+    const enemyOptions=[{id:'slime',name:'そらとぶスライム',zone:'tower',key:0},{id:'hedgehog',name:'キノコやまあらし',zone:'tower',key:8},{id:'boss',name:'くさはらのぬし（ボス）'}];
+    let selectedEnemy=enemyOptions.find(e=>e.id===new URLSearchParams(location.search).get('enemy'))||enemyOptions[0];
+    localArtEnemyRef=selectedEnemy.zone?{zone:selectedEnemy.zone,key:selectedEnemy.key}:null;
+    G=newGameState('絵柄確認用',characterIds[0]);
+    G.player.lvl=12; // Allow all four sample weapons within the normal cost cap.
+    // This deliberately does not use SAVE_PREFIX, so save() cannot persist it.
+    currentSlotKey='local-art-preview';
+    G.unlockedSkins=[...characterIds];
+    G.ownedEquips.push(...weaponIds.map((id,i)=>({uid:i+2,id,rarity:1,ability:eventEquipmentAbility(id)||null})));
+    G.nextUid=6;
+    G.equipment.weapon={uid:2};
+    document.getElementById('boot-loader-screen')?.remove();
+    SM.setMuted(true);
+    const home=()=>{endBattleLoop();showHome();};
+    const room=()=>{endBattleLoop();showStatus();};
+    const fight=()=>{endBattleLoop();G.player.hp=totalMaxHp();G.player.mp=totalMaxMp();if(selectedEnemy.id==='boss')enterAreaBoss('area1');else enterAreaStage('area1',0);};
+    openLocalArtGamePreview({
+      characters:characterIds.map(id=>getHeroAvatar(id)),
+      weapons:weaponIds.map(id=>getEquipTemplate(id)),
+      enemies:enemyOptions,selectedEnemy:selectedEnemy.id,
+      character(id){if(characterIds.includes(id)){G.avatar=id;home();}},
+      weapon(id){const index=weaponIds.indexOf(id);if(index>=0){G.equipment.weapon={uid:index+2};room();}},
+      enemy(id){const entry=enemyOptions.find(e=>e.id===id);if(entry){selectedEnemy=entry;localArtEnemyRef=entry.zone?{zone:entry.zone,key:entry.key}:null;fight();}},
+      home,room,selector:()=>window.showAvatarChangeModal(),
+      battle:fight,
+    });
+    if(new URLSearchParams(location.search).get('view')==='battle')fight();else home();
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',beginLocalArtPreview,{once:true});
+  else beginLocalArtPreview();
+}

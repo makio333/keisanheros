@@ -1,0 +1,11 @@
+/* Dedicated reserved row: mount between battle header and question, never overlay. */
+.ancient-exp-toast-v2 { box-sizing:border-box; width:100%; min-width:0; min-height:112px; padding:8px 12px; border:1px solid #e8be6a; border-radius:12px; background:#211b30; color:#fff2cf; font:14px/1.5 system-ui,sans-serif; pointer-events:none; overflow-wrap:anywhere; animation:ancient-exp-v2-in .18s ease-out; }
+.ancient-exp-toast-v2[hidden] { display:block; visibility:hidden; }
+.ancient-exp-toast-v2 > strong { font-size:12px; color:#f3d38e; }
+.ancient-exp-toast-v2__row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:2px 12px; }
+.ancient-exp-toast-v2__row > b { min-width:0; }
+.ancient-exp-toast-v2__row > span:nth-of-type(2), .ancient-exp-toast-v2 progress { grid-column:1/-1; }
+.ancient-exp-toast-v2 progress { width:100%; height:8px; accent-color:#efd186; }
+@keyframes ancient-exp-v2-in { from { opacity:0; } to { opacity:1; } }
+@media(max-width:480px) { .ancient-exp-toast-v2 { font-size:12px; padding:8px; } }
+@media(prefers-reduced-motion:reduce) { .ancient-exp-toast-v2 { animation:none; } }

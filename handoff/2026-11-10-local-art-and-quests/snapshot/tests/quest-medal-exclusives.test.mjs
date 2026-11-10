@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {QUEST_MEDAL_EXCLUSIVE_PRIZES as prizes,QUEST_MEDAL_EQUIPMENT as gear,claimQuestMedalExclusive as claim,QUEST_MEDAL_SKIN,QUEST_MEDAL_BACKGROUND,QUEST_MEDAL_FRAME} from '../quest_medal_exclusives.js';
+const fresh=medals=>({questMedals:medals,questMedalExchanged:{old_reward:true},nextUid:7,ownedEquips:[],unlockedSkins:['old_skin'],unlockedAvatarBackgrounds:['default'],unlockedDecorations:[]});
+for(const p of prizes){const low=fresh(p.medals-1),before=JSON.stringify(low);assert.equal(claim(low,p.key),null);assert.equal(JSON.stringify(low),before);const g=fresh(300);const reward=claim(g,p.key);assert.equal(reward.name,p.label);assert.equal(g.questMedals,300);assert.equal(g.questMedalExchanged.old_reward,true);assert.equal(claim(g,p.key),null);if(p.kind==='equip'){assert.equal(g.ownedEquips[0].rarity,5);assert.equal(g.ownedEquips[0].ability,p.ability);assert.equal(g.nextUid,8);}const restored=JSON.parse(JSON.stringify(g));assert.equal(claim(restored,p.key),null);}
+const g=fresh(300);for(const p of prizes)assert.ok(claim(g,p.key));assert.equal(g.ownedEquips.length,3);assert.ok(g.unlockedSkins.includes('old_skin'));assert.equal(g.nextUid,10);assert.equal(claim(g,'missing'),null);
+for(const value of [-1,NaN,Infinity,2.5])assert.equal(claim(fresh(value),prizes[0].key),null);
+const corrupt=fresh(300);corrupt.unlockedSkins={};const before=JSON.stringify(corrupt);assert.equal(claim(corrupt,'exclusive_library_keeper'),null);assert.equal(JSON.stringify(corrupt),before);
+const invalid=fresh(300);invalid.nextUid=Number.MAX_SAFE_INTEGER;assert.equal(claim(invalid,prizes.find(p=>p.kind==='equip').key),null);
+assert.equal(gear.length,3);assert.ok([QUEST_MEDAL_SKIN,QUEST_MEDAL_BACKGROUND].every(p=>p.rewardSource==='quest-medal'));assert.equal(QUEST_MEDAL_FRAME.source,'quest-medal');
+console.log('PASS: all six medal-exclusive prizes, thresholds, retained medals, guaranteed legend abilities, replay and restore safety, old rewards and malformed saves preserved');

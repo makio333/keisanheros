@@ -1,0 +1,6 @@
+import assert from 'node:assert/strict';import {uniquePrintProblems,printProblemKey} from '../print_uniqueness.js';import {kanaPrintChoice,kanaChoicePrintHtml} from '../kana_choice_print.js';
+let calls=0;const problems=uniquePrintProblems(()=>({text:['1 + 1','1 + 1','2 + 2','3 + 3'][calls++%4],answer:1}),10);assert.equal(problems.length,3);assert.equal(new Set(problems.map(printProblemKey)).size,3);
+assert.equal(printProblemKey({text:'１ ＋ １'}),printProblemKey({text:'1+1'}));
+for(const [word,wrong]of [['くうき','くーき'],['すうじ','すーじ']]){const choice=kanaPrintChoice({answer:word},{options:[wrong,word]});assert.deepEqual(new Set(choice.options),new Set([word,wrong]));assert.equal(choice.options[choice.correctIndex],word);}
+const html=kanaChoicePrintHtml({problems:[{answer:'くうき',printChoices:['くーき','くうき']},{answer:'すうじ',printChoices:['すうじ','すーじ']}],title:'テスト',playerName:'',printId:'1234'});assert.ok(html.includes('writing-mode:vertical-rl'));assert.ok(html.includes('まるで かこみましょう'));assert.equal(html.includes('<img'),false);assert.equal(html.includes('kc-picture'),false);
+console.log('PASS: bounded unique generation, normalize duplicate expressions, finite pools never padded with repeats, printed long-vowel choices, vertical text-only layout');

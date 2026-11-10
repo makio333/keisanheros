@@ -1,0 +1,3 @@
+#town-map>#hotspot-raid-boss>.hotspot-tag{position:relative;overflow:visible}
+#hotspot-raid-boss .raid-town-icon{position:absolute;left:50%;bottom:36px;transform:translateX(-50%);display:block;width:112px;height:112px;max-width:none;object-fit:contain;image-rendering:pixelated;pointer-events:none;filter:drop-shadow(0 3px 5px #0008)}
+@media(max-width:600px){#hotspot-raid-boss .raid-town-icon{bottom:42px;width:88px;height:88px}}

@@ -1,0 +1,57 @@
+{
+  "theme": "星読みの図書館",
+  "assets": [
+    {
+      "file": "skin.png",
+      "prompt": "Full body chibi fantasy RPG character skin, 星読みの司書: androgynous young librarian hero in midnight blue and ivory robe with gold star embroidery, short silver hair, round glasses, holding one luminous open book and feather quill. Friendly face, strong silhouette, fully visible feet bottom centered, square character canvas, same polished pixel art proportions as reference. Transparent alpha background, no scenery, no floor, no text or frame. Reference for style only, no pumpkins or Halloween.",
+      "references": [
+        "assets/halloween/skin_pumpkin_knight.png"
+      ],
+      "transparent_background": true,
+      "generatedSource": "/Users/motoyamayuuki/.codex/generated_images/01a1bbb2-16fa-7dc0-904a-b4c93a4fe88d/exec-502b075b-0460-412e-ab51-13a39abf4447.png"
+    },
+    {
+      "file": "background.png",
+      "prompt": "Square fantasy RPG avatar background: 夜の星読み図書館. Cozy magical circular library, midnight blue arched star windows, tall warm wood bookshelves, golden lamps, floating softly illuminated books only in upper corners, central foreground open and calm for a character overlay. Refined 16-bit pixel art, crisp clusters, navy/amber/ivory palette, welcoming to children. No characters, no text, no UI, no frame.",
+      "references": [],
+      "transparent_background": false,
+      "generatedSource": "/Users/motoyamayuuki/.codex/generated_images/01a1bbb2-16fa-7dc0-904a-b4c93a4fe88d/exec-e35c59f1-dfc2-4e71-aebd-a49a7d577b51.png"
+    },
+    {
+      "file": "frame.png",
+      "prompt": "One square 1:1 fantasy RPG portrait frame: 星の本と羽根ペンのフレーム. Thin gold connectors at extreme outer edges <=3 logical pixels on 128x128 grid, four small corner clusters of navy books, ivory quills and tiny gold stars, each confined to outermost20% corners. Central56% square AND entire face rectangle x22–78%, y15–60% completely alpha transparent, empty center, no top-center dangling ornament. Match reference crisp coarse pixel art, 24–32 colors, transparent background, no card or character, thin readable at48px. Reference style only, book theme instead of ribbons/moons.",
+      "references": [
+        "assets/frames-thin/moon_ribbon.png"
+      ],
+      "transparent_background": true,
+      "generatedSource": "/Users/motoyamayuuki/.codex/generated_images/01a1bbb2-16fa-7dc0-904a-b4c93a4fe88d/exec-2eb2973a-e48f-4d1d-9d9c-d9c798977b0f.png"
+    },
+    {
+      "file": "weapon.png",
+      "prompt": "One legendary RPG weapon icon: 星詠みの羽根剣. Feather-quill shaped silver blade pointing UPPER RIGHT, navy leather grip LOWER LEFT, star-shaped gold guard with sapphire and small closed-book motif. Coarse128x128 logical pixel art, dark1px outline,24–32 colors,3–4 flat shades per material, big readable clusters, match reference pixel density,84% square canvas. Transparent alpha background, no text, frame, ground, glow cloud. Reference style only, no Halloween.",
+      "references": [
+        "assets/halloween/equip_pumpkin_blade.png"
+      ],
+      "transparent_background": true,
+      "generatedSource": "/Users/motoyamayuuki/.codex/generated_images/01a1bbb2-16fa-7dc0-904a-b4c93a4fe88d/exec-b2854060-3774-4fef-94e8-8df2b7a2a3c8.png"
+    },
+    {
+      "file": "armor.png",
+      "prompt": "One legendary RPG armor icon: 大司書のローブ. Unworn midnight blue and ivory hooded librarian robe with gold piping, small star clasps and a restrained constellation motif, broad readable silhouette. Coarse128x128 logical pixel art, dark1px outline,24–32 colors,3–4 flat shades per material, big clusters, match reference pixel density,84% square canvas. Transparent alpha background, no wearer, text, frame,ground,glow cloud. Reference style only, no Halloween.",
+      "references": [
+        "assets/halloween/equip_witch_mantle.png"
+      ],
+      "transparent_background": true,
+      "generatedSource": "/Users/motoyamayuuki/.codex/generated_images/01a1bbb2-16fa-7dc0-904a-b4c93a4fe88d/exec-b7a7cb56-f8ee-4c1a-bb3a-b22830834a67.png"
+    },
+    {
+      "file": "accessory.png",
+      "prompt": "One legendary RPG accessory icon: 知恵のしおり. Ivory feather bookmark on a short navy ribbon, tiny gold closed book pendant with one sapphire star, balanced diagonal silhouette and readable icon. Coarse128x128 logical pixel art, dark1px outline,24–32 colors,3–4 flat shades, big clusters, match reference pixel density,84% square canvas. Transparent alpha background, no text, frame, floor, glow cloud. Reference style only, no Halloween.",
+      "references": [
+        "assets/halloween/equip_moon_charm.png"
+      ],
+      "transparent_background": true,
+      "generatedSource": "/Users/motoyamayuuki/.codex/generated_images/01a1bbb2-16fa-7dc0-904a-b4c93a4fe88d/exec-abf63576-ef89-4709-bf1c-594d803650c6.png"
+    }
+  ]
+}

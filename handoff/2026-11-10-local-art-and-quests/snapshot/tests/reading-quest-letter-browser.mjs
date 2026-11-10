@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {chromium} from '/Users/motoyamayuuki/.codex/skills/develop-web-game/node_modules/playwright/index.mjs';
+import {JAPANESE_READING_QUESTS_V2 as records} from '../japanese_reading_quests_v2.js';
+const b=await chromium.launch({channel:'chrome',headless:true});
+try{
+ const p=await b.newPage({viewport:{width:1366,height:900},serviceWorkers:'block'}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto('http://127.0.0.1:5174/print_review_20261106.html?kind=reading-board&grade=4');await p.waitForFunction(()=>window.reviewReady);
+ const scroll=[];
+ for(const record of records){await p.locator('#grade').selectOption(String(record.grade));let card=p.locator('.reading-v2-quest-card').filter({has:p.getByRole('heading',{name:record.title,exact:true})});if(!await card.count())await p.getByRole('button',{name:'次のクエストページ',exact:true}).click();await card.getByRole('button',{name:'依頼を受ける',exact:true}).click();
+ const state=await p.locator('.reading-v2-passage').evaluate(el=>{const copy=el.cloneNode(true);copy.querySelectorAll('rt,.reading-v2-reference-label').forEach(e=>e.remove());return{text:copy.textContent,scroll:el.scrollHeight>el.clientHeight+1,font:parseFloat(getComputedStyle(el).fontSize)};});assert.equal(state.text,record.passage,record.id);assert.ok(state.font>=18);if(state.scroll)scroll.push(record.id);assert.equal(await p.locator('.reading-v2-choice,.reading-v2-extraction-form,.reading-v2-review-criteria').count()>0,true);await p.getByRole('button',{name:'← 依頼一覧へ',exact:true}).click();}
+ assert.deepEqual(scroll,[],'all passages fit the desktop letter');
+ for(const [width,height] of [[390,844],[375,667],[844,390]]){await p.setViewportSize({width,height});await p.locator('#grade').selectOption('6');await p.getByRole('button',{name:/^(依頼を受ける|回答のつづき)$/}).first().click();const r=await p.locator('.reading-v2-answer-panel').evaluate(el=>{const rect=el.getBoundingClientRect();return {x:rect.x,y:rect.y,right:rect.right,bottom:rect.bottom,width:innerWidth,height:innerHeight,panels:document.querySelectorAll('.reading-v2-answer-panel').length};});assert.equal(r.panels,1);assert.ok(r.x>=0&&r.right<=r.width+1&&r.y>=0&&r.bottom<=r.height+1,JSON.stringify(r));await p.locator('.reading-v2-passage').evaluate(el=>{el.scrollTop=el.scrollHeight;});assert.ok(await p.locator('.reading-v2-passage').evaluate(el=>el.scrollTop>0));await p.getByRole('button',{name:'← 依頼一覧へ',exact:true}).click();}
+ assert.deepEqual(errors,[]);console.log('PASS: 60 full passages, no desktop passage scrolling at 1366x900, font >=18px, all answer types; mobile and short-screen panel bounds and scroll fallback');
+}finally{await b.close();}

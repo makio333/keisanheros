@@ -1,0 +1,32 @@
+<!doctype html><html lang="ja"><meta charset="utf-8"><title>プリントと5問クエストの確認</title><link rel="icon" href="data:,">
+<link rel="stylesheet" href="/reading_subquests.css"><link rel="stylesheet" href="/word_problem_print_layout_v2.css?v=20261109-paragraph-indent">
+<style>body{display:block;height:auto;overflow:auto;background:#e7e7e7;color:#222;margin:0;padding:20px}nav{display:flex;gap:12px;flex-wrap:wrap;align-items:center;background:#fff;padding:14px;z-index:10}button,select{padding:9px;font-size:16px}#preview{color:#111;width:max-content;min-width:100%}#board{background:#79532c;padding:20px}iframe{width:100%;height:1150px;border:0;background:white}@media print{nav,#board{display:none!important}body{display:block!important;height:auto!important;padding:0;background:white}body>#preview{display:block!important;width:auto;min-width:0}}</style>
+<nav><strong>確認用・実データの保存なし</strong><select id="kind"><option value="math">算数文章問題・5問</option><option value="japanese">国語・1本文5問</option><option value="regular">通常プリント・20問</option><option value="kanji-stage">国語ステージ・20問</option><option value="ancient">古代からの挑戦状・テスト1</option><option value="board">算数の5問クエストを試す</option><option value="reading-board">国語の5問クエストを試す</option></select><select id="grade"></select><select id="material" aria-label="文章・問題セット"></select><select id="mode"><option value="student">児童用</option><option value="teacher">先生用解答</option></select><input id="space" type="hidden" value="standard"><button id="print">印刷</button><span id="status"></span></nav><main id="preview"></main><section id="board" hidden></section>
+<script type="module">
+import {QUEST_MEDAL_IMAGE} from './quest_medal_art.js';
+import {getMathWordQuestsV2} from './math_word_quests_v2.js';
+import {JAPANESE_READING_QUESTS_V2} from './japanese_reading_quests_v2.js';
+import {renderMathWordSetPrintV2} from './math_word_problem_print_adapter_v2.js';
+import {renderJapaneseReadingPrintV2} from './japanese_reading_print_adapter_v2.js';
+import {paginateWordProblemPrintV2} from './word_problem_print_layout_v2.js';
+import {renderMathWordSubquests} from './math_word_subquests.js';
+import {renderJapaneseReadingV2Subquests} from './japanese_reading_subquests_v2.js';
+const $=id=>document.getElementById(id);for(let i=1;i<=6;i++)$('grade').add(new Option(`${i}年`,i));
+const params=new URLSearchParams(location.search);$('kind').value=params.get('kind')||'math';$('grade').value=params.get('grade')||1;$('mode').value=params.get('mode')||'student';$('space').value='standard';
+let sourceKey='';
+const questPages={};
+const game={player:{gold:0},questMedals:0};window.reviewGame=game;
+async function render(){window.reviewReady=false;const kind=$('kind').value,grade=Number($('grade').value),mode=$('mode').value;$('preview').replaceChildren();$('board').hidden=!['board','reading-board'].includes(kind);$('mode').hidden=['board','reading-board'].includes(kind);$('print').hidden=['board','reading-board'].includes(kind);$('space').hidden=kind!=='math';$('status').textContent='';
+ const sources=kind==='japanese'?JAPANESE_READING_QUESTS_V2.filter(p=>p.grade===grade):Array.from({length:Math.ceil(getMathWordQuestsV2(grade).length/5)},(_,i)=>({id:String(i),title:`${i+1}組目`}));
+ const key=kind+'-'+grade;if(key!==sourceKey){$('material').replaceChildren(...sources.map(p=>new Option(p.title+(p.passage?`（${p.passage.length}字）`:''),p.id)));if(!sourceKey&&params.get('record'))$('material').value=params.get('record');sourceKey=key;}$('material').hidden=['board','reading-board','regular','ancient','kanji-stage'].includes(kind);
+ if(['board','reading-board'].includes(kind)){if(!document.querySelector('#board-game-style')){const css=document.createElement('link');css.id='board-game-style';css.rel='stylesheet';css.href='/style.css';document.head.append(css);}const api={pageForGrade:g=>questPages[kind+'-'+g]||0,setPageForGrade:(g,page)=>{questPages[kind+'-'+g]=page;},game:()=>game,asset:p=>'/'+p,rewardIcon:()=>`<img class="quest-villager-medal" src="${QUEST_MEDAL_IMAGE}" width="24" height="24" alt="クエストメダル">`,bindRewards:()=>{},exp:()=>{},save:()=>{},refresh:()=>{},print:record=>window.open(`/print_review_20261106.html?kind=japanese&grade=${grade}&record=${encodeURIComponent(record.id)}`,'_blank')};if(kind==='reading-board')renderJapaneseReadingV2Subquests($('board'),grade,api);else renderMathWordSubquests($('board'),api);$('status').textContent=`${grade}年・回答を試せます／進み具合や報酬はこの画面内だけの仮データです`;window.reviewReady=true;return;}
+
+ document.querySelector('#board-game-style')?.remove();
+ if(kind==='kanji-stage'){$('preview').innerHTML=`<iframe title="国語ステージプリント見本" src="/print_review_kanji_stage.html?grade=${grade}&mode=${mode}"></iframe>`;window.reviewReady=true;return;}
+ if(kind==='ancient'){$('preview').innerHTML=`<iframe title="古代からの挑戦状のテスト見本" src="/print_review_ancient_sample.html?mode=${mode}"></iframe>`;$('status').textContent='確認用テスト1・3年生相当／実際のアイテム消費なし';window.reviewReady=true;return;}
+ if(kind==='regular'){$('preview').innerHTML=`<iframe title="${grade}年の通常計算プリント" src="/regular_print_preview.html?grade=${grade}&mode=${mode}"></iframe>`;$('status').textContent=`${grade}年のゲーム内問題から作成した見本／保存・報酬付与なし`;window.reviewReady=true;return;}
+ $('preview').innerHTML=kind==='math'?renderMathWordSetPrintV2(getMathWordQuestsV2(grade).slice(Number($('material').value||0)*5,Number($('material').value||0)*5+5),{mode,calculationSpace:$('space').value}):renderJapaneseReadingPrintV2(sources.find(p=>p.id===$('material').value)||sources[0],{mode});
+ await paginateWordProblemPrintV2($('preview').querySelector('.wpp2-root'));$('status').textContent=kind==='math'&&$('space').value==='double'?`計算スペース2倍／${$('preview').querySelectorAll('.wpp2-page').length}ページ`:kind==='japanese'?'A4横向き・縦書き／表2問・裏3問／両面印刷：短辺とじ':'表2問・裏3問／計算欄は文章量に合わせて調整／両面印刷：長辺とじ';window.reviewReady=true;
+}
+for(const id of ['kind','grade','mode','material','space'])$(id).onchange=()=>render().catch(e=>{$('status').textContent=e.message;window.reviewError=e.message;});$('print').onclick=()=>{const frame=$('preview').querySelector('iframe');if(frame)frame.contentWindow.print();else window.print();};render().catch(e=>{$('status').textContent=e.message;window.reviewError=e.message;});
+</script></html>

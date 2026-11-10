@@ -1,0 +1,10 @@
+/* Inner image floats independently of the frame's existing hit reactions. */
+#screen-battle #battle-enemy-emoji.ghost-boss-motion{position:relative;isolation:isolate}
+#screen-battle #battle-enemy-emoji.ghost-boss-motion > img{animation:ghost-hover 3.6s ease-in-out infinite;transform-origin:50% 65%;will-change:transform}
+@keyframes ghost-hover{0%,100%{transform:translateY(0) rotate(-.8deg)}50%{transform:translateY(-12px) rotate(.8deg)}}
+#screen-battle #battle-enemy-emoji.ghost-boss-motion.enemy-attack-lean{animation:ghost-lunge .55s ease-in-out both}
+#screen-battle #battle-enemy-emoji.ghost-boss-motion.enemy-attack-lean::after{content:'';pointer-events:none;position:absolute;inset:20% 9% 0;border:2px solid #c7fbffb0;border-radius:50%;background:radial-gradient(ellipse,transparent 45%,#84e8ff44 65%,transparent 72%);animation:ghost-cold-wave .55s ease-out both}
+@keyframes ghost-lunge{0%,100%{transform:translateY(0) scale(1)}28%{transform:translateY(-16px) scale(.96)}52%{transform:translateY(12px) scale(1.09)}74%{transform:translateY(3px) scale(1.035)}}
+@keyframes ghost-cold-wave{0%,28%{opacity:0;transform:scale(.65)}46%{opacity:.8}100%{opacity:0;transform:translateY(30px) scale(1.6)}}
+#screen-battle:not(.active) .ghost-boss-motion > img{animation-play-state:paused}
+@media(prefers-reduced-motion:reduce){#screen-battle #battle-enemy-emoji.ghost-boss-motion > img,#screen-battle #battle-enemy-emoji.ghost-boss-motion.enemy-attack-lean{animation:none;will-change:auto}#screen-battle #battle-enemy-emoji.ghost-boss-motion.enemy-attack-lean::after{animation:none;opacity:0}}

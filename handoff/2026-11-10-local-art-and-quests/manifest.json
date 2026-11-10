@@ -1,0 +1,1306 @@
+{
+  "sourceBranch": "codex/product-migration-ready",
+  "format": "review snapshots only; integrate selectively",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 10039,
+      "sha256": "cfca6608d8f9dbaeee867e047886d338233d05245ef8ba3220f80fc1968f71e9"
+    },
+    {
+      "path": "screenshots/handdrawn-enemy-boss.png",
+      "bytes": 1973304,
+      "sha256": "1d46bd108e3d5fdecc33e8bd85bc221b7922395647f629a3ec08b293fda0198c"
+    },
+    {
+      "path": "screenshots/handdrawn-enemy-hedgehog.png",
+      "bytes": 1965388,
+      "sha256": "c9685b9fa71cb77c7ea8c49533aec0f2ba893d7dc5b9e3c58fe9f9b98c6d7291"
+    },
+    {
+      "path": "screenshots/handdrawn-enemy-slime.png",
+      "bytes": 1940382,
+      "sha256": "32ccf182381e1a992377314da0a26ee7c7926e09962b5f44a655b3001614a014"
+    },
+    {
+      "path": "screenshots/home-game.png",
+      "bytes": 1734717,
+      "sha256": "6717af774c3a65b63954431d6533eb3ffae1a983dce4c382667dddaabc5986ca"
+    },
+    {
+      "path": "snapshot/CHARACTER_STYLE_GUIDE.md",
+      "bytes": 7702,
+      "sha256": "4e663c4cabfafef1b13898ad471b5c747041012d80a36010666d0074f5f7533a"
+    },
+    {
+      "path": "snapshot/ancient_awakening.js",
+      "bytes": 1964,
+      "sha256": "d5f0851d89f10beed7168ed122d8a5fd58b40a00f538c4671e60293592aeffb4"
+    },
+    {
+      "path": "snapshot/ancient_challenge_sheet.js",
+      "bytes": 8939,
+      "sha256": "7df056f431a330ff163ce5a483cc9e35f961bf35ea28e39b44ab48463aa1e79d"
+    },
+    {
+      "path": "snapshot/ancient_exp_toast_v2.css",
+      "bytes": 1107,
+      "sha256": "aad61c43d7cf6df0bc5b305d0c2b986f884272fa0fbc6cc8de64acf73c092617"
+    },
+    {
+      "path": "snapshot/ancient_exp_toast_v2.js",
+      "bytes": 3164,
+      "sha256": "3b50664decf465206f655f0ccbae7459e4b8c1d7d68cc40f18fd1dba6dfe9020"
+    },
+    {
+      "path": "snapshot/ancient_reading_test_print.js",
+      "bytes": 4717,
+      "sha256": "003ceb3ceb9ae44c061736008d000d03ee823d98a69fbdd20ab5ccf75e00d73e"
+    },
+    {
+      "path": "snapshot/ancient_word_problem_print_adapter_v2.js",
+      "bytes": 9914,
+      "sha256": "d9736140351a5ccc98581746501a46982cceb44fe84b475876cffc7e8b622a36"
+    },
+    {
+      "path": "snapshot/ancient_word_problem_print_adapter_v2_preview.html",
+      "bytes": 5103,
+      "sha256": "529ea6004289d8bf368c82eb36ad03d19f6b665f3199ea53b9cde6cc0b25233c"
+    },
+    {
+      "path": "snapshot/artist_adventure_preview.html",
+      "bytes": 5850,
+      "sha256": "3d45d89b5bb54412af425e0708bbaa8c18dc2f6337674f2c102d17efb5b310bb"
+    },
+    {
+      "path": "snapshot/assets/artist-monster-samples/artwork-prompts.json",
+      "bytes": 11265,
+      "sha256": "0f2a8e6da1325fb7e8dca72528c2124a0d3157567a4f7bad71081970dac3004c"
+    },
+    {
+      "path": "snapshot/assets/artist-monster-samples/flying-slime-handdrawn-v1.png",
+      "bytes": 1381696,
+      "sha256": "9ad4687e5094d6f11d1b90aed9e7f933292add981ae40d0d9335b50ee04d6c4a"
+    },
+    {
+      "path": "snapshot/assets/artist-monster-samples/meadow-lord-handdrawn-v1.png",
+      "bytes": 2273968,
+      "sha256": "01d56448265f8e0d7c52912331d27fe03c705fc8b81b370c46d3d8296553a123"
+    },
+    {
+      "path": "snapshot/assets/artist-monster-samples/mushroom-hedgehog-handdrawn-v1.png",
+      "bytes": 2004529,
+      "sha256": "73c57a08b1c88f1c53c632644e55fa05d08c6e0cf033acded4f1cee5894e346f"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/artwork-prompts-002-003.json",
+      "bytes": 6638,
+      "sha256": "25d5258dd2bfec952ed79a9e25afc7e10dabc4fecb2ada8937ca71b02235e270"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/artwork-prompts-combat.json",
+      "bytes": 6796,
+      "sha256": "28334a7c59d8b3c6c1c437b2f7c7527177952ef778f8c881935801411aa5743c"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/artwork-prompts-handdrawn.json",
+      "bytes": 10744,
+      "sha256": "fb6eee9e13fe8978d814ab5e4f94ae8d4010972913b07ff92699615b787d8a28"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/artwork-prompts-queen-guardian.json",
+      "bytes": 9283,
+      "sha256": "86235f911da6c7c1f6c00fc3d104d291aa643c3f7d73b2994fdad819404eaf2a"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/artwork-prompts.json",
+      "bytes": 3528,
+      "sha256": "53ff4ba6ec0fc24c39f3cb9d004a14bfda6cbe235c68d7ff9cebf00c79fc1e7a"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/brief.txt",
+      "bytes": 528,
+      "sha256": "53d58ff4c02ae0da9e845949a4d47202a67f75aae53000b6de44b33e835060da"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/fire-lancer-handdrawn-v1.png",
+      "bytes": 1884298,
+      "sha256": "70d225cd3a0914733f9b847d63b66f56e3030af4c2092523c6ac22a1d1fbafbe"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/forest-scout-handdrawn-v1.png",
+      "bytes": 1773316,
+      "sha256": "488612408c79f3e969eb70144d95ee92e12c44b07e6fb836a9af5613f2bf61f4"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/halloween-queen-handdrawn-v1.png",
+      "bytes": 2237095,
+      "sha256": "ab445f1e36acd3580ecf9b06554f832a628d590497abb5154fdc8fd0f1a9f11e"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/hanakaze-mage-combat-v1.png",
+      "bytes": 1070570,
+      "sha256": "c4534d160c758067f5ce19c1799164a51941da89590b3022626f2208ff5d5b1b"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/hanakaze-mage-handdrawn-v1.png",
+      "bytes": 1826769,
+      "sha256": "43f04952bc617fadd79e079d9a7db49bbfb54f6b2dfbebd7e08fb2dd5818aa0b"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/hanakaze-mage-v1.png",
+      "bytes": 810014,
+      "sha256": "3a542d5a1187ada56fa33fb9ab4960cf82a6caabc47a9a3538eee2797e031656"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/hidamari-traveler-v1.png",
+      "bytes": 767819,
+      "sha256": "0bf7d8e02d3458a827649b60de54708ce62e220baae3047563db996232ad7c7f"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/komorebi-adventurer-boy-v1.png",
+      "bytes": 1333646,
+      "sha256": "822735f62f03ed15f30a0cc28a7691465b32894bc378ebf81214d6024d347b6a"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/komorebi-adventurer-girl-v1.png",
+      "bytes": 1231846,
+      "sha256": "4c193d5a8514e040de491caf9f7616eb05f942e33fc7c8d51c6c92feb27833ca"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/star-alchemist-handdrawn-v1.png",
+      "bytes": 1825388,
+      "sha256": "dcb7988e691ad8bbdaac7f898846a08dddcff1ced495e308bc6ab0f97b4fdce0"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/star-guardian-handdrawn-v1.png",
+      "bytes": 1822266,
+      "sha256": "232c2a809a2a6b66845981fc45feab031b6461107e71b258d6d767853b84b150"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/tide-cleric-handdrawn-v1.png",
+      "bytes": 1967276,
+      "sha256": "ea4af22197201fbc3d08d277571d7e9c2d0ab87150a1d68e3d12db7f2b5de112"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/yunagi-swordsman-combat-v1.png",
+      "bytes": 1048186,
+      "sha256": "c6d0aa43fde4d741b9d1281dea4fc87ad1d654e322ec24fa14cf2eff1c4f93ef"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/yunagi-swordsman-handdrawn-v1.png",
+      "bytes": 1704355,
+      "sha256": "3b78237f11321e9c37cb3d7585b7226416b9fb6017ecf8004f8a10eddad51013"
+    },
+    {
+      "path": "snapshot/assets/artist-skin-samples/yunagi-swordsman-v1.png",
+      "bytes": 649773,
+      "sha256": "96692b2e05b19019b6096cb83378b4bbf6b486eec07de342e96c9ab3d54b25bb"
+    },
+    {
+      "path": "snapshot/assets/artist-stage-samples/adventure-art-prompts.json",
+      "bytes": 11302,
+      "sha256": "175ec34187b934b533497fc0904ef5ced162ee1027f1560ba907f7ba97e7e395"
+    },
+    {
+      "path": "snapshot/assets/artist-stage-samples/home-aerial-prompts.json",
+      "bytes": 7523,
+      "sha256": "83529c1097704631ff2d63000dce59435fe8644a04fadc6989471825021bd085"
+    },
+    {
+      "path": "snapshot/assets/artist-stage-samples/home-art-prompts.json",
+      "bytes": 4316,
+      "sha256": "0bc4da889dbaeed78f490a3e61517f10edd0db547daaee59d04bfa08427c0980"
+    },
+    {
+      "path": "snapshot/assets/artist-stage-samples/komorebi-clearing-v1.png",
+      "bytes": 2499086,
+      "sha256": "49c9c8f3fc44a43b9befc179f56229e7540b7a5561ce2b8500f68ba3cb7b0923"
+    },
+    {
+      "path": "snapshot/assets/artist-stage-samples/komorebi-village-aerial-v2.png",
+      "bytes": 3363864,
+      "sha256": "d5d0d7b03752aa4fdf5428e729b2d19c26b463cb8fddec2ac03565ed47b83853"
+    },
+    {
+      "path": "snapshot/assets/artist-stage-samples/komorebi-village-v1.png",
+      "bytes": 2943329,
+      "sha256": "6ac46da3b8ad22ab77ddfe01e87e3b023d697883ebca6bdaadc92bba55a4914f"
+    },
+    {
+      "path": "snapshot/assets/artist-weapon-samples/ancient-dual-handdrawn-v1.png",
+      "bytes": 1288290,
+      "sha256": "a25403be30bc1e19ef84bcca71a5a20c02af1b2fdfc197984b1057cfc4ff8008"
+    },
+    {
+      "path": "snapshot/assets/artist-weapon-samples/artwork-prompts-batch8.json",
+      "bytes": 29115,
+      "sha256": "abb6b6d1acb2c4aabc6e193b1c7ac3d8ee17b6732b3a6d48fe34c96b952e5762"
+    },
+    {
+      "path": "snapshot/assets/artist-weapon-samples/lantern-staff-handdrawn-v1.png",
+      "bytes": 1045967,
+      "sha256": "76fa74cd131de903120d99b25019f5f1561139a4e15cd599c5b51962536d49b2"
+    },
+    {
+      "path": "snapshot/assets/artist-weapon-samples/pumpkin-blade-handdrawn-v1.png",
+      "bytes": 976878,
+      "sha256": "cad8397c09282b893a903d1e1a4ba99d3165b85b895b9f9a93beaead797ad1a4"
+    },
+    {
+      "path": "snapshot/assets/artist-weapon-samples/wood-sword-handdrawn-v1.png",
+      "bytes": 879657,
+      "sha256": "0b1d9aef3430260df9cd7d9259d479e982f08dc59f65d17f48a40951c8e224a5"
+    },
+    {
+      "path": "snapshot/assets/characters/CHARACTER_ART_RULES.md",
+      "bytes": 1098,
+      "sha256": "b91aefcf67fba55800f8b5775177f2d65bf9d828bbb0005114d3b8aa56b7f23f"
+    },
+    {
+      "path": "snapshot/assets/quest-board/artwork-prompts.json",
+      "bytes": 3807,
+      "sha256": "e0e627360eb1addd49c15642770db9e892c515e6ab1294feb6214d2e6bbd5c6b"
+    },
+    {
+      "path": "snapshot/assets/quest-board/villager-medal.png",
+      "bytes": 1114412,
+      "sha256": "28a04a09a00807ff4e449d1851a3922208325ea2bab8ee5f2179ecc04e6f539b"
+    },
+    {
+      "path": "snapshot/assets/quest-board/wooden-board.png",
+      "bytes": 2583211,
+      "sha256": "e8d65a8143bc0f08b6634cf1b82a3be31b3b0aa5b51839feda8498a28c6186cf"
+    },
+    {
+      "path": "snapshot/assets/quest-medal-limited/accessory.png",
+      "bytes": 749297,
+      "sha256": "9cabb811f2e6968aaba34edee4b8ca585c3bc303b1dc94febeb72b515ddfe1f3"
+    },
+    {
+      "path": "snapshot/assets/quest-medal-limited/armor.png",
+      "bytes": 1211678,
+      "sha256": "f2f3b9365f5e97df7ddbb57bc36acbb6ab344105995d2ba44fd862eb79b0947a"
+    },
+    {
+      "path": "snapshot/assets/quest-medal-limited/artwork-prompts.json",
+      "bytes": 4933,
+      "sha256": "a5ce8452fd626cfae3c1e621046ae1e6f9d48232322164c6d0b09c4bf02b797a"
+    },
+    {
+      "path": "snapshot/assets/quest-medal-limited/background.png",
+      "bytes": 2552854,
+      "sha256": "629d9f8c28ea778697a1c1b49cb87ea79264e226f983029e61783840a01d7055"
+    },
+    {
+      "path": "snapshot/assets/quest-medal-limited/frame.png",
+      "bytes": 689189,
+      "sha256": "7bb4a12f7810e41381a00a9695771649545002c548a0efc4922f1802304b886d"
+    },
+    {
+      "path": "snapshot/assets/quest-medal-limited/skin.png",
+      "bytes": 1729156,
+      "sha256": "a69b05d62b843397b9284ef68abb3d7e6ffe8536a82c247151aeab622f2a7acd"
+    },
+    {
+      "path": "snapshot/assets/quest-medal-limited/weapon.png",
+      "bytes": 724501,
+      "sha256": "711100301f1056fb97e4cf5e110444c994d7b166886079834c74a39a12deedfb"
+    },
+    {
+      "path": "snapshot/assets/quest-notices/artwork-prompts.json",
+      "bytes": 5937,
+      "sha256": "eb25eff4a73fc00d0b9dd99c83460ace9c1a3ce7e54bc7da50e76cfc949d1de3"
+    },
+    {
+      "path": "snapshot/assets/quest-notices/blue-letter.png",
+      "bytes": 2122273,
+      "sha256": "178820256c09a33aecc2c2dbbbd3e12154336f023d9df7ddb4f8db2975bbf7d8"
+    },
+    {
+      "path": "snapshot/assets/quest-notices/fold-lower-left.png",
+      "bytes": 2056128,
+      "sha256": "95f098e633988b49b98e35dd1f93c6cfcff5a1e7d7a6cdab04beee7e683dd6ba"
+    },
+    {
+      "path": "snapshot/assets/quest-notices/fold-lower-right.png",
+      "bytes": 2186091,
+      "sha256": "ca85100e6c00e2a91dd7a0242e13e974cd6cd62b4866cba39b8de0d4eb6531c9"
+    },
+    {
+      "path": "snapshot/assets/quest-notices/fold-upper-left.png",
+      "bytes": 2099268,
+      "sha256": "ce33ec4b25b7620af4775e122b8aa5ea804d1ef324fc32e85126ac44332a1444"
+    },
+    {
+      "path": "snapshot/assets/quest-notices/honey-scroll.png",
+      "bytes": 2277617,
+      "sha256": "65fba7dfa0ad5d0f5e392eaeb43560f2410f7c252dd6d59869a2afe39e20f8fe"
+    },
+    {
+      "path": "snapshot/assets/quest-notices/leaf-paper.png",
+      "bytes": 2122811,
+      "sha256": "5988380fffe74bccc85dc2ee9bf895694959c7358b9330e78af5428f7a729ae2"
+    },
+    {
+      "path": "snapshot/assets/quest-notices/paper-edge-prompts.json",
+      "bytes": 6906,
+      "sha256": "4e49c5e074cb41a9b453add976cec2e10a6639dce7dc96ff8d0a98b225c2a4e3"
+    },
+    {
+      "path": "snapshot/assets/quest-notices/rose-note.png",
+      "bytes": 2083184,
+      "sha256": "2f37f31bf1ccb1d7de0ce85c44ac4dd8580cf984e8c4c4b87b53b03d9aac3ca2"
+    },
+    {
+      "path": "snapshot/assets/quest-notices/torn-upper-right.png",
+      "bytes": 2098675,
+      "sha256": "2a17b5ddf0771803d21f321aaad358f120784e2b1384bb78b5abb933a2d853f7"
+    },
+    {
+      "path": "snapshot/assets/reading-quest-letter/artwork-prompts.json",
+      "bytes": 1666,
+      "sha256": "4a07d118264f828e8c9d35eeb062d5bc29aeb20682ba01a4ea060d43558b20a2"
+    },
+    {
+      "path": "snapshot/assets/reading-quest-letter/letter-paper.png",
+      "bytes": 2330147,
+      "sha256": "d22ff1f2d36fb7db593a09e07a4caaf38cff627cc348f49a367ed6d0589e0474"
+    },
+    {
+      "path": "snapshot/assets_bundle.js",
+      "bytes": 3180,
+      "sha256": "389c82dd546a3d5b1f0c7c3512eb3ccf9e100120a95ee550d6dc66cbfacf0152"
+    },
+    {
+      "path": "snapshot/battle_avatar_crop.js",
+      "bytes": 1468,
+      "sha256": "b7b0a4b4ebcac39839f06e14dfe626c2ebc5ed3512158c504d07373aa1c44691"
+    },
+    {
+      "path": "snapshot/battle_question_layout.css",
+      "bytes": 6352,
+      "sha256": "74b663016f7244a2237ce0ab5425d6c4da435a755950ad3822b7cfa40260dabd"
+    },
+    {
+      "path": "snapshot/challenge_letter.js",
+      "bytes": 3334,
+      "sha256": "755681c5a3d1923ca8781fcfbb5ffd9044d2cd280fe7e572d649e4376566a65c"
+    },
+    {
+      "path": "snapshot/damage_float_queue_v2.css",
+      "bytes": 647,
+      "sha256": "e7b175b389e747bf44d1fd856061c1ffff2745d6de29b8dee99722f8267318f5"
+    },
+    {
+      "path": "snapshot/damage_float_queue_v2.js",
+      "bytes": 5403,
+      "sha256": "c3f1b7bf74ffd68cdbf454b19e4f543f0e0f9f0ed1a305d86ea802e26d35b237"
+    },
+    {
+      "path": "snapshot/economy.js",
+      "bytes": 2699,
+      "sha256": "077c97184037d6dfea12f119cf1357ea62fef0a07b4026c5757ceeb503f5a124"
+    },
+    {
+      "path": "snapshot/equipment_art_samples.js",
+      "bytes": 831,
+      "sha256": "36f9c6565d692657f323edebcc6f717e4e0fcb9e7eaf0a3dec7f4cfbd881d6fe"
+    },
+    {
+      "path": "snapshot/event_equipment.js",
+      "bytes": 1303,
+      "sha256": "e5ec9246acab30d10673df1fbac5edf0769840665b3c698cd2fbf5c46a343237"
+    },
+    {
+      "path": "snapshot/event_raid.js",
+      "bytes": 5079,
+      "sha256": "e8a1e04c29ca09a46896b387f5279cdcac9f24dbfa0896397560720e209a2f11"
+    },
+    {
+      "path": "snapshot/event_system.js",
+      "bytes": 8351,
+      "sha256": "ca0c78e027a7ea5317a8c7c659204b71d098c332d9dc29eec4cfced343136939"
+    },
+    {
+      "path": "snapshot/game.js",
+      "bytes": 908867,
+      "sha256": "ac14ce976c2359d980e4441d8f2460fcc8c7b16fe03815b3ee6ef04b895b0f31"
+    },
+    {
+      "path": "snapshot/gameplay_review_settings.js",
+      "bytes": 465,
+      "sha256": "9356d9e3401e7e18642672aac4d05334f9327a0e8542356eb24125db498888e5"
+    },
+    {
+      "path": "snapshot/ghost_boss_motion.css",
+      "bytes": 1589,
+      "sha256": "8b6b944140fb032f8494df611e2ab6069321a6f4939e72215127f8e17d73c8de"
+    },
+    {
+      "path": "snapshot/ghost_raid_content.js",
+      "bytes": 3491,
+      "sha256": "76dffb9516b0f4721689f951c1e8dac6fffca0a8eac6683f35d418044c4d68a5"
+    },
+    {
+      "path": "snapshot/hihiru_letter_voice.js",
+      "bytes": 4354,
+      "sha256": "7babb6e63545147a0dcee50fdc5c35cfd52234e9f37481cdc80bfe9101dce7c5"
+    },
+    {
+      "path": "snapshot/hp_recovery_feedback.css",
+      "bytes": 1768,
+      "sha256": "8050ed19db375167c78a5d69c508bf4be83231296811d4c45f10f38a8dd6d74d"
+    },
+    {
+      "path": "snapshot/hp_recovery_feedback.js",
+      "bytes": 1968,
+      "sha256": "49a7d0bd4b364fb11d55a335f6ec353cb1a692f0f646765efe1940d52cb354ab"
+    },
+    {
+      "path": "snapshot/ice_breath.js",
+      "bytes": 2793,
+      "sha256": "a02379612fc7c938f4f54a5e41a94838ba0faf8fa815d010760b6d47df80baa3"
+    },
+    {
+      "path": "snapshot/icon_presentation_v2.css",
+      "bytes": 3967,
+      "sha256": "d54808fb7c21f5079e8d7f520bf8a0b16bf73dc33c3b91f2b1109da14b5caae1"
+    },
+    {
+      "path": "snapshot/icon_presentation_v2.js",
+      "bytes": 4115,
+      "sha256": "1870a7fd0e0b8cfea4eac1e9a76083f6f8153627dbb1dfa8c8247903b5ec3a63"
+    },
+    {
+      "path": "snapshot/index.html",
+      "bytes": 99533,
+      "sha256": "f5eeb67ec492ae6733f2315307dbc4e4847d6465c428b9aba3d2337c8428f6ca"
+    },
+    {
+      "path": "snapshot/japanese_print_header.js",
+      "bytes": 1608,
+      "sha256": "ce10c653248e000217d6777eb1a7d9f9127b929fda7747dab4ba6d216bca065b"
+    },
+    {
+      "path": "snapshot/japanese_reading_lower_choices_v2.js",
+      "bytes": 7027,
+      "sha256": "af1fff0f9c4627d740be61cd78c6a7424e5186f9f6129b8fdca93890a4c07757"
+    },
+    {
+      "path": "snapshot/japanese_reading_print_adapter_v2.js",
+      "bytes": 2657,
+      "sha256": "690f2236f6aae4b8c521611aec227422875be82ce85cd7a3a72b3e1ea4fdf3f1"
+    },
+    {
+      "path": "snapshot/japanese_reading_print_adapter_v2_preview.html",
+      "bytes": 2038,
+      "sha256": "929eb812578669a1032aa042191a8aa5d748114ca4a69d1d010f1f2973fbad47"
+    },
+    {
+      "path": "snapshot/japanese_reading_quests_v2.js",
+      "bytes": 137917,
+      "sha256": "d45f727b682a80efa938e6e4645d3b32856202020baa380cfc3f975780e4d98e"
+    },
+    {
+      "path": "snapshot/japanese_reading_session_v2.js",
+      "bytes": 5923,
+      "sha256": "1fd29af0818e56848b701c0810a7329f06185a7f54d7eb4627d4c937fe030c51"
+    },
+    {
+      "path": "snapshot/japanese_reading_subquests_v2.js",
+      "bytes": 21469,
+      "sha256": "9593ecaeddd6781b4e03673f1e07bab6ef5e5191dc7cad87660a1a7006751128"
+    },
+    {
+      "path": "snapshot/kana_choice_print.js",
+      "bytes": 4761,
+      "sha256": "9f46bccadfe2ec3b788789635b9ee05f35b0550b17171bf64fe1741c4a04685a"
+    },
+    {
+      "path": "snapshot/kanji_data.js",
+      "bytes": 100119,
+      "sha256": "34996427f366eb41a022b5d410a43978b1d04ec785b73a2c51fa5aaa4d64dd75"
+    },
+    {
+      "path": "snapshot/kanji_input_style.css",
+      "bytes": 21144,
+      "sha256": "95ec55c2bd087665f042747daccbff892dbad337a19018a906eb408b4118fb76"
+    },
+    {
+      "path": "snapshot/kanji_input_ui.js",
+      "bytes": 15031,
+      "sha256": "b5fcb5e4d0ba4b0faf6368ebfb1369fbae62603275c00f2265e093520bdbe4de"
+    },
+    {
+      "path": "snapshot/kanji_print_context.js",
+      "bytes": 17897,
+      "sha256": "09419e406a45be7c3ff14b10be7da112677b5e2c5dad28cfc23c233c66960bf1"
+    },
+    {
+      "path": "snapshot/kanji_print_sentences.js",
+      "bytes": 32946,
+      "sha256": "3c14435a0a5a6494a77bf915d69925ff7ecc0c2e062c93a02ce49f32e3334061"
+    },
+    {
+      "path": "snapshot/kanji_readings.js",
+      "bytes": 1389,
+      "sha256": "11fd887656b82e2db973e6c333b10ca97ac5cd43949c40a45593e919e0dbe093"
+    },
+    {
+      "path": "snapshot/kanji_readings_data.js",
+      "bytes": 145431,
+      "sha256": "db7d5819dd8e210b9f4fe86424e0d83fc664b41ad14b69430edbbae493526388"
+    },
+    {
+      "path": "snapshot/kuku_training.css",
+      "bytes": 3736,
+      "sha256": "3477295c5bc94edb8412555a194328076bff3763a34c0025c8c6de7f3d565967"
+    },
+    {
+      "path": "snapshot/kuku_training.js",
+      "bytes": 7427,
+      "sha256": "013934a8490222c39d466ee678a01b809a8fb4a7d5eaa7ba9f8e660d0c44fdd0"
+    },
+    {
+      "path": "snapshot/local_art_game_preview.js",
+      "bytes": 1549,
+      "sha256": "c24396f8c3e23c26057b30726debba53bff6874fe4ec9f3fdb6daa87ec9182cd"
+    },
+    {
+      "path": "snapshot/local_game_client.js",
+      "bytes": 364,
+      "sha256": "5b8aac3cd0eebce9ce49caca29462f421bf74ddc1d00dfba5c3e4950c770ec82"
+    },
+    {
+      "path": "snapshot/main.js",
+      "bytes": 934,
+      "sha256": "51a8c12ce09adf6426998e5a021ad115a85ad2463a567ed2cc35571f1e541ad3"
+    },
+    {
+      "path": "snapshot/math_word_problem_print_adapter_v2.js",
+      "bytes": 3562,
+      "sha256": "3b0b831183da7751a3f4b3de40fb378f401246c3d918229f080cad634d434888"
+    },
+    {
+      "path": "snapshot/math_word_problem_print_adapter_v2_preview.html",
+      "bytes": 2020,
+      "sha256": "87b5b2f09c072f6b2b18d727d8270379cc298a1ee7f6d9acb0bb4b1435dd9cf5"
+    },
+    {
+      "path": "snapshot/math_word_quests_v2.js",
+      "bytes": 452791,
+      "sha256": "b5c54da474940736ff06e5cab81a98ba19f51d3a907d9256b50a847069130814"
+    },
+    {
+      "path": "snapshot/math_word_subquests.js",
+      "bytes": 9162,
+      "sha256": "ed2cad14fee95c866e92aad94011405471c48f13ce85d3bcce6082596f796b60"
+    },
+    {
+      "path": "snapshot/monster_art_samples.js",
+      "bytes": 601,
+      "sha256": "674411508238f1bd9adf17c34d94b0ce7aad09c737588a9d4de997d861436ec6"
+    },
+    {
+      "path": "snapshot/print_answer_review.css",
+      "bytes": 1227,
+      "sha256": "1231bdc69bd12e39697dcbc25843c1b73f06a1e73a8452df59800ce89be12bec"
+    },
+    {
+      "path": "snapshot/print_answers.js",
+      "bytes": 2942,
+      "sha256": "ce37e7e3ad33a94f42a203ab9961ecf65399e35c6f485750e47fb3dd1a65851d"
+    },
+    {
+      "path": "snapshot/print_quest_villagers.js",
+      "bytes": 1386,
+      "sha256": "195dded3d067950ba98c0fc02a86c1d0508eb3786705408ffa5cd376043d3b08"
+    },
+    {
+      "path": "snapshot/print_review_20261106.html",
+      "bytes": 6799,
+      "sha256": "bac798f59e97950206b39ef3403d35695f4f1b040ebb9fe9a18f12e25a307753"
+    },
+    {
+      "path": "snapshot/print_review_ancient_sample.html",
+      "bytes": 3190,
+      "sha256": "db9481b7a08c107b8147fb129300042b430b298db19dce582ec7c34fbe75b2ee"
+    },
+    {
+      "path": "snapshot/print_review_kanji_stage.html",
+      "bytes": 1946,
+      "sha256": "232e9894028e46417ae16b68335ca67979d7fea3f2f10376e233f1e8339fe57d"
+    },
+    {
+      "path": "snapshot/print_review_regular_sample.html",
+      "bytes": 8138,
+      "sha256": "5809e0c308c8ec7d76d6e1582939ade204f6281c816f9ce1d3fb5a71f023e7cb"
+    },
+    {
+      "path": "snapshot/print_reward_icons.js",
+      "bytes": 2046,
+      "sha256": "ff56f3ab9885345ad78b61bde2c53ad241bedd3a63aac82a69c0c41b38987b70"
+    },
+    {
+      "path": "snapshot/print_uniqueness.js",
+      "bytes": 538,
+      "sha256": "529b79de0a1148170079aa5298221318e5b1fbf4f9727a639e52d617070fd7eb"
+    },
+    {
+      "path": "snapshot/public/assets_audio/bgm_area_boss.mp3",
+      "bytes": 5138824,
+      "sha256": "69dc4ecb33e2fd8bb9656c1577c3072ae689347447743fe502ff2d243d08abab"
+    },
+    {
+      "path": "snapshot/public/assets_audio/bgm_home_kaisei.mp3",
+      "bytes": 2290589,
+      "sha256": "b759fe21cbc6b0f4b91f82911b2902b16e038d936cc4ad439cf732d2d517d8f4"
+    },
+    {
+      "path": "snapshot/quest_answer_panel_scroll.js",
+      "bytes": 1475,
+      "sha256": "6e6341c428484f242751e169d02b2b08468312d9f3973079c7d9cfd92223739b"
+    },
+    {
+      "path": "snapshot/quest_board_art_preview.html",
+      "bytes": 2600,
+      "sha256": "ed7418fed41f02273d7a57421419164f3bc20edcc5039be6076a6ef3854202bc"
+    },
+    {
+      "path": "snapshot/quest_board_notice.css",
+      "bytes": 19175,
+      "sha256": "70fe344d77433c8f5569c887c095c464a9dd0a0812fdec805e773f42a4cac3cd"
+    },
+    {
+      "path": "snapshot/quest_board_pagination.js",
+      "bytes": 5136,
+      "sha256": "6d2021eb862b906d60e2d1c0ab7ddb4781326e6d668aabdd5b75613431450b64"
+    },
+    {
+      "path": "snapshot/quest_medal_art.js",
+      "bytes": 336,
+      "sha256": "b446524b9b33400033dec3ecba544fc2b6a4643a5fd9ba142b9ce5cd1be68cb6"
+    },
+    {
+      "path": "snapshot/quest_medal_exclusives.js",
+      "bytes": 3174,
+      "sha256": "c62bfd1c304e9763ee4cfffb36e9b75e6d9c2c29af460f405dac3ec0f7af4828"
+    },
+    {
+      "path": "snapshot/quest_medal_rewards_preview.html",
+      "bytes": 3734,
+      "sha256": "3a4c0550c928ec075e45531ab738e5e6c4ad0bb3496b74a95fd8132a6e6bd73f"
+    },
+    {
+      "path": "snapshot/quest_notice_shapes_preview.html",
+      "bytes": 1675,
+      "sha256": "3b9125a2c43faad956d4f18274caa74f01eb19197ec4f5f2b92e7bd2b427e5bc"
+    },
+    {
+      "path": "snapshot/quest_notice_variants.js",
+      "bytes": 809,
+      "sha256": "2def685295133226206f0cd6576a5f96b1e91bf004ebcda7cd5bddcf0eb6733c"
+    },
+    {
+      "path": "snapshot/raid_boss_intro.js",
+      "bytes": 7942,
+      "sha256": "bae7e5a453b5c77f83441fc9f93bd42ae8c6a6dcc9f9277c3742f9877facd407"
+    },
+    {
+      "path": "snapshot/raid_challenge_gate.js",
+      "bytes": 1037,
+      "sha256": "1d36984ab2877ae8356bf4920c941a15c3b6f4cfe9d73ad34c735969062485c6"
+    },
+    {
+      "path": "snapshot/raid_ice.css",
+      "bytes": 3405,
+      "sha256": "b7f929dcf456a4289b22354a1df17a0045e457b26ff03d2708e8083c11cf79bb"
+    },
+    {
+      "path": "snapshot/raid_intro_bgm.js",
+      "bytes": 1170,
+      "sha256": "e68cf7939c0dcac06a0d4bd87c075ee4e32ba0dae162b11fc3b191c9164f85ce"
+    },
+    {
+      "path": "snapshot/raid_monthly_rules.js",
+      "bytes": 1683,
+      "sha256": "c67bdd0fbcab1e2266400a7cd0cf46c16edc5f692da90be3e5f7f3e29c14db7a"
+    },
+    {
+      "path": "snapshot/raid_run_rules.js",
+      "bytes": 1385,
+      "sha256": "f7e50a9120a63e59bb1427a5603109485385d26066a69259db1b841df6551caf"
+    },
+    {
+      "path": "snapshot/reading_answer_board.js",
+      "bytes": 2779,
+      "sha256": "ad53fe4f46ea21bce49d181e3f268ded1c94f6a6f2672f0e86c621f29e8ef03d"
+    },
+    {
+      "path": "snapshot/reading_challenge_lower_grades.js",
+      "bytes": 4246,
+      "sha256": "67c9b7f729801e885c1c646868ebb0224fbc770347a0cfa0973c1db4c085105d"
+    },
+    {
+      "path": "snapshot/reading_challenge_story.js",
+      "bytes": 3285,
+      "sha256": "9a8199fbf8c68dcd6752a6c57ac6685d645847827816e199af4964e2b3e398c3"
+    },
+    {
+      "path": "snapshot/reading_pursuit_preview.js",
+      "bytes": 6968,
+      "sha256": "6ee1ac95110340191c7a2a0776f8eb2e79dc81d58f37f1f0cc7d29a9a94c95ba"
+    },
+    {
+      "path": "snapshot/reading_pursuit_quests.js",
+      "bytes": 24982,
+      "sha256": "62b9bfdf3613f4a1f5e0d180934a90264b8cc4b20a4344a5e512a47743a6c7ec"
+    },
+    {
+      "path": "snapshot/reading_quest_letter.css",
+      "bytes": 11369,
+      "sha256": "d79888e1d75a25241579a0ce7eea12729865aada42cfe744b0e55431af855ed3"
+    },
+    {
+      "path": "snapshot/reading_quests.js",
+      "bytes": 47686,
+      "sha256": "f8c4d3a2aa4f9cbc4a2b7cf6b7100d709be42f0d2beeeca64581850cee6d59b7"
+    },
+    {
+      "path": "snapshot/reading_reference_marks.js",
+      "bytes": 1116,
+      "sha256": "3a17fa7173c9cb59a1b5ad9c43f25f77da2f9ffce6f9d6e2ec160dce11ed8308"
+    },
+    {
+      "path": "snapshot/reading_retry_hints.js",
+      "bytes": 2280,
+      "sha256": "5b1c465de9241109fa658b6b9fde99fd681e05d116fb03ea3105081145636f90"
+    },
+    {
+      "path": "snapshot/reading_story_quests.js",
+      "bytes": 16309,
+      "sha256": "12d799957301fa6f5cfa87509b3c568e1c0554cc892da503875a51953aa8c3fd"
+    },
+    {
+      "path": "snapshot/reading_story_reference_questions.js",
+      "bytes": 8625,
+      "sha256": "d55407c80301a0809df8fadb5101f6f7eb89cd2b998a795969798bb504a53261"
+    },
+    {
+      "path": "snapshot/reading_subquest_progress.js",
+      "bytes": 1197,
+      "sha256": "c96c8e5027bc1bdc58b7c27e39419a8372e6e99f6436b87537f8629808c95b4b"
+    },
+    {
+      "path": "snapshot/reading_subquests.css",
+      "bytes": 44419,
+      "sha256": "cde0b067257b3abf56eebf030d3f11d0d086658ce21cee7eaf6ac8d836ff6109"
+    },
+    {
+      "path": "snapshot/reading_subquests.js",
+      "bytes": 12212,
+      "sha256": "17646e193f7c62bcc4eb2be91c6e0488770f1fe66e089cc8d28f864e7bc96ab1"
+    },
+    {
+      "path": "snapshot/reading_villagers.js",
+      "bytes": 4484,
+      "sha256": "990cc25bdc12cb540272e6253eeaaf5be89273d4e31613978f1eba77b1163212"
+    },
+    {
+      "path": "snapshot/regular_math_print_layout.js",
+      "bytes": 496,
+      "sha256": "2a9da43ad736f338124f6897c455543b6a0a42ccedeb1a8832cc29f591de2dd0"
+    },
+    {
+      "path": "snapshot/regular_print_preview.html",
+      "bytes": 1378,
+      "sha256": "8fcadf05d023000c58ef149419380ce00b0e3e342c435fa1e248703464018c8f"
+    },
+    {
+      "path": "snapshot/regular_print_preview.js",
+      "bytes": 2105,
+      "sha256": "b28784a7849be20349cd1480745073758038e0957e3ca28e07a6a2de1c215ca1"
+    },
+    {
+      "path": "snapshot/scripts/lib/regular-preview-catalog.mjs",
+      "bytes": 670,
+      "sha256": "ff092e4b7a558270fbddeb730125424fa9cbc48b586b56db9e36f72fdfd1a392"
+    },
+    {
+      "path": "snapshot/scripts/lib/skin-preview-catalog.mjs",
+      "bytes": 493,
+      "sha256": "499b70a8ec6a14734951595b23a5c598fc816ba385702e1c528187bc7243b65f"
+    },
+    {
+      "path": "snapshot/skill_menu.css",
+      "bytes": 1037,
+      "sha256": "ebea08ce6e3400482cc311aedbef071187da36b27e52fde0d24b71a70eab3583"
+    },
+    {
+      "path": "snapshot/skin_art_review.css",
+      "bytes": 4125,
+      "sha256": "6f27da51fb0b820558eb1270b038a4aee83c2f22b425b56185a2060b5cf17b8b"
+    },
+    {
+      "path": "snapshot/skin_art_review.html",
+      "bytes": 2934,
+      "sha256": "bf45d9c16f8211a025653f35d8da37bb1a7157be4660174f0260becf0adbe008"
+    },
+    {
+      "path": "snapshot/skin_art_review.js",
+      "bytes": 6894,
+      "sha256": "492cf19db7d82846f20e5537431d9f8dfbce45baac2dc2b044337a1051eba9fd"
+    },
+    {
+      "path": "snapshot/skin_art_samples.js",
+      "bytes": 2758,
+      "sha256": "152508072cf6d76624a2948a0e2e01e429cde0fe35e517a0d0855ab6b36f398d"
+    },
+    {
+      "path": "snapshot/stage_print_layout.js",
+      "bytes": 11677,
+      "sha256": "06c7b4e792df1929f0579c742e8f3e2e76a25d78c211fb37f8e9e3782a63a498"
+    },
+    {
+      "path": "snapshot/storage_polyfill.js",
+      "bytes": 1888,
+      "sha256": "1098915123e3e391a709d9f24ac4f3e6e1c9102aa26d30ee1227cd8a5c160712"
+    },
+    {
+      "path": "snapshot/style.css",
+      "bytes": 389252,
+      "sha256": "005c04f843a7c64726f860785f56518902b60bc4b7b2cbde32e60d6942f07167"
+    },
+    {
+      "path": "snapshot/tests/ancient-challenge-print-browser.mjs",
+      "bytes": 8560,
+      "sha256": "c2cf0d98b0d3c868ec1f6386024006e51d1c8e9d31d187b3368bf743f05a9258"
+    },
+    {
+      "path": "snapshot/tests/challenge-print.test.mjs",
+      "bytes": 4578,
+      "sha256": "f337952f67b8ec37b3b3e837a0237d06006b9d0c5088ec6982a6e188b7a05923"
+    },
+    {
+      "path": "snapshot/tests/japanese-reading-v2-audit.mjs",
+      "bytes": 7613,
+      "sha256": "e7e54f117bcf193f468de1553c0a6b808889a20fb00036f12c2d06febf53978c"
+    },
+    {
+      "path": "snapshot/tests/japanese-reading-v2-browser.mjs",
+      "bytes": 5343,
+      "sha256": "b833610ac5b92fee6c7d7bdebf0595b8eb15fa1349ea4b693818db8182168a3a"
+    },
+    {
+      "path": "snapshot/tests/japanese-reading-v2-server.mjs",
+      "bytes": 1472,
+      "sha256": "da12cf2ede9678c3361f5aaaeedb52202a686727e36a453cc6b3e05cebcfcff0"
+    },
+    {
+      "path": "snapshot/tests/japanese-reading-v2.test.mjs",
+      "bytes": 7334,
+      "sha256": "bcdb8ef8ef1f0cbb5490cfdcc3132429cbdb4e58f153227eea54175e24d2d933"
+    },
+    {
+      "path": "snapshot/tests/kana-choice-print-browser.mjs",
+      "bytes": 2817,
+      "sha256": "e013e34393cce77f806f0bf607467e58250c03e340214d181aca3c10e592090d"
+    },
+    {
+      "path": "snapshot/tests/kana-expanded-print-browser.mjs",
+      "bytes": 2908,
+      "sha256": "4110a5086a082d111dabf993f7fc16ed9b41a41bfe6b7497214bede3214371a1"
+    },
+    {
+      "path": "snapshot/tests/kanji-print-context.test.mjs",
+      "bytes": 3474,
+      "sha256": "f7bc692e23d4f2677410cf39692eb680862fce4d3af3c3078b8c77b69a9093b0"
+    },
+    {
+      "path": "snapshot/tests/kanji-print-layout-browser.mjs",
+      "bytes": 11863,
+      "sha256": "7714c12ebee996679b58b8b5b81fa9a2c96e7898122ea9cb358bdcd42de04f99"
+    },
+    {
+      "path": "snapshot/tests/kanji-print-unique.test.mjs",
+      "bytes": 1699,
+      "sha256": "c67edf3236291824f4258c980eca7caa4ead1c4c6843d4f304f8d8811f759332"
+    },
+    {
+      "path": "snapshot/tests/kanji-reading-hints.test.mjs",
+      "bytes": 2480,
+      "sha256": "2f69d6ef2741d3050929484d74fb6dbbd59b54f77e5fcddb6862fffb1bfebe9b"
+    },
+    {
+      "path": "snapshot/tests/kanji-readings.test.mjs",
+      "bytes": 2547,
+      "sha256": "791b7caa1648b53a5a9ac261a355324e5a99f32a21c022fbcf2e26ca5e2be6ca"
+    },
+    {
+      "path": "snapshot/tests/math-word-quests-v2.test.mjs",
+      "bytes": 9359,
+      "sha256": "2a303b736e4926f8a5388b2424f1f851ea86c92502f6fcb11ebe488f0c242326"
+    },
+    {
+      "path": "snapshot/tests/multiplication-print.test.mjs",
+      "bytes": 2901,
+      "sha256": "9d30248b8e3f52eb332a55af8f450de8349aece2b2000fe1bea79832e1eb835d"
+    },
+    {
+      "path": "snapshot/tests/print-answer-review-browser.mjs",
+      "bytes": 2929,
+      "sha256": "403ee0708c3dc35888914a99d3c7f115fa0980bff0c6e915a2b6d48255480113"
+    },
+    {
+      "path": "snapshot/tests/print-cached-style-browser.mjs",
+      "bytes": 2628,
+      "sha256": "35e37310314ebfebf0c4db531d46c72c93899b2cd264749040c490bd50ed698f"
+    },
+    {
+      "path": "snapshot/tests/print-duplex-layout-browser.mjs",
+      "bytes": 5855,
+      "sha256": "5901e78eb31d403bc72f1fe43be61765f5b38626acbf2f6e62ca6d74e8551172"
+    },
+    {
+      "path": "snapshot/tests/print-entry-layout-browser.mjs",
+      "bytes": 9253,
+      "sha256": "4976fde240eaf2934e1371e316b38e6bd34e823d39586b6c590a2f98f38f8fac"
+    },
+    {
+      "path": "snapshot/tests/print-rewards.test.mjs",
+      "bytes": 1552,
+      "sha256": "095c1fb5991299488414133155df5e81f5d252cea8f538545d88b5f3b21520ed"
+    },
+    {
+      "path": "snapshot/tests/print-uniqueness.test.mjs",
+      "bytes": 1346,
+      "sha256": "4b06402a019fa00d98ec5ed8bd667ee1c2ed011b9429322f43fa9b7a466e9d67"
+    },
+    {
+      "path": "snapshot/tests/quest-board-fitting-browser.mjs",
+      "bytes": 4716,
+      "sha256": "34bbd9174be2409f05448218593009057cd6e142e4fd76ef46af7a43aa7fbd0d"
+    },
+    {
+      "path": "snapshot/tests/quest-medal-exclusive-browser.mjs",
+      "bytes": 4237,
+      "sha256": "a017d7e1fb30659ac66e35a31dd51c944d44202230c79c67be36914a78845fa8"
+    },
+    {
+      "path": "snapshot/tests/quest-medal-exclusives.test.mjs",
+      "bytes": 2023,
+      "sha256": "69c29403c070966468abc4f0a2093394b7215e942d2495588480c06beea7382e"
+    },
+    {
+      "path": "snapshot/tests/quest-medal-progression.test.mjs",
+      "bytes": 6964,
+      "sha256": "26d0f616c51782c764c157a5e54d825fd042d6ba8964616279e1cf1882e537a8"
+    },
+    {
+      "path": "snapshot/tests/quest-notice-variants.test.mjs",
+      "bytes": 747,
+      "sha256": "67d92125426433102bae041d213c39784ed97358be32bcdc86c5c842978aefa9"
+    },
+    {
+      "path": "snapshot/tests/reading-batch-review-browser.mjs",
+      "bytes": 9233,
+      "sha256": "96f30186c2d57c4a41e0407ff924a6415456a73e9f61ef26af902a2f00202051"
+    },
+    {
+      "path": "snapshot/tests/reading-extraction.test.mjs",
+      "bytes": 1684,
+      "sha256": "62aac43ef0a3199556aa0a2cf4b30891a7e7c508bf605b3e14d9315bcfa9fb22"
+    },
+    {
+      "path": "snapshot/tests/reading-grade-input-browser.mjs",
+      "bytes": 1946,
+      "sha256": "e303d0391b29f35f727bd90dc4e92bd9e0fca4196045c16e24cbfcbdb47eccec"
+    },
+    {
+      "path": "snapshot/tests/reading-lower-challenge.test.mjs",
+      "bytes": 843,
+      "sha256": "7b814d50dc8424acfebc03045c7f54c33ee9704b5225963037e74a975bf6b840"
+    },
+    {
+      "path": "snapshot/tests/reading-pursuit-browser.mjs",
+      "bytes": 3806,
+      "sha256": "b28690e08bce05241f568ffedf1ff940ea97f4a71a9c2ebe78dbfb140e8f63c7"
+    },
+    {
+      "path": "snapshot/tests/reading-pursuit.test.mjs",
+      "bytes": 1474,
+      "sha256": "2ac49e472f21b88552febf88e6ebebb8bf3b72250040646de33aceff632bd6e1"
+    },
+    {
+      "path": "snapshot/tests/reading-quest-letter-browser.mjs",
+      "bytes": 2772,
+      "sha256": "f010a02b289d8a45aab40bbd7e7eb4bf86d19e64d500e6fe75b7470899dbb445"
+    },
+    {
+      "path": "snapshot/tests/reading-quests-browser.mjs",
+      "bytes": 2082,
+      "sha256": "fc34a9d5153d96498574479556f355e994b3a92f90609e5b995599b4d446e8fe"
+    },
+    {
+      "path": "snapshot/tests/reading-quests.test.mjs",
+      "bytes": 1723,
+      "sha256": "12f7987f3427104d5decad95457781ccb7bd4fd3e1f7e49928112ea59694324d"
+    },
+    {
+      "path": "snapshot/tests/reading-retry-hints.test.mjs",
+      "bytes": 1204,
+      "sha256": "5e14530b7ff7c9e27ace2dfb96a14993cc7ca3a214ae9455a949eb93b9069c46"
+    },
+    {
+      "path": "snapshot/tests/reading-session-v2.test.mjs",
+      "bytes": 5237,
+      "sha256": "d7c94729e07c4fcec8f7e778c63ec373dd17cd846a3d1e75bab4f32d7f7c2ab0"
+    },
+    {
+      "path": "snapshot/tests/reading-story-quests.test.mjs",
+      "bytes": 2575,
+      "sha256": "4be0f870f3c340c6d7655dbfed339bcb7001779dc283f4a6c05b71fa04164a07"
+    },
+    {
+      "path": "snapshot/tests/reading-subquests-browser.mjs",
+      "bytes": 20643,
+      "sha256": "d24d650a61ebf4e0f7dc14cf347d4726a625a0cf97fc46bf49e3bf3b7e189da3"
+    },
+    {
+      "path": "snapshot/tests/reading-villagers.test.mjs",
+      "bytes": 931,
+      "sha256": "4d493cce95ca9c760a1b269bc33e30927f566902a25318697375312550654d01"
+    },
+    {
+      "path": "snapshot/tests/seed-print-browser.mjs",
+      "bytes": 5182,
+      "sha256": "18fa1efb616f50040e2d7e8880775637a2be9805c3bdd532ab724ca017b74fba"
+    },
+    {
+      "path": "snapshot/tests/stage-print-review-browser.mjs",
+      "bytes": 4443,
+      "sha256": "85dc424c034af2fc9f27509594dba56b419a877f42a56b3ab899a754b2dd8a2e"
+    },
+    {
+      "path": "snapshot/tests/ui-reading-tooltip-browser.mjs",
+      "bytes": 5697,
+      "sha256": "a030e874844f3ce6883f5282f1f54d4bfd9649fbee4132577e5e272c3db23a6d"
+    },
+    {
+      "path": "snapshot/tests/ui-reading-tooltip.test.mjs",
+      "bytes": 1612,
+      "sha256": "6849a8302d0137caf85b8184d89193bf55a823ac8b8dd3105451cadca06faf2b"
+    },
+    {
+      "path": "snapshot/title_release_info.js",
+      "bytes": 4059,
+      "sha256": "2cb9f6ff0a4518f3da8e6713c68cffe115a866de78a549d32ccc601a9237ca8b"
+    },
+    {
+      "path": "snapshot/title_release_notes.css",
+      "bytes": 3856,
+      "sha256": "da2c6e80baa78233a662fd84f0c8988f5f1455a0356e819a605fb19945fec0e0"
+    },
+    {
+      "path": "snapshot/title_release_notes.js",
+      "bytes": 3205,
+      "sha256": "76d86d63892a0adf62e8e2e24515f79dadfa6781fa3925c73ed5e82a3c50f858"
+    },
+    {
+      "path": "snapshot/town_raid.css",
+      "bytes": 431,
+      "sha256": "7547bb2b5b577b358ec27b231e9b9a4775eee117249e16b39c2788583ee123d9"
+    },
+    {
+      "path": "snapshot/ui_reading_tooltip.css",
+      "bytes": 1081,
+      "sha256": "57743e846ca507b5ecee9620bb6a8d0aea1b608270b42816ce074783a572cb0c"
+    },
+    {
+      "path": "snapshot/ui_reading_tooltip.js",
+      "bytes": 6562,
+      "sha256": "1a5aa93d4a572853b0fa15224680286c122b02feaa451eea27451bf54ebbbc34"
+    },
+    {
+      "path": "snapshot/ui_reading_words.js",
+      "bytes": 5932,
+      "sha256": "7a8dcbd3a2a69089587a6f4274c64caf81052b7487b6422e935c8854ded89c62"
+    },
+    {
+      "path": "snapshot/vite.config.ts",
+      "bytes": 2805,
+      "sha256": "e274dcc743497adbdf8078457e28ab5c3694bce841035e7177160553159f780e"
+    },
+    {
+      "path": "snapshot/window_dismiss.css",
+      "bytes": 2297,
+      "sha256": "07d82cba2e3f7dc7ee89f17ad29964668c882f8802bcb3503ff3b08d67e6e61d"
+    },
+    {
+      "path": "snapshot/window_dismiss.js",
+      "bytes": 2106,
+      "sha256": "81c542096624b8a9356ff5d78037a037471456e755fa30b6ab8a5a76da1ee584"
+    },
+    {
+      "path": "snapshot/word_problem_print_layout_v2.css",
+      "bytes": 11453,
+      "sha256": "f2e7fded9163c03c114fdb14966cad71afd2fadf5c145c8eda5e61ac08898fd9"
+    },
+    {
+      "path": "snapshot/word_problem_print_layout_v2.js",
+      "bytes": 15141,
+      "sha256": "4c6fa8aa16315690eb916259464b3fea90c41f528ba0d26eaf1a457cfb37ce25"
+    },
+    {
+      "path": "snapshot/word_problem_print_layout_v2_preview.html",
+      "bytes": 1439,
+      "sha256": "50d9be79340b9939de26109353e73597fb139958f6e3ee908e70909f9fcd8c5f"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_adventurer.jpg",
+      "bytes": 372749,
+      "sha256": "9fdcf3ed95021716f05a0cce702fac748a6077c017fed89c7bd8eacc6b0bb036"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_adventurer.png",
+      "bytes": 471983,
+      "sha256": "be870377397798aac6ccaf721ca7457b4b6979d11c53d72c17f5014a8fda36a4"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_baker_sara.jpg",
+      "bytes": 350315,
+      "sha256": "ec887d7e49818e06849d0e96ceba0423510d398456b68e2303cd7d7257bb0eaa"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_baker_sara.png",
+      "bytes": 424884,
+      "sha256": "62aed8e4618abce258ba1de0c705f1f64725ef588ee911cbd2a9e6d291295f2c"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_baker_sara_transparent_v2.png",
+      "bytes": 561087,
+      "sha256": "d92f5eed6715fdc475d708559de2879097125d7ddd045d3ef4c75e1fbedeca0d"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_blacksmith_ken.jpg",
+      "bytes": 448439,
+      "sha256": "7f2a95a7f864338c881e0f25fedbbb09c48104b30ff1ce205ca2beefe83ec5e6"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_blacksmith_ken.png",
+      "bytes": 611432,
+      "sha256": "bb93041ebf0506eea473a0b191eda87a3eea4d965cbcd18033d342e0e44e21ba"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_blacksmith_ken_transparent_v2.png",
+      "bytes": 811749,
+      "sha256": "7aef9a1e787601ae4b9e2d5d47e69471ac76bd472d5dfc136b948cb975d7d7d2"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_child_nono.png",
+      "bytes": 632713,
+      "sha256": "5f7810086b902763e8c3eadcf81f6fc41442b14b005fa093563265873720a060"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_farmer_tom.jpg",
+      "bytes": 407943,
+      "sha256": "74780d483b970232781ba1bda5bd867e1fb9348d1df1f5b2d2aa237655d417f7"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_farmer_tom.png",
+      "bytes": 518834,
+      "sha256": "c74916ac4ed3e063bd95cf2af3ad861fd90a3c7ea835ef34fa9ed0ad16148710"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_farmer_tom_transparent_v2.png",
+      "bytes": 743892,
+      "sha256": "314272c8c6a5f4fcc8dd086abb47c1afcea24cca644192a18b67dfd204f6c858"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_fisherman_dan.jpg",
+      "bytes": 394141,
+      "sha256": "29f78b514409ca288096aed8f51afde469d5e94c18ed1ac8e77463f702fc88aa"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_fisherman_dan.png",
+      "bytes": 532218,
+      "sha256": "de0bcfe9627e445e20ce9f9c37cc2c88adcddb3bd91a437a545dc0b9f39ab156"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_fisherman_dan_transparent_v2.png",
+      "bytes": 785368,
+      "sha256": "1df0e676fa4e0f200d104813e9dde918602412dd81a7fbc5dcb33854599097b3"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_librarian_fumi.png",
+      "bytes": 580464,
+      "sha256": "e173ae0106876ec7e18f5039eeb311446d9b9e1831e7fd32761412e51b043daf"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_merchant_lina.jpg",
+      "bytes": 363562,
+      "sha256": "13c9ab8c1065cc0948ca10e6f6dc4b71386542176c3ad8986e3c2c8cddbd1c14"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_merchant_lina.png",
+      "bytes": 453376,
+      "sha256": "c20f7da7163bcd3172fedb59a6dc8ac110fe408983b5c8ebf170ab4ebfff1b30"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_merchant_lina_transparent_v2.png",
+      "bytes": 618728,
+      "sha256": "f57f30351199eb48f9db3f1ef470703eea8f28d95b9cf98e693a7a415b4ba57c"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_postman_reto.png",
+      "bytes": 657151,
+      "sha256": "b5a418843e5f1eff65ef18b6491c8acc36b2e1c793ccade33129842aa2ccabac"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_villager.jpg",
+      "bytes": 616195,
+      "sha256": "00e19aae6ad65b8f9cc57c09ea06b78a885372d137e08defb0948d9268643952"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_villager.png",
+      "bytes": 1100823,
+      "sha256": "df5e577bb478bfbac690bb7b2d750bf5d3e4561121ad8da6bcf80dfa53f52b39"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_watch_mina.png",
+      "bytes": 624566,
+      "sha256": "bfcfac844bec2bcfb5591afd948f5eed673ce3d4c6fd5f57abca83c2e0ef802a"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_wiseman_gondo.jpg",
+      "bytes": 427431,
+      "sha256": "f6190ea5d96b79f1ab024271bde2fd79ed3bbba5039dba383099dc6afb0b13b0"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_wiseman_gondo.png",
+      "bytes": 641762,
+      "sha256": "23ada5795fdd9af672f14d7738b1f0b30237a313f54a953945991311bf252d74"
+    },
+    {
+      "path": "snapshot/画像/NPC/npc_wiseman_gondo_transparent_v2.png",
+      "bytes": 962621,
+      "sha256": "5c90cb93747a58d79371f569a5576dfad9a64ef032215170694c58c2dd2abf71"
+    },
+    {
+      "path": "verification-scripts/batch8-game-check.mjs",
+      "bytes": 4357,
+      "sha256": "e3479103bd4e22f70750dd37d1adf70dee03e5dabf90713c9b996c182d868913"
+    },
+    {
+      "path": "verification-scripts/enemy-art-check.mjs",
+      "bytes": 2709,
+      "sha256": "47982408e61285c66a00b4440b3d4974a3e538e8db6ab3ddbff735b353d55334"
+    },
+    {
+      "path": "verification-scripts/handdrawn-town-check.mjs",
+      "bytes": 5073,
+      "sha256": "6773a42bc4f7eaa94b781f0ebea6283903281ba6e05d466a9e6c7ecbe3ed29eb"
+    }
+  ]
+}

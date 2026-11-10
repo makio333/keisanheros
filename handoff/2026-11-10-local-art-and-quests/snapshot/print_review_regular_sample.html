@@ -1,0 +1,45 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>プリント</title><style>
+      @page { size: A4; margin: 8mm; }
+      body { font-family: sans-serif; background: #fff; color: #222; padding: 6mm; }
+      h1 { font-size: 26px; margin-bottom: 6px; }
+      .p-sub { font-size: 15px; color: #555; margin-bottom: 16px; }
+      .p-sheet { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 60px; }
+      .p-row { font-size: 24px; display: flex; align-items: baseline; gap: 12px; padding: 6px 0; border-bottom: 1px dotted #aaa; }
+      .p-num { width: auto; min-width: 34px; color: #888; font-size: 16px; white-space: nowrap; }
+      .p-expr { white-space: nowrap; }
+      .p-blank { flex: 1; border-bottom: 1px solid #222; min-width: 70px; height: 1.1em; }
+      .p-remainder-blank { display:inline-flex; align-items:baseline; gap:5px; flex:1; font-size:16px; }
+      .p-remainder-blank .p-blank { min-width:26px; }
+      .frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 6px; line-height: 1.15; }
+      .frac-n { padding: 0 6px 1px; border-bottom: 2px solid #222; }
+      .frac-d { padding: 1px 6px 0; }
+      .p-frac-blank { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; gap: 3px; margin-left: 6px; }
+      .p-frac-blank i { display: block; width: 56px; height: 1.3em; border: 1px solid #222; border-radius: 3px; }
+      .p-frac-blank i.p-frac-bar { height: 2px; border: 0; background: #222; border-radius: 0; }
+      .p-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 60px; }
+      .p-meta { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 40px; font-size: 16px; margin-bottom: 18px; }
+      .p-meta-name { border-bottom: 1px solid #222; padding: 0 160px 4px 4px; }
+      .p-title { font-size: 22px; font-weight: bold; margin-bottom: 8px; }
+      .p-name-box { font-size: 16px; margin-bottom: 12px; }
+      .p-name-line { display: inline-block; width: 200px; border-bottom: 1px solid #222; }
+      .p-desc { font-size: 14px; color: #555; margin-bottom: 16px; }
+      .p-bonus-banner { background: #fffde7; border: 2px solid #f9a825; border-radius: 8px; padding: 8px 12px; margin-bottom: 16px; font-size: 15px; }
+    </style></head><body>
+            <div class="p-title">【エリア1-1】 始まりの平原 1桁＋1桁（くり上がりなし） Aセット</div>
+            <style>
+    .print-rewards { margin:2mm 0 3mm; padding:2mm 0; border-top:1px solid #777; border-bottom:1px solid #777; color:#111; font:8pt/1.4 sans-serif; break-inside:avoid; }
+    .print-rewards-title { display:block; margin-bottom:1mm; font-size:8pt; }
+    .print-reward-list { display:flex; flex-wrap:wrap; align-items:flex-start; gap:2mm 4mm; }
+    .print-reward { display:flex; align-items:center; gap:1.5mm; max-width:100%; }
+    .print-reward-icon { box-sizing:border-box; display:flex; align-items:center; justify-content:center; width:7mm; height:7mm; aspect-ratio:1; flex:0 0 7mm; padding:0.6mm; border:1px solid #555; border-radius:0; overflow:hidden; font-size:13pt; line-height:1; }
+    .print-reward-icon img { display:block; width:100%; height:100%; object-fit:contain; }
+    .print-reward-text { min-width:0; }
+    .print-reward-text b { font-weight:600; }
+    .print-reward-text small { display:block; font-size:7pt; }
+  </style><section class="print-rewards" aria-label="プリント報酬"><strong class="print-rewards-title">プリント報酬</strong><div class="print-reward-list"><div class="print-reward"><span class="print-reward-icon" aria-hidden="true">🏅</span><span class="print-reward-text"><b>クエストメダル 1問1枚</b><small>正解した分</small></span></div><div class="print-reward"><span class="print-reward-icon" aria-hidden="true">✨</span><span class="print-reward-text"><b>経験値 1問 20 EXP</b><small>正解した分</small></span></div><div class="print-reward"><span class="print-reward-icon" aria-hidden="true">💰</span><span class="print-reward-text"><b>ゴールド 1問 10 G</b><small>正解した分</small></span></div><div class="print-reward"><span class="print-reward-icon" aria-hidden="true"><img src="http://127.0.0.1:5181/assets/items/potion.png" alt=""></span><span class="print-reward-text"><b>傷薬 ×1</b><small>10問以上正解</small></span></div><div class="print-reward"><span class="print-reward-icon" aria-hidden="true"><img src="http://127.0.0.1:5181/assets/items/hipotion.png" alt=""></span><span class="print-reward-text"><b>秘薬 ×3</b><small>16問以上正解：またはエーテル×1</small></span></div><div class="print-reward"><span class="print-reward-icon" aria-hidden="true"><img src="http://127.0.0.1:5181/assets/items/cost_seed_pixel.png" alt=""></span><span class="print-reward-text"><b>コストプラスのたね ×1</b><small>20問正解</small></span></div><div class="print-reward"><span class="print-reward-icon" aria-hidden="true">💰</span><span class="print-reward-text"><b>全問正解ボーナス 500 G</b><small>20問正解</small></span></div></div></section>
+            <div class="p-name-box">なまえ：<span class="p-name-line" style="position:relative;"><span style="position:absolute; bottom:2px; left:4px; font-size:18px;">確認用</span></span></div>
+            <div class="p-desc">プリント番号: 3050</div>
+            <div class="p-cols">
+              <div class="p-col"><div class="p-row"><span class="p-num">1.</span><span class="p-expr">7 + 1 = </span><span class="p-blank"></span></div><div class="p-row"><span class="p-num">2.</span><span class="p-expr">2 + 1 = </span><span class="p-blank"></span></div><div class="p-row"><span class="p-num">3.</span><span class="p-expr">3 + 4 = </span><span class="p-blank"></span></div><div class="p-row"><span class="p-num">4.</span><span class="p-expr">3 + 1 = </span><span class="p-blank"></span></div><div class="p-row"><span class="p-num">5.</span><span class="p-expr">2 + 6 = </span><span class="p-blank"></span></div><div class="p-row"><span class="p-num">6.</span><span class="p-expr">1 + 5 = </span><span class="p-blank"></span></div><div class="p-row"><span class="p-num">7.</span><span class="p-expr">8 + 1 = </span><span class="p-blank"></span></div><div class="p-row"><span class="p-num">8.</span><span class="p-expr">4 + 1 = </span><span class="p-blank"></span></div><div class="p-row"><span class="p-num">9.</span><span class="p-expr">5 + 3 = </span><span class="p-blank"></span></div><div class="p-row"><span class="p-num">10.</span><span class="p-expr">3 + 6 = </span><span class="p-blank"></span></div></div>
+              <div class="p-col"><div class="p-row"><span class="p-num">11.</span><span class="p-expr">1 + 1 = </span><span class="p-blank"></span></div><div class="p-row"><span class="p-num">12.</span><span class="p-expr">4 + 2 = </span><span class="p-blank"></span></div><div class="p-row"><span class="p-num">13.</span><span class="p-expr">2 + 4 = </span><span class="p-blank"></span></div><div class="p-row"><span class="p-num">14.</span><span class="p-expr">2 + 5 = </span><span class="p-blank"></span></div><div class="p-row"><span class="p-num">15.</span><span class="p-expr">5 + 4 = </span><span class="p-blank"></span></div><div class="p-row"><span class="p-num">16.</span><span class="p-expr">6 + 2 = </span><span class="p-blank"></span></div><div class="p-row"><span class="p-num">17.</span><span class="p-expr">1 + 3 = </span><span class="p-blank"></span></div><div class="p-row"><span class="p-num">18.</span><span class="p-expr">2 + 2 = </span><span class="p-blank"></span></div><div class="p-row"><span class="p-num">19.</span><span class="p-expr">4 + 3 = </span><span class="p-blank"></span></div><div class="p-row"><span class="p-num">20.</span><span class="p-expr">3 + 5 = </span><span class="p-blank"></span></div></div>
+            </div><script type="module">import {regularMathPrintCss} from './regular_math_print_layout.js';const style=document.createElement('style');style.textContent=regularMathPrintCss;document.head.append(style);window.reviewReady=true;</script></body></html>

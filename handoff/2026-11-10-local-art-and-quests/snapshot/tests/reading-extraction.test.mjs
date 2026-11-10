@@ -1,0 +1,8 @@
+import assert from 'node:assert/strict';import {READING_QUESTS,readingAnswerMatches} from '../reading_quests.js';import {READING_PURSUIT_QUESTS} from '../reading_pursuit_quests.js';
+const extract=READING_QUESTS.filter(q=>q.extraction);assert.equal(extract.length,12);
+for(const q of extract){assert.equal(q.extraction.characterCount,[...q.answer].length);assert.ok(q.passage.includes(q.extraction.sourceText));assert.equal(q.extraction.inputLengthEnforced,false);assert.ok(q.question.includes(String(q.extraction.characterCount)));assert.ok(readingAnswerMatches(q,q.answer));for(const answer of q.acceptedAnswers)assert.ok(readingAnswerMatches(q,answer));}
+assert.ok(extract.some(q=>q.dialogueSpeaker==='self'&&q.scene));assert.ok(extract.some(q=>q.dialogueSpeaker==='npc'));
+const q=READING_QUESTS.find(q=>q.id==='reading-g1-01');assert.equal(readingAnswerMatches(q,'いど'),true);assert.equal(readingAnswerMatches(q,'イド'),false,'kana script distinction stays unchanged');
+const moon=READING_QUESTS.find(q=>q.id==='reading-g3-01');assert.equal(moon.extraction.characterCount,4);assert.equal(readingAnswerMatches(moon,'つきのかぎ'),true,'existing explicit reading alias remains valid despite typed length');
+for(const quest of READING_PURSUIT_QUESTS){assert.ok(quest.steps.some(s=>s.extraction));for(const s of quest.steps){assert.equal(s.dialogueSpeaker,'hihiru');assert.equal(s.questionLocation,'letter');assert.equal(s.scene,'');assert.ok(!s.question.startsWith(quest.npc+'「'));}}
+console.log('PASS: 12 natural extraction prompts, correct printed character counts, NPC/self narration, existing aliases, unchanged hiragana/katakana distinction, challenge propagation');

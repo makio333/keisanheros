@@ -1,0 +1,10 @@
+#battle-sub-menu .battle-skill-option{gap:12px;text-align:left;white-space:normal;width:100%;box-sizing:border-box}
+.battle-skill-art{position:relative;display:flex;flex:0 0 48px;align-items:center;justify-content:center;width:48px;height:48px}
+.battle-skill-art img{image-rendering:pixelated}
+.battle-skill-tier{position:absolute;right:-3px;bottom:-3px;background:#30250b;border:1px solid #ffe18a;color:#ffe18a;border-radius:4px;font-size:12px;line-height:16px;padding:0 3px}
+.battle-skill-copy{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
+.battle-skill-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.battle-skill-mp{font-size:13px;color:#f1c40f;white-space:nowrap}
+.battle-skill-copy small{color:var(--text-light);font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.battle-skill-option:disabled .battle-skill-art{opacity:.5}
+@media(max-width:480px){#battle-sub-menu .battle-skill-option{padding:10px!important;gap:10px}.battle-skill-heading strong{font-size:14px}}

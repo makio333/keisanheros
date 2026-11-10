@@ -1,0 +1,32 @@
+import {HERO_AVATARS} from 'virtual:skin-preview-catalog';
+import {SKIN_ART_SAMPLES} from './skin_art_samples.js';
+import {EQUIPMENT_ART_SAMPLES} from './equipment_art_samples.js';
+import {MONSTER_ART_SAMPLES} from './monster_art_samples.js';
+const $=s=>document.querySelector(s),key='legend-skin-art-review-v1';
+const names={initial:'初期キャラクター',gacha:'通常ガチャ',halloween:'ハロウィン',christmas:'クリスマス',raid:'レイド','quest-medal':'メダル限定',sample:'試作・あなたの絵柄','weapon-sample':'武器・あなたの絵柄','monster-sample':'敵・あなたの絵柄'};
+const roster=[...HERO_AVATARS.map((a,i)=>({...a,number:`SK-${String(i+1).padStart(3,'0')}`,category:a.rewardSource||(a.gachaOnly?'gacha':'initial')})),...SKIN_ART_SAMPLES,...EQUIPMENT_ART_SAMPLES,...MONSTER_ART_SAMPLES];
+let saved={};try{saved=JSON.parse(localStorage.getItem(key)||'{}')||{};}catch{}
+let selected=new Set(Array.isArray(saved.selected)?saved.selected.filter(id=>roster.some(a=>a.id===id)):[]),notes=saved.notes&&typeof saved.notes==='object'?saved.notes:{},batch=typeof saved.batch==='string'?saved.batch:'',zoomId=null;
+$('#batch').value=batch;
+function persist(){try{localStorage.setItem(key,JSON.stringify({selected:[...selected],notes,batch}));}catch{$('#feedback').textContent='ブラウザに保存できません。指示をコピーして残してください。';}}
+function chosen(){return roster.filter(a=>selected.has(a.id));}
+function instruction(){const list=chosen();if(!list.length)return '';return ['キャラクター・武器・敵のアート修正をお願いします。',...(batch.trim()?['','共通の指示：',batch.trim()]:[]),'','対象のアート：',...list.map(a=>`${a.number} ${a.name}\nスキンID: ${a.id}\n画像: ${a.image}${String(notes[a.id]||'').trim()?`\n個別の指示: ${notes[a.id].trim()}`:''}`)].join('\n\n');}
+function button(text,handler,className=''){const b=document.createElement('button');b.type='button';b.textContent=text;b.className=className;b.onclick=handler;return b;}
+function sync(){const list=chosen();$('#selected-count').textContent=`${list.length}枚選択`;$('#copy').disabled=$('#download').disabled=!list.length;$('#output').value=instruction();$('#selected-list').replaceChildren(...list.map(a=>button(`${a.number} ${a.name} ×`,()=>toggle(a.id,false),'chip')));document.querySelectorAll('.art-card').forEach(card=>{card.classList.toggle('selected',selected.has(card.dataset.skinId));card.querySelector('input').checked=selected.has(card.dataset.skinId);});if(zoomId)$('#zoom-select').checked=selected.has(zoomId);persist();}
+function toggle(id,value){if(value)selected.add(id);else selected.delete(id);$('#feedback').textContent='';if($('#only').checked)render();sync();}
+function visible(){const q=$('#search').value.trim().toLowerCase();return roster.filter(a=>($('#category').value==='all'||a.category===$('#category').value)&&(!$('#only').checked||selected.has(a.id))&&`${a.name} ${a.number} ${a.id}`.toLowerCase().includes(q));}
+function zoom(a){zoomId=a.id;$('#zoom-title').textContent=`${a.number}　${a.name}`;$('#zoom-image').src='/'+a.image;$('#zoom-image').alt=a.name;$('#zoom-select').checked=selected.has(a.id);$('#zoom').showModal();}
+function render(){const list=visible();$('#gallery').replaceChildren(...list.map(a=>{const card=document.createElement('article');card.className='art-card';card.dataset.skinId=a.id;const top=document.createElement('div');top.className='card-top';const label=document.createElement('label'),check=document.createElement('input');check.type='checkbox';check.setAttribute('aria-label',`${a.number} ${a.name}を選択`);check.onchange=()=>toggle(a.id,check.checked);label.append(check,document.createTextNode(a.number));top.append(label,document.createTextNode('拡大 ↗'));const view=button('',()=>zoom(a),'art-view');view.setAttribute('aria-label',`${a.name}を拡大`);const img=document.createElement('img');img.src='/'+a.image;img.alt=a.name;img.loading='lazy';view.append(img);const body=document.createElement('div');body.className='card-body';const title=document.createElement('h2');title.textContent=a.name;const tag=document.createElement('span');tag.className='tag';tag.textContent=names[a.category]||a.category;const id=document.createElement('code');id.className='art-id';id.textContent=a.id;const noteLabel=document.createElement('label');noteLabel.textContent='このアートへのメモ';noteLabel.htmlFor='note-'+a.id;const note=document.createElement('textarea');note.id=noteLabel.htmlFor;note.className='note';note.rows=2;note.placeholder='例：剣を小さくする';note.value=notes[a.id]||'';note.oninput=()=>{notes[a.id]=note.value;if(note.value.trim())selected.add(a.id);sync();};body.append(title,tag,id,noteLabel,note);card.append(top,view,body);return card;}));$('#counts').textContent=`全${roster.length}枚 / 表示${list.length}枚`;$('#empty').hidden=list.length>0;sync();}
+for(const id of ['search','category','only'])$('#'+id).addEventListener(id==='search'?'input':'change',render);
+$('#batch').oninput=()=>{batch=$('#batch').value;sync();};
+$('#select-visible').onclick=()=>{visible().forEach(a=>selected.add(a.id));render();};
+$('#clear').onclick=()=>{selected.clear();render();};
+$('#copy').onclick=async()=>{try{await navigator.clipboard.writeText(instruction());$('#feedback').textContent='コピーしました。このチャットに貼り付けてください。';}catch{$('#output').closest('details').open=true;$('#output').select();$('#feedback').textContent='下の文章を選択してコピーしてください。';}};
+$('#download').onclick=()=>{const data={type:'legend-heroes-skin-art-instructions',version:1,instruction:batch,art:chosen().map(a=>({number:a.number,id:a.id,name:a.name,image:a.image,note:notes[a.id]||''}))};const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='キャラクタースキンへの指示.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);$('#feedback').textContent='選択と指示を保存しました。';};
+$('#close-zoom').onclick=()=>$('#zoom').close();$('#zoom-select').onchange=()=>toggle(zoomId,$('#zoom-select').checked);$('#zoom').onclick=e=>{if(e.target===$('#zoom'))$('#zoom').close();};
+window.render_game_to_text=()=>JSON.stringify({screen:'skin-art-review',total:roster.length,visible:visible().map(a=>a.id),selected:chosen().map(a=>({id:a.id,name:a.name,image:a.image,note:notes[a.id]||''})),instruction:batch});
+const requestedCategory=new URLSearchParams(location.search).get('category');
+if(requestedCategory&&Object.hasOwn(names,requestedCategory))$('#category').value=requestedCategory;
+const requestedSearch=new URLSearchParams(location.search).get('q');
+if(requestedSearch)$('#search').value=requestedSearch;
+render();

@@ -1,0 +1,8 @@
+<!doctype html><html lang="ja"><meta charset="utf-8"><title>学年別・通常計算プリント</title>
+<style>
+@page{size:A4 portrait;margin:10mm}
+*{box-sizing:border-box}body{margin:0;color:#222;background:#eee;font:16px sans-serif}.controls{padding:12px;background:#fff;display:flex;gap:12px;align-items:center;flex-wrap:wrap}select,button{padding:8px;font:inherit}
+.sheet{width:190mm;min-height:277mm;background:#fff;margin:16px auto;padding:6mm}.title{font-size:19px;margin:0 0 5mm}.meta{font-size:13px;margin:0 0 7mm}.questions{display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:column;grid-template-rows:repeat(10,minmax(20mm,auto));gap:2mm 8mm}.question{display:flex;gap:2mm;align-items:baseline;break-inside:avoid;font-size:17px;line-height:1.6}.number{font-size:11px;color:#666;flex:0 0 5mm}.expression{overflow-wrap:anywhere}.blank{display:block;min-height:6mm;border-bottom:1px solid #333;margin-top:1mm;font-size:13px}.solution{font-size:13px;color:#222}
+@media print{body{background:#fff}.controls{display:none}.sheet{margin:0;width:190mm;min-height:0;padding:0}}
+</style>
+<nav class="controls"><b>学年別の確認用・保存／報酬付与なし</b><label>単元 <select id="unit"></select></label><button id="refresh">別の問題にする</button></nav><main id="preview"></main><script type="module" src="/regular_print_preview.js"></script></html>
