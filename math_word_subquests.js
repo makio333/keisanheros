@@ -1,16 +1,111 @@
 import { getMathWordQuestsV2, scoreMathWordAnswerV2 } from './math_word_quests_v2.js';
+import { getMathWordQuestionVisualV2 } from './math_word_visuals_v2.js';
+import itemAtlas from './assets/items/math-word-icons/manifest.json';
 import './reading_quest_letter.css';
 import './math_word_subquests.css';
 import { assignQuestNotice } from './quest_notice_variants.js';
 
 const FIRST_CLEAR_REWARD = Object.freeze({ gold: 300, exp: 20, medal: 1 });
 const QUESTIONS_PER_SET = 5;
+const ITEM_ATLAS_URL = new URL('./assets/items/math-word-icons/atlas.png', import.meta.url).href;
+const ITEM_SPRITES = Object.fromEntries(itemAtlas.sprites.map(sprite => [sprite.key, sprite]));
 const el = (tag, text, className) => {
   const node = document.createElement(tag);
   if (text !== undefined && text !== null) node.textContent = text;
   if (className) node.className = className;
   return node;
 };
+
+function itemSprite(key, size = 22) {
+  const sprite = ITEM_SPRITES[key];
+  if (!sprite) return null;
+  const node = el('span', null, 'math-word-item-icon');
+  node.setAttribute('aria-hidden', 'true');
+  node.style.width = `${size}px`;
+  node.style.height = `${size}px`;
+  node.style.backgroundImage = `url("${ITEM_ATLAS_URL}")`;
+  node.style.backgroundSize = `${size * itemAtlas.columns}px ${size * itemAtlas.rows}px`;
+  node.style.backgroundPosition = `${-size * (sprite.column - 1)}px ${-size * (sprite.row - 1)}px`;
+  return node;
+}
+
+function visualOperator(text) {
+  const node = el('span', text, 'math-word-visual-operator');
+  node.setAttribute('aria-hidden', 'true');
+  return node;
+}
+
+function renderMathWordVisual(problem) {
+  const visual = getMathWordQuestionVisualV2(problem.id);
+  if (!visual) return null;
+  const compact = window.matchMedia?.('(max-width: 600px)').matches;
+  const regularSize = compact ? 15 : (problem.grade === 1 ? 30 : 26);
+  const figure = el('figure', null, 'math-word-item-visual');
+  figure.setAttribute('role', 'img');
+  figure.setAttribute('aria-label', visual.alt || '問題文に出てくるもの');
+
+  if (visual.groups) {
+    const groups = el('div', null, 'math-word-visual-groups');
+    visual.groups.forEach((group, index) => {
+      if (index && group.operator) groups.append(visualOperator(group.operator));
+      const groupNode = el('div', null, 'math-word-visual-group');
+      if (group.tone) groupNode.dataset.tone = group.tone;
+      const shown = Math.min(Number(group.count) || 1, 14);
+      const iconSize = Number(group.count) > 20 ? (compact ? 13 : 20) : regularSize;
+      for (let i = 0; i < shown; i++) {
+        const icon = itemSprite(group.icon, iconSize);
+        if (!icon) continue;
+        if (Number(group.count) <= 20 && i < (Number(group.marked) || 0)) icon.classList.add('is-removed');
+        if (Number(group.count) <= 20 && i < (Number(group.highlighted) || 0)) icon.classList.add('is-highlighted');
+        groupNode.append(icon);
+      }
+      if (group.label) groupNode.append(el('span', group.label, 'math-word-visual-note'));
+      groupNode.append(el('span', `${group.count}${group.unit || ''}`, 'math-word-visual-count'));
+      groups.append(groupNode);
+    });
+    figure.append(groups);
+  }
+
+  if (visual.sequence) {
+    const sequence = el('div', null, 'math-word-visual-sequence');
+    const marks = new Map((visual.sequence.marks || []).map(mark => [mark.position, mark.label]));
+    for (let position = 1; position <= visual.sequence.count; position++) {
+      const person = el('span', null, 'math-word-visual-person');
+      if (marks.has(position)) person.classList.add('is-marked');
+      person.append(itemSprite(visual.sequence.icon, regularSize));
+      if (marks.has(position)) person.append(el('small', marks.get(position), 'math-word-visual-person-label'));
+      sequence.append(person);
+    }
+    figure.append(sequence);
+  }
+
+  if (visual.sets) {
+    const sets = el('div', null, 'math-word-visual-sets');
+    for (let index = 0; index < visual.sets.count; index++) {
+      const set = el('div', null, 'math-word-visual-set');
+      set.append(itemSprite(visual.sets.contextIcon, compact ? 15 : 23), visualOperator('×'));
+      set.append(itemSprite(visual.sets.itemIcon, compact ? 13 : 21));
+      set.append(el('small', `${visual.sets.each}`, 'math-word-visual-set-count'));
+      sets.append(set);
+    }
+    if (visual.sets.extra) {
+      const extra = el('div', null, 'math-word-visual-group');
+      for (let i = 0; i < visual.sets.extra; i++) extra.append(itemSprite(visual.sets.extraIcon || visual.sets.itemIcon, 20));
+      extra.append(el('span', `${visual.sets.extra}${visual.sets.unit || ''}`, 'math-word-visual-count'));
+      sets.append(extra);
+    }
+    figure.append(sets);
+  }
+
+  if (visual.grid) {
+    const grid = el('div', null, 'math-word-visual-grid');
+    grid.style.gridTemplateColumns = `repeat(${visual.grid.columns}, 14px)`;
+    for (let index = 0; index < visual.grid.rows * visual.grid.columns; index++) grid.append(itemSprite(visual.grid.icon, 14));
+    figure.append(grid);
+  }
+
+  return figure;
+}
 
 function stateFor(game) {
   const state = game.mathWordQuestsV2 ||= {};
@@ -261,9 +356,12 @@ export function openMathWordSubquests(api) {
     const story = el('div', problem.story, 'reading-v2-passage math-word-letter-story');
     story.lang = 'ja';
     story.tabIndex = 0;
+    const itemVisual = renderMathWordVisual(problem);
     const signature = el('footer', null, 'reading-v2-letter-signature');
     signature.append(el('span', '勇者へ'), el('b', `${villager.name} より`));
-    letter.append(letterHeader, story, signature);
+    letter.append(letterHeader, story);
+    if (itemVisual) letter.append(itemVisual);
+    letter.append(signature);
     questionContext.append(letter);
 
     const answerStage = el('div', null, 'quest-answer-center reading-v2-answer-center');

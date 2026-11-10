@@ -41,6 +41,8 @@
 .math-word-reading-answer-panel .reading-v2-answer-foreground{overflow-y:auto}
 .math-word-reading-answer-panel .math-word-story-progress{margin:0;font-size:14px}
 .math-word-reading-answer-panel .math-word-question-text{margin:0;text-align:left}
+.math-word-reading-answer-panel .reading-v2-letter .math-word-letter-story{flex:0 1 auto}
+.math-word-reading-answer-panel .reading-v2-letter-signature{margin-top:auto}
 .math-word-reading-answer-panel .math-word-answer-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));align-items:end;justify-content:stretch;gap:10px;width:100%;margin:0}
 .math-word-reading-answer-panel .math-word-answer-form.math-word-single-field{grid-template-columns:minmax(0,1fr)}
 .math-word-reading-answer-panel .math-word-field{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;padding:8px 6px;border:1px solid #cbb98e;border-radius:7px;background:#fffbef}
@@ -48,9 +50,29 @@
 .math-word-reading-answer-panel .math-word-field input{box-sizing:border-box;width:min(100%,118px);min-width:0;min-height:44px;padding:6px 8px;border:2px solid #91612e;border-radius:8px;background:#fff;color:#24170d;font:inherit;font-size:20px;text-align:center}
 .math-word-reading-answer-panel .math-word-field-unit{color:#5b3213;font-weight:700;white-space:nowrap}
 .math-word-reading-answer-panel .math-word-answer-form>.btn{grid-column:1/-1;width:100%;max-width:none;min-height:44px;margin:0;padding:8px 12px}
+.math-word-item-visual{display:flex;align-items:center;justify-content:center;flex:0 0 auto;max-width:100%;max-height:116px;margin:10px auto 2px;padding:0 2px;overflow:auto;scrollbar-width:thin}
+.math-word-visual-groups,.math-word-visual-sets{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px}
+.math-word-visual-group{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;max-width:320px;gap:1px;padding:4px 6px;border:1px solid #d2bd94;border-radius:9px;background:#fff8e9}
+.math-word-visual-count{margin-left:4px;color:#51391f;font:700 12px/1.3 sans-serif;white-space:nowrap}
+.math-word-visual-note{margin-right:4px;color:#70573a;font:11px/1.3 sans-serif;white-space:nowrap}
+.math-word-visual-operator{padding:0 2px;color:#74552f;font:700 13px/1 sans-serif;white-space:nowrap}
+.math-word-item-icon{display:inline-block;flex:0 0 auto;background-repeat:no-repeat;image-rendering:pixelated}
+.math-word-item-icon.is-removed{position:relative;opacity:.62}
+.math-word-item-icon.is-removed::after{position:absolute;inset:0;content:"×";display:grid;place-items:center;color:#a73527;font:900 20px/1 sans-serif;text-shadow:0 1px #fff}
+.math-word-item-icon.is-highlighted{border-radius:50%;background-color:#ffe5a3;box-shadow:0 0 0 1px #bf872d}
+.math-word-visual-group[data-tone="blue"] .math-word-item-icon{filter:hue-rotate(175deg) saturate(1.25)}
+.math-word-visual-group[data-tone="red"] .math-word-item-icon{filter:saturate(1.15)}
+.math-word-visual-group[data-tone="gray"] .math-word-item-icon{filter:grayscale(1);opacity:.7}
+.math-word-visual-group[data-tone="yellow"] .math-word-item-icon{filter:sepia(.7) saturate(1.5)}
+.math-word-visual-sequence{display:flex;align-items:flex-end;justify-content:center;flex-wrap:wrap;gap:2px;max-width:100%;padding:5px 8px 18px;border-bottom:2px dashed #b49a68}
+.math-word-visual-person{position:relative;display:flex;align-items:center;justify-content:center;min-width:23px;min-height:27px}
+.math-word-visual-person.is-marked{border-radius:6px;background:#ffe3a6;box-shadow:0 0 0 1px #bd8c42}
+.math-word-visual-person-label{position:absolute;top:100%;left:50%;transform:translateX(-50%);color:#604321;font:10px/1.2 sans-serif;white-space:nowrap}
+.math-word-visual-sets{max-width:100%;max-height:100%;overflow:auto;padding:3px}
+.math-word-visual-set{display:flex;align-items:center;justify-content:center;gap:1px;padding:3px 5px;border:1px solid #d2bd94;border-radius:8px;background:#fff8e9}
+.math-word-visual-set-count{color:#51391f;font:bold 12px/1 sans-serif}
+.math-word-visual-grid{display:grid;gap:1px;padding:4px;border:1px solid #d2bd94;border-radius:7px;background:#fff8e9}
 .math-word-reading-answer-panel .math-word-form-status{min-height:1.3em;margin:0;color:#8a3b0f;text-align:left;font-weight:700}
-.math-word-reading-answer-panel .reading-villager-dialogue{flex:0 0 auto;margin:8px 0 0;padding:9px 0 0;gap:0;border-top:1px solid #c6ae7b;border-radius:0;background:transparent;box-shadow:none;color:#3f3325}
-.math-word-reading-answer-panel .reading-villager-dialogue p{margin:4px 0 0;font-size:13px;line-height:1.55}
 .math-word-reading-answer-panel .math-word-results-title{margin:0;color:#4f3b28;text-align:left;font-size:19px}
 .math-word-reading-answer-panel .math-word-results-list{display:grid;grid-template-columns:1fr;gap:7px;max-height:34dvh;overflow-y:auto;padding:1px 3px 2px 0;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#a58a58 transparent}
 .math-word-reading-answer-panel .math-word-result-row{padding:8px 10px;border:1px solid #c6b393;border-left:4px solid #4c8659;border-radius:7px;background:#fffdfa}
@@ -72,7 +94,6 @@
  .math-word-reading-answer-panel .quest-answer-center{flex:0 0 auto;overflow:hidden}
  .math-word-reading-answer-panel .reading-v2-answer-foreground{max-height:none;overflow:visible}
  .math-word-reading-answer-panel .reading-v2-scene-villager{height:300px;top:4px}
- .math-word-reading-answer-panel .reading-villager-dialogue{display:none}
 }
 @media(max-width:600px){
  .math-word-subquest-panel{width:100%;height:96dvh;max-height:96dvh;border-width:5px}
@@ -91,7 +112,18 @@
  .math-word-reading-answer-panel .reading-v2-letter-header h2{font-size:19px}
  .math-word-reading-answer-panel .reading-v2-letter .reading-v2-passage{max-height:39dvh;font-size:18px;line-height:1.85}
  .math-word-reading-answer-panel .reading-v2-letter-signature{margin-top:6px;padding-top:4px}
+ .math-word-item-visual{max-height:64px;margin-top:5px}
+ .math-word-visual-groups{gap:3px}
+ .math-word-visual-group{max-width:calc(100vw - 56px);gap:0;padding:3px 4px}
+ .math-word-visual-count{font-size:10px}
+ .math-word-visual-note{font-size:9px}
+ .math-word-visual-operator{font-size:11px}
+ .math-word-visual-sets{gap:3px}
+ .math-word-visual-set{padding:2px 3px}
+ .math-word-visual-person{min-width:20px;min-height:24px}
+ .math-word-visual-person-label{font-size:8px}
  .math-word-reading-answer-panel .reading-v2-answer-foreground{padding:12px;gap:8px}
+ .math-word-reading-answer-panel .reading-v2-answer-foreground{margin-top:clamp(80px,14dvh,110px)}
  .math-word-reading-answer-panel .reading-v2-prompt{font-size:17px}
  .math-word-reading-answer-panel .math-word-answer-form{grid-template-columns:1fr}
  .math-word-reading-answer-panel .math-word-answer-form>.btn{grid-column:1}
@@ -122,6 +154,8 @@
 .math-word-reading-answer-panel[data-grade="2"] .math-word-field-label,.math-word-reading-answer-panel[data-grade="2"] .math-word-field-unit{font-size:16px}
 .math-word-reading-answer-panel[data-grade="1"] .math-word-field input{font-size:24px}
 .math-word-reading-answer-panel[data-grade="2"] .math-word-field input{font-size:22px}
+.math-word-reading-answer-panel[data-grade="1"] .math-word-visual-count{font-size:14px}
+.math-word-reading-answer-panel[data-grade="2"] .math-word-visual-count{font-size:13px}
 @media(max-width:1000px){
  .math-word-reading-answer-panel[data-grade="1"] .reading-v2-letter .math-word-letter-story{font-size:24px}
  .math-word-reading-answer-panel[data-grade="2"] .reading-v2-letter .math-word-letter-story{font-size:22px}
@@ -129,7 +163,7 @@
  .math-word-reading-answer-panel[data-grade="2"] .math-word-question-text{font-size:20px}
 }
 @media(max-width:600px){
- .math-word-reading-answer-panel[data-grade="1"] .reading-v2-letter .math-word-letter-story{font-size:21px;line-height:1.6}
+ .math-word-reading-answer-panel[data-grade="1"] .reading-v2-letter .math-word-letter-story{font-size:20.5px;line-height:1.5}
  .math-word-reading-answer-panel[data-grade="2"] .reading-v2-letter .math-word-letter-story{font-size:20px;line-height:1.9}
  .math-word-reading-answer-panel[data-grade="1"] .math-word-question-text{font-size:20px}
  .math-word-reading-answer-panel[data-grade="2"] .math-word-question-text{font-size:19px}

@@ -1,0 +1,573 @@
+{
+  "columns": 8,
+  "rows": 10,
+  "dimensions": [
+    1280,
+    1600
+  ],
+  "style": "transparent-background 16-bit fantasy pixel art",
+  "sprite_count": 80,
+  "count_rendering": "repeat sprite assets in code using the exact quantity from each problem; sprites themselves contain no quantities",
+  "sprites": [
+    {
+      "key": "feather",
+      "label_ja": "光る羽",
+      "row": 1,
+      "column": 1,
+      "file": "feather.png"
+    },
+    {
+      "key": "berries",
+      "label_ja": "木の実・ベリー",
+      "row": 1,
+      "column": 2,
+      "file": "berries.png"
+    },
+    {
+      "key": "mushroom",
+      "label_ja": "きのこ",
+      "row": 1,
+      "column": 3,
+      "file": "mushroom.png"
+    },
+    {
+      "key": "bread",
+      "label_ja": "パン",
+      "row": 1,
+      "column": 4,
+      "file": "bread.png"
+    },
+    {
+      "key": "herbs",
+      "label_ja": "薬草・葉",
+      "row": 1,
+      "column": 5,
+      "file": "herbs.png"
+    },
+    {
+      "key": "flower",
+      "label_ja": "花",
+      "row": 1,
+      "column": 6,
+      "file": "flower.png"
+    },
+    {
+      "key": "seed_pod",
+      "label_ja": "種・さや",
+      "row": 1,
+      "column": 7,
+      "file": "seed_pod.png"
+    },
+    {
+      "key": "dragon_egg",
+      "label_ja": "竜のたまご",
+      "row": 1,
+      "column": 8,
+      "file": "dragon_egg.png"
+    },
+    {
+      "key": "adventurer",
+      "label_ja": "冒険者・人",
+      "row": 2,
+      "column": 1,
+      "file": "adventurer.png"
+    },
+    {
+      "key": "fairy",
+      "label_ja": "妖精",
+      "row": 2,
+      "column": 2,
+      "file": "fairy.png"
+    },
+    {
+      "key": "dragon",
+      "label_ja": "竜",
+      "row": 2,
+      "column": 3,
+      "file": "dragon.png"
+    },
+    {
+      "key": "pigeon",
+      "label_ja": "はと・伝書鳥",
+      "row": 2,
+      "column": 4,
+      "file": "pigeon.png"
+    },
+    {
+      "key": "owl",
+      "label_ja": "フクロウ",
+      "row": 2,
+      "column": 5,
+      "file": "owl.png"
+    },
+    {
+      "key": "crow",
+      "label_ja": "カラス",
+      "row": 2,
+      "column": 6,
+      "file": "crow.png"
+    },
+    {
+      "key": "robin",
+      "label_ja": "コマドリ",
+      "row": 2,
+      "column": 7,
+      "file": "robin.png"
+    },
+    {
+      "key": "horse",
+      "label_ja": "馬",
+      "row": 2,
+      "column": 8,
+      "file": "horse.png"
+    },
+    {
+      "key": "sword",
+      "label_ja": "剣",
+      "row": 3,
+      "column": 1,
+      "file": "sword.png"
+    },
+    {
+      "key": "shield",
+      "label_ja": "盾",
+      "row": 3,
+      "column": 2,
+      "file": "shield.png"
+    },
+    {
+      "key": "arrow",
+      "label_ja": "矢",
+      "row": 3,
+      "column": 3,
+      "file": "arrow.png"
+    },
+    {
+      "key": "staff",
+      "label_ja": "杖",
+      "row": 3,
+      "column": 4,
+      "file": "staff.png"
+    },
+    {
+      "key": "flute",
+      "label_ja": "笛",
+      "row": 3,
+      "column": 5,
+      "file": "flute.png"
+    },
+    {
+      "key": "torch",
+      "label_ja": "たいまつ",
+      "row": 3,
+      "column": 6,
+      "file": "torch.png"
+    },
+    {
+      "key": "boot",
+      "label_ja": "くつ",
+      "row": 3,
+      "column": 7,
+      "file": "boot.png"
+    },
+    {
+      "key": "cloak",
+      "label_ja": "マント",
+      "row": 3,
+      "column": 8,
+      "file": "cloak.png"
+    },
+    {
+      "key": "wooden_box",
+      "label_ja": "箱",
+      "row": 4,
+      "column": 1,
+      "file": "wooden_box.png"
+    },
+    {
+      "key": "sack",
+      "label_ja": "袋",
+      "row": 4,
+      "column": 2,
+      "file": "sack.png"
+    },
+    {
+      "key": "crate",
+      "label_ja": "木箱",
+      "row": 4,
+      "column": 3,
+      "file": "crate.png"
+    },
+    {
+      "key": "barrel",
+      "label_ja": "たる",
+      "row": 4,
+      "column": 4,
+      "file": "barrel.png"
+    },
+    {
+      "key": "medicine_bottle",
+      "label_ja": "薬びん",
+      "row": 4,
+      "column": 5,
+      "file": "medicine_bottle.png"
+    },
+    {
+      "key": "jug",
+      "label_ja": "つぼ・かめ",
+      "row": 4,
+      "column": 6,
+      "file": "jug.png"
+    },
+    {
+      "key": "canteen",
+      "label_ja": "水筒",
+      "row": 4,
+      "column": 7,
+      "file": "canteen.png"
+    },
+    {
+      "key": "cup",
+      "label_ja": "コップ",
+      "row": 4,
+      "column": 8,
+      "file": "cup.png"
+    },
+    {
+      "key": "plank",
+      "label_ja": "板",
+      "row": 5,
+      "column": 1,
+      "file": "plank.png"
+    },
+    {
+      "key": "wood_block",
+      "label_ja": "つみ木",
+      "row": 5,
+      "column": 2,
+      "file": "wood_block.png"
+    },
+    {
+      "key": "branch",
+      "label_ja": "枝",
+      "row": 5,
+      "column": 3,
+      "file": "branch.png"
+    },
+    {
+      "key": "metal_rod",
+      "label_ja": "金属棒",
+      "row": 5,
+      "column": 4,
+      "file": "metal_rod.png"
+    },
+    {
+      "key": "chain",
+      "label_ja": "鎖",
+      "row": 5,
+      "column": 5,
+      "file": "chain.png"
+    },
+    {
+      "key": "rope_spool",
+      "label_ja": "ひも・糸",
+      "row": 5,
+      "column": 6,
+      "file": "rope_spool.png"
+    },
+    {
+      "key": "ribbon",
+      "label_ja": "リボン",
+      "row": 5,
+      "column": 7,
+      "file": "ribbon.png"
+    },
+    {
+      "key": "rug",
+      "label_ja": "しきもの・布",
+      "row": 5,
+      "column": 8,
+      "file": "rug.png"
+    },
+    {
+      "key": "flag",
+      "label_ja": "旗",
+      "row": 6,
+      "column": 1,
+      "file": "flag.png"
+    },
+    {
+      "key": "ball",
+      "label_ja": "玉",
+      "row": 6,
+      "column": 2,
+      "file": "ball.png"
+    },
+    {
+      "key": "crystal",
+      "label_ja": "水晶・宝石",
+      "row": 6,
+      "column": 3,
+      "file": "crystal.png"
+    },
+    {
+      "key": "ore",
+      "label_ja": "鉱石",
+      "row": 6,
+      "column": 4,
+      "file": "ore.png"
+    },
+    {
+      "key": "tile",
+      "label_ja": "タイル",
+      "row": 6,
+      "column": 5,
+      "file": "tile.png"
+    },
+    {
+      "key": "coin",
+      "label_ja": "硬貨",
+      "row": 6,
+      "column": 6,
+      "file": "coin.png"
+    },
+    {
+      "key": "star_sand",
+      "label_ja": "星の砂",
+      "row": 6,
+      "column": 7,
+      "file": "star_sand.png"
+    },
+    {
+      "key": "screw",
+      "label_ja": "ねじ",
+      "row": 6,
+      "column": 8,
+      "file": "screw.png"
+    },
+    {
+      "key": "lantern",
+      "label_ja": "ランタン・あかり",
+      "row": 7,
+      "column": 1,
+      "file": "lantern.png"
+    },
+    {
+      "key": "clock",
+      "label_ja": "時計",
+      "row": 7,
+      "column": 2,
+      "file": "clock.png"
+    },
+    {
+      "key": "drum",
+      "label_ja": "たいこ",
+      "row": 7,
+      "column": 3,
+      "file": "drum.png"
+    },
+    {
+      "key": "map",
+      "label_ja": "地図",
+      "row": 7,
+      "column": 4,
+      "file": "map.png"
+    },
+    {
+      "key": "book",
+      "label_ja": "本",
+      "row": 7,
+      "column": 5,
+      "file": "book.png"
+    },
+    {
+      "key": "postcard",
+      "label_ja": "はがき",
+      "row": 7,
+      "column": 6,
+      "file": "postcard.png"
+    },
+    {
+      "key": "signpost",
+      "label_ja": "道しるべ",
+      "row": 7,
+      "column": 7,
+      "file": "signpost.png"
+    },
+    {
+      "key": "telescope",
+      "label_ja": "望遠鏡",
+      "row": 7,
+      "column": 8,
+      "file": "telescope.png"
+    },
+    {
+      "key": "ferry",
+      "label_ja": "船・渡し船",
+      "row": 8,
+      "column": 1,
+      "file": "ferry.png"
+    },
+    {
+      "key": "handcart",
+      "label_ja": "荷車",
+      "row": 8,
+      "column": 2,
+      "file": "handcart.png"
+    },
+    {
+      "key": "wheel",
+      "label_ja": "車輪",
+      "row": 8,
+      "column": 3,
+      "file": "wheel.png"
+    },
+    {
+      "key": "sail",
+      "label_ja": "帆",
+      "row": 8,
+      "column": 4,
+      "file": "sail.png"
+    },
+    {
+      "key": "jewel_chest",
+      "label_ja": "宝石箱",
+      "row": 8,
+      "column": 5,
+      "file": "jewel_chest.png"
+    },
+    {
+      "key": "water_bucket",
+      "label_ja": "水おけ",
+      "row": 8,
+      "column": 6,
+      "file": "water_bucket.png"
+    },
+    {
+      "key": "vial",
+      "label_ja": "小びん",
+      "row": 8,
+      "column": 7,
+      "file": "vial.png"
+    },
+    {
+      "key": "sapling",
+      "label_ja": "木・苗",
+      "row": 8,
+      "column": 8,
+      "file": "sapling.png"
+    },
+    {
+      "key": "chair",
+      "label_ja": "いす",
+      "row": 9,
+      "column": 1,
+      "file": "chair.png"
+    },
+    {
+      "key": "pillar",
+      "label_ja": "柱",
+      "row": 9,
+      "column": 2,
+      "file": "pillar.png"
+    },
+    {
+      "key": "gate",
+      "label_ja": "門",
+      "row": 9,
+      "column": 3,
+      "file": "gate.png"
+    },
+    {
+      "key": "star",
+      "label_ja": "星",
+      "row": 9,
+      "column": 4,
+      "file": "star.png"
+    },
+    {
+      "key": "flowerbed",
+      "label_ja": "花だん",
+      "row": 9,
+      "column": 5,
+      "file": "flowerbed.png"
+    },
+    {
+      "key": "clothing",
+      "label_ja": "服",
+      "row": 9,
+      "column": 6,
+      "file": "clothing.png"
+    },
+    {
+      "key": "broom",
+      "label_ja": "ほうき",
+      "row": 9,
+      "column": 7,
+      "file": "broom.png"
+    },
+    {
+      "key": "airship",
+      "label_ja": "飛行船",
+      "row": 9,
+      "column": 8,
+      "file": "airship.png"
+    },
+    {
+      "key": "ring",
+      "label_ja": "輪",
+      "row": 10,
+      "column": 1,
+      "file": "ring.png"
+    },
+    {
+      "key": "bell",
+      "label_ja": "ベル",
+      "row": 10,
+      "column": 2,
+      "file": "bell.png"
+    },
+    {
+      "key": "powder_pouch",
+      "label_ja": "顔料・粉の袋",
+      "row": 10,
+      "column": 3,
+      "file": "powder_pouch.png"
+    },
+    {
+      "key": "water_tank",
+      "label_ja": "水そう",
+      "row": 10,
+      "column": 4,
+      "file": "water_tank.png"
+    },
+    {
+      "key": "fence",
+      "label_ja": "さく",
+      "row": 10,
+      "column": 5,
+      "file": "fence.png"
+    },
+    {
+      "key": "watchtower",
+      "label_ja": "見張り塔",
+      "row": 10,
+      "column": 6,
+      "file": "watchtower.png"
+    },
+    {
+      "key": "cottage",
+      "label_ja": "家",
+      "row": 10,
+      "column": 7,
+      "file": "cottage.png"
+    },
+    {
+      "key": "bridge",
+      "label_ja": "橋",
+      "row": 10,
+      "column": 8,
+      "file": "bridge.png"
+    }
+  ]
+}
