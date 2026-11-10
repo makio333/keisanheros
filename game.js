@@ -2,6 +2,7 @@ import { eventEquipmentAbility, ensureEventEquipmentAbilities } from './event_eq
 import { applyGiftPayload, recallGiftPayload, raidResumeStage, raidParticipationCoins } from './economy.js';
 import { kanjiPrintContext } from './kanji_print_context.js';
 import { isPrintAnswerCorrect, formatPrintAnswer } from './print_answers.js';
+import { openMathWordSubquests, mathWordQuestProgress } from './math_word_subquests.js';
 
 import { EVENT_RAID_RULES, EVENT_RAID_BONUSES, EventRaidRun, eventRaidTargetCount, rankEventRaidRecords, eventRaidRewardEntitlements, eventRaidBonusEntitlements, eventRaidGaugeRatio, formatEventRaidTime, EVENT_RAID_FINAL_AT } from './event_raid.js';
 window.addEventListener('online',()=>{ if(G) for(const mode of ['math','kanji']) if(eventRaidState(mode).pendingBest) syncEventRaidRecord(mode).catch(()=>{}); });
@@ -7482,6 +7483,30 @@ function showQuestBoard(){
   bindStageRewardTooltips(list);
   renderQuestMedalShop();
   renderQuestMedalCount();
+  renderMathWordQuestProgress();
+}
+
+function renderMathWordQuestProgress(){
+  const el=$('math-word-quest-progress');
+  if(!el||!G)return;
+  const progress=mathWordQuestProgress(G);
+  el.textContent=`クリア ${progress.completed} / ${progress.total} 問`;
+}
+
+function openMathWordQuestMode(){
+  openMathWordSubquests({
+    game:()=>G,
+    save:()=>save(true),
+    grantExp,
+    refresh:()=>{updateHud();renderQuestMedalCount();renderMathWordQuestProgress();},
+    levelStart:()=>({lvl:G.player.lvl,hp:totalMaxHp(),mp:totalMaxMp(),points:G.player.points}),
+    levelFinish:before=>({
+      fromLvl:before.lvl,toLvl:G.player.lvl,hpBefore:before.hp,hpAfter:totalMaxHp(),
+      mpBefore:before.mp,mpAfter:totalMaxMp(),pointsGained:G.player.points-before.points,
+      unlockedSkills:SKILL_DB.filter(skill=>(skill.reqLvl||1)>before.lvl&&(skill.reqLvl||1)<=G.player.lvl),
+    }),
+    showLevelUp:data=>showLevelUpModal(data),
+  });
 }
 
 /* カードを えらんだあとの 詳細：もんだい・ごほうび（1〜3回目）・こたえる／プリント */
@@ -10638,6 +10663,7 @@ function bindEvents(){
   on('hotspot-gacha', showGacha);
   on('hotspot-synthesis', () => showSynthesis());
   on('hotspot-quest-board', showQuestBoard);
+  on('btn-math-word-quests', openMathWordQuestMode);
   on('hotspot-raid-boss', showRaidBossMenu);
   on('hotspot-halloween', showHalloweenMenu);
   

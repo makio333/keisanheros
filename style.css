@@ -7608,6 +7608,74 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
 
 .quest-card-tag { max-width: 100%; font-size: 12px; font-weight: bold; color: #5b3a1a; background: rgba(255,255,255,.55); border-radius: 999px; padding: 1px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+/* 算数文章問題：既存クエストボードの木と羊皮紙の色に合わせた入口 */
+.math-word-quest-entry { margin: 9px 0 0; padding: 8px 12px; border: 2px solid #f2d37a; border-radius: 12px; background: rgba(40, 22, 8, .78); text-align: center; }
+.math-word-quest-entry-button { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; margin: 0; padding: 9px 14px; color: #4a2b12; border: 2px solid #f2d37a; border-radius: 9px; background: linear-gradient(180deg, #fff1c4, #dcbf86); font-weight: 800; }
+.math-word-quest-entry-button small { flex: 0 0 auto; color: #704516; font-size: 13px; }
+.math-word-quest-entry > p { margin: 5px 0 0; color: #ffe9b8; font-size: 12px; }
+.math-word-subquest-overlay { position: fixed; inset: 0; z-index: 120; display: flex; align-items: center; justify-content: center; padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom)); background: rgba(7, 5, 13, .82); }
+.math-word-subquest-panel { display: flex; flex-direction: column; width: min(960px, 96vw); height: min(94vh, 900px); max-height: 94dvh; overflow: hidden; color: #38220f; border: 7px solid #4a2b12; border-radius: 16px; background: repeating-linear-gradient(90deg, rgba(0,0,0,.035) 0 2px, transparent 2px 9px), linear-gradient(180deg, #f8ebc9, #dcbf86); box-shadow: 0 16px 42px rgba(0,0,0,.65), inset 0 0 20px rgba(92,52,14,.24); }
+.math-word-subquest-header { display: flex; align-items: center; gap: 14px; padding: 12px 16px 4px; }
+.math-word-subquest-back { flex: 0 0 auto; width: auto; margin: 0; padding: 7px 12px; font-size: 15px; }
+.math-word-subquest-title { flex: 1; margin: 0; color: #fff3c9; text-align: center; font-size: 24px; text-shadow: 0 2px 0 #4a2b12, 0 0 9px rgba(0,0,0,.4); }
+.math-word-subquest-description { margin: 3px 16px 10px; padding: 8px 12px; color: #fff3c9; border-radius: 8px; background: rgba(57,34,14,.82); text-align: center; font-size: 14px; }
+.math-word-subquest-content { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 18px 18px; overscroll-behavior: contain; }
+.math-word-subquest-progress, .math-word-grade-progress { margin: 2px 0 8px; text-align: center; color: #6c3e15; font-weight: 800; }
+.math-word-grade-tabs { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.math-word-grade-tab { width: auto; min-width: 54px; margin: 0; padding: 6px 12px; }
+.math-word-grade-tab[aria-pressed="true"] { color: #fff; background: linear-gradient(180deg, #a04fe0, #6a2aa8); border-color: #e7c8ff; }
+.math-word-set-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.math-word-set-card { padding: 14px 12px 12px; border: 3px solid #f2d37a; border-radius: 11px; background: linear-gradient(180deg, #fff6dc, #e1c995); box-shadow: 0 3px 0 #5b3a1a; text-align: center; }
+.math-word-set-title { margin: 0 0 5px; color: #8a3b0f; font-size: 17px; }
+.math-word-set-progress { margin: 0 0 8px; font-size: 13px; }
+.math-word-set-start { width: 100%; margin: 0; padding: 7px 10px; font-size: 15px; }
+.math-word-run-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.math-word-run-nav .btn { width: auto; margin: 0; padding: 6px 12px; }
+.math-word-run-count { color: #6c3e15; font-weight: 800; }
+.math-word-current-topic { margin: 0 0 6px; color: #8a3b0f; text-align: center; font-weight: 800; }
+.math-word-question-card { max-width: 720px; margin: 0 auto; padding: 20px; border: 3px solid #9a642d; border-radius: 14px; background: rgba(255,249,229,.96); box-shadow: 0 5px 14px rgba(61,35,11,.2); }
+.math-word-question-story { margin: 0 0 12px; white-space: pre-line; font-size: 18px; line-height: 1.8; }
+.math-word-question-text { margin: 0 0 14px; color: #5b3213; font-size: 20px; line-height: 1.6; }
+.math-word-question-helper { margin: 0 0 14px; color: #624b32; font-size: 13px; }
+.math-word-answer-form { display: flex; align-items: end; justify-content: center; flex-wrap: wrap; gap: 12px; }
+.math-word-field { display: flex; align-items: center; gap: 6px; }
+.math-word-field-label { font-weight: 700; }
+.math-word-field input { width: 118px; min-height: 44px; padding: 6px 10px; color: #24170d; border: 2px solid #91612e; border-radius: 8px; background: #fff; font: inherit; font-size: 20px; text-align: center; }
+.math-word-field-unit { color: #5b3213; font-weight: 700; }
+.math-word-answer-form .btn { flex: 0 0 100%; max-width: 260px; margin: 6px auto 0; }
+.math-word-answer-form .math-word-hint-button { flex: 0 0 auto; width: auto; max-width: none; margin: 0; }
+.math-word-form-status { min-height: 1.4em; margin: 10px 0 0; color: #8a3b0f; text-align: center; font-weight: 700; }
+.math-word-results-title { margin: 4px 0 12px; color: #6c3e15; text-align: center; font-size: 22px; }
+.math-word-results-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.math-word-result-row { padding: 12px; border: 2px solid #9a642d; border-radius: 9px; background: rgba(255,249,229,.95); }
+.math-word-result-row.is-correct { border-color: #408344; }
+.math-word-result-row.is-wrong { border-color: #b54a31; }
+.math-word-result-mark { color: #5b3213; }
+.math-word-result-question, .math-word-result-answer, .math-word-result-explanation { margin: 5px 0 0; font-size: 14px; line-height: 1.55; }
+.math-word-result-explanation { color: #60472d; }
+.math-word-run-reward, .math-word-run-complete { margin: 12px 0; color: #6c3e15; text-align: center; font-weight: 800; }
+.math-word-retry-start { display: block; width: min(100%, 400px); margin: 12px auto 0; }
+.math-word-hint { margin: 0 0 12px; padding: 10px 12px; border-left: 5px solid #d39a34; border-radius: 6px; background: #fff0c5; line-height: 1.6; }
+.math-word-hint p { margin: 4px 0 0; }
+@media (max-width: 640px) {
+  .math-word-quest-entry { padding: 6px; }
+  .math-word-quest-entry-button { align-items: flex-start; flex-direction: column; gap: 2px; text-align: left; }
+  .math-word-subquest-panel { width: 100%; height: 96dvh; max-height: 96dvh; border-width: 4px; }
+  .math-word-subquest-header { gap: 7px; padding: 9px 8px 2px; }
+  .math-word-subquest-back { padding: 6px 8px; font-size: 13px; }
+  .math-word-subquest-title { font-size: 19px; }
+  .math-word-subquest-description { margin: 4px 8px 8px; font-size: 12px; }
+  .math-word-subquest-content { padding: 6px 10px 14px; }
+  .math-word-set-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .math-word-set-card { padding: 10px 8px; }
+  .math-word-set-title { font-size: 14px; }
+  .math-word-question-card { padding: 14px 12px; }
+  .math-word-question-story { font-size: 16px; }
+  .math-word-question-text { font-size: 18px; }
+  .math-word-results-list { grid-template-columns: 1fr; }
+  .math-word-field input { width: 102px; }
+}
+
 /* ===== レイドボス画面：左＝ボス・報酬／右＝ランキング（より多くの順位を1画面に） ===== */
 :is(#screen-raid-boss,#screen-event-raid) .raid-menu-panel {
   display: grid; width: min(1100px, 96%); max-width: 1100px; height: min(94dvh, 840px); max-height: none; overflow: hidden;
