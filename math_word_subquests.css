@@ -42,8 +42,9 @@
 .math-word-reading-answer-panel .math-word-story-progress{margin:0;font-size:14px}
 .math-word-reading-answer-panel .math-word-question-text{margin:0;text-align:left}
 .math-word-reading-answer-panel .math-word-answer-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));align-items:end;justify-content:stretch;gap:10px;width:100%;margin:0}
+.math-word-reading-answer-panel .math-word-answer-form.math-word-single-field{grid-template-columns:minmax(0,1fr)}
 .math-word-reading-answer-panel .math-word-field{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0;padding:8px 6px;border:1px solid #cbb98e;border-radius:7px;background:#fffbef}
-.math-word-reading-answer-panel .math-word-field-label{font-size:14px;font-weight:700;color:#59452d}
+.math-word-reading-answer-panel .math-word-field-label{font-size:14px;font-weight:700;color:#59452d;white-space:nowrap}
 .math-word-reading-answer-panel .math-word-field input{box-sizing:border-box;width:min(100%,118px);min-width:0;min-height:44px;padding:6px 8px;border:2px solid #91612e;border-radius:8px;background:#fff;color:#24170d;font:inherit;font-size:20px;text-align:center}
 .math-word-reading-answer-panel .math-word-field-unit{color:#5b3213;font-weight:700;white-space:nowrap}
 .math-word-reading-answer-panel .math-word-answer-form>.btn{grid-column:1/-1;width:100%;max-width:none;min-height:44px;margin:0;padding:8px 12px}
@@ -85,10 +86,11 @@
  .math-word-notice-card .quest-card-title{font-size:14px}
  .math-word-notice-rewards{font-size:10px}
  .reading-subquest-panel.quest-answer-panel.math-word-reading-answer-panel{width:calc(100vw - 16px);height:96dvh;max-height:96dvh;padding:10px;gap:8px}
- .math-word-reading-answer-panel .reading-v2-letter{max-height:58dvh;padding:16px 18px 12px}
- .math-word-reading-answer-panel .reading-v2-letter-header{padding-bottom:7px;margin-bottom:9px}
+ .math-word-reading-answer-panel .reading-v2-letter{max-height:58dvh;padding:12px 18px 8px}
+ .math-word-reading-answer-panel .reading-v2-letter-header{padding-bottom:5px;margin-bottom:6px}
  .math-word-reading-answer-panel .reading-v2-letter-header h2{font-size:19px}
  .math-word-reading-answer-panel .reading-v2-letter .reading-v2-passage{max-height:39dvh;font-size:18px;line-height:1.85}
+ .math-word-reading-answer-panel .reading-v2-letter-signature{margin-top:6px;padding-top:4px}
  .math-word-reading-answer-panel .reading-v2-answer-foreground{padding:12px;gap:8px}
  .math-word-reading-answer-panel .reading-v2-prompt{font-size:17px}
  .math-word-reading-answer-panel .math-word-answer-form{grid-template-columns:1fr}
@@ -105,4 +107,32 @@
  .math-word-reading-answer-panel .reading-v2-letter{max-height:48dvh}
  .math-word-reading-answer-panel .reading-v2-letter .reading-v2-passage{max-height:30dvh}
  .math-word-reading-answer-panel .reading-v2-answer-foreground{margin-top:clamp(110px,21dvh,170px)}
+}
+
+/* Early-grade copy uses the letter and question space more comfortably. */
+.math-word-reading-answer-panel[data-grade="1"] .reading-v2-letter .math-word-letter-story{font-size:28px;line-height:2}
+.math-word-reading-answer-panel[data-grade="2"] .reading-v2-letter .math-word-letter-story{font-size:25px;line-height:2}
+.math-word-reading-answer-panel[data-grade="1"] .math-word-question-text{font-size:25px}
+.math-word-reading-answer-panel[data-grade="2"] .math-word-question-text{font-size:23px}
+.math-word-reading-answer-panel[data-grade="1"] .reading-v2-batch-note{font-size:15px}
+.math-word-reading-answer-panel[data-grade="2"] .reading-v2-batch-note{font-size:14px}
+.math-word-reading-answer-panel[data-grade="1"] .math-word-story-progress{font-size:16px}
+.math-word-reading-answer-panel[data-grade="2"] .math-word-story-progress{font-size:15px}
+.math-word-reading-answer-panel[data-grade="1"] .math-word-field-label,.math-word-reading-answer-panel[data-grade="1"] .math-word-field-unit{font-size:17px}
+.math-word-reading-answer-panel[data-grade="2"] .math-word-field-label,.math-word-reading-answer-panel[data-grade="2"] .math-word-field-unit{font-size:16px}
+.math-word-reading-answer-panel[data-grade="1"] .math-word-field input{font-size:24px}
+.math-word-reading-answer-panel[data-grade="2"] .math-word-field input{font-size:22px}
+@media(max-width:1000px){
+ .math-word-reading-answer-panel[data-grade="1"] .reading-v2-letter .math-word-letter-story{font-size:24px}
+ .math-word-reading-answer-panel[data-grade="2"] .reading-v2-letter .math-word-letter-story{font-size:22px}
+ .math-word-reading-answer-panel[data-grade="1"] .math-word-question-text{font-size:22px}
+ .math-word-reading-answer-panel[data-grade="2"] .math-word-question-text{font-size:20px}
+}
+@media(max-width:600px){
+ .math-word-reading-answer-panel[data-grade="1"] .reading-v2-letter .math-word-letter-story{font-size:21px;line-height:1.6}
+ .math-word-reading-answer-panel[data-grade="2"] .reading-v2-letter .math-word-letter-story{font-size:20px;line-height:1.9}
+ .math-word-reading-answer-panel[data-grade="1"] .math-word-question-text{font-size:20px}
+ .math-word-reading-answer-panel[data-grade="2"] .math-word-question-text{font-size:19px}
+ .math-word-reading-answer-panel[data-grade="1"] .math-word-field input{font-size:23px}
+ .math-word-reading-answer-panel[data-grade="2"] .math-word-field input{font-size:21px}
 }

@@ -199,6 +199,7 @@ export function openMathWordSubquests(api) {
   function answerValues(problem, answer) {
     const form = el('form', null, 'math-word-answer-form');
     form.autocomplete = 'off';
+    if (problem.input.fields.length === 1) form.classList.add('math-word-single-field');
     const inputs = {};
     for (const field of problem.input.fields) {
       const label = el('label', null, 'math-word-field');
@@ -275,24 +276,17 @@ export function openMathWordSubquests(api) {
     answerStage.append(villagerImage, answerForeground);
     answerContent.append(questionContext, answerStage);
 
-    const dialogue = el('section', null, 'reading-villager-dialogue');
-    const speech = el('div');
-    speech.append(el('b', villager.name), el('p', group.grade <= 2
-      ? 'この もんだいを いっしょに かんがえて、こたえを みつけよう！'
-      : '村の依頼を一緒に考えてくれる？ 5問の答え合わせは最後にまとめてするよ。'));
-    dialogue.append(speech);
-
     scenePanel.append(header, answerContent);
     sceneOverlay.append(scenePanel);
     document.body.append(sceneOverlay);
-    return { sceneOverlay, scenePanel, answerForeground, dialogue, villager };
+    return { sceneOverlay, scenePanel, answerForeground, villager };
   }
 
   function renderQuestion(group, session) {
     const index = Math.max(0, Math.min(QUESTIONS_PER_SET - 1, Number(session.currentIndex) || 0));
     const problem = group.questions[index];
     const scene = createScene(group, problem, index, '算数の依頼');
-    const { answerForeground: body, dialogue } = scene;
+    const { answerForeground: body } = scene;
     const progress = el('p', `${index + 1}／${QUESTIONS_PER_SET}問め　${group.title}`, 'reading-story-progress math-word-story-progress');
     const helper = el('p', '答え合わせは、5問ぜんぶに答えたあとに出ます。', 'reading-v2-batch-note');
     const question = el('h3', problem.question, 'challenge-problem challenge-problem-word quest-reading-question reading-v2-prompt math-word-question-text');
@@ -331,7 +325,7 @@ export function openMathWordSubquests(api) {
       renderResults(group, session);
       grantLevelSummary(api, levelSummary);
     };
-    body.append(progress, helper, question, form, status, dialogue);
+    body.append(progress, helper, question, form, status);
     inputs[problem.input.fields[0].name]?.focus({ preventScroll: true });
   }
 
@@ -341,7 +335,7 @@ export function openMathWordSubquests(api) {
     session.phase = allMastered ? 'done' : 'results';
     api.save();
     const scene = createScene(group, group.questions[wrongIndexes[0] ?? 0], wrongIndexes[0] ?? 0, '5問の答え合わせ');
-    const { answerForeground: body, dialogue } = scene;
+    const { answerForeground: body } = scene;
     const title = el('h3', allMastered ? 'ぜんぶクリア！' : `正解 ${session.results.filter(result => result.correct || result.reviewed).length} / ${QUESTIONS_PER_SET} 問`, 'math-word-results-title');
     const summary = el('p', allMastered
       ? '5問ぜんぶ正解！村人の依頼をやりとげたよ。'
@@ -377,7 +371,6 @@ export function openMathWordSubquests(api) {
       again.onclick = () => { state.sessions[group.id] = blankSession(group); api.save(); renderQuestion(group, state.sessions[group.id]); };
       body.append(done, again);
     }
-    body.append(dialogue);
   }
 
   function renderRetry(group, session, index) {
@@ -386,7 +379,7 @@ export function openMathWordSubquests(api) {
       label: '← 答え合わせへ',
       onClick: () => renderResults(group, session),
     });
-    const { answerForeground: body, dialogue } = scene;
+    const { answerForeground: body } = scene;
     const progress = el('p', `${index + 1}／${QUESTIONS_PER_SET}問め　やり直し`, 'reading-story-progress math-word-story-progress');
     const question = el('h3', problem.question, 'challenge-problem challenge-problem-word quest-reading-question reading-v2-prompt math-word-question-text');
     const hint = el('div', null, 'math-word-hint');
@@ -434,7 +427,7 @@ export function openMathWordSubquests(api) {
     };
     hint.classList.add('reading-v2-retry-hint');
     hint.append(el('p', '本文の数字と、何を聞かれているかを順番に確かめよう。'));
-    body.append(progress, el('h3', `問題 ${index + 1} をやり直そう`, 'math-word-results-title'), hint, question, form, status, dialogue);
+    body.append(progress, el('h3', `問題 ${index + 1} をやり直そう`, 'math-word-results-title'), hint, question, form, status);
     inputs[problem.input.fields[0].name]?.focus({ preventScroll: true });
   }
 
