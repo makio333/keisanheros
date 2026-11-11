@@ -7891,6 +7891,9 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
 .halloween-home-tag { display: flex; align-items: center; gap: 6px; border-color: #ffbe61; color: #fff0cd; background: linear-gradient(135deg,#61357e,#bd572b); box-shadow: 0 0 18px rgba(239,141,45,.35); }
 .halloween-home-tag img { image-rendering: pixelated; object-fit: contain; }
 .halloween-home-tag small { font-size: 10px; }
+.christmas-home-tag { display: flex; align-items: center; gap: 6px; border-color: #9de7f4; color: #f1fcff; background: linear-gradient(135deg,#174869,#167a7b); box-shadow: 0 0 18px rgba(105,218,239,.38); }
+.christmas-home-tag img { image-rendering: pixelated; object-fit: contain; }
+.christmas-home-tag small { font-size: 10px; }
 .halloween-event-card { width: min(700px,92vw); max-height: 85dvh; overflow-y: auto; border: 2px solid #ffbd66; background: radial-gradient(ellipse at top,#50306d,#201525 75%); text-align: center; padding: 22px; box-sizing: border-box; }
 .halloween-event-card h2 { color: #ffd089; }
 .halloween-event-date { display: inline-block; font-size: 12px; color: #ffcf87; padding: 5px 12px; border-radius: 20px; border: 1px solid #b8794c; }
@@ -7940,6 +7943,87 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
 @media (max-width: 640px) { .halloween-prize-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; } .halloween-hub-header { padding: 8px; } .halloween-hub-header h2 { font-size: 18px; } .halloween-event-banner > div { padding: 8px 10px; } .halloween-event-banner span { font-size: 11px; } .halloween-tab-panel { padding: 10px; } .halloween-hub .halloween-prize-card { padding: 8px; } }
 #screen-battle.halloween-battle-screen { background-color: #2b183e; }
 #screen-battle.halloween-battle-screen .battle-field { background: radial-gradient(ellipse,rgba(159,66,185,.12),transparent 75%); }
+.christmas-event-card { width: min(820px,94vw); max-height: 90dvh; overflow-y: auto; padding: 0; box-sizing: border-box; text-align: center; color: #f2f8ff; border: 2px solid #91ddeb; background: linear-gradient(180deg,#173b58,#10243c 70%); box-shadow: 0 16px 54px rgba(0,0,0,.65),0 0 26px rgba(94,206,231,.2); }
+.christmas-event-banner { min-height: 190px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding: 20px; box-sizing: border-box; background-size: cover; background-position: center 35%; border-bottom: 2px solid #91ddeb; text-shadow: 0 2px 4px #101322; }
+.christmas-event-banner h2 { margin: 0; color: #fff1b0; font-size: clamp(22px,4vw,32px); }
+.christmas-event-banner p { margin: 6px 0 0; font-weight: 700; }
+.christmas-stage-source { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 14px 18px; padding: 12px 14px; text-align: left; border: 1px solid #559bb3; border-radius: 10px; background: rgba(8,28,48,.7); }
+.christmas-stage-source > div { min-width: 0; }
+.christmas-stage-source small { display: block; color: #a7e7f3; font-size: 12px; }
+.christmas-stage-source strong { display: block; margin-top: 2px; color: #fff1b0; }
+.christmas-stage-source p { margin: 3px 0 0; color: #c8d9e8; font-size: 12px; }
+.christmas-stage-source .btn { flex: 0 0 auto; width: auto; min-height: 48px; }
+.christmas-monster-grid { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 8px; margin: 0 18px 14px; }
+.christmas-monster-card { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 4px; min-width: 0; padding: 8px 5px; border: 1px solid rgba(134,203,224,.35); border-radius: 8px; background: rgba(9,27,45,.65); }
+.christmas-monster-card img { width: 100%; height: 84px; object-fit: contain; image-rendering: pixelated; }
+.christmas-monster-card:last-child { border-color: #f0c869; background: rgba(117,54,56,.35); }
+.christmas-monster-card span { font-size: 11px; font-weight: 700; line-height: 1.35; }
+.christmas-event-footer { padding: 8px 18px 14px; border-top: 1px solid rgba(145,221,235,.3); }
+.christmas-clear-card { padding: 22px; }
+.christmas-clear-card h2 { color: #fff1b0; }
+.christmas-clear-card .btn { width: min(360px,100%); min-height: 48px; margin-top: 10px; }
+#screen-battle.christmas-battle-screen { position: relative; isolation: isolate; background-color: #152744; }
+#screen-battle.christmas-battle-screen::before,
+#screen-battle.christmas-battle-screen::after { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+#screen-battle.christmas-battle-screen::before {
+  opacity: 0;
+  background:
+    radial-gradient(ellipse 72% 32% at 70% 6%,rgba(44,246,166,.34),transparent 74%),
+    radial-gradient(ellipse 56% 27% at 24% 15%,rgba(57,166,255,.2),transparent 78%);
+  background-size: 150% 100%;
+  mix-blend-mode: screen;
+  filter: blur(13px);
+  transition: opacity .8s ease;
+}
+#screen-battle.christmas-battle-screen:has(#kanji-problem-center:not(.hidden))::before {
+  opacity: .8;
+  animation: christmas-aurora-drift 9s ease-in-out infinite alternate;
+}
+#screen-battle.christmas-battle-screen::after {
+  opacity: .34;
+  background-image:
+    radial-gradient(2px 2px at 28px 34px,rgba(255,255,255,.9) 55%,transparent 100%),
+    radial-gradient(1.5px 1.5px at 92px 124px,rgba(217,246,255,.85) 55%,transparent 100%),
+    radial-gradient(2px 2px at 168px 72px,rgba(255,255,255,.8) 55%,transparent 100%),
+    radial-gradient(1px 1px at 224px 156px,rgba(255,255,255,.75) 55%,transparent 100%);
+  background-size: 260px 190px;
+  animation: christmas-snowfall 15s linear infinite;
+}
+#screen-battle.christmas-battle-screen .battle-wrap { z-index: 1; }
+#screen-battle.christmas-battle-screen:has(#kanji-problem-center:not(.hidden)) #battle-enemy-emoji {
+  animation: christmas-monster-idle 2.8s ease-in-out infinite;
+}
+#screen-battle.christmas-battle-screen .battle-field { background: radial-gradient(ellipse,rgba(105,211,238,.13),transparent 75%); }
+@keyframes christmas-aurora-drift {
+  from { transform: translateX(-1.5%) scaleX(1); filter: blur(13px) hue-rotate(-8deg); }
+  to { transform: translateX(1.5%) scaleX(1.08); filter: blur(17px) hue-rotate(12deg); }
+}
+@keyframes christmas-snowfall {
+  from { background-position: 0 -190px; }
+  to { background-position: 36px 0; }
+}
+@keyframes christmas-monster-idle {
+  0%,100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.025); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #screen-battle.christmas-battle-screen::before,
+  #screen-battle.christmas-battle-screen::after,
+  #screen-battle.christmas-battle-screen:has(#kanji-problem-center:not(.hidden)) #battle-enemy-emoji { animation: none; }
+  #screen-battle.christmas-battle-screen:has(#kanji-problem-center:not(.hidden))::before { opacity: .45; }
+}
+@media (max-width: 640px) {
+  .christmas-home-tag { font-size: 12px; padding: 4px; }
+  .christmas-home-tag img { width: 32px; height: 32px; }
+  .christmas-event-card { width: min(96vw,600px); max-height: 88dvh; }
+  .christmas-event-banner { min-height: 150px; padding: 14px; }
+  .christmas-stage-source { align-items: stretch; flex-direction: column; margin: 10px; padding: 10px; }
+  .christmas-monster-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; margin: 0 10px 10px; }
+  .christmas-monster-card img { height: 68px; }
+  .christmas-monster-card span { font-size: 10px; }
+  .christmas-event-footer { padding: 8px 10px 10px; }
+  .christmas-clear-card { padding: 14px; }
+}
 @media (max-width: 640px) { .halloween-home-tag { font-size: 12px; padding: 4px; } .halloween-home-tag img { width: 32px; height: 32px; } .halloween-monster-parade img { height: 70px; } .halloween-event-card { padding: 14px; } }
 .battle-enemy-figure { position: relative; flex: 0 0 auto; }
 #battle-enemy-progress { position: absolute; top: -42px; left: 50%; transform: translateX(-50%); z-index: 21; width: max-content; max-width: 90vw; padding: 5px 9px; border-radius: 8px; background: rgba(22,18,34,.65); pointer-events: none; }

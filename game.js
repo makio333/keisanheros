@@ -1780,6 +1780,7 @@ function enterAreaBoss(areaId){
 }
 
 function generateStageEnemy(areaId, stageIndex, isBoss){
+  if (explore?.isChristmas) return generateChristmasEnemy(explore);
   if (explore?.isHalloween) return generateHalloweenEnemy(explore);
   const area = AREA_STAGES[areaId];
   if (isBoss){
@@ -1891,8 +1892,8 @@ function renderBattleProgressStars() {
   el.classList.toggle('hidden', raid);
   if (raid) { el.innerHTML = ''; return; }
   const total = explore.stageMode ? (explore.isBoss ? 2 : ENEMIES_PER_STAGE) : 10;
-  const eventTotal = explore.isHalloween ? halloweenEncounterTotal(explore) : total;
-  const current = explore.isHalloween ? explore.halloweenIndex + 1 : explore.stageMode
+  const eventTotal = explore.isHalloween ? halloweenEncounterTotal(explore) : explore.isChristmas ? CHRISTMAS_MONSTERS.length : total;
+  const current = explore.isHalloween ? explore.halloweenIndex + 1 : explore.isChristmas ? explore.christmasIndex + 1 : explore.stageMode
     ? (explore.isBoss ? (explore.bossPhase === 2 ? 2 : 1) : Math.min(total, (explore.stageKillCount || 0) + 1))
     : explore.floor;
   el.innerHTML = progressStarsHtml(current, eventTotal);
@@ -4577,15 +4578,17 @@ function startBattle(animateFloor){
   const bg = isStageMode
     ? stageBattleBg(explore.areaId, explore.stageIndex, explore.isBoss)
     : battleBgFor(explore.zone, explore.floor);
-  const battleBg = explore.isHalloween ? 'assets/halloween/battle_background.png' : bg;
+  const battleBg = explore.isChristmas ? christmasBattleBackground(explore.christmasIndex) : explore.isHalloween ? 'assets/halloween/battle_background.png' : bg;
   $('screen-battle').style.backgroundImage = battleBg ? `url("${av(battleBg)}")` : 'none';
   $('battle-floor-title').innerHTML = isStageMode
     ? stageBattleTitleHtml(explore.areaId, explore.stageIndex, explore.isBoss, explore.bossPhase, explore.stageKillCount)
     : `${zoneName(explore.zone)} ${floorLabelHTML(explore.zone, explore.floor)}／10（${OP_LABELS[opTierForZoneFloor(explore.zone, explore.floor)]}）`;
   $('screen-battle').classList.toggle('halloween-battle-screen', !!explore.isHalloween);
+  $('screen-battle').classList.toggle('christmas-battle-screen', !!explore.isChristmas);
   $('screen-battle').classList.toggle('event-raid-battle', !!explore.isEventRaid);
   $('screen-battle').classList.toggle('event-raid-kanji', explore.eventRaid?.mode==='kanji');
   if (explore.isHalloween) $('battle-floor-title').textContent = `🎃 ハロウィンの森${explore.halloweenSeason === 2 ? ' S2' : ''} ${explore.halloweenIndex + 1}／${halloweenEncounterTotal(explore)}たいめ・${halloweenSeason2Stage(explore)?.name || AREA_STAGES[explore.areaId].stages[explore.stageIndex].name}${explore.halloweenTest ? '（テスト）' : ''}`;
+  if (explore.isChristmas) $('battle-floor-title').textContent = `🎄 ${christmasBattleLocation(explore.christmasIndex)} ${explore.christmasIndex + 1}／${CHRISTMAS_MONSTERS.length}・漢字${AREA_STAGES[explore.areaId].displayNum} ${AREA_STAGES[explore.areaId].stages[explore.stageIndex].name}`;
   if (explore.halloweenSeason === 2) $('battle-floor-title').textContent = halloweenSeason2Title(explore);
   if (explore.isEventRaid) $('battle-floor-title').textContent = '🎃 イベント専用レイド・討伐数チャレンジ';
   renderBattleProgressStars();
@@ -4617,7 +4620,7 @@ function startBattle(animateFloor){
     openActionMenu();
   }, 1000); // メッセージを少し見せるために1秒待つ
   CM.start();
-  if (explore && explore.stageMode && !explore.isHalloween && !explore.isBoss && explore.stageKillCount === 0) {
+  if (explore && explore.stageMode && !explore.isHalloween && !explore.isChristmas && !explore.isBoss && explore.stageKillCount === 0) {
     // ステージ突入時に「1 / 10」を表示
     showKillProgressPopup(1, 1, ENEMIES_PER_STAGE);
   }
@@ -5890,7 +5893,7 @@ function stageDropProfile(areaId, stageIndex = null) {
 }
 
 function recordBattleDropOpportunity() {
-  if (!G || !explore?.stageMode || explore.isRaid || explore.isHalloween) return;
+  if (!G || !explore?.stageMode || explore.isRaid || explore.isHalloween || explore.isChristmas) return;
   const profile = stageDropProfile(explore.areaId, explore.isBoss ? null : explore.stageIndex);
   G.stageDropOpportunities ||= {};
   G.stageDropOpportunities[profile.key] = (Number(G.stageDropOpportunities[profile.key]) || 0) + 1;
@@ -5898,6 +5901,7 @@ function recordBattleDropOpportunity() {
 
 function stageRepeatDropMult(){
   if (!explore || !explore.stageMode) return rewardSettings.pastStageDropMult;
+  if (explore.isChristmas) return rewardSettings.pastStageDropMult;
   if (explore.isHalloween) {
     const count = Number(G?.halloweenEvent?.[HALLOWEEN_EVENT.id]?.clears) || 0;
     return rewardSettings.pastStageDropMult * (count >= rewardSettings.repeatThreshold ? rewardSettings.repeatMult : 1);
@@ -5954,6 +5958,7 @@ function winBattle(){
   save();
 
   const proceed = () => {
+    if (explore.isChristmas) { proceedChristmasBattle(); return; }
     if (explore.isHalloween) { proceedHalloweenBattle(); return; }
     if (explore.stageMode){
       // 新ステージ：ボスを たおしたら エリア制覇（救助イベント）へ
@@ -6935,6 +6940,7 @@ function showHome(){
   checkDemonCastleReward();
   checkRaidLevelTicket();
   renderHalloweenEntry();
+  renderChristmasEntry();
 }
 
 function checkDemonCastleReward() {
@@ -10668,6 +10674,7 @@ function bindEvents(){
   on('btn-math-word-quests', openMathWordQuestMode);
   on('hotspot-raid-boss', showRaidBossMenu);
   on('hotspot-halloween', showHalloweenMenu);
+  on('hotspot-christmas', showChristmasMenu);
   
   on('btn-raid-exchange', () => showRaidExchange());
   on('btn-raid-history', showRaidHistory);
@@ -11316,6 +11323,28 @@ const HALLOWEEN_EVENT = {
   candyIcon:'assets/halloween/candy_token.png', battleBackground:'assets/halloween/battle_background.png',
   ticketDropRates:{normal:0.05,boss:0.25}
 };
+const CHRISTMAS_EVENT = {
+  id:'christmas_2026', startsAt:Date.parse('2026-11-25T00:00:00+09:00'),
+  endsAt:Date.parse('2027-01-08T00:00:00+09:00'),
+  heroBackground:'assets/christmas/rovaniemi_santa_village.png',
+  battleBackgrounds:[
+    'assets/christmas/lapland_reindeer_trail.png',
+    'assets/christmas/rovaniemi_santa_village.png',
+    'assets/christmas/korvatunturi_workshop.png'
+  ],
+  homeBackground:'assets/christmas/christmas_home_town.png'
+};
+const CHRISTMAS_MONSTERS = [
+  {id:'christmas_tree_monster',name:'もみのき モンスター'},
+  {id:'gift_mimic',name:'びっくり プレゼント'},
+  {id:'naughty_reindeer',name:'いたずら トナカイ'},
+  {id:'gingerbread_knight',name:'ジンジャーブレッドの きし'},
+  {id:'nutcracker_soldier',name:'くるみわり へいたい'},
+  {id:'coal_gremlin',name:'すすくず ゴブリン'},
+  {id:'bell_ghost',name:'おばけの クリスマスベル'},
+  {id:'candy_cane_serpent',name:'キャンディケインの へび'},
+  {id:'black_santa_boss_pixel',name:'ブラックサンタ',isBoss:true}
+];
 const HALLOWEEN_MONSTERS = [
   { id:'pumpkin_imp', name:'かぼちゃの こあくま' },
   { id:'candy_slime', name:'キャンディスライム' },
@@ -11446,6 +11475,23 @@ function isHalloweenActive(now = Date.now()) {
 
 function renderHalloweenEntry() {
   $('hotspot-halloween')?.classList.toggle('hidden', !isHalloweenActive());
+}
+
+function isChristmasActive(now = Date.now()) {
+  return !!G?.isTestMode || (now >= CHRISTMAS_EVENT.startsAt && now < CHRISTMAS_EVENT.endsAt);
+}
+
+function renderChristmasEntry() {
+  const active = isChristmasActive();
+  $('hotspot-christmas')?.classList.toggle('hidden', !active);
+  const town = $('town-map');
+  const image = town?.querySelector('.town-map-img');
+  if (image) {
+    const background = active ? CHRISTMAS_EVENT.homeBackground : '画像/home_town_v2.png';
+    if (image.getAttribute('src') !== background) image.setAttribute('src', background);
+    image.alt = active ? 'オーロラと灯りに彩られた夜のクリスマス拠点' : '噴水広場と工房が並ぶ拠点の街';
+  }
+  town?.classList.toggle('christmas-home', active);
 }
 
 const HALLOWEEN_GACHA_PRIZES = [
@@ -12262,6 +12308,124 @@ function proceedHalloweenBattle() {
     document.body.appendChild(overlay);
     bindDropItemTooltips(overlay);
     overlay.querySelector('[data-action="return-home"]').onclick = () => { hideTooltip(); overlay.remove(); showHome(); showHalloweenMenu('stage'); };
+  });
+}
+
+function christmasChallengeSource() {
+  const kanjiAreaIds = ['area5','area6','area7','area8','area9','area10'];
+  const pickup = choosePickupStage();
+  if (pickup && kanjiAreaIds.includes(pickup.areaId) && AREA_STAGES[pickup.areaId]?.stages[pickup.stageIndex]) return pickup;
+
+  const attempted = Object.entries(G?.studyStats?.stageHistory || {}).map(([key, stat]) => {
+    const match = key.match(/^(area(?:5|6|7|8|9|10))_(\d+)$/);
+    if (!match || !AREA_STAGES[match[1]]?.stages[Number(match[2])] || !(Number(stat.total) > 0)) return null;
+    const history = Array.isArray(stat.history) ? stat.history : [];
+    return {
+      areaId:match[1], stageIndex:Number(match[2]), total:Number(stat.total),
+      accuracy:Number(stat.correct || 0) / Number(stat.total),
+      lastAttempt:history.length ? Number(history[history.length - 1].t) || 0 : 0
+    };
+  }).filter(Boolean);
+  if (attempted.length) {
+    const practiced = attempted.filter(stage => stage.total >= 3);
+    if (practiced.length) {
+      practiced.sort((a,b) => a.accuracy - b.accuracy || b.lastAttempt - a.lastAttempt);
+      return {...practiced[0], reason:'漢字ステージの復習にちょうせんしよう！'};
+    }
+    attempted.sort((a,b) => b.lastAttempt - a.lastAttempt);
+    return {...attempted[0], reason:'この前取り組んだ漢字ステージにちょうせんしよう！'};
+  }
+
+  const progressedAreas = kanjiAreaIds.filter(areaId =>
+    (G?.stageClearCounts?.[areaId] || []).some(count => Number(count) > 0) || stageTotalClearCount(areaId, null) > 0
+  );
+  const progressedArea = progressedAreas[progressedAreas.length - 1];
+  const level = Math.max(1, Number(G?.player?.lvl) || 1);
+  const grade = progressedArea ? Number(progressedArea.replace('area','')) - 4 : Math.min(6, 1 + Math.floor(level / 5));
+  const areaId = progressedArea || `area${grade + 4}`;
+  return {areaId, stageIndex:leastClearedStage(areaId), reason:'漢字のステージをえらんで ちょうせんしよう！'};
+}
+
+function showChristmasMenu() {
+  if (!G || !isChristmasActive()) return;
+  document.querySelector('.christmas-menu')?.remove();
+  const source = christmasChallengeSource();
+  const area = AREA_STAGES[source.areaId], stage = area.stages[source.stageIndex];
+  const total = CHRISTMAS_MONSTERS.length;
+  const portraits = CHRISTMAS_MONSTERS.map((monster, index) => `<div class="christmas-monster-card"><img src="${av(`assets/christmas/${monster.id}.png`)}" alt="${escapeHtml(monster.name)}"><span>${index === total - 1 ? 'さいごのボス' : `${index + 1}. ${escapeHtml(monster.name)}`}</span></div>`).join('');
+  const overlay = document.createElement('div');
+  overlay.className = 'confirm-overlay christmas-menu';
+  overlay.innerHTML = `<div class="panel christmas-event-card" role="dialog" aria-modal="true" aria-labelledby="christmas-event-title">
+    <header class="christmas-event-banner" style="background-image:url('${av(CHRISTMAS_EVENT.heroBackground)}')">
+      <h2 id="christmas-event-title">🎄 フィンランド・ラップランド</h2>
+      <p>ロヴァニエミのサンタクロース村を、ブラックサンタから守ろう！ 一対一の漢字バトル・全9戦</p>
+    </header>
+    <section class="christmas-stage-source"><div><small>漢字ステージ · 森の道 → 村 → 工房</small><strong>${escapeHtml(area.displayNum)}・${escapeHtml(stage.name)}</strong><p>漢字の問題に答えながら、フィンランドの雪景色を一体ずつ進もう。</p></div><button type="button" class="btn btn-primary" data-action="start">⚔️ ラップランドへすすむ</button></section>
+    <div class="christmas-monster-grid" aria-label="登場するモンスター">${portraits}</div>
+    <footer class="christmas-event-footer"><button type="button" class="btn" data-action="close">とじる</button></footer>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('[data-action="close"]').onclick = () => { hideTooltip(); overlay.remove(); };
+  overlay.querySelector('[data-action="start"]').onclick = () => { hideTooltip(); overlay.remove(); startChristmasChallenge(source); };
+  overlay.querySelector('[data-action="start"]').focus({preventScroll:true});
+}
+
+function startChristmasChallenge(source = christmasChallengeSource()) {
+  if (!G || !isChristmasActive() || !AREA_STAGES[source.areaId]?.stages[source.stageIndex]) return;
+  explore = {
+    stageMode:true, isChristmas:true, christmasIndex:0,
+    areaId:source.areaId, stageIndex:source.stageIndex,
+    isBoss:false, sessionDrops:[], sessionGold:0, stageDrops:[], stageGold:0, stageExp:0,
+    usedProblems:new Set()
+  };
+  startBattle(false);
+}
+
+function christmasBattleBackground(index) {
+  const stageIndex = Number(index) || 0;
+  return CHRISTMAS_EVENT.battleBackgrounds[stageIndex < 3 ? 0 : stageIndex < 6 ? 1 : 2];
+}
+
+function christmasBattleLocation(index) {
+  const stageIndex = Number(index) || 0;
+  return stageIndex < 3 ? 'ラップランドの森' : stageIndex < 6 ? 'サンタクロース村' : 'サンタの工房';
+}
+
+function generateChristmasEnemy(run) {
+  const index = Math.max(0, Math.min(CHRISTMAS_MONSTERS.length - 1, Number(run.christmasIndex) || 0));
+  const monster = CHRISTMAS_MONSTERS[index];
+  const grade = getDefaultAreaDifficultyMultiplier(run.areaId);
+  const isBoss = !!monster.isBoss;
+  const hp = Math.round(isBoss ? 36 + grade * 14 : 10 + grade * 4);
+  return {
+    name:monster.name, emoji:`assets/christmas/${monster.id}.png`,
+    maxHp:hp, hp, atk:Math.max(1, Math.round(isBoss ? 4 + grade * 2 : grade * 2)),
+    def:isBoss ? Math.max(1, Math.round(grade)) : 0, spd:5,
+    goldMin:2, goldMax:isBoss ? 12 : 5, exp:isBoss ? 12 : 5, isBoss
+  };
+}
+
+function proceedChristmasBattle() {
+  const run = explore;
+  const defeated = run.christmasIndex + 1;
+  const total = CHRISTMAS_MONSTERS.length;
+  showKillProgressPopup(defeated, defeated === total ? defeated + 1 : defeated, total, () => {
+    if (explore !== run) return;
+    if (defeated < total) {
+      run.christmasIndex = defeated;
+      startBattle(false);
+      return;
+    }
+    const rewards = {gold:run.sessionGold, exp:run.stageExp, drops:run.sessionDrops, milestoneRewards:[]};
+    G.player.hp = totalMaxHp(); G.player.mp = totalMaxMp();
+    explore = null;
+    save(true);
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay christmas-menu';
+    overlay.innerHTML = `<div class="panel christmas-event-card christmas-clear-card"><h2>🎄 サンタクロース村をまもった！</h2><p>8体の手先とブラックサンタを たおした！</p>${stageClearRewardsHtml(rewards)}<p class="flavor">よくがんばったね！ オーロラの村へ、またあそびにきてね。</p><button type="button" class="btn btn-primary" data-action="return-home">きょてんに もどる</button></div>`;
+    document.body.appendChild(overlay);
+    bindDropItemTooltips(overlay);
+    overlay.querySelector('[data-action="return-home"]').onclick = () => { hideTooltip(); overlay.remove(); showHome(); showChristmasMenu(); };
   });
 }
 
