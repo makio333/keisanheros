@@ -1,0 +1,84 @@
+{
+  "files": [
+    {
+      "path": "README.md",
+      "size_bytes": 4126,
+      "sha256": "a73e9ad1e703982b48b2850d26ae7c91b273dcf628e9a2055c3201344b0d1202"
+    },
+    {
+      "path": "assets/christmas/bell_ghost.png",
+      "size_bytes": 395461,
+      "sha256": "b29170ba926e20dc55e9dfd1460a72168a5ccdc0fcc37a46ad990eff035aa180"
+    },
+    {
+      "path": "assets/christmas/black_santa_boss_pixel.png",
+      "size_bytes": 1143729,
+      "sha256": "b1f583cb00c5b585c534b711cfba5b2a33f651a35cbc940c301497df0a2192b8"
+    },
+    {
+      "path": "assets/christmas/candy_cane_serpent.png",
+      "size_bytes": 400231,
+      "sha256": "bfa44cce3e9bbcf9123b3eeec51d91ff9b0f96dc0c2d91720587127cef3fe420"
+    },
+    {
+      "path": "assets/christmas/christmas_home_town.png",
+      "size_bytes": 3627823,
+      "sha256": "22a3ac5fe96d3a5c7881a10742427a466a954ce37d292187c7b10e5ff09a6953"
+    },
+    {
+      "path": "assets/christmas/christmas_tree_monster.png",
+      "size_bytes": 458835,
+      "sha256": "6520a4fae583c0922bcd9899be3d64d3d9751ba41cd7e04fa4d57025ed88bc1b"
+    },
+    {
+      "path": "assets/christmas/coal_gremlin.png",
+      "size_bytes": 362526,
+      "sha256": "324d72b00df6fa6b21b4b3482dbb9d57963db89b33c00a9d3f5dab63f5f49cc8"
+    },
+    {
+      "path": "assets/christmas/gift_mimic.png",
+      "size_bytes": 476093,
+      "sha256": "3862f2bd0e40abb475213c55d13ae2a058cbce5a2d18b749d0ed522a3bf3ed11"
+    },
+    {
+      "path": "assets/christmas/gingerbread_knight.png",
+      "size_bytes": 471740,
+      "sha256": "f0f0d093dfaabdbb7e5dcb3a71798c8f9d34185e14b2d682cdbf23514d9ff4f7"
+    },
+    {
+      "path": "assets/christmas/korvatunturi_workshop.png",
+      "size_bytes": 2618612,
+      "sha256": "70834a2f85ce5e5cd4c7be54b9763c367e12f7ec7a6de80bccda25204a7aaefb"
+    },
+    {
+      "path": "assets/christmas/lapland_reindeer_trail.png",
+      "size_bytes": 2590503,
+      "sha256": "b0c9bc6dd9ca28e5a89a69cd88d307297b984933a46967f15d85f672f471a866"
+    },
+    {
+      "path": "assets/christmas/naughty_reindeer.png",
+      "size_bytes": 489399,
+      "sha256": "e346988556e926988e2b6a8c260b1c6111fe5433c9eee652e43f4caa32545a16"
+    },
+    {
+      "path": "assets/christmas/nutcracker_soldier.png",
+      "size_bytes": 435848,
+      "sha256": "60f180caec3c927ce7a4ab572464fa445fd7b203a8b4ff0e36384b7e369f99b3"
+    },
+    {
+      "path": "assets/christmas/rovaniemi_santa_village.png",
+      "size_bytes": 2391289,
+      "sha256": "b297ec2c8f8a7582e9271199c509b54e03a105569e257a46c8f0b28c95defb5a"
+    },
+    {
+      "path": "christmas-stage.patch",
+      "size_bytes": 25190,
+      "sha256": "7aea913db9c1ccfc8224cc494e56fb118be4779b568ed5efb3c9688b2ff58d2e"
+    },
+    {
+      "path": "preview-christmas-stage.mjs",
+      "size_bytes": 2031,
+      "sha256": "522f3c76ae62cde052dcd4ffb23e1fbccad7e752ccba39cc3b28b90dbf9e4475"
+    }
+  ]
+}
