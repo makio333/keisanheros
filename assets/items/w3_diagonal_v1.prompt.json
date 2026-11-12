@@ -1,0 +1,6 @@
+{
+  "mode": "built-in image_gen edit",
+  "asset": "w3_diagonal_v1.png",
+  "reference": "w3.png",
+  "prompt": "Use case: precise-object-edit. Edit target: the attached vertical steel sword pixel-art icon. Change ONLY its orientation and framing: rotate the entire existing sword clockwise by approximately 45 degrees so the pommel and brown grip sit at the LOWER LEFT and the steel blade tip points to the UPPER RIGHT, matching standard RPG inventory diagonal weapon icons. Preserve the original exact weapon identity: slim dark bluish steel double-edged straight blade, bright silver edge highlights, small bronze/gold crossguard with center triangle, dark brown wrapped grip, silver-and-gold round pommel. Preserve the same pixel-art drawing, colors, proportions, material details, visible crisp pixel clusters and outline. Do not redesign, thicken, ornament, replace the blade, or add magic effects. Show ONE complete sword with no clipping, centered in a square canvas, longest diagonal spanning about 85% of the square. True transparent alpha background, no shadow, no text, no frame, no checkerboard drawing. Rotation of the existing item rather than a new sword design."
+}

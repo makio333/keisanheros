@@ -777,7 +777,7 @@
     {
       "id": "w3",
       "name": "はがねの剣",
-      "icon": "assets/items/w3.png",
+      "icon": "assets/items/w3_diagonal_v1.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 3,
@@ -806,7 +806,7 @@
     {
       "id": "w3",
       "name": "はがねの剣",
-      "icon": "assets/items/w3.png",
+      "icon": "assets/items/w3_diagonal_v1.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 5,
@@ -835,7 +835,7 @@
     {
       "id": "w3",
       "name": "はがねの剣",
-      "icon": "assets/items/w3.png",
+      "icon": "assets/items/w3_diagonal_v1.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 6,
@@ -864,7 +864,7 @@
     {
       "id": "w3",
       "name": "はがねの剣",
-      "icon": "assets/items/w3.png",
+      "icon": "assets/items/w3_diagonal_v1.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 9,
@@ -893,7 +893,7 @@
     {
       "id": "w3",
       "name": "はがねの剣",
-      "icon": "assets/items/w3.png",
+      "icon": "assets/items/w3_diagonal_v1.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 13,

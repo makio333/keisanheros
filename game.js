@@ -3010,7 +3010,7 @@ const EQUIP_DB = [
   // 武器
   { id:'w1', name:'木の剣', slot:'weapon', opTier:'add1', stat:{atk:2}, price:20, cost:1, emoji:'assets/event-pixel/wood_sword.png' },
   { id:'w2', name:'どうの剣', slot:'weapon', opTier:'add2', stat:{atk:4}, price:35, cost:2, emoji:'assets/event-pixel/copper_sword.png' },
-  { id:'w3', name:'はがねの剣', slot:'weapon', opTier:'add3', stat:{atk:7}, price:60, cost:3, emoji:'assets/items/w3.png' },
+  { id:'w3', name:'はがねの剣', slot:'weapon', opTier:'add3', stat:{atk:7}, price:60, cost:3, emoji:'assets/items/w3_diagonal_v1.png' },
   { id:'w4', name:'ほのおの斧', slot:'weapon', opTier:'add4', stat:{atk:9}, price:80, cost:4, emoji:'assets/items/w4.png' },
   { id:'w5', name:'いなずまの太刀', slot:'weapon', opTier:'sub3', stat:{atk:13}, price:120, cost:6, emoji:'assets/event-pixel/thunder_katana.png' },
   { id:'w6', name:'まけんグラム', slot:'weapon', opTier:'sub4', stat:{atk:15}, price:140, cost:7, emoji:'assets/items/w6_right.png' },
