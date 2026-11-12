@@ -1,0 +1,10 @@
+{
+  "mode": "built-in image_gen",
+  "date": "2026-11-12",
+  "asset": "present_rescue_banner_v2.png",
+  "references": [
+    "present_rescue_banner_v1.png",
+    "black_santa_boss_pixel.png"
+  ],
+  "prompt": "Use case: illustration-story. Edit target: Image 1 existing Christmas event banner. Supporting character reference: Image 2 Black Santa villain, preserve his purple-black coat, red zigzag trim, white beard and sinister eyebrows. Primary request: replace the cheerful delivery parade with an unmistakable scene of chasing thieves to recover stolen presents. Keep a very wide panoramic banner, approximately 3:1 aspect ratio, snowy northern village at night, pixel-art RPG aesthetic with crisp visible pixel clusters, aurora sky and warmly lit timber houses matching the original. Narrative: on the RIGHT, Black Santa and two small coal gremlin henchmen flee toward the dark snowy forest carrying a bulging stolen sack and an armful of bright red gift boxes with gold ribbons; one present falls onto the snow and footprints mark their escape. Black Santa glances back with a sly villainous grin. On the LEFT and CENTER, the blue-cloaked young adventurer and red winter-clad girl from the original sprint after them with determined, concerned faces, arms reaching toward the stolen gifts, not holding gifts or smiling in celebration. Far left by the village gate, the normal red Santa looks alarmed beside an emptied gift sleigh, pointing after the thieves. Clear visual separation between victims/heroes and escaping thieves, strong left-to-right pursuit movement, stolen presents central to storytelling. Mood: urgent adventurous rescue mission, child-friendly and readable at small banner size, no horror, injury, violence, no victory celebration or cheerful delivery procession. Preserve the existing scenic pixel-art style, warm village versus cold forest contrast. Opaque full-bleed landscape illustration. No lettering, no captions, no logos, no borders, no UI."
+}

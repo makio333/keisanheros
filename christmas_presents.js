@@ -1,7 +1,7 @@
 // Christmas's only event currency. This module has no browser or storage side effects.
 export const CHRISTMAS_EVENT_ID='christmas_2026';
 export const CHRISTMAS_PRESENT_ICON='assets/christmas/present_box_token_v1.png';
-export const CHRISTMAS_STORY_BANNER='assets/christmas/present_rescue_banner_v1.png';
+export const CHRISTMAS_STORY_BANNER='assets/christmas/present_rescue_banner_v2.png';
 const CHRISTMAS_EXCHANGE_EQUIPMENT=[
  {id:'christmas_exchange_candy_sword',name:'サンタのキャンディソード',costs:[10,20,30],ability:'crit_up'},
  {id:'christmas_exchange_aurora_mantle',name:'聖夜のオーロラマント',costs:[15,25,40],ability:'guard'},
