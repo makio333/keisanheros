@@ -10572,7 +10572,7 @@ function renderEquipmentGachaControls() {
   const tickets = G.equipGachaTenPullTickets || 0;
   $('equip-gacha-tickets').textContent = tickets;
   $('btn-gacha-ticket').disabled = equipmentGachaRolling || tickets < 1;
-  const entry = db => `<button type="button" class="skin-gacha-theme equipment-gacha-preview" data-equip-id="${db.id}" aria-label="${db.name}の抽選レアリティと性能を表示"><span class="equipment-card-icon rarity-3" style="display:block;position:relative;width:88px;height:88px;flex:0 0 88px;margin:0 auto">${equipmentCardLayers(db,3,64)}</span><b>${db.name}</b><span>${SLOT_LABELS[db.slot]}</span><span class="equipment-gacha-rates"><i class="rarity-3">★3 9%</i><i class="rarity-4">★4 0.7%</i><i class="rarity-5">★5 0.3%</i></span></button>`;
+  const entry = db => `<button type="button" class="skin-gacha-theme equipment-gacha-preview" data-equip-id="${db.id}" aria-label="${db.name}の抽選レアリティと性能を表示"><span class="equipment-card-icon rarity-3" style="display:block;position:relative;width:88px;height:88px;flex:0 0 88px;margin:0 auto;box-sizing:border-box;border:2px solid var(--equip-tone,#ffe066);border-radius:8px">${equipmentCardLayers(db,3,64)}</span><b>${db.name}</b><span>${SLOT_LABELS[db.slot]}</span><span class="equipment-gacha-rates"><i class="rarity-3">★3 9%</i><i class="rarity-4">★4 0.7%</i><i class="rarity-5">★5 0.3%</i></span></button>`;
   $('equipment-gacha-featured').innerHTML = LIMITED_EQUIP_DB.map(entry).join('');
   $('equipment-gacha-collection').innerHTML = EQUIP_DB.filter(db => !db.assist).map(entry).join('');
   document.querySelectorAll('.equipment-gacha-preview').forEach(button => {
@@ -10592,7 +10592,7 @@ function renderChristmasEquipmentGachaControls() {
     const badge = db.id.startsWith('christmas_')
       ? '<span class="christmas-equipment-badge">限定ピックアップ</span>'
       : gachaExclusiveIds.has(db.id) ? '<span class="christmas-equipment-badge is-standard">ガチャ限定装備</span>' : '';
-    return `<button type="button" class="skin-gacha-theme equipment-gacha-preview christmas-equipment-gacha-preview" data-equip-id="${db.id}" aria-label="${db.name}の抽選レアリティと性能を表示"><span class="equipment-card-icon rarity-3" style="display:block;position:relative;width:88px;height:88px;flex:0 0 88px;margin:0 auto">${equipmentCardLayers(db,3,64)}</span><b>${db.name}</b>${badge}<span>${SLOT_LABELS[db.slot]}</span><span class="equipment-gacha-rates">${db.id.startsWith('christmas_')?'限定枠 合計20%':'通常枠 合計80%'}</span></button>`;
+    return `<button type="button" class="skin-gacha-theme equipment-gacha-preview christmas-equipment-gacha-preview" data-equip-id="${db.id}" aria-label="${db.name}の抽選レアリティと性能を表示"><span class="equipment-card-icon rarity-3" style="display:block;position:relative;width:88px;height:88px;flex:0 0 88px;margin:0 auto;box-sizing:border-box;border:2px solid var(--equip-tone,#ffe066);border-radius:8px">${equipmentCardLayers(db,3,64)}</span><b>${db.name}</b>${badge}<span>${SLOT_LABELS[db.slot]}</span><span class="equipment-gacha-rates">${db.id.startsWith('christmas_')?'限定枠 合計20%':'通常枠 合計80%'}</span></button>`;
   };
   $('christmas-equipment-gacha-featured').innerHTML = CHRISTMAS_EQUIP_DB.filter(db=>!christmasExchangeOnly(db.id)).map(entry).join('');
   $('christmas-equipment-gacha-collection').innerHTML = [...LIMITED_EQUIP_DB,...EQUIP_DB.filter(db => !db.assist)].map(entry).join('');
