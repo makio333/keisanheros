@@ -10618,6 +10618,8 @@ function closeGachaArtworkPreview() {
 function presentGachaArtworkPreview() {
   hideTooltip();
   const modal = $('skin-gacha-preview-modal');
+  // Keep the shared preview outside scrolling/positioned game panels.
+  if(modal.parentElement!==document.body)document.body.appendChild(modal);
   if (modal.classList.contains('hidden')) gachaPreviewPreviousFocus = document.activeElement;
   modal.classList.remove('hidden');
   $('btn-skin-gacha-preview-close').focus({preventScroll:true});
