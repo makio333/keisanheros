@@ -1,0 +1,7 @@
+<!doctype html><html lang="ja"><meta charset="utf-8"><title>文章問題 印刷V2 独立検証</title><link rel="stylesheet" href="word_problem_print_layout_v2.css"><style>body{margin:0;background:#ddd}.wpp2-controls{padding:16px;background:white;font:16px sans-serif}button,a{margin-right:16px}</style><div class="wpp2-controls">独立見本・架空教材のみ　<button id="print" disabled>印刷</button><a href="?subject=math">算数</a><a href="?subject=japanese&vertical=1">国語縦書き</a><a href="?subject=japanese">国語横書き</a><a href="?subject=math&teacher=1">指導者解答</a><span id="status"></span></div><main id="preview"></main><script type="module">
+import {renderWordProblemPrintV2,paginateWordProblemPrintV2} from './word_problem_print_layout_v2.js';
+import {fixture} from './tests/word_problem_print_layout_v2/fixtures.js';
+const params=new URLSearchParams(location.search);const config=fixture(params);document.querySelector('#preview').innerHTML=renderWordProblemPrintV2(config);
+try{const result=await paginateWordProblemPrintV2(document.querySelector('.wpp2-root'));document.querySelector('#status').textContent=`${result.pages}ページ / ${result.mode}`;document.querySelector('#print').disabled=false;window.wpp2Ready=result;}catch(e){document.querySelector('#status').textContent=e.message;window.wpp2Error=e.message;}
+document.querySelector('#print').onclick=()=>window.print();
+</script></html>

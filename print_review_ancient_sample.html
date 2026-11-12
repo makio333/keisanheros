@@ -1,0 +1,17 @@
+<!doctype html><html lang="ja"><meta charset="utf-8"><title>古代からの挑戦状・テスト見本</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/word_problem_print_layout_v2.css?v=20261107-kanji-context">
+<style>body{margin:0;background:#e7e7e7;color:#111}.controls{padding:16px;background:#fff;font:15px/1.7 sans-serif}button,select{font:inherit;padding:7px;margin:0 8px}#preview{width:max-content;min-width:100%}@media print{.controls{display:none}body{background:#fff}#preview{width:auto;min-width:0}}</style>
+<nav class="controls"><b>古代からの挑戦状・確認用テスト1</b><br>3年生相当／計算10問・文章問題3問・漢字の読み5問・書き5問・読解5問。実際のアイテム消費・保存・報酬付与はありません。<br><label>表示<select id="mode"><option value="student">児童用</option><option value="teacher">先生用解答</option></select></label><button id="print" disabled>印刷</button><span id="status" role="status">準備中…</span></nav><main id="preview"></main>
+<script src="/kanji_data.js"></script><script type="module">
+import {ancientPrintPlanV2,paginateAncientAutomaticV2} from './ancient_word_problem_print_adapter_v2.js';
+import {JAPANESE_READING_QUESTS_V2} from './japanese_reading_quests_v2.js';
+import {MATH_WORD_QUESTS_V2} from './math_word_quests_v2.js';
+import {kanjiPrintContext} from './kanji_print_context.js';
+const calculations=[['248 + 135','383'],['602 − 278','324'],['36 × 4','144'],['72 ÷ 8','9'],['125 + 387','512'],['800 − 456','344'],['24 × 3','72'],['63 ÷ 7','9'],['147 + 256','403'],['504 − 168','336']].map(([text,answer])=>({text,answer}));
+const math=MATH_WORD_QUESTS_V2.filter(p=>p.grade===3),pool=window.KANJI_POOLS.kanji_g3;
+const kanji=p=>({...p,printContext:kanjiPrintContext(p)});
+const data={name:'確認用の勇者',printId:'TEST-ANCIENT-001',grade:3,calculations,stories:[math[0],math[2],math.find(p=>p.id==='mwq-v2-g3-023')].map(p=>({text:p.text,answer:p.answerDisplay,sourceId:p.id})),readings:pool.slice(0,5).map(kanji),writings:pool.slice(10,15).map(kanji),readingPassage:JAPANESE_READING_QUESTS_V2.find(p=>p.grade===3)};
+const plan=ancientPrintPlanV2(data);window.ancientSampleData=data;window.ancientSamplePlan=plan;
+const mode=document.querySelector('#mode');mode.value=new URLSearchParams(location.search).get('mode')==='teacher'?'teacher':'student';
+async function render(){window.reviewReady=false;document.querySelector('#print').disabled=true;const host=document.querySelector('#preview');host.innerHTML=mode.value==='teacher'?plan.teacherHtml:plan.automaticStudentHtml;const pages=await paginateAncientAutomaticV2(host);document.querySelector('#status').textContent=`全28問・23問以上正解で古代装備／${pages}ページ・両面2枚（${mode.value==='teacher'?'先生用解答':'児童用'}）`;document.querySelector('#print').disabled=false;window.reviewReady=true;}
+mode.onchange=()=>render().catch(fail);document.querySelector('#print').onclick=()=>window.print();function fail(error){window.reviewError=error.message;document.querySelector('#status').textContent=error.message;}render().catch(fail);
+</script></html>

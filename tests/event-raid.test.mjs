@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import {raidResumeStage} from '../economy.js';
 import {EVENT_RAID_FINAL_AT,EVENT_RAID_RULES,EVENT_RAID_BONUSES,EventRaidRun,eventRaidTargetCount,sampleEventRaidTargets,rankEventRaidRecords,eventRaidRewardEntitlements,eventRaidBonusEntitlements,eventRaidGaugeRatio,formatEventRaidTime} from '../event_raid.js';
 
-for(const ms of [0,10000,10001,20000,20001,30000,90000]) assert.equal(eventRaidTargetCount(ms),3);
+for(const [ms,count] of [[0,4],[10000,4],[10001,3],[20000,3],[20001,2],[30000,2],[90000,2]]) assert.equal(eventRaidTargetCount(ms),count);
 const run=new EventRaidRun(1000,EVENT_RAID_RULES,()=>0.99);
 assert.equal(run.endsAt,121000); assert.equal(run.enemies.length,7);
 assert.ok(run.enemies.every(enemy=>enemy.monsterIndex===6),'random enemies never select boss index seven');
@@ -16,7 +16,7 @@ assert.deepEqual([growth.enemies[0].hp,growth.enemies[0].atk,growth.enemies[0].d
 assert.equal(survivor.hp,6,'survivors do not heal when another enemy dies');
 assert.equal(survivor.level,1,'survivors retain their original visible level');
 for(const kills of [5,10,25,50]) {growth.kills=kills;const enemy=growth.spawn(0);assert.deepEqual([enemy.hp,enemy.atk,enemy.def,enemy.level],[10+5*kills,2+kills,kills,kills+1]);}
-for(let i=0;i<5;i++) {run.beginQuestion(1000);const answer=run.answer(true,1100,()=>0);assert.equal(answer.targets.length,3);assert.equal(answer.special,false);assert.equal(new Set(answer.targets).size,3);assert.equal(run.answer(true,1100),null,'double submission is ignored');}
+for(let i=0;i<5;i++) {run.beginQuestion(1000);const answer=run.answer(true,1100,()=>0);assert.equal(answer.targets.length,4);assert.equal(answer.special,false);assert.equal(new Set(answer.targets).size,4);assert.equal(run.answer(true,1100),null,'double submission is ignored');}
 assert.equal(run.charge,5);
 run.beginQuestion(2000); assert.equal(run.answer(false,3000).correct,false);assert.equal(run.charge,5,'wrong answers retain ready charge');
 run.beginQuestion(3000);const special=run.answer(true,3300,()=>0.99);assert.equal(special.targets.length,7);assert.equal(special.special,true);assert.equal(run.charge,0);
@@ -68,7 +68,7 @@ const context=vm.createContext({EVENT_RAID_FINAL_AT,EVENT_RAID_RULES,EventRaidRu
  AREA_STAGES:{area1:{stages:[{}]},area2:{stages:[{},{}]},area14:{stages:[{},{},{},{}]}},raidReviewCandidates(){return [];},stageDropDifficulty(_area,stage){return stage;},
  startChallenge(_container,opts,callback){context.questionCallback=callback;context.challengeOptions=opts;}
  ,effectiveAtk:()=>5,basicAttackDamage:atk=>atk,equippedAncientIds:()=>new Set(),equippedAbilities:()=>new Set(),calcSpdRate:()=>0,totalStat:()=>0,ancientCritBonus:()=>0,
- BALANCE:{atkMinRatio:.3,critMult:2},renderEventRaidBattleHud(){},ancientDamageReduction:damage=>damage,playEventRaidUltimate(){}
+ BALANCE:{atkMinRatio:.3,timeBonus:.2,critMult:2},renderEventRaidBattleHud(){},ancientDamageReduction:damage=>damage,playEventRaidUltimate(){}
 });
 vm.runInContext(source.slice(source.indexOf('function applyEventRaidRewards('),source.indexOf('async function syncEventRaidRecord(')),context);
 vm.runInContext(source.slice(source.indexOf('const EVENT_RAID_MATH_AREA_IDS='),source.indexOf('function eventRaidEnemy(')),context);
@@ -90,16 +90,16 @@ context.startEventRaidQuestion();
 let gauge=element('event-raid-gauge');
 assert.equal(context.challengeOptions.problem.text,'既存チャレンジの問題');assert.equal(context.challengeOptions.showBattleCommands,false);
 assert.equal(context.battle.season2Question,null,'enemy numbers are not used as answers');
-assert.equal(gauge.attrs['aria-valuenow'],'3');
-assert.equal(gauge.querySelector('i').style.width,'75%');
-now=uiStart+5000;delayed[0]();assert.equal(gauge.querySelector('i').style.width,'75%','target count stays fixed while answering');
-now=uiStart+20001;delayed[0]();assert.equal(gauge.attrs['aria-valuenow'],'3');
+assert.equal(gauge.attrs['aria-valuenow'],'4');
+assert.equal(gauge.querySelector('i').style.width,'100%');
+now=uiStart+5000;delayed[0]();assert.equal(gauge.querySelector('i').style.width,'87.5%','blue gauge animates before the target count changes');
+now=uiStart+20001;delayed[0]();assert.equal(gauge.attrs['aria-valuenow'],'2');
 const beeps=[];context.SM.playBeep=type=>beeps.push(type);
 context.challengeOptions.onAnswered(20001,true);assert.deepEqual(beeps,[],'raid does not overlay a second chime on the normal challenge success sound');
 let oldQuestion=context.questionCallback;
 oldQuestion({success:true,elapsedMs:20001});assert.equal(uiRun.enemies.filter(e=>e.hp===5).length,1,'only the first target is hit immediately');
 assert.equal(pendingTimeouts[0].ms,120,'subsequent hits are paced');
-flushAttacks();assert.equal(uiRun.enemies.filter(e=>e.hp===5).length,3,'gauge and actual targets agree');
+flushAttacks();assert.equal(uiRun.enemies.filter(e=>e.hp===5).length,2,'gauge and actual targets agree');
 assert.ok(context.battle.eventRaidQuestion);oldQuestion({success:true});assert.equal(uiRun.charge,1,'stale question callbacks are ignored');
 context.questionCallback({success:false,elapsedMs:1000});assert.equal(uiRun.charge,1);assert.equal(context.G.player.hp,5);
 flushAttacks();uiRun.charge=5;
@@ -145,18 +145,18 @@ now=kanaRun.endsAt;flushAttacks();assert.equal(kanaRun.kills,1,'expiry cancels r
 pendingTimeouts=[];const gearedRun=new EventRaidRun(now,EVENT_RAID_RULES,()=>0);
 context.explore={isEventRaid:true,eventRaid:gearedRun};context.battle={enemies:gearedRun.enemies,over:false};
 context.Math=Object.create(Math);context.Math.random=()=>0;
-context.effectiveAtk=()=>20;context.startEventRaidQuestion();context.questionCallback({success:true,elapsedMs:1000});
+context.effectiveAtk=()=>20;context.startEventRaidQuestion();context.questionCallback({success:true,elapsedMs:1000,timeFrac:1});
 assert.equal(gearedRun.kills,1,'equipped attack power replaces fixed five damage');
 assert.equal(element('event-raid-kill-counter').textContent,'1体討伐！');flushAttacks();
-assert.equal(gearedRun.kills,3);assert.equal(element('event-raid-kill-counter').textContent,'3体討伐！');
+assert.equal(gearedRun.kills,4);assert.equal(element('event-raid-kill-counter').textContent,'4体討伐！');
 now+=5000;context.renderEventRaidBattleHud(gearedRun);assert.equal(element('event-raid-digital-timer').textContent,'01:55');
 for(const enemy of gearedRun.enemies){enemy.hp=100;enemy.maxHp=100;enemy.def=0;}
 context.effectiveAtk=()=>5;context.equippedAncientIds=()=>new Set(['anc_w1']);
-context.questionCallback({success:true,elapsedMs:1000});flushAttacks();
-assert.equal(gearedRun.enemies.reduce((sum,e)=>sum+100-e.hp,0),24,'ancient dual swords retain two 0.8-power hits on each target');
+context.questionCallback({success:true,elapsedMs:1000,timeFrac:0});flushAttacks();
+assert.equal(gearedRun.enemies.reduce((sum,e)=>sum+100-e.hp,0),32,'ancient dual swords retain two 0.8-power hits on each target');
 for(const enemy of gearedRun.enemies){enemy.hp=100;enemy.def=4;}
-context.questionCallback({success:true,elapsedMs:1000});flushAttacks();
-assert.equal(gearedRun.enemies.reduce((sum,e)=>sum+100-e.hp,0),6,'increased enemy defense reduces actual outgoing damage');
+context.questionCallback({success:true,elapsedMs:1000,timeFrac:0});flushAttacks();
+assert.equal(gearedRun.enemies.reduce((sum,e)=>sum+100-e.hp,0),8,'increased enemy defense reduces actual outgoing damage');
 for(const enemy of gearedRun.enemies)enemy.atk=12;
 context.G.player.hp=100;context.eventRaidCounterattack(context.battle);assert.equal(context.G.player.hp,73,'higher attack power increases retaliation damage');
 context.totalStat=()=>5;context.eventRaidCounterattack(context.battle);assert.equal(context.G.player.hp,51,'player defense mitigates retaliation');
@@ -186,7 +186,7 @@ kanjiState.rewardClaims['kills:25']=true;assert.equal(modeContext.eventRaidState
 modeContext.eventState=JSON.parse(JSON.stringify(modeContext.eventState));
 assert.equal(modeContext.eventRaidState('kanji').rewardClaims['kills:10'],true,'shared reward claims survive reload');
 assert.equal(formatEventRaidTime(0),'00:00');assert.equal(formatEventRaidTime(59999),'01:00');
-assert.equal(eventRaidGaugeRatio(20000),.75);assert.equal(eventRaidGaugeRatio(30000),.75,'target gauge stays fixed while answering');
-console.log('PASS: 120 seconds, fixed three-target attacks, unique random targets, five-charge/seventh-target special, wrong-answer retention, kills only, refill, gauge, stale callbacks, HP end, tied ranks and bounded rewards');
+assert.equal(eventRaidGaugeRatio(20000),.5);assert.equal(eventRaidGaugeRatio(30000),.5,'two-target minimum remains visible');
+console.log('PASS: 120 seconds, 4/3/2 targets, unique random targets, five-charge/seventh-target special, wrong-answer retention, kills only, refill, gauge, stale callbacks, HP end, tied ranks and bounded rewards');
 
 context.state.lastKanjiStage=12;context.startEventRaidBattle(null,'kanji');assert.equal(context.explore.eventRaid.startAnswerCount,50,'restart two stages before the last reached stage');assert.equal(context.explore.areaId,'area7');assert.equal(context.explore.stageIndex,0);

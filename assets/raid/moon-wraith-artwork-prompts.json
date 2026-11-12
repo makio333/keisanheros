@@ -1,0 +1,54 @@
+[
+  {
+    "id": "moon_court",
+    "file": "assets/raid/moon_court.png",
+    "prompt": "Create a new 16:9 JRPG pixel-art battle background: the Moon Wraith King's moonlit ruined silver palace courtyard, violet night sky, enormous pale moon behind distant broken gothic arches, cyan will-o-wisp lanterns at far sides, misty stone tiles and shallow reflective pools. No characters, no boss, no text, no UI. Center upper-middle has clean open space for large floating ghost king, lower 45% a spacious simple empty stone battleground for game overlays. Match polished colorful Japanese fantasy pixel art: large readable square pixel clusters, limited deep violet/silver/cyan palette, crisp edges, no photographic or painted blur. It will also be unlockable avatar background.",
+    "tool": "built-in image_gen",
+    "references": []
+  },
+  {
+    "id": "moon_blade",
+    "file": "assets/raid/moon_blade.png",
+    "prompt": "Edit this reference equipment into a distinct new ghost-king raid sword called Moonseal Blade. Preserve coarse 128x128 logical pixel art density, 24-32 colors, 1 logical pixel dark outline, 3-4 flat shades per material. Replace all pumpkin/fire motifs with silver crescent guard, icy cyan spectral blade and violet grip, a small teal jewel; pointed blade upper right, grip lower left. Single item fills84% square, centered, actual transparent alpha, no floor/no card/no background/no checkerboard/no text. Individual new bitmap weapon, not a recolor of pumpkin sword; elegant broad silver blade with crescent cutout silhouette.",
+    "tool": "built-in image_gen",
+    "references": [
+      "assets/halloween/equip_pumpkin_blade.png"
+    ]
+  },
+  {
+    "id": "moon_mantle",
+    "file": "assets/raid/moon_mantle.png",
+    "prompt": "Edit this reference mantle into a distinct new armor item for the Moon Wraith King's raid: Spiritward Mantle. Same coarse128x128 logical pixel grid density, 24-32 colors, 1px dark outline, 3-4 flat shades. Hoodless short silver-white shoulder mantle over deep-violet long cloth, chunky silver crescent clasp, cyan ward rune trim in large clusters. No pumpkin/orange/fire. One standalone empty wearable garment, no wearer. Fills84% square, actual alpha transparency, no background, no card, no floor/no text.",
+    "tool": "built-in image_gen",
+    "references": [
+      "assets/halloween/equip_witch_mantle.png"
+    ]
+  },
+  {
+    "id": "moon_charm",
+    "file": "assets/raid/moon_charm.png",
+    "prompt": "Edit this reference amulet into a distinct new ghost-king raid accessory: Soul Lantern Charm. Same128x128 logical pixel density, 24-32colors, 1px dark outline, flat3-4shades. Short dark violet chain holds a chunky silver lantern pendant, large pale cyan friendly spirit-flame enclosed inside, crescent top. Silver/cyan/violet only. One centered standalone accessory fills84% square, actual alpha transparent background, no card/no floor/no text. Big readable silhouette at48px and88px.",
+    "tool": "built-in image_gen",
+    "references": [
+      "assets/halloween/equip_moon_charm.png"
+    ]
+  },
+  {
+    "id": "spirit_guardian",
+    "file": "assets/raid/spirit_guardian.png",
+    "prompt": "Transform this reference character into a new distinct anti-evil-spirit hero skin named Moonward Exorcist. Keep full-body friendly chibi JRPG proportions, whole character and boots in frame, bottom centered, clearly visible confident young male hero with dark indigo hair, silver-white exorcist coat over violet tunic, cyan crescent ward emblems, one silver sword and one small spirit lantern. Strong readable silhouettes, coarse colorful pixel art with visible square clusters consistent with128px logical game sprites, limited silver/violet/cyan colors and flat shading; no fine painted texture. Real transparent alpha; no floor, no backdrop, no card, no text. Courageous child-safe fantasy hero, not a ghost.",
+    "tool": "built-in image_gen",
+    "references": [
+      "assets/raid/raid_star_guardian.png"
+    ]
+  },
+  {
+    "id": "moon_frame",
+    "file": "assets/raid/moon_frame.png",
+    "prompt": "Redraw this frame natively as square1:1 thin corner ornaments for Moon Wraith King raid. Keep coarse128x128 logical pixel grid, 24-32 colors, dark outline, flat3shades, actual alpha. Replace all magma with silver/cyan crescent moons and tiny will-o-wisp flames ONLY at extreme four corners. Thin silver straight connectors <=3 logical pixels, within outer10% edge strip. Each corner within20% canvas. Central56% square x/y22-78% AND face rectangle x22-78% y15-60% entirely alpha transparent. No central crown/moon/gem, no dangling ornaments, no wide border, no solid interior/background, no text. Preserve empty space for full character avatar. Large readable corner clusters at48px88px.",
+    "tool": "built-in image_gen",
+    "references": [
+      "assets/frames-thin/raid_starlight.png"
+    ]
+  }
+]

@@ -1,0 +1,8 @@
+<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="icon" href="data:,"><title>レイド開始演出・独立見本</title><style>body{margin:0;background:#101c30;color:#e8f5ff;font:18px system-ui;padding:32px}button{padding:16px 24px;font:inherit}p{max-width:650px;line-height:1.8}</style><h1>レイド開始演出</h1><p>独立した表示見本です。レベルとHPはテスト用の仮データです。</p><button id="start-btn">幽霊王の登場を見る</button><p id="status">待機中</p><script type="module">
+import {createRaidBossIntro} from './raid_boss_intro.js';
+const fixture=Object.freeze({name:'月影の幽霊王',level:120,hp:7284500,maxHp:10000000,image:'assets/raid/raid_boss_halloween_moon_wraith.png'});
+const intro=createRaidBossIntro(); let mode='idle',completions=0;
+window.introPreview={intro,fixture,start(data=fixture,options={}){mode='intro';return intro.play(data,options).then(result=>{mode=result.status==='cancelled'?'idle':'battle-preview';document.querySelector('#status').textContent=result.status==='cancelled'?'演出を中断しました':'戦闘開始（見本のみ）';return result})}};
+document.querySelector('#start-btn').onclick=()=>window.introPreview.start();
+window.render_game_to_text=()=>JSON.stringify({mode,playing:intro.playing,fixture:true,level:fixture.level,hp:fixture.hp});
+</script></html>

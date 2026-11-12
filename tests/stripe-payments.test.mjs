@@ -52,7 +52,8 @@ try{
   assert.equal((await checkout()).status,200);await checkout();
   assert.equal(checkouts.size,1);assert.equal(calls[0].params.mode,'payment');assert.equal(calls[0].params.client_reference_id,idA);
   assert.deepEqual(calls[0].params.line_items,[{price:price.id,quantity:1}]);
-  assert.equal(calls[0].options.idempotencyKey,calls[1].options.idempotencyKey);
+  assert.equal(calls.length,1,'existing open checkout is retrieved instead of recreated');
+  assert.deepEqual(calls[0].params.adaptive_pricing,{enabled:false},'fixed JPY prices must not be localized');
   assert.equal((await checkout('organization10')).status,409,'parallel plan purchases cannot reuse the same upgrade credit');
   assert.equal((await payments.accounts.summary(session)).saveLimit,0,'opening checkout never grants access');
   await assert.rejects(payments.accounts.applyPurchaseEvidence({accountId:idA,eventId:'forged',purchaseId:'forged',productId:'personal'}),/unverified_purchase/);
@@ -113,6 +114,16 @@ try{
   assert.equal((await signed({...event,id:'evt_direct_org',data:{object:{id:direct.id}}})).status,200);
   assert.equal((await payments.accounts.summary(second)).saveLimit,30,'organization can be the first purchase');
   assert.equal((await payments.accounts.listSaves(second)).length,0,'no other purchaser saves are imported');
+  const failedOwner=(await db.auth.resolveIdentity({provider:'line',providerId:'fixture',subject:'failed-payment'})).accountId,failedSession='f'.repeat(64);
+  await db.sessions.create(failedSession,{accountId:failedOwner,expiresAt:Date.now()+86400000});
+  await payments.checkout(failedSession);let failedCheckout=[...checkouts.values()].at(-1);failedCheckout.status='complete';
+  const failedEvent={...event,id:'evt_async_failed',type:'checkout.session.async_payment_failed',data:{object:{id:failedCheckout.id}}};
+  assert.equal((await signed(failedEvent)).status,200);assert.equal((await signed(failedEvent)).status,200);assert.equal((await payments.checkoutStatus(failedSession)).state,'failed');assert.equal((await payments.accounts.summary(failedSession)).saveLimit,0);
+  await payments.checkout(failedSession);const expiredCheckout=[...checkouts.values()].at(-1);assert.notEqual(expiredCheckout.id,failedCheckout.id);expiredCheckout.status='expired';
+  assert.equal((await signed({...event,id:'evt_expired',type:'checkout.session.expired',data:{object:{id:expiredCheckout.id}}})).status,200);assert.equal((await payments.checkoutStatus(failedSession)).state,'cancelled');
+  await payments.checkout(failedSession);const recovered=[...checkouts.values()].at(-1);recovered.status='complete';recovered.payment_status='paid';
+  const recoveredEvent={...event,id:'evt_recovered',data:{object:{id:recovered.id}}};await signed(recoveredEvent);await signed(recoveredEvent);assert.equal((await payments.checkoutStatus(failedSession)).state,'paid');assert.equal((await db.transaction(tx=>tx.listPurchases(failedOwner))).length,1);
+  assert.equal((await fetch(origin+'/api/payments/status')).status,401);
   const plans=Object.entries(PURCHASE_PRICES);
   for(const [fromId,from] of plans)for(const [toId,to] of plans){
     if(to.saveLimit>from.saveLimit){

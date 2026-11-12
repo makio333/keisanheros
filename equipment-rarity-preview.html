@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>装備アイコン レアリティ見本</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background: #10141d;
+      color: #f3f5fa;
+      font-synthesis: none;
+      --panel: #191f2b;
+      --line: #303949;
+      --muted: #a8b1c1;
+      --selected: #f2f5fc;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: #10141d; }
+    button { font: inherit; }
+    .page { max-width: 1120px; margin: 0 auto; padding: 32px 24px 56px; }
+    header { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 26px; }
+    .eyebrow { color: #92a0b4; font-size: 12px; font-weight: 700; }
+    h1 { margin: 6px 0 0; font-size: 25px; line-height: 1.3; }
+    .prototype-tag { padding: 7px 10px; border: 1px solid #58657a; border-radius: 5px; color: #ccd5e3; font-size: 12px; white-space: nowrap; }
+    section { border-top: 1px solid var(--line); padding-top: 21px; margin-top: 25px; }
+    .section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; margin-bottom: 15px; }
+    h2 { margin: 0; font-size: 17px; }
+    .section-note { margin: 0; color: var(--muted); font-size: 12px; }
+    .comparison { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+    .rarity-card {
+      --tone: #4da6ff; --dark: #182636; --glow: #a8d5ff;
+      position: relative; display: block;
+      aspect-ratio: 1; overflow: hidden; min-width: 0; padding: 8px;
+      border: 2px solid var(--tone); border-radius: 8px;
+      background: linear-gradient(155deg, color-mix(in srgb, var(--tone) 16%, #20242c), var(--dark) 78%);
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone) 24%, transparent), 0 5px 16px #0005;
+      text-align: center; transition: transform 150ms ease, box-shadow 150ms ease;
+    }
+    .rarity-card:hover { transform: translateY(-2px); box-shadow: inset 0 0 0 1px var(--tone), 0 8px 20px #0008; }
+    .rarity-card[data-rarity="1"] { --tone:#4da6ff; --dark:#182636; --glow:#b7ddff; }
+    .rarity-card[data-rarity="2"] { --tone:#4ddd7a; --dark:#173327; --glow:#a5f0b9; }
+    .rarity-card[data-rarity="3"] { --tone:#ffe066; --dark:#39321a; --glow:#fff0a8; }
+    .rarity-card[data-rarity="4"] { --tone:#ff5c5c; --dark:#3b2024; --glow:#ffb0a9; }
+    .rarity-card[data-rarity="5"] { --tone:#b26bff; --dark:#2d2140; --glow:#d9b5ff; }
+    .rarity-card[data-rarity="6"] { --tone:#ff9f43; --dark:#39271d; --glow:#ffd09a; }
+    .rarity-card[data-rarity="6"]::after { content:""; position:absolute; inset:3px; border:1px solid #ffd09a80; border-radius:4px; pointer-events:none; }
+    .card-top { position:absolute; top:8px; left:8px; z-index:2; display:flex; align-items:flex-start; color:var(--glow); }
+    .category-icon { display:grid; place-items:center; width:40px; height:40px; transform:translate(-10px,-10px); }
+    .category-icon img { width:100%; height:100%; object-fit:contain; }
+    .equip-image { position:absolute; inset:0; z-index:1; display:grid; place-items:center; border-radius:5px; pointer-events:none; background:radial-gradient(ellipse at 50% 48%, color-mix(in srgb,var(--tone) 20%, transparent), transparent 70%); }
+    .equip-image img { display:block; width:74%; height:74%; max-width:100%; max-height:100%; object-fit:contain; object-position:center; transform:translate(var(--visual-x,0%),var(--visual-y,0%)); image-rendering:pixelated; filter:drop-shadow(0 3px 2px #0008); }
+    .item-stars { position:absolute; right:8px; bottom:6px; left:8px; z-index:2; display:grid; place-items:center; height:20px; color:var(--glow); font-size:14px; line-height:1; letter-spacing:0; white-space:nowrap; }
+    .rarity-selector { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+    .rarity-choice { display:inline-flex; align-items:center; gap:7px; min-height:36px; padding:6px 10px; border:1px solid #424d60; border-radius:5px; background:#1a202c; color:#d9e0eb; cursor:pointer; }
+    .rarity-choice[aria-pressed="true"] { border-color:var(--selected); box-shadow:inset 0 0 0 1px var(--selected); color:white; }
+    .swatch { width:14px; height:14px; border:1px solid #ffffff70; border-radius:3px; background:var(--swatch); }
+    .inventory { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; }
+    .inventory .rarity-card { cursor:pointer; }
+    .inventory .rarity-card.is-selected { outline:2px solid #f5f7fc; outline-offset:2px; }
+    .sample-empty { min-height:120px; display:grid; place-items:center; grid-column:1/-1; color:var(--muted); }
+    footer { margin-top:22px; color:#99a4b4; font-size:12px; line-height:1.7; }
+    @media (max-width:760px) {
+      .page { padding:22px 15px 36px; }
+      header { align-items:flex-start; }
+      h1 { font-size:21px; }
+      .comparison { grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .inventory { grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+      .rarity-card { padding:7px; }
+    }
+    @media (max-width:390px) {
+      .comparison { gap:7px; }
+      .inventory { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .section-head { align-items:flex-start; flex-direction:column; gap:5px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *,*::before,*::after { transition:none!important; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div><div class="eyebrow">LEGEND HEROES · 装備UIプレビュー</div><h1>いつもの装備絵に、レアリティの色をつける</h1></div>
+      <span class="prototype-tag">ゲーム本体へ反映済み</span>
+    </header>
+
+    <section aria-labelledby="comparison-title">
+      <div class="section-head"><h2 id="comparison-title">同じアイコンで色を比較</h2><p class="section-note">枠・背景だけを変更。装備の絵はそのまま。</p></div>
+      <div class="comparison" id="comparison"></div>
+    </section>
+
+    <section aria-labelledby="inventory-title">
+      <div class="section-head"><h2 id="inventory-title">装備一覧の見え方</h2><p class="section-note">色を選ぶと、下の装備カードに反映します。</p></div>
+      <div class="rarity-selector" id="rarity-selector" aria-label="レアリティを選択"></div>
+      <div class="inventory" id="inventory"></div>
+    </section>
+    <footer>色の段階は現在のゲーム内レアリティに対応した仮案です。最上位だけ金の縁取りを強め、通常レアリティはアイコンが見やすい落ち着いた色にしています。</footer>
+  </main>
+  <script>
+    const tiers = [
+      {id:1,name:'ノーマル',color:'#4da6ff'},
+      {id:2,name:'レア',color:'#4ddd7a'},
+      {id:3,name:'激レア',color:'#ffe066'},
+      {id:4,name:'超激レア',color:'#ff5c5c'},
+      {id:5,name:'レジェンド',color:'#b26bff'},
+      {id:6,name:'エンシェントレア',color:'#ff9f43'},
+    ];
+    const equipment = [
+      {name:'木の剣',image:'assets/event-pixel/wood_sword.png',slot:'武器'},
+      {name:'どうの剣',image:'assets/event-pixel/copper_sword.png',slot:'武器'},
+      {name:'はがねの鎧',image:'assets/items/a3.png',slot:'防具'},
+      {name:'りゅうりんの鎧',image:'assets/items/a7.png',slot:'防具'},
+      {name:'古代の双剣',image:'assets/items/ancient_dual_swords_v1.png',slot:'武器'},
+      {name:'古代の指輪',image:'assets/items/ancient_ring_v2.png',slot:'アクセサリー'},
+      {name:'月影の短剣',image:'assets/event-pixel/rank_blade.png',slot:'武器'},
+      {name:'月光のお守り',image:'assets/items/limited_moon_charm.png',slot:'アクセサリー'},
+      {name:'ほのおの斧',image:'assets/items/w4.png',slot:'武器'},
+      {name:'古代の盾',image:'assets/items/ancient_shield_v2.png',slot:'防具'},
+    ];
+    let selectedTier = 3;
+    const categoryIcon = slot => {
+      const icons = {'武器':'weapon','防具':'armor','アクセサリー':'accessory'};
+      return icons[slot] || 'weapon';
+    };
+    const card = (item,tier,extraClass='') => `<article class="rarity-card ${extraClass}" data-rarity="${tier.id}" aria-label="${item.name}、${tier.name}" ${extraClass==='inventory-item'?'tabindex="0" role="button"':''}>
+      <div class="card-top"><span class="category-icon category-icon-${categoryIcon(item.slot)}"><img src="assets/equipment-category-icons/${categoryIcon(item.slot)}.png" alt="${item.slot}" loading="lazy"></span></div>
+      <div class="equip-image"><img src="${item.image}" alt="${item.name}" loading="lazy"></div>
+      <div class="item-stars" aria-label="${tier.id}つ星">${'★'.repeat(tier.id)}</div>
+    </article>`;
+    const categoryBoundsCache = new Map();
+    function alphaBounds(image){
+      const key=image.currentSrc||image.src;
+      if(categoryBoundsCache.has(key))return categoryBoundsCache.get(key);
+      const canvas=document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
+      const context=canvas.getContext('2d',{willReadFrequently:true});
+      if(!context)return null;
+      context.drawImage(image,0,0);
+      const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
+      let left=canvas.width,top=canvas.height,right=-1,bottom=-1;
+      for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++)if(pixels[(y*canvas.width+x)*4+3]>8){left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x);bottom=Math.max(bottom,y);}
+      const bounds=right<left?null:{left,top,right,bottom,width:canvas.width,height:canvas.height};
+      categoryBoundsCache.set(key,bounds);return bounds;
+    }
+    function alignCategoryIcons(root){
+      const icons=[...root.querySelectorAll('.category-icon img')];
+      const reference=icons.find(image=>image.closest('.category-icon')?.classList.contains('category-icon-weapon'));
+      if(!reference)return;
+      const align=()=>{
+        if(!reference.naturalWidth)return;
+        const ref=alphaBounds(reference);if(!ref)return;
+        for(const image of icons){
+          if(!image.naturalWidth){image.addEventListener('load',align,{once:true});continue;}
+          const bounds=alphaBounds(image);if(!bounds)continue;
+          const box=image.getBoundingClientRect();
+          const dx=(ref.left/ref.width-bounds.left/bounds.width)*box.width;
+          const dy=(ref.top/ref.height-bounds.top/bounds.height)*box.height;
+          image.style.transform=`translate(${dx}px,${dy}px)`;
+        }
+      };
+      if(reference.complete)requestAnimationFrame(align);else reference.addEventListener('load',align,{once:true});
+      icons.forEach(image=>{if(!image.complete)image.addEventListener('load',align,{once:true});});
+    }
+    function centerArtwork(root){
+      root.querySelectorAll('.equip-image img').forEach(image=>{
+        const adjust=()=>{
+          if(!image.naturalWidth)return;
+          const canvas=document.createElement('canvas');
+          canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
+          const context=canvas.getContext('2d',{willReadFrequently:true});
+          context.drawImage(image,0,0);
+          const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
+          let left=canvas.width,top=canvas.height,right=-1,bottom=-1;
+          for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++){
+            if(pixels[(y*canvas.width+x)*4+3]>8){left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x);bottom=Math.max(bottom,y);}
+          }
+          if(right<left)return;
+          const imageBox=image.getBoundingClientRect();
+          const scale=Math.min(imageBox.width/canvas.width,imageBox.height/canvas.height);
+          const dx=(canvas.width/2-(left+right)/2)*scale/imageBox.width*100;
+          const dy=(canvas.height/2-(top+bottom)/2)*scale/imageBox.height*100;
+          image.style.setProperty('--visual-x',`${dx}%`);
+          image.style.setProperty('--visual-y',`${dy}%`);
+        };
+        if(image.complete&&image.naturalWidth)adjust();else image.addEventListener('load',adjust,{once:true});
+      });
+    }
+    const comparison = document.querySelector('#comparison');
+    comparison.innerHTML = tiers.map(tier=>card(equipment[0],tier)).join('');
+    centerArtwork(comparison);
+    alignCategoryIcons(comparison);
+    const selector = document.querySelector('#rarity-selector');
+    selector.innerHTML = tiers.map(tier=>`<button class="rarity-choice" type="button" data-tier="${tier.id}" aria-pressed="${tier.id===selectedTier}"><span class="swatch" style="--swatch:${tier.color}"></span>${tier.name}</button>`).join('');
+    const inventory = document.querySelector('#inventory');
+    function renderInventory(){
+      const tier=tiers.find(row=>row.id===selectedTier);
+      inventory.innerHTML=equipment.map(item=>card(item,tier,'inventory-item')).join('');
+      centerArtwork(inventory);
+      alignCategoryIcons(inventory);
+      inventory.querySelectorAll('.inventory-item').forEach((element,index)=>{
+        element.addEventListener('click',()=>{inventory.querySelectorAll('.inventory-item').forEach(card=>card.classList.remove('is-selected'));element.classList.add('is-selected');});
+        element.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();element.click();}});
+      });
+    }
+    selector.addEventListener('click',event=>{
+      const button=event.target.closest('[data-tier]');if(!button)return;
+      selectedTier=Number(button.dataset.tier);
+      selector.querySelectorAll('[data-tier]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+      renderInventory();
+    });
+    renderInventory();
+  </script>
+</body>
+</html>

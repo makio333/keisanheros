@@ -1,0 +1,36 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import {validRaidDamage,raidDamageCoins,raidInitialHp,raidConfiguredHp,grantRaidRun} from '../raid_run_rules.js';
+for(const [damage,coins] of [[0,0],[9,0],[10,1],[19.9,1],[100000,10000]]) assert.equal(raidDamageCoins(damage),coins);
+for(const damage of [-1,NaN,Infinity,-Infinity,'100',Number.MAX_SAFE_INTEGER+1]) {assert.equal(validRaidDamage(damage),null);assert.equal(raidDamageCoins(damage),0);}
+assert.equal(raidInitialHp('moonWraith'),50000);
+assert.equal(raidConfiguredHp({maxHp:1000,monsterId:'darkBahamutFinal'},'moonWraith'),50000);
+assert.equal(raidConfiguredHp({maxHp:101000,monsterId:'moonWraith'},'moonWraith'),101000);
+assert.equal(raidConfiguredHp({maxHp:2500,monsterId:'darkBahamut'},'darkBahamut'),2500);
+const old={player:{gold:10},raidCoins:7,raidProgress:{totalDamage:99999}};
+assert.equal(grantRaidRun(old,{id:'one',damage:109,bossId:'old'}).coins,10);
+assert.equal(old.raidBestSingleDamage,109,'legacy cumulative total is not a single-run record');
+assert.equal(old.raidCoins,17);
+assert.equal(grantRaidRun(old,{id:'one',damage:109}).applied,false);
+const loaded=JSON.parse(JSON.stringify(old));
+assert.equal(grantRaidRun(loaded,{id:'one',damage:109}).applied,false,'reload/replay does not grant coins');
+grantRaidRun(loaded,{id:'two',damage:9,bossId:'next'});
+assert.equal(loaded.raidBestSingleDamage,109,'record survives lower runs and next boss');
+grantRaidRun(loaded,{id:'three',damage:250,bossId:'next'});
+assert.equal(loaded.raidBestSingleDamage,250);assert.equal(loaded.raidCoins,42);
+const unchanged=JSON.stringify(loaded);
+assert.equal(grantRaidRun(loaded,{id:'bad',damage:Infinity}),null);assert.equal(JSON.stringify(loaded),unchanged);
+const source=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');
+let cache={},saves=0,syncs=0;
+const c=vm.createContext({G:{player:{gold:0},raidCoins:0},battle:{raidRunId:'run-1',raidBossId:'boss_50'},currentSlotKey:'mine',TEST_SLOT_KEY:'test',crypto:{randomUUID:()=>{throw Error('must reuse battle ID');}},validRaidDamage,grantRaidRun,
+ raidPlayerProgress:()=>c.G.raidProgress ||= {bossId:'boss_50',pendingEvents:[],totalDamage:0},getRaidData:()=>cache,saveRaidData:v=>{cache=v;},save:()=>saves++,syncRaidState:()=>syncs++});
+vm.runInContext(source.slice(source.indexOf('function recordRaidDamage('),source.indexOf('// ランキング配列を取得')),c);
+c.recordRaidDamage('mine','fixture',109);c.recordRaidDamage('mine','fixture',109);
+assert.equal(c.G.raidCoins,10);assert.equal(c.G.player.gold,109);assert.equal(c.G.raidBestSingleDamage,109);assert.equal(cache.totalDamage,109);assert.equal(saves,1);assert.equal(syncs,1);
+assert.equal(c.G.raidProgress.pendingEvents[0].id,'run-1');
+c.G=JSON.parse(JSON.stringify(c.G));c.battle={raidRunId:'run-1',raidBossId:'boss_50'};
+c.recordRaidDamage('mine','fixture',109);assert.equal(c.G.raidCoins,10);assert.equal(cache.totalDamage,109);
+c.G={isTestMode:true,player:{gold:0}};c.battle={raidRunId:'test-run',raidBossId:'boss_50'};
+c.recordRaidDamage('mine','fixture',90);assert.equal(c.G.raidCoins,9);assert.equal(c.G.raidBestSingleDamage,90);assert.equal(saves,1);assert.equal(cache.totalDamage,109);
+console.log('PASS: HP50000, coin boundaries, invalid input, old saves, monotonic best, saved run replay, gold/events once, test rewards in memory');

@@ -4,19 +4,42 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "node scripts/release-web.mjs internal --dev",
+    "build": "node scripts/release-web.mjs internal",
+    "dev:product": "node scripts/release-web.mjs product --dev",
+    "dev:product-free": "node scripts/release-web.mjs product-free --dev",
+    "dev:internal": "node scripts/release-web.mjs internal --dev",
+    "build:product": "node scripts/release-web.mjs product",
+    "build:product-free": "node scripts/release-web.mjs product-free",
     "build:single": "BUILD_SINGLEFILE=true vite build",
     "preview": "vite preview",
-    "deploy": "vite build && firebase deploy --only hosting"
+    "deploy": "node -e \"console.error('Choose deploy:internal (no sales), deploy:product-free (product, no sales), or deploy:product (sales). Nothing deployed.'); process.exit(1)\"",
+    "deploy:product": "node scripts/release-web.mjs product --deploy",
+    "deploy:product-free": "node scripts/release-web.mjs product-free --deploy",
+    "deploy:product-api:no-sales": "node scripts/deploy-product-api.mjs --sales-disabled --deploy",
+    "deploy:internal-raid-api": "node scripts/deploy-internal-raid-api.mjs",
+    "build:internal": "node scripts/release-web.mjs internal",
+    "deploy:internal": "node scripts/release-web.mjs internal --deploy",
+    "account:local": "node --env-file=.env server/local-product-check.mjs",
+    "stripe:products:test": "node --env-file=.env scripts/setup-stripe-products.mjs --apply-test",
+    "build:sales-preview": "node scripts/private-migration-web.mjs --sales-preview",
+    "sales:preview": "node scripts/sales-preview.mjs --mock",
+    "email-verification:offline": "node scripts/email-verification-offline-preview.mjs --mock",
+    "test:firestore-rules:emulator": "node scripts/run-account-deletion-rules-emulator.mjs"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
     "typescript": "^5.4.5",
     "vite": "^5.2.11",
     "vite-plugin-singlefile": "^2.0.1"
   },
   "dependencies": {
     "firebase": "^12.18.0",
+    "firebase-admin": "^14.5.0",
+    "google-auth-library": "^11.3.1",
     "stripe": "^23.0.0"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.6"
   }
 }

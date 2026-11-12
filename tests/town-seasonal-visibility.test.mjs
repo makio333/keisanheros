@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+const source=fs.readFileSync(new URL('../game.js',import.meta.url),'utf8');
+const end=Date.parse('2026-11-01T00:00:00+09:00');let now=end-1000,scheduled;
+const nodes=new Map();const el=id=>{if(!nodes.has(id))nodes.set(id,{classList:{toggle(_cls,hidden){this.hidden=hidden;}}});return nodes.get(id);};
+const c=vm.createContext({Date:class extends Date{static now(){return now;}},$:el,gachaView:'skins',document:{querySelectorAll:()=>[]},clearTimeout(){},setTimeout(fn,ms){scheduled={fn,ms};}});
+vm.runInContext(source.slice(source.indexOf('const HALLOWEEN_EVENT ='),source.indexOf('const HALLOWEEN_MONSTERS')),c);
+vm.runInContext(source.slice(source.indexOf('function isHalloweenActive('),source.indexOf('const HALLOWEEN_GACHA_PRIZES')),c);
+c.renderHalloweenEntry();assert.equal(el('hotspot-halloween').classList.hidden,false);assert.equal(scheduled.ms,1010);
+now=end;scheduled.fn();assert.equal(el('hotspot-halloween').classList.hidden,true);assert.equal(el('btn-gacha-tab-halloween').classList.hidden,true);
+assert.equal(c.isHalloweenActive(end-1),true);assert.equal(c.isHalloweenActive(end),false);
+console.log('PASS: exact November1 JST boundary, town/event gacha hidden, open-town boundary refresh');

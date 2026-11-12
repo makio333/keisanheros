@@ -1,0 +1,26 @@
+{
+  "mode": "built-in image_gen",
+  "status": "selected-flamboyant-runtime",
+  "selectedDesign": "User-provided crop of number 3 from generated_images/exec-60fb3d1a-8d60-4415-b289-c01aa0744dee.png: black/burgundy tricorn, white pointed mask, burgundy cape, rapier and letter; not kimono number 3 from later sheet.",
+  "references": [
+    "assets/halloween/equip_pumpkin_blade.png",
+    "assets/halloween/equip_witch_mantle.png",
+    "assets/halloween/equip_moon_charm.png",
+    "assets/monsters_refreshed/monster_3.png"
+  ],
+  "runtimeDraft": "assets/quest_enemies/letter_bandit_hihiru_faceless_v1.png",
+  "comparisonSheets": [
+    {
+      "file": "generated_images/exec-60fb3d1a-8d60-4415-b289-c01aa0744dee.png",
+      "note": "User selected number 3 by uploaded crop."
+    },
+    {
+      "file": "assets/quest_enemies/hihiru-eight-designs.png",
+      "note": "Later sheet with eight fully distinct costumes, retained for review; not the chosen character."
+    }
+  ],
+  "finalPrompt": "Use the most recent USER-UPLOADED CROP of selected character3 as the exact base design. User now requests MORE FLAMBOYANT CLOTHING. Make ONE standalone full-body phantom-thief enemy sprite, genuinely transparent background. Keep the recognizable selected black-and-burgundy TRICORN hat, pointed distinctive WHITE PORCELAIN MASK hiding his human face entirely, dark swept hair, elegant masked male rogue, dynamic wide-legged duelist stance, left hand extending thin rapier toward imageleft, right raised gloved hand presenting ivory sealed letter with red wax seal. Upgrade the outfit with bold readable extravagance: a LARGE flowing crimson cape with rich wine-red lining and strong sweeping silhouette, crisp GOLD shoulder ornaments and bold gold-edged cuffs, a large ivory-and-crimson feather plume fixed on the SIDE of the tricorn, a handsome deep burgundy tailored double-breasted waistcoat with two rows of gold buttons, broad cream cravat secured by a single red gemstone, long split black coat tails with gold edging and a few LARGE geometric gold appliques, stylish high leather boots with gold accent buckles. A theatrical elegant master thief, slightly wicked, cool and dashing. More luxurious than the crop but not armored knight, no crown, no fantasy wings. Face remains concealed by mask, no visible skin/eyes/mouth. Maintain source's crisp SQUARE PIXEL ART, moderately detailed about160logical-pixel sprite density with clean clusters, flat3-4 shades per material, no smooth painted anime, no microscopic filigree or noisy texture. No pumpkins, no skulls, no stars/moons/Halloween motifs. Entire sword tip, hat plume, cape edges and both boots visible, comfortably fit inside squarecanvas with8percent transparent margin. Exactly one character. Remove all neighboring sprites, number3, background/grayblur/floor/text/watermarks; genuinealpha transparency.",
+  "runtimeAsset": "assets/quest_enemies/phantom_thief_hihiru.png",
+  "generatedSource": "generated_images/exec-ed7387d5-c405-4b10-895d-ad718e27a7ef.png",
+  "selection": "Selected white-mask tricorn duelist; latest user revision: more flamboyant clothing."
+}

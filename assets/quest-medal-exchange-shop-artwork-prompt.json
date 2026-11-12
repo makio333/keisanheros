@@ -1,0 +1,5 @@
+{
+  "asset": "assets/quest-medal-exchange-shop.png",
+  "tool": "built-in image_gen",
+  "prompt": "Use case: stylized-concept\nAsset type: square game UI icon for a small clickable button\nPrimary request: a clear, charming fantasy quest-medal exchange shop icon\nSubject: a compact old wooden shop counter with a small parchment awning and one large gold medal with a simple embossed star displayed at the front; tiny hanging exchange tag, no readable writing\nStyle/medium: polished hand-painted 2D game illustration matching a warm rustic RPG quest board made of wood and parchment\nComposition/framing: centered, front-facing, bold silhouette, generous transparent padding, readable at 48 pixels, square crop\nLighting/mood: warm lantern glow, friendly and inviting\nColor palette: honey gold, parchment cream, dark walnut wood, muted burgundy accent\nMaterials/textures: visible hand-painted wood grain, aged paper edges, softly gleaming medal\nConstraints: transparent background, isolated icon only, no square background, no border, no interface elements, no characters, no legible text, no watermark"
+}

@@ -1,0 +1,14 @@
+{
+  "sourceRepository": "makio333/keisanheros",
+  "sourceCommit": "521db625031a27a80c7ec0fdff9a63e60bb17926",
+  "sourceDirectory": "assets/christmas",
+  "importedAssets": "Existing WebP artwork from the ゲーム開発 chat; original images preserved.",
+  "town": {
+    "file": "town.png",
+    "generatedSource": "exec-6dff5fbe-9ab5-4028-9a9d-abfa064efca9.png",
+    "referenceFiles": [
+      "画像/home_town_v2.png"
+    ],
+    "prompt": "Edit reference town into festive Christmas version. Preserve EXACT building positions, bridges, roads and recognizable silhouettes for existing clickable hotspots: training upper left, church upper middle-left, castle upper right, house middle right, forge lower right, potion shop lower left, central fountain plaza. Snow-covered roofs and fir trees, warm amber windows, red green wreaths, fairy lights, gifts beside central decorated Christmas tree replacing fountain centerpiece. Clear walkways, inviting bright blue winter twilight, richly detailed coherent pixel art same perspective as reference. Wide landscape 16:9. No text, no UI, no characters. Use reference only as edit target."
+  }
+}

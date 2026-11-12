@@ -1,0 +1,23 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "salesDeletionOutbox",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "record.state", "order": "ASCENDING"},
+        {"fieldPath": "record.nextAttemptAt", "order": "ASCENDING"},
+        {"fieldPath": "__name__", "order": "ASCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "salesFinancialArchive",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "record.policyId", "order": "ASCENDING"},
+        {"fieldPath": "record.retainUntil", "order": "ASCENDING"},
+        {"fieldPath": "__name__", "order": "ASCENDING"}
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

@@ -1,10 +1,11 @@
+import {uniquePrintProblems} from '../print_uniqueness.js';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
 const source = fs.readFileSync(new URL('../game.js', import.meta.url), 'utf8');
 let randomCalls = 0;
-const context = vm.createContext({
+const context = vm.createContext({uniquePrintProblems,
   G: { playerName:'確認用' },
   escapeHtml:text=>String(text),
   AREA_STAGES: { area2:{name:'かけ算の森',stages:Array.from({length:9},(_,index)=>({name:`${index+1}の段`,generateProblem:()=>({a:index+1,b:1,op:'×',answer:index+1,text:`${index+1} × 1`})}))},

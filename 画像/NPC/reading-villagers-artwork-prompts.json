@@ -1,0 +1,97 @@
+{
+  "method": "built-in image_gen",
+  "reference": "画像/NPC/npc_baker_sara_transparent_v2.png",
+  "assets": [
+    {
+      "key": "librarian",
+      "name": "fumi",
+      "prompt": "Create one NEW full-body friendly fantasy village NPC for an educational RPG. The attached baker is a STYLE REFERENCE ONLY, not an edit target. Match her readable chunky square-pixel RPG style, apparent pixel scale, dark outlines, simple flat-shaded colors, body proportions and front three-quarter view. Single character centered on square canvas, entire body and boots visible with clear margin. True RGBA transparent background, no ground, shadow, white matte, scenery, frame or text. Distinct silhouette and face from reference. A calm adult female librarian named Fumi, dark navy bob hair, round glasses, plum long vest over cream blouse, teal ankle-length skirt, brown boots, holding an open green book with large simple page shapes. Warm thoughtful smile.",
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a1924e-c322-7242-9b6f-5c92056379bb/exec-d789286b-6cc6-47d0-b139-960f8f8e56a6.png",
+      "output": "画像/NPC/npc_librarian_fumi.png"
+    },
+    {
+      "key": "postman",
+      "name": "reto",
+      "prompt": "Create one NEW full-body friendly fantasy village NPC for an educational RPG. The attached baker is a STYLE REFERENCE ONLY, not an edit target. Match her readable chunky square-pixel RPG style, apparent pixel scale, dark outlines, simple flat-shaded colors, body proportions and front three-quarter view. Single character centered on square canvas, entire body and boots visible with clear margin. True RGBA transparent background, no ground, shadow, white matte, scenery, frame or text. Distinct silhouette and face from reference. A cheerful young adult male village postman named Reto, short copper hair, moss-green cap with one cream feather, mustard short coat, dark brown trousers and boots, leather crossbody mail satchel, holding a sealed cream envelope. Energetic friendly smile.",
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a1924e-c322-7242-9b6f-5c92056379bb/exec-00fa36b7-3fc6-4f18-aa0c-6eacd2eccb58.png",
+      "output": "画像/NPC/npc_postman_reto.png"
+    },
+    {
+      "key": "watch",
+      "name": "mina",
+      "prompt": "Create one NEW full-body friendly fantasy village NPC for an educational RPG. The attached baker is a STYLE REFERENCE ONLY, not an edit target. Match her readable chunky square-pixel RPG style, apparent pixel scale, dark outlines, simple flat-shaded colors, body proportions and front three-quarter view. Single character centered on square canvas, entire body and boots visible with clear margin. True RGBA transparent background, no ground, shadow, white matte, scenery, frame or text. Distinct silhouette and face from reference. A reliable adult female town watch named Mina, short dark brown hair, simple steel open-face helmet without visor, blue scarf, modest steel breastplate over indigo tunic, brown boots, holding a wooden lantern in one hand. Warm approachable face, no weapon.",
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a1924e-c322-7242-9b6f-5c92056379bb/exec-7f50e2b9-53b3-4bc0-9001-b004b7dc871c.png",
+      "output": "画像/NPC/npc_watch_mina.png"
+    },
+    {
+      "key": "child",
+      "name": "nono",
+      "prompt": "Create one NEW full-body friendly fantasy village NPC for an educational RPG. The attached baker is a STYLE REFERENCE ONLY, not an edit target. Match her readable chunky square-pixel RPG style, apparent pixel scale, dark outlines, simple flat-shaded colors, body proportions and front three-quarter view. Single character centered on square canvas, entire body and boots visible with clear margin. True RGBA transparent background, no ground, shadow, white matte, scenery, frame or text. Distinct silhouette and face from reference. A cheerful village girl named Nono, brown hair in two short pigtails with red ribbons, coral hooded capelet, cream tunic and forest-green shorts, sturdy brown boots, holding a small wicker basket with one red apple. Child proportions, wholesome, friendly, adventurous. No animal.",
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a1924e-c322-7242-9b6f-5c92056379bb/exec-a44b9e4d-96a1-423e-975b-7621d71bb518.png",
+      "output": "画像/NPC/npc_child_nono.png"
+    }
+  ],
+  "validation": {
+    "images": [
+      {
+        "output": "画像/NPC/npc_librarian_fumi.png",
+        "mode": "RGBA",
+        "size": [
+          1254,
+          1254
+        ],
+        "alpha": [
+          0,
+          255
+        ]
+      },
+      {
+        "output": "画像/NPC/npc_postman_reto.png",
+        "mode": "RGBA",
+        "size": [
+          1254,
+          1254
+        ],
+        "alpha": [
+          0,
+          255
+        ]
+      },
+      {
+        "output": "画像/NPC/npc_watch_mina.png",
+        "mode": "RGBA",
+        "size": [
+          1254,
+          1254
+        ],
+        "alpha": [
+          0,
+          255
+        ]
+      },
+      {
+        "output": "画像/NPC/npc_child_nono.png",
+        "mode": "RGBA",
+        "size": [
+          1254,
+          1254
+        ],
+        "alpha": [
+          0,
+          255
+        ]
+      }
+    ],
+    "sourceStyleInspected": true,
+    "visualSizes": [
+      48,
+      88,
+      280
+    ],
+    "backgrounds": [
+      "navy",
+      "cream"
+    ],
+    "inGameAll60Quests": true
+  }
+}

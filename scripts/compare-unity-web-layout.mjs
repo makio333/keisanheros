@@ -12,7 +12,7 @@ const browser=await chromium.launch({channel:'chrome',headless:true});
 try{
  const size=await native('JSON.stringify([innerWidth,innerHeight])');
  const context=await browser.newContext({viewport:{width:size[0],height:size[1]},serviceWorkers:'block'});
- await context.route('**/firebase_init.js*',r=>r.fulfill({contentType:'text/javascript',body:'window.CloudSave={saveSlot:async()=>{},listSlots:async()=>[],flush(){}};window.EventRaidAPI={getRankings:async()=>[]};window.AdminGiftAPI={fetchPending:async()=>[]};'}));
+ await context.route('**/local_game_client.js*',r=>r.fulfill({contentType:'text/javascript',body:'window.CloudSave={saveSlot:async()=>{},listSlots:async()=>[],flush(){}};window.EventRaidAPI={getRankings:async()=>[]};window.AdminGiftAPI={fetchPending:async()=>[]};'}));
  await context.route('**/game.js*',async r=>{const original=await r.fetch();await r.fulfill({response:original,body:await original.text()+'\n'+fixture});});
  await context.route('https://cdn.jsdelivr.net/npm/chart.js',async r=>r.fulfill({contentType:'text/javascript',body:await readFile('unity-port/Native/chart.umd.js')}));
  await context.route('https://firestore.googleapis.com/**',r=>r.abort());

@@ -1,0 +1,14 @@
+{
+  "asset": "ice-breath-v2.png",
+  "generator": "built-in image_gen",
+  "source": "/Users/motoyamayuuki/.codex/generated_images/01a194ec-8c9d-7ee1-a8fe-5604bf9238f5/exec-fa991992-4db6-4260-ac79-5ef9f305872b.png",
+  "prompt_summary": "Production quality 2D hand animated game VFX sprite sheet; regular 4x4 grid, sixteen consecutive frames of ice breath blizzard explosion, spark, curling wind jet, expanding crystalline vortex, dissolving shards; detailed Japanese RPG painterly cel shading, cobalt undersides, white highlights, asymmetric cyan curls; transparent background; no text, no characters, no geometric rings.",
+  "reference_files": [],
+  "layout": {
+    "columns": 4,
+    "rows": 4,
+    "order": "row-major",
+    "frame_ms": 80
+  },
+  "note": "User requested substantially higher quality than procedural rings. Original attached reference used as conversation art direction."
+}

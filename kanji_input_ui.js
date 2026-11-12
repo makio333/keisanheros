@@ -19,10 +19,11 @@ const KANA_COLUMNS_MAIN = [
   ['わ', 'を', 'ん', 'ー', ''],
 ];
 
-let isFlickMode = false;
+let isKanaBoardMinimized = false;
 let currentChallengeAnswer = null;
 let currentAcceptedAnswers = null;   // おくりがな ありでも なしでも せいかいに する
 let onAnswerCallback = null;
+let resultOverlayHideTimer = 0;
 
 /* ひらがな・カタカナ（おくりがな）かどうか */
 function isKanaChar(ch){ return /[\u3041-\u309F\u30A0-\u30FF\u30FCー]/.test(ch); }
@@ -32,6 +33,12 @@ function kanjiAcceptedAnswers(text, answer, alternatives = []) {
   return getAcceptedKanjiReadings(text, answer, alternatives);
 }
 let currentKanjiAnswerMode = false;
+
+function usesNativeMobileKeyboard() {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia?.('(pointer: coarse)').matches === true ||
+    /Android|iPhone|iPad|iPod/i.test(window.navigator?.userAgent || '');
+}
 
 /**
  * 入力UIの初期化
@@ -43,16 +50,30 @@ function initKanjiInputUI(callback) {
   const container = document.getElementById('software-keyboard');
   if (container) {
     container.innerHTML = '';
+    container.dataset.kanaPage='0';
+    container.classList.remove('hidden');
+    container.classList.toggle('is-minimized',isKanaBoardMinimized);
+    const header=document.createElement('div');header.className='kana-board-header';header.title='ドラッグで移動・ダブルクリックで自動配置';
+    const title=document.createElement('span');title.textContent='⠿ 五十音ボード';
+    const minimize=document.createElement('button');minimize.id='btn-toggle-kana-board';minimize.type='button';minimize.setAttribute('aria-controls','kana-board-content');minimize.onclick=toggleKanaBoard;
+    header.append(title,minimize);container.append(header);
+    const content=document.createElement('div');content.id='kana-board-content';content.className='kana-board-content';container.append(content);
     const section=document.createElement('div'); section.className='kana-board-section';
     section.appendChild(buildKanaGrid(KANA_COLUMNS_MAIN,['あ行','か行','さ行','た行','な行','は行','ま行','や行','ら行','わ行']));
-    container.appendChild(section);
+    content.appendChild(section);
     const modifiers=document.createElement('div'); modifiers.className='kana-board-modifiers';
     for(const [key,label,accessibleLabel] of [['DAKUTEN','゛','濁点'],['HANDAKUTEN','゜','半濁点'],['SMALL','小さく','小さく'],['BS','⌫ けす','けす']]) {
       const button=document.createElement('button'); button.type='button'; button.className='key-btn key-fn';
       button.textContent=label; button.setAttribute('aria-label',accessibleLabel);
       button.onclick=()=>handleKeyClick(key); modifiers.appendChild(button);
     }
-    container.appendChild(modifiers);
+    content.appendChild(modifiers);
+    for(const corner of ['nw','ne','sw','se']){
+      const handle=document.createElement('button');handle.type='button';handle.className='kana-resize-handle';handle.dataset.corner=corner;
+      handle.setAttribute('aria-label','五十音ボードのサイズ変更');handle.title='ドラッグでサイズ変更・ダブルクリックで自動サイズ';
+      container.append(handle);
+    }
+    updateKanaBoardVisibility();
   }
 
   const toggleBtn = document.getElementById('btn-toggle-input');
@@ -62,11 +83,12 @@ function initKanjiInputUI(callback) {
   
   const inputEl = document.getElementById('challenge-input');
   if (inputEl) {
+    inputEl.readOnly=false;
     inputEl.oninput = () => {
       spawnInputEffect();
     };
     inputEl.onkeydown = (e) => {
-      if (e.key === 'Enter') submitKanjiAnswer();
+      if (e.key === 'Enter' && !e.isComposing && e.keyCode!==229) {e.preventDefault();submitKanjiAnswer();}
     };
   }
   
@@ -80,15 +102,18 @@ function initKanjiInputUI(callback) {
 function buildKanaGrid(columns, labels = []) {
   const grid = document.createElement('div');
   grid.className = 'kana-grid kana-board-grid';
-  grid.style.gridTemplateRows='repeat(5,minmax(22px,1fr))';
+  // ボードの余った高さでキーが縦に伸びないよう、行はキーの正方形サイズに合わせる。
+  grid.style.gridTemplateRows='repeat(5,auto)';
   columns.forEach((col,index) => {
     const label=document.createElement('span'); label.className='kana-row-label';
     const gridRow=index%5+1, firstColumn=index<5?1:7;
     label.style.gridRow=String(gridRow); label.style.gridColumn=String(firstColumn);
+    label.style.setProperty('--kana-full-row',String(index+1));label.dataset.kanaHalf=String(index<5?0:1);label.style.setProperty('--kana-compact-column','1');
     label.textContent=labels[index] || ''; grid.appendChild(label);
     col.forEach((char,charIndex) => {
       const btn = document.createElement('button');
       btn.type='button';
+      btn.style.setProperty('--kana-full-row',String(index+1));btn.dataset.kanaHalf=String(index<5?0:1);btn.style.setProperty('--kana-compact-column',String(charIndex+2));
       btn.style.gridRow=String(gridRow); btn.style.gridColumn=String(firstColumn+charIndex+1);
       if (!char) {
         btn.className = 'key-btn key-blank';
@@ -108,55 +133,32 @@ function buildKanaGrid(columns, labels = []) {
 }
 
 function handleKeyClick(char) {
-  const input = document.getElementById('challenge-input');
-  if (!input) return;
-  
-  if (char === 'BS') {
-    input.value = input.value.slice(0, -1);
-  } else if(['DAKUTEN','HANDAKUTEN','SMALL'].includes(char)) {
-    if(!input.value)return;
-    const last=input.value.slice(-1);
-    let replacement=last;
-    if(char==='SMALL') {
-      const large='あいうえおやゆよつわアイウエオヤユヨツワ', small='ぁぃぅぇぉゃゅょっゎァィゥェォャュョッヮ';
-      const largeIndex=large.indexOf(last),smallIndex=small.indexOf(last);
-      replacement=largeIndex>=0?small[largeIndex]:smallIndex>=0?large[smallIndex]:last;
-    } else {
-      const plain=last.normalize('NFD')[0];
-      const supported=char==='DAKUTEN'?'かきくけこさしすせそたちつてとはひふへほうカキクケコサシスセソタチツテトハヒフヘホウ':'はひふへほハヒフヘホ';
-      if(supported.includes(plain)) {
-        const mark=char==='DAKUTEN'?'\u3099':'\u309a';
-        const converted=(plain+mark).normalize('NFC');
-        replacement=last===converted?plain:converted;
-      }
+  const input=document.getElementById('challenge-input');if(!input)return;
+  const start=input.selectionStart ?? input.value.length,end=input.selectionEnd ?? start;
+  if(char==='BS'){
+    input.setRangeText('',start===end?Math.max(0,start-1):start,end,'end');
+  }else if(['DAKUTEN','HANDAKUTEN','SMALL'].includes(char)){
+    const position=end || start;if(!position)return;
+    const last=input.value[position-1];let replacement=last;
+    if(char==='SMALL'){
+      const large='あいうえおやゆよつわアイウエオヤユヨツワ',small='ぁぃぅぇぉゃゅょっゎァィゥェォャュョッヮ';
+      const a=large.indexOf(last),b=small.indexOf(last);replacement=a>=0?small[a]:b>=0?large[b]:last;
+    }else{
+      const plain=last.normalize('NFD')[0],supported=char==='DAKUTEN'?'かきくけこさしすせそたちつてとはひふへほうカキクケコサシスセソタチツテトハヒフヘホウ':'はひふへほハヒフヘホ';
+      if(supported.includes(plain)){const converted=(plain+(char==='DAKUTEN'?'\u3099':'\u309a')).normalize('NFC');replacement=last===converted?plain:converted;}
     }
-    input.value=input.value.slice(0,-1)+replacement;
-    if(replacement!==last)spawnInputEffect();
-  } else {
-    input.value += char;
-    spawnInputEffect();
-  }
+    input.setRangeText(replacement,position-1,position,'end');
+  }else input.setRangeText(char,start,end,'end');
+  input.dispatchEvent(new Event('input',{bubbles:true}));
 }
-
-function toggleInputMode() {
-  isFlickMode = !isFlickMode;
-  const btn = document.getElementById('btn-toggle-input');
-  const input = document.getElementById('challenge-input');
-  const softwareKbd = document.getElementById('software-keyboard');
-  
-  if (isFlickMode) {
-    if(btn) btn.textContent = '入力切替：フリック/物理キーボード';
-    if(input) {
-      input.readOnly = false;
-      input.focus();
-    }
-    if(softwareKbd) softwareKbd.classList.add('hidden');
-  } else {
-    if(btn) btn.textContent = '入力切替：五十音';
-    if(input) input.readOnly = true;
-    if(softwareKbd) softwareKbd.classList.remove('hidden');
-  }
+function updateKanaBoardVisibility(){
+  const board=document.getElementById('software-keyboard'),button=document.getElementById('btn-toggle-kana-board');
+  board?.classList.toggle('is-minimized',isKanaBoardMinimized);
+  if(button){button.textContent=isKanaBoardMinimized?'＋ 展開':'− 最小化';button.setAttribute('aria-expanded',String(!isKanaBoardMinimized));button.setAttribute('aria-label',isKanaBoardMinimized?'五十音ボードを展開':'五十音ボードを最小化');}
 }
+function toggleKanaBoard(){isKanaBoardMinimized=!isKanaBoardMinimized;updateKanaBoardVisibility();}
+// Retain the old function entry point for external callers; input is always editable.
+function toggleInputMode(){toggleKanaBoard();}
 
 /**
  * 新しい問題を画面にセットして入力を待機する
@@ -229,12 +231,14 @@ function setupKanjiChallenge(problemData) {
     }
   } else {
     // ===== 通常入力モード =====
+    const nativeMobileKeyboard = usesNativeMobileKeyboard();
+
     if (normalDisplay) normalDisplay.classList.remove('hidden');
     if (locDisplay) { locDisplay.classList.add('hidden'); locDisplay.style.display = ''; }
     if (choiceDisplay) { choiceDisplay.classList.add('hidden'); choiceDisplay.style.display = ''; }
     if (inputDisplay) inputDisplay.classList.remove('hidden');
-    if (inputToggle) inputToggle.classList.remove('hidden');
-    if (keyboard && !isFlickMode) keyboard.classList.remove('hidden');
+    if (inputToggle) inputToggle.classList.add('hidden');
+    if (keyboard) keyboard.classList.remove('hidden');
     
     const textEl = document.getElementById('challenge-problem-text');
     if(textEl) {
@@ -245,6 +249,7 @@ function setupKanjiChallenge(problemData) {
     const inputEl = document.getElementById('challenge-input');
     if(inputEl) {
       inputEl.value = '';
+      inputEl.readOnly=false;
       if (tierStr.startsWith('kana_kata')) {
         inputEl.placeholder = 'カタカナで入力';
       } else if (tierStr.startsWith('kana_hira')) {
@@ -252,7 +257,7 @@ function setupKanjiChallenge(problemData) {
       } else {
         inputEl.placeholder = 'ひらがなで入力';
       }
-      if(isFlickMode) inputEl.focus();
+      if(window.matchMedia('(pointer:fine)').matches) inputEl.focus({preventScroll:true});
     }
   }
 }
@@ -333,6 +338,8 @@ function showResultOverlay(isCorrect) {
   const overlay = document.getElementById('result-overlay');
   const text = document.getElementById('result-text');
   if (!overlay || !text) return;
+
+  if (resultOverlayHideTimer) clearTimeout(resultOverlayHideTimer);
   
   overlay.classList.remove('hidden');
   
@@ -344,8 +351,9 @@ function showResultOverlay(isCorrect) {
     text.className = 'result-incorrect';
   }
   
-  setTimeout(() => {
+  resultOverlayHideTimer = setTimeout(() => {
     overlay.classList.add('hidden');
+    resultOverlayHideTimer = 0;
   }, 1000);
 }
 

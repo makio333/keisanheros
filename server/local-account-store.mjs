@@ -23,7 +23,7 @@ export async function openLocalAccountStore(directory){
       const draft=structuredClone(state);
       const tx={
         getAccount:id=>draft.accounts.get(id),putAccount:row=>draft.accounts.set(row.id,structuredClone(row)),
-        getSave:key=>draft.saves.get(key),putSave:row=>draft.saves.set(row.key,structuredClone(row)),
+        getSave:key=>draft.saves.get(key),putSave:row=>draft.saves.set(row.key,structuredClone(row)),removeSave:key=>draft.saves.delete(key),
         listSaves:id=>[...draft.saves.values()].filter(row=>row.ownerAccountId===id),
         listAllSaves:()=>[...draft.saves.values()],
         getGameDocument:key=>draft.gameDocuments.get(key),putGameDocument:(key,row)=>draft.gameDocuments.set(key,structuredClone(row)),
@@ -61,12 +61,12 @@ export async function openLocalAccountStore(directory){
       tx.removeAttempt(key);return attempt;
     }),
     getAuthenticatedAccount:async id=>(await sessions.get(id,Date.now()))?.accountId||null,
-    resolveIdentity:({provider,providerId,subject,linkAccountId})=>transaction(tx=>{
+    resolveIdentity:({provider,providerId,subject,linkAccountId,accountCreatedAt})=>transaction(tx=>{
       const key=JSON.stringify([provider,providerId,subject]),existing=tx.getIdentity(key);
       if(existing){if(linkAccountId && linkAccountId!==existing)throw Error('identity_already_linked');return {accountId:existing,created:false};}
       if(linkAccountId && !tx.getAccount(linkAccountId))throw Error('account_not_found');
       const id=linkAccountId||randomUUID();
-      if(!linkAccountId)tx.putAccount({id,createdAt:Date.now()});
+      if(!linkAccountId)tx.putAccount({id,createdAt:Number.isSafeInteger(accountCreatedAt)&&accountCreatedAt>=0?accountCreatedAt:Date.now()});
       tx.putIdentity(key,id);return {accountId:id,created:!linkAccountId};
     }),
   };

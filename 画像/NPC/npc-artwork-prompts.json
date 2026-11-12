@@ -1,0 +1,67 @@
+{
+  "method": "built-in image_gen",
+  "originalsPreserved": true,
+  "validation": {
+    "mode": "RGBA",
+    "size": [
+      1254,
+      1254
+    ],
+    "outerBorderAlphaMaximum": 7,
+    "visualBackgrounds": [
+      "cream",
+      "dark navy",
+      "teal"
+    ],
+    "visualSizes": [
+      48,
+      88
+    ],
+    "inGame": true,
+    "legacySavedNpcNamesResolveCurrentImages": true
+  },
+  "assets": [
+    {
+      "key": "tom",
+      "reference": "画像/NPC/npc_farmer_tom.png",
+      "source": "generated_images/exec-1ac55451-8829-4518-bb68-51fb4a714805.png",
+      "output": "画像/NPC/npc_farmer_tom_transparent_v2.png",
+      "prompt": "Edit this exact existing game NPC image into a clean FINAL transparent sprite, carefully redrawing edge pixels as needed. Preserve character identity, face, apparent age, gender, hairstyle, outfit palette, clothing, hand pose, body proportions and all job-related held props: the friendly male farmer Tom with straw hat, brown hair, red plaid shirt, blue overalls, gloves, boots and pitchfork. Preserve the original readable square-pixel RPG sprite style and similar detail density; do not convert to smooth illustration, do not add decorative microdetail. Entire body and every held prop visible including boots and any rod/staff/fork tips, with a small clear margin. CRITICAL background cleanup: remove the whole opaque white background, EVERY baked floor/wooden board/stone platform/ground patch/cast shadow, and background trapped between arms, legs, tools, fishing line or body. True RGBA alpha transparency everywhere outside the actual character and held prop. Retain white beard, clothing, eye highlights, bread steam and light-colored sprite details; they are NOT background. No ground plane, no shadow, no dirty white fringe, no checkerboard painted into image, no frame, no scenery, no text. Single isolated character, square canvas. This is the replacement game asset, not a mockup on a card."
+    },
+    {
+      "key": "lina",
+      "reference": "画像/NPC/npc_merchant_lina.png",
+      "source": "generated_images/exec-806b1962-cc85-4f73-99cc-aaa78c4ed968.png",
+      "output": "画像/NPC/npc_merchant_lina_transparent_v2.png",
+      "prompt": "Edit this exact existing game NPC image into a clean FINAL transparent sprite, carefully redrawing edge pixels as needed. Preserve character identity, face, apparent age, gender, hairstyle, outfit palette, clothing, hand pose, body proportions and all job-related held props: the friendly young woman merchant Lina with brown bobbed hair, green/teal gold-trimmed tunic, burgundy vest, jewelry, belt pouches and brown boots. Preserve the original readable square-pixel RPG sprite style and similar detail density; do not convert to smooth illustration, do not add decorative microdetail. Entire body and every held prop visible including boots and any rod/staff/fork tips, with a small clear margin. CRITICAL background cleanup: remove the whole opaque white background, EVERY baked floor/wooden board/stone platform/ground patch/cast shadow, and background trapped between arms, legs, tools, fishing line or body. True RGBA alpha transparency everywhere outside the actual character and held prop. Retain white beard, clothing, eye highlights, bread steam and light-colored sprite details; they are NOT background. No ground plane, no shadow, no dirty white fringe, no checkerboard painted into image, no frame, no scenery, no text. Single isolated character, square canvas. This is the replacement game asset, not a mockup on a card."
+    },
+    {
+      "key": "gondo",
+      "reference": "画像/NPC/npc_wiseman_gondo.png",
+      "source": "generated_images/exec-77a1f916-0376-4930-bc72-115516cf9fc2.png",
+      "output": "画像/NPC/npc_wiseman_gondo_transparent_v2.png",
+      "prompt": "Edit this exact existing game NPC image into a clean FINAL transparent sprite, carefully redrawing edge pixels as needed. Preserve character identity, face, apparent age, gender, hairstyle, outfit palette, clothing, hand pose, body proportions and all job-related held props: the elderly wise man Gondo with thick white beard and hair, blue-purple gold-trimmed robe/cape and wooden staff with blue crystal. Preserve the original readable square-pixel RPG sprite style and similar detail density; do not convert to smooth illustration, do not add decorative microdetail. Entire body and every held prop visible including boots and any rod/staff/fork tips, with a small clear margin. CRITICAL background cleanup: remove the whole opaque white background, EVERY baked floor/wooden board/stone platform/ground patch/cast shadow, and background trapped between arms, legs, tools, fishing line or body. True RGBA alpha transparency everywhere outside the actual character and held prop. Retain white beard, clothing, eye highlights, bread steam and light-colored sprite details; they are NOT background. No ground plane, no shadow, no dirty white fringe, no checkerboard painted into image, no frame, no scenery, no text. Single isolated character, square canvas. This is the replacement game asset, not a mockup on a card."
+    },
+    {
+      "key": "sara",
+      "reference": "画像/NPC/npc_baker_sara.png",
+      "source": "generated_images/exec-c325c53d-f485-4a3e-8eb9-617010ed0f71.png",
+      "output": "画像/NPC/npc_baker_sara_transparent_v2.png",
+      "prompt": "Redraw this exact NPC as a clean transparent sprite for the same game. Preserve identity, face, outfit colors, pose, full body proportions, tools and existing square pixel-art style: smiling red-haired female baker with blue headscarf, blue striped apron over cream dress, brown boots, holding bread; REMOVE wooden floor underneath boots. True RGBA alpha transparent background outside character and props, including between arms, legs and tools. No white background or fringe, no checkerboard drawn in, no floor, wooden board, stone, ground patch, cast shadow, backdrop, frame or text. Keep white clothes/beard/eye highlights and real sprite details. All body and tools entirely visible with a clear margin. Similar pixel density and simple shading as reference; no smooth painting or added microdetail. One character on square canvas."
+    },
+    {
+      "key": "ken",
+      "reference": "画像/NPC/npc_blacksmith_ken.png",
+      "source": "generated_images/exec-488d583d-7252-4d74-ad06-0ab3fbf37dfd.png",
+      "output": "画像/NPC/npc_blacksmith_ken_transparent_v2.png",
+      "prompt": "Redraw this exact NPC as a clean transparent sprite for the same game. Preserve identity, face, outfit colors, pose, full body proportions, tools and existing square pixel-art style: muscular bearded brown-haired male blacksmith with green shirt, brown leather apron, tool belt, wrapped forearms, boots and hammer; REMOVE stone platform underneath boots. True RGBA alpha transparent background outside character and props, including between arms, legs and tools. No white background or fringe, no checkerboard drawn in, no floor, wooden board, stone, ground patch, cast shadow, backdrop, frame or text. Keep white clothes/beard/eye highlights and real sprite details. All body and tools entirely visible with a clear margin. Similar pixel density and simple shading as reference; no smooth painting or added microdetail. One character on square canvas."
+    },
+    {
+      "key": "dan",
+      "reference": "画像/NPC/npc_fisherman_dan.png",
+      "source": "generated_images/exec-696ff617-279d-4921-b92f-f12cd277efdd.png",
+      "output": "画像/NPC/npc_fisherman_dan_transparent_v2.png",
+      "prompt": "Redraw this exact NPC as a clean transparent sprite for the same game. Preserve identity, face, outfit colors, pose, full body proportions, tools and existing square pixel-art style: friendly elderly fisherman with gray beard, brown fishing hat, navy sweater, trousers, boots, tackle bag, long fishing rod, thin line and hook. True RGBA alpha transparent background outside character and props, including between arms, legs and tools. No white background or fringe, no checkerboard drawn in, no floor, wooden board, stone, ground patch, cast shadow, backdrop, frame or text. Keep white clothes/beard/eye highlights and real sprite details. All body and tools entirely visible with a clear margin. Similar pixel density and simple shading as reference; no smooth painting or added microdetail. One character on square canvas."
+    }
+  ]
+}

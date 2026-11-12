@@ -1,0 +1,50 @@
+/* Player summary and problem share the original question window's height. */
+#screen-battle #battle-question-window{width:min(560px,92vw);height:268px;max-height:calc(100dvh - 24px);flex:0 0 auto;min-height:0;box-sizing:border-box;margin:10px auto 0;padding:8px 12px;display:flex;flex-direction:column;gap:6px;position:relative;z-index:20;background:rgba(22,18,34,.85);backdrop-filter:blur(8px);border:3px solid var(--panel-border);border-radius:14px;box-shadow:0 8px 24px #0009}
+#screen-battle #battle-player-window.status-window{position:static;display:grid;grid-template-columns:100px minmax(0,1fr) minmax(0,1fr);grid-template-areas:"identity hp mp" "identity exp exp";grid-template-rows:26px 20px;gap:4px 10px;align-items:center;flex:none;width:100%;max-width:none;box-sizing:border-box;min-height:0;padding:0;margin:0;border:0;border-radius:0;background:none;box-shadow:none;backdrop-filter:none}
+#battle-player-window>.status-header-row{grid-area:identity;display:flex;flex-direction:column;align-items:center;align-self:stretch;gap:1px;min-width:0}
+#battle-player-window .status-line{width:100%;display:flex;flex-wrap:nowrap;justify-content:center;gap:4px;font-size:10px;line-height:13px;min-height:13px}
+#battle-player-window #battle-player-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;min-width:0}
+#battle-player-window #battle-player-lv{flex:none;font-size:10px}
+#battle-player-window .battle-status-avatar{position:relative;width:38px;height:38px;flex:none;border-radius:4px;overflow:hidden}
+#battle-player-window .battle-status-avatar>img{width:100%;height:100%;object-fit:contain}
+#battle-player-window>.stat-bar-wrap{display:flex;gap:3px;min-width:0;min-height:0;margin:0}
+#battle-player-window .stat-label{font:700 10px/1.2 system-ui,sans-serif;flex:none}
+#battle-player-window .stat-inline-icon{display:none}
+#battle-player-window .stat-bar{height:19px;min-width:0;flex:1}
+#battle-player-window .battle-stat-exp .stat-bar{height:15px}
+#battle-player-window .stat-bar-label{font:700 10px/1 system-ui,sans-serif;white-space:nowrap}
+#screen-battle #battle-question-window #battle-challenge{position:static;inset:auto;flex:1;min-height:0;width:100%;height:auto;max-height:none;box-sizing:border-box;margin:0;padding:0;overflow:auto;border:0;border-radius:0;box-shadow:none;background:none;backdrop-filter:none}
+#battle-question-window .challenge-body{width:100%;min-width:0;gap:0}
+#battle-question-window .challenge-main{width:100%;min-width:0}
+#screen-battle #battle-question-window .challenge-prompt{font-size:12px;line-height:1.3;margin:0 0 3px}
+#screen-battle #battle-question-window .challenge-problem{font-size:25px;line-height:1.3;margin:0 0 4px;min-height:0}
+#screen-battle #battle-question-window .challenge-problem-word{font-size:17px;line-height:1.45;text-align:left}
+#screen-battle #battle-question-window #ch-form{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px;margin:0}
+#screen-battle #battle-question-window #ch-form:has(#ch-test-correct){grid-template-columns:minmax(0,1fr) auto auto}
+#screen-battle #battle-question-window #ch-form>*{grid-column:auto;box-sizing:border-box;min-width:0;width:auto;max-width:100%;height:42px;margin:0;padding:4px 10px}
+#screen-battle #battle-question-window #ch-form .challenge-input{width:100%;font-size:20px}
+#screen-battle #battle-question-window #ch-form .btn{font-size:13px;white-space:nowrap}
+#screen-battle #battle-question-window #ch-form #ch-test-correct{font-size:10px;padding:4px 6px}
+#battle-question-window .result-text:empty{display:none}
+#screen-battle #battle-question-window .battle-inline-commands{margin-top:6px;gap:6px;flex-wrap:wrap}
+#screen-battle #battle-question-window .battle-inline-commands .btn{min-width:0;height:34px;padding:4px 12px;font-size:12px}
+#battle-question-window:has(#battle-challenge.hidden){height:auto!important}
+@media(max-width:820px){#screen-battle #battle-question-window{width:calc(100% - 16px);margin:0 8px;height:268px;padding:8px;gap:5px}#screen-battle #battle-player-window.status-window{grid-template-columns:86px minmax(0,1fr) minmax(0,1fr);gap:4px 6px}#screen-battle .battle-top{padding-right:100px}#screen-battle #battle-question-window .challenge-problem{font-size:23px}#screen-battle #battle-question-window .challenge-problem-word{font-size:16px}}
+@media(max-height:520px) and (min-width:600px){#screen-battle .battle-wrap{padding-top:8px!important;gap:4px!important}#screen-battle #battle-question-window{position:absolute;right:105px;bottom:8px;width:min(500px,60vw);margin:0;height:min(268px,calc(100dvh - 16px));max-height:calc(100dvh - 16px)}#screen-battle .battle-field{padding-right:62vw!important}#screen-battle .battle-field .enemy-sprite{max-width:120px;max-height:120px}}
+#screen-battle #battle-player-window.status-window{grid-template-rows:34px 30px}
+#battle-player-window .battle-status-avatar.avatar-composite-stage{--avatar-stage-width:52px;width:52px!important;height:52px!important;min-width:52px!important;max-width:52px!important;min-height:52px!important;max-height:52px!important;margin:0!important}
+#screen-battle #battle-question-window .challenge-main{padding:0;box-sizing:border-box}
+#screen-battle #battle-question-window #ch-form{width:100%;max-width:none}
+#screen-battle #battle-question-window .battle-inline-commands{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;box-sizing:border-box}
+#screen-battle #battle-question-window .battle-inline-commands .btn{width:100%;padding:4px;font-size:11px}
+/* The portrait :has() layout also targets the challenge; keep its body shrinkable. */
+#screen-battle #battle-question-window #battle-challenge.challenge-area:not(.hidden){flex:1 1 0;min-height:0;height:0;max-height:100%;position:static;margin:0;padding:0;overflow-x:hidden;overflow-y:auto}
+#screen-battle .battle-wrap{width:100%;max-width:100%;min-width:0}
+/* Adventure portrait: crop the existing skin to its head, without changing its source. */
+#battle-player-window .battle-status-avatar #battle-player-avatar.avatar-composite-character{inset:auto!important;left:var(--battle-avatar-left,-100%)!important;top:var(--battle-avatar-top,-19%)!important;width:var(--battle-avatar-size,300%)!important;height:var(--battle-avatar-size,300%)!important;object-fit:contain!important;object-position:center top!important}
+/* Separate the summary and answer panels with a small view of the stage between them. */
+#screen-battle #battle-question-window{height:268px;padding:0;gap:6px;background:none;border:0;border-radius:0;box-shadow:none;backdrop-filter:none}
+#screen-battle #battle-player-window.status-window,
+#screen-battle #battle-question-window #battle-challenge.challenge-area:not(.hidden){padding:8px 12px;border:3px solid var(--panel-border);border-radius:14px;background:rgba(22,18,34,.85);box-shadow:0 8px 24px #0009;backdrop-filter:blur(8px)}
+#screen-battle:has(#battle-question-window #battle-challenge:not(.hidden)) .battle-field{flex-shrink:1;min-height:0}
+@media(max-height:520px) and (min-width:600px){#screen-battle #battle-question-window{height:min(268px,calc(100dvh - 16px))}}

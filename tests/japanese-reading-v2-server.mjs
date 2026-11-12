@@ -1,0 +1,7 @@
+// Loopback-only fixture server. Never exposes saves, env files, or repository browsing.
+import http from 'node:http';import fs from 'node:fs/promises';import {fileURLToPath} from 'node:url';
+const root=new URL('../',import.meta.url);
+const files=new Map([['/','tests/fixtures/japanese-reading-v2/preview.html'],['/japanese-reading-v2.html','tests/fixtures/japanese-reading-v2/preview.html'],['/japanese_reading_quests_v2.js','japanese_reading_quests_v2.js'],['/reading_answer_board.js','reading_answer_board.js']]);
+const port=Number(process.env.JR_V2_PORT||5207);
+if(!Number.isInteger(port)||port<1024||port>65535||[5181,5182,5186,5193,8794,8795].includes(port))throw Error('Choose an unused fixture port');
+http.createServer(async(req,res)=>{const path=new URL(req.url,'http://127.0.0.1').pathname,file=files.get(path);if(req.method!=='GET'||!file){res.writeHead(404);res.end('Not found');return;}try{const content=await fs.readFile(fileURLToPath(new URL(file,root)));res.writeHead(200,{'Content-Type':file.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8','Cache-Control':'no-store','Content-Security-Policy':"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'none'; img-src 'self' data:"});res.end(content);}catch{res.writeHead(500);res.end('Fixture unavailable');}}).listen(port,'127.0.0.1',()=>console.log(`Japanese reading fixture: http://127.0.0.1:${port}/japanese-reading-v2.html`));

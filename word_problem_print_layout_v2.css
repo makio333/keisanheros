@@ -1,0 +1,156 @@
+@page { size:A4 portrait; margin:0; }
+.wpp2-root,.wpp2-root *{box-sizing:border-box}
+.wpp2-root{color:#111;font:var(--wpp2-font)/1.8 'Hiragino Mincho ProN','Yu Mincho',serif;line-break:strict;overflow-wrap:anywhere}
+.wpp2-root .wpp2-source{position:absolute;visibility:hidden;width:180mm}
+.wpp2-root .wpp2-page{width:210mm;height:297mm;padding:14mm 15mm 12mm;background:#fff;break-after:page;position:relative;margin:8mm auto;box-shadow:0 1px 8px #aaa}
+.wpp2-root .wpp2-page:last-child{break-after:auto}
+.wpp2-root header{height:27mm;border-bottom:0.4mm solid #333;margin-bottom:4mm}
+.wpp2-root h1{font:bold 17pt/1.3 sans-serif;margin:0 0 2mm}
+.wpp2-root header p{font:10pt/1.5 sans-serif;margin:0}
+.wpp2-root .wpp2-page-body{height:231mm;display:flow-root}
+.wpp2-root footer{font:9pt sans-serif;position:absolute;bottom:9mm;right:15mm}
+.wpp2-root .wpp2-block{padding:0 0 5mm;margin:0;break-inside:avoid}
+.wpp2-root .wpp2-text{white-space:pre-wrap}
+.wpp2-root [data-vertical=true] .wpp2-text{writing-mode:vertical-rl;height:190mm;width:100%;padding:2mm 0;line-height:2;white-space:pre-wrap}
+.wpp2-root p{margin:0 0 2mm;white-space:pre-wrap}
+.wpp2-root .wpp2-question{border-top:0.25mm solid #888;padding-top:3mm}
+.wpp2-root .wpp2-work{border:0.25mm solid #777;padding:2mm;font:10pt sans-serif;margin:2mm 0}
+.wpp2-root .wpp2-answer{display:flex;align-items:end;gap:2mm}
+.wpp2-root .wpp2-answer span{display:inline-block;min-width:80mm;height:10mm;border-bottom:0.3mm solid #333}
+.wpp2-root .wpp2-expression{font-family:serif;white-space:pre-wrap;line-height:1.8}
+.wpp2-root .wpp2-solution{border-left:0.8mm solid #555;padding:3mm;white-space:pre-wrap}
+.wpp2-root table{border-collapse:collapse;width:100%;font-size:0.9em}
+.wpp2-root td,.wpp2-root th{border:0.25mm solid #333;padding:2mm;text-align:center}
+.wpp2-root figure{margin:0}
+.wpp2-root.wpp2-color h1{color:#184d70}
+@media print{html,body{margin:0;padding:0;background:#fff}.wpp2-controls{display:none!important}.wpp2-root .wpp2-page{margin:0;box-shadow:none}.wpp2-root[data-error]{display:none}}
+
+.wpp2-root .wpp2-ancient-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:7mm;padding-bottom:2mm}
+.wpp2-root .wpp2-ancient-pair>.wpp2-question{padding-bottom:2mm}
+.wpp2-root .wpp2-ancient-pair .wpp2-answer span{min-width:0;flex:1}
+
+.wpp2-root .wpp2-prompt-target{text-underline-offset:1mm;font-weight:600}
+.wpp2-root .wpp2-annotated{line-height:2.15}
+.wpp2-root ruby{ruby-align:center}
+.wpp2-root rt{font-size:0.5em;line-height:1}
+.wpp2-root .wpp2-reference{text-underline-offset:1mm}
+.wpp2-root .wpp2-reference-label{font:0.65em sans-serif;margin-right:0.3em}
+.wpp2-root .wpp2-paragraph-marker{font:0.7em sans-serif;margin-right:0.5em}
+.wpp2-root .wpp2-options{list-style:none;padding:0 0 0 4mm;margin:2mm 0}
+.wpp2-root .wpp2-options li{margin:1mm 0}
+.wpp2-root .wpp2-cells{display:inline-flex;flex-wrap:wrap;max-width:100%;vertical-align:middle;gap:0}
+.wpp2-root .wpp2-cells i{display:inline-block;width:8mm;height:8mm;border:0.25mm solid #555}
+.wpp2-root .wpp2-response-lines>div{height:9mm;border-bottom:0.25mm solid #777}
+
+.wpp2-root .wpp2-question-id{font:8pt sans-serif;color:#333}
+
+/* Five-problem math set review: retain large text and compact the writing blocks. */
+.wpp2-math-set{line-height:1.45}.wpp2-math-set .wpp2-block{padding-bottom:2mm}.wpp2-math-set .wpp2-question{padding-top:2mm}.wpp2-math-set .wpp2-answer span{height:6mm}.wpp2-math-set .wpp2-work{margin:1mm 0}
+
+.wpp2-root h1{color:#111;text-shadow:none}
+
+/* A4 one-sheet duplex: metadata and two questions on front, three on back. */
+.wpp2-duplex{line-height:1.85}
+.wpp2-duplex header{height:34mm;margin-bottom:4mm}
+.wpp2-duplex .wpp2-back-header{height:15mm}
+.wpp2-duplex .wpp2-page-body{height:226mm;display:flex;flex-direction:column;gap:4mm}
+.wpp2-duplex .wpp2-back .wpp2-page-body{height:245mm}
+.wpp2-duplex .wpp2-question{flex:1;min-height:min-content;display:flex;flex-direction:column;padding:2mm 0}
+.wpp2-duplex .wpp2-work{flex:1;min-height:26mm!important;margin:3mm 0}
+.wpp2-duplex .wpp2-story{padding-bottom:2mm;flex-shrink:0}
+.wpp2-duplex .wpp2-annotated{line-height:2.1}
+.wpp2-duplex .wpp2-options{margin:1mm 0}
+.wpp2-duplex .wpp2-options li{margin:1.5mm 0}
+.wpp2-duplex .wpp2-reward{font:9pt/1.5 sans-serif;border:0.25mm solid #555;padding:2mm;margin-top:2mm}
+.wpp2-duplex .wpp2-context-note{font:10pt/1.5 sans-serif}
+.wpp2-duplex .wpp2-question-id{display:none}
+.wpp2-duplex .wpp2-question>p{white-space:pre-wrap;margin-bottom:4mm}
+.wpp2-duplex[data-compact="1"]{line-height:1.45}
+.wpp2-duplex[data-compact="1"] .wpp2-annotated{line-height:1.65}
+.wpp2-duplex[data-compact="2"]{font-size:calc(var(--wpp2-font)*.95);line-height:1.45}
+.wpp2-duplex[data-compact="2"] .wpp2-annotated{line-height:1.6}
+.wpp2-duplex[data-compact="3"]{font-size:calc(var(--wpp2-font)*.9);line-height:1.4}
+.wpp2-duplex[data-compact="3"] .wpp2-annotated{line-height:1.55}
+.wpp2-duplex[data-compact="4"]{font-size:calc(var(--wpp2-font)*.88);line-height:1.35}
+.wpp2-duplex[data-compact="4"] .wpp2-annotated{line-height:1.5}
+
+/* Give the printed text itself more vertical room, independently of answer boxes. */
+.wpp2-math-set.wpp2-duplex .wpp2-question>p{line-height:2.2}
+
+.wpp2-root .wpp2-reward-caption{display:block;font:8pt/1.35 sans-serif;margin-bottom:1mm}.wpp2-root .wpp2-reward{line-height:1.2}.wpp2-root header .wpp2-reward{font-size:8pt}
+.wpp2-root:not(.wpp2-duplex) header:has(.print-reward-icons){height:46mm}
+.wpp2-root:not(.wpp2-duplex):has(.print-reward-icons) .wpp2-page-body{height:212mm}
+
+/* Unruled calculation space, approximately twice the previous minimum height. */
+.wpp2-math-set .wpp2-work,.wpp2-root .wpp2-work[aria-label="計算スペース"]{border:0;background:transparent;padding:0}
+
+
+.wpp2-math-set:not(.wpp2-duplex) .wpp2-question>p{line-height:2.2}
+
+/* Selected layout: use the remaining A4 space for unruled calculation work. */
+.wpp2-math-set.wpp2-duplex .wpp2-question>.wpp2-work{flex-grow:1;flex-shrink:0}
+.wpp2-math-set.wpp2-duplex .wpp2-question>.wpp2-fields{flex-shrink:0}
+
+/* The reward rules belong to the reward strip, never through its contents. */
+.wpp2-duplex header{border-bottom:0}
+.wpp2-duplex .wpp2-reward{border:0;border-top:.25mm solid #777;border-bottom:.25mm solid #777;padding:2mm 0}
+
+/* The reward strip already separates the front header from the first math question. */
+.wpp2-math-set.wpp2-duplex .wpp2-front .wpp2-page-body>.wpp2-question:first-child{border-top:0}
+
+/* Japanese reading: the former top header is the rightmost vertical column. */
+.wpp2-landscape-vertical .wpp2-page{width:297mm;height:209.5mm;padding:10mm 12mm;display:flex;flex-direction:row-reverse;gap:5mm;break-inside:avoid;overflow:hidden}
+.wpp2-landscape-vertical .wpp2-page,.wpp2-landscape-vertical .wpp2-page *{text-orientation:upright}
+.wpp2-landscape-vertical header{writing-mode:vertical-rl;width:43mm;height:179mm;flex:0 0 43mm;margin:0;padding:0 0 0 3mm;border:0;border-left:.25mm solid #777}
+.wpp2-landscape-vertical h1{font-size:15pt;line-height:1.3;margin:0 0 0 2mm}
+.wpp2-landscape-vertical .wpp2-metadata{margin-left:2mm}
+.wpp2-landscape-vertical .wpp2-metadata p{margin:0 0 0 1mm;font-size:10pt;line-height:1.4;white-space:nowrap}
+.wpp2-landscape-vertical .wpp2-name-line,.wpp2-landscape-vertical .wpp2-date-line{display:inline-block;vertical-align:middle;width:5mm;height:75mm;border-left:.25mm solid #555;margin-top:3mm}
+.wpp2-landscape-vertical .wpp2-date-line{height:45mm}
+.wpp2-landscape-vertical header .wpp2-reward{margin:0;padding:0;border:0;font-size:8pt}
+.wpp2-landscape-vertical .wpp2-reward-caption{margin:0 0 0 1mm;line-height:1.4}
+.wpp2-landscape-vertical .print-reward-icons{display:flex!important;flex-direction:row;flex-wrap:nowrap!important;gap:2mm!important}
+.wpp2-landscape-vertical .print-reward-icon-entry{flex-direction:row;white-space:nowrap}
+.wpp2-landscape-vertical .wpp2-back-header{width:12mm;flex-basis:12mm;height:179mm}
+.wpp2-landscape-vertical .wpp2-page-body{width:225mm;height:179mm;writing-mode:vertical-rl;display:flex;flex-direction:column;gap:3mm;flex:1;min-width:0}
+.wpp2-landscape-vertical .wpp2-back .wpp2-page-body{height:179mm}
+.wpp2-landscape-vertical .wpp2-story{height:100%;width:max-content;max-width:none;flex:0 0 auto;padding:0 0 0 3mm}
+.wpp2-landscape-vertical [data-vertical=true] .wpp2-text{height:179mm;width:auto;max-height:none;writing-mode:vertical-rl;padding:0;line-height:inherit}
+.wpp2-landscape-vertical .wpp2-question{writing-mode:vertical-rl;height:100%;min-height:0;min-width:min-content;flex:1;border-top:0;border-right:.25mm solid #888;padding:0 3mm}
+.wpp2-landscape-vertical .wpp2-question>p{margin:0 0 0 3mm;line-height:1.7}
+.wpp2-landscape-vertical .wpp2-options{display:flex;flex-direction:column;gap:3mm;padding:0;margin:0 0 0 3mm}
+.wpp2-landscape-vertical .wpp2-options li{margin:0;white-space:normal}
+.wpp2-landscape-vertical .wpp2-response-choice{white-space:nowrap}
+.wpp2-landscape-vertical .wpp2-response-lines{display:flex;flex-direction:column;flex:1;min-width:0}
+.wpp2-landscape-vertical .wpp2-response-lines>div{width:9mm;height:100%;border-bottom:0;border-left:.25mm solid #777;flex:1;min-width:7mm}
+.wpp2-landscape-vertical .wpp2-cells{flex-direction:row;flex-wrap:wrap;max-height:100%;max-width:none}
+.wpp2-landscape-vertical .wpp2-solution{border-left:0;border-right:.8mm solid #555;padding:0 3mm}
+.wpp2-landscape-vertical .wpp2-solution p{margin:0 0 0 2mm}
+.wpp2-landscape-vertical .wpp2-context-note{writing-mode:vertical-rl;margin:0 0 0 2mm}
+.wpp2-landscape-vertical footer{writing-mode:horizontal-tb;bottom:4mm;font-size:8pt}
+@media print{
+ html:has(.wpp2-landscape-vertical),body:has(.wpp2-landscape-vertical){height:auto!important;min-height:0!important}
+}
+
+/* Face close-ups use the existing artwork, clipped independently of text flow. */
+.wpp2-root .wpp2-quest-face{display:inline-block;position:relative;overflow:hidden;width:12mm;height:12mm;writing-mode:horizontal-tb;vertical-align:middle;margin-right:3mm}
+.wpp2-root .wpp2-quest-portrait{position:absolute;max-width:none;max-height:none;object-fit:fill}
+.wpp2-math-set.wpp2-duplex .wpp2-front header:has(.wpp2-quest-face){height:40mm}
+.wpp2-math-set.wpp2-duplex .wpp2-front:has(.wpp2-quest-face) .wpp2-page-body{height:220mm}
+.wpp2-landscape-vertical .wpp2-quest-face{width:12mm;height:12mm;margin:0 0 3mm;vertical-align:middle}
+.wpp2-landscape-vertical .wpp2-front header{width:49mm;flex-basis:49mm}
+.wpp2-landscape-vertical[data-mode=teacher] h1{font-size:13pt}
+.wpp2-landscape-vertical[data-mode=teacher] .wpp2-front header{width:37mm;flex-basis:37mm}
+.wpp2-landscape-vertical[data-mode=teacher] .wpp2-metadata p{font-size:8pt}
+.wpp2-landscape-vertical[data-mode=teacher] .wpp2-reward-caption{font-size:7pt}
+
+.wpp2-landscape-vertical .wpp2-front header{width:35mm;flex-basis:35mm}
+.wpp2-landscape-vertical[data-mode=teacher] .wpp2-front header{width:35mm;flex-basis:35mm}
+.wpp2-landscape-vertical .wpp2-back-header.jp-print-header{display:block!important}
+.wpp2-landscape-vertical .wpp2-back-header .jp-title-stack{width:10mm;flex-basis:10mm}
+.wpp2-landscape-vertical .wpp2-back-header .jp-title-stack h1{max-height:179mm;max-width:10mm}
+
+/* Enclose the reading passage without changing the measured print layout. */
+.wpp2-landscape-vertical .wpp2-story{outline:.3mm solid #333;outline-offset:1mm;border-radius:0}
+
+.wpp2-root .wpp2-paragraph-indent{display:inline-block;inline-size:1em;block-size:1em;vertical-align:top}

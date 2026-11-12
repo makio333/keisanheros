@@ -1,4 +1,4 @@
-const CACHE_NAME = 'legend-heroes-cache-v22';
+const CACHE_NAME = 'legend-heroes-cache-v25';
 const ASSETS_TO_CACHE = [
   './manifest.json',
   './icon-192.png',
@@ -10,7 +10,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker v22] Caching essential PWA assets');
+      console.log('[Service Worker v23] Caching essential PWA assets');
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
@@ -22,7 +22,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
-            console.log('[Service Worker v22] Removing old cache:', key);
+            console.log('[Service Worker v23] Removing old cache:', key);
             return caches.delete(key);
           }
         })
@@ -38,15 +38,17 @@ self.addEventListener('fetch', (event) => {
   }
 
   const url = new URL(event.request.url);
-  // Account/session/save responses must never survive logout or fall back across accounts.
+  // Let the browser own API requests, especially OAuth navigation redirects and
+  // their Set-Cookie headers. Fetching the callback inside a worker can cause
+  // Safari to retry the one-use authorization code. API handlers send no-store.
+  // Returning without respondWith also prevents any offline/cache fallback.
   if (url.pathname === '/api' || url.pathname.startsWith('/api/')) {
-    event.respondWith(fetch(event.request, {cache:'no-store'}));
     return;
   }
 
-  // HTML / JS / ナビゲーションリクエストは必ず「ネットワーク優先（Network-First）」
+  // HTML / JS / CSS / ナビゲーションリクエストは必ず「ネットワーク優先（Network-First）」
   // 端末がオンラインなら常に最新のスクリプトとHTMLを取得し、オフライン時のみキャッシュへフォールバック
-  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html') || url.pathname.endsWith('.js')) {
+  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html') || url.pathname.endsWith('.js') || url.pathname.endsWith('.css') || event.request.destination === 'style') {
     event.respondWith(
       fetch(event.request).then((networkResponse) => {
         if (networkResponse && networkResponse.status === 200 && !networkResponse.headers.get('Cache-Control')?.includes('no-store')) {
@@ -61,16 +63,19 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 静的画像・音声・スタイルなどは「キャッシュ優先（Cache-First）」
+  // 静的画像・音声などは「キャッシュ優先（Cache-First）」
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        return cachedResponse;
+        const cachedType = cachedResponse.headers.get('Content-Type') || '';
+        if (event.request.destination !== 'image' || cachedType.startsWith('image/')) return cachedResponse;
       }
       return fetch(event.request).then((networkResponse) => {
         if (!networkResponse || networkResponse.status !== 200 || networkResponse.headers.get('Cache-Control')?.includes('no-store') || (networkResponse.type !== 'basic' && networkResponse.type !== 'cors')) {
           return networkResponse;
         }
+        // A missing image can receive an HTML fallback; never retain it as artwork.
+        if (event.request.destination === 'image' && !(networkResponse.headers.get('Content-Type') || '').startsWith('image/')) return networkResponse;
         const responseToCache = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(event.request, responseToCache);

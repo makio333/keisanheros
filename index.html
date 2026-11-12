@@ -125,6 +125,10 @@
 
     <!-- タイトル -->
     <section id="screen-title" class="screen active">
+      <div id="title-release-controls" aria-label="バージョン情報">
+        <button id="btn-title-patch-notes" type="button" aria-haspopup="dialog" aria-controls="title-patch-notes-dialog">📝 修正パッチノート</button>
+        <span id="title-version"></span>
+      </div>
       <!-- 隠し要素：背景の魔王城をクリックできる透明ホットスポット（一旦無効化） -->
       <!-- <div id="title-demon-castle-hotspot" class="title-demon-castle-hotspot" title="魔王城"></div> -->
 
@@ -143,6 +147,19 @@
         <button id="btn-goto-admin" class="btn btn-admin-title" style="max-width:320px; margin:14px auto 0;">⚙ かんりしゃせってい</button>
         <p class="hint">※にゅうりょくは すべて はんかく（ぜんかくは じどうへんかん）</p>
       </div>
+
+      <dialog id="title-patch-notes-dialog" aria-labelledby="title-patch-notes-title">
+        <header class="title-patch-notes-header">
+          <h2 id="title-patch-notes-title">修正パッチノート</h2>
+          <button id="btn-title-patch-notes-close" type="button" aria-label="パッチノートを閉じる">✕</button>
+        </header>
+        <div id="title-patch-notes-content" tabindex="0" aria-label="修正履歴"></div>
+        <footer class="title-patch-notes-footer">
+          <p id="title-patch-notes-build"></p>
+          <p id="title-patch-notes-published"></p>
+          <p id="title-patch-notes-hosting"></p>
+        </footer>
+      </dialog>
 
       <!-- 魔王城の秘密プリント モーダル -->
       <div id="modal-demon-castle-secret" class="modal-overlay hidden">
@@ -276,7 +293,7 @@
               <button id="btn-toggle-home-status" class="btn-status-toggle" title="ステータスをおりたたむ">➖</button>
             </div>
             <div class="gold-badge"><span class="gold-badge-icon">💰</span><span id="home-player-gold" class="gold-badge-num">0</span><span class="gold-badge-unit">G</span></div>
-            <div class="stat-bar-wrap">
+            <div class="stat-bar-wrap home-stat-hp">
               <span class="stat-label"><img src="assets/ui_icons/ui_icon_4.png" class="stat-inline-icon">HP</span>
               <div class="stat-bar hp-bar-container">
                 <div id="home-player-hp-ghost" class="stat-bar-fill ghost-fill"></div>
@@ -284,7 +301,7 @@
                 <span class="stat-bar-label"><span id="home-player-hp-num">0</span>/<span id="home-player-hp-max">0</span></span>
               </div>
             </div>
-            <div class="stat-bar-wrap">
+            <div class="stat-bar-wrap home-stat-mp">
               <span class="stat-label"><img src="assets/ui_icons/ui_icon_6.png" class="stat-inline-icon">MP</span>
               <div class="stat-bar mp-bar-container">
                 <div id="home-player-mp-ghost" class="stat-bar-fill ghost-fill"></div>
@@ -292,14 +309,14 @@
                 <span class="stat-bar-label"><span id="home-player-mp-num">0</span>/<span id="home-player-mp-max">0</span></span>
               </div>
             </div>
-            <div class="stat-bar-wrap">
+            <div class="stat-bar-wrap home-stat-exp">
               <span class="stat-label">✨</span>
               <div class="stat-bar exp-bar-container">
                 <div id="home-player-exp" class="stat-bar-fill exp"></div>
                 <span class="stat-bar-label"><span id="home-player-exp-num">0</span>/<span id="home-player-exp-max">0</span></span>
               </div>
             </div>
-            <div class="stat-bar-wrap">
+            <div class="stat-bar-wrap home-stat-atb">
               <span class="stat-label">⚡</span>
               <div class="stat-bar atb"><div id="home-player-atb" class="stat-bar-fill atb"></div></div>
             </div>
@@ -327,10 +344,13 @@
           <span class="hotspot-tag">🌀 合成</span>
         </button>
         <button id="hotspot-quest-board" class="town-hotspot" style="left:83%; top:30%;">
-          <span class="hotspot-tag">📋 サブクエスト<br><span style="font-size:0.75em; color:#ffd34e; font-weight:bold; text-shadow: 0 0 5px rgba(255,211,78,0.8); animation: pulse 1s infinite alternate;">UP! アップデート</span></span>
+          <span class="hotspot-tag">📋 サブクエスト</span>
         </button>
         <button id="hotspot-raid-boss" class="town-hotspot" style="left:75%; top:15%;">
-          <span class="hotspot-tag" style="background:linear-gradient(45deg, #e74c3c, #c0392b); font-weight:900;">👿 レイドボス</span>
+          <span class="hotspot-tag"><img class="raid-town-icon" src="assets/raid/raid_boss_halloween_moon_wraith.png" alt="" width="32" height="32"><span>レイドボス</span></span>
+        </button>
+        <button id="hotspot-christmas" class="town-hotspot christmas-home-entry hidden" style="left:50%; top:17%;">
+          <span class="hotspot-tag christmas-home-tag"><img src="assets/christmas/christmas_tree_monster.png" alt="" width="48" height="48"><span>🎄 サンタクロース村へ<br><small>フィンランド・ラップランド</small></span></span>
         </button>
         <button id="hotspot-halloween" class="town-hotspot halloween-home-entry hidden" style="left:50%; top:17%;">
           <span class="hotspot-tag halloween-home-tag"><img src="assets/halloween/pumpkin_imp.png" alt="" width="48" height="48"><span>🎃 ハロウィンの森<br><small>10/31まで・復習チャレンジ</small></span></span>
@@ -484,17 +504,17 @@
       <div class="gacha-page">
         <header class="gacha-page-header">
           <button id="btn-gacha-back" class="window-nav-btn window-back-btn">← もどる</button>
-          <h2>クリスマスガチャ</h2>
+          <h2>ガチャ</h2>
           <div class="gacha-wallet"><span>所持ゴールド</span><strong><b id="gacha-current-gold">0</b> G</strong></div>
         </header>
-        <div class="gacha-page-tabs" role="tablist" aria-label="クリスマスガチャの種類">
-          <button id="btn-gacha-tab-skins" class="hidden" type="button" role="tab" aria-controls="skin-gacha-section" aria-selected="false">背景スキンガチャ</button>
-          <button id="btn-gacha-tab-items" class="hidden" type="button" role="tab" aria-controls="gacha-item-section" aria-selected="false">装備ガチャ</button>
-          <button id="btn-gacha-tab-halloween" class="hidden" type="button" role="tab" aria-controls="halloween-gacha-section" aria-selected="false">ハロウィンガチャ</button>
-          <button id="btn-gacha-tab-christmas-skins" type="button" role="tab" aria-controls="christmas-skin-gacha-section" aria-selected="true">クリスマススキンガチャ</button>
-          <button id="btn-gacha-tab-christmas-items" type="button" role="tab" aria-controls="christmas-equip-gacha-section" aria-selected="false">クリスマス装備ガチャ</button>
+        <div class="gacha-page-tabs" role="tablist" aria-label="ガチャの種類">
+          <button id="btn-gacha-tab-skins" type="button" role="tab" aria-controls="skin-gacha-section" aria-selected="true">背景スキンガチャ</button>
+          <button id="btn-gacha-tab-items" type="button" role="tab" aria-controls="gacha-item-section" aria-selected="false">装備ガチャ</button>
+          <button id="btn-gacha-tab-halloween" type="button" role="tab" aria-controls="halloween-gacha-section" aria-selected="false">ハロウィンガチャ</button>
+          <button id="btn-gacha-tab-christmas-skins" type="button" role="tab" aria-controls="christmas-skin-gacha-section" aria-selected="false">クリスマススキン</button>
+          <button id="btn-gacha-tab-christmas-items" type="button" role="tab" aria-controls="christmas-equip-gacha-section" aria-selected="false">クリスマス装備</button>
         </div>
-        <section id="skin-gacha-section" class="skin-gacha-panel hidden" role="tabpanel" aria-labelledby="btn-gacha-tab-skins">
+        <section id="skin-gacha-section" class="skin-gacha-panel" role="tabpanel" aria-labelledby="btn-gacha-tab-skins">
           <div class="gacha-showcase">
             <img id="skin-gacha-title" class="gacha-logo" src="assets/ui/background_skin_gacha_logo.png" alt="背景スキンガチャ">
             <div class="gacha-feature-lineup">
@@ -507,7 +527,7 @@
           <div class="gacha-summon-bar">
             <div class="skin-gacha-balance"><img class="skin-ticket-icon" src="assets/items/background_skin_ticket.png" alt="背景スキンガチャチケット">所持チケット <b id="skin-gacha-tickets">0</b> 枚</div>
           <div class="skin-gacha-draw-actions">
-              <button id="btn-skin-gacha-draw" class="btn btn-primary" type="button">1000Gで1回引く</button>
+              <button id="btn-skin-gacha-draw" class="btn btn-primary" type="button">2500Gで1回引く</button>
               <button id="btn-skin-gacha-ticket" class="btn" type="button">チケット1枚で1回引く</button>
           </div>
           <div id="skin-gacha-status" class="flavor" aria-live="polite"></div>
@@ -543,11 +563,11 @@
           <div class="christmas-gacha-controls">
             <div class="skin-gacha-balance"><img class="skin-ticket-icon" src="assets/items/background_skin_ticket.png" alt="背景スキンガチャチケット"> 所持チケット <b id="christmas-skin-gacha-tickets">0</b> 枚</div>
             <div class="menu-grid christmas-gacha-draw-actions">
-              <button id="btn-christmas-skin-gacha-draw" class="btn btn-primary" type="button">1000Gで1回引く</button>
+              <button id="btn-christmas-skin-gacha-draw" class="btn btn-primary" type="button">2500Gで1回引く</button>
               <button id="btn-christmas-skin-gacha-ticket" class="btn" type="button">チケット1枚で1回引く</button>
             </div>
             <p id="christmas-skin-gacha-status" class="christmas-gacha-note" aria-live="polite"></p>
-            <div class="gacha-collection-heading"><h3>ラインナップ</h3><span>通常スキン・背景＋クリスマス限定スキン・背景・フレーム</span></div>
+            <div class="gacha-collection-heading"><h3>限定ピックアップ</h3><span>通常品1種あたりの抽選重み1.5倍</span></div><div id="christmas-skin-gacha-featured" class="christmas-skin-gacha-collection"></div><div class="gacha-collection-heading"><h3>通常ラインナップ</h3><span>通常スキン・背景</span></div>
             <div id="christmas-skin-gacha-collection" class="christmas-skin-gacha-collection" aria-live="polite"></div>
           </div>
         </section>
@@ -557,7 +577,7 @@
             <p>いつもの装備に、雪の国の限定装備が加わった特別ラインナップ！</p>
           </div>
           <div class="christmas-gacha-controls">
-            <div class="gacha-collection-heading"><h3>クリスマス限定ピックアップ</h3><span>クリスマス装備のみピックアップ抽選</span></div>
+            <div class="gacha-collection-heading"><h3>クリスマス限定ピックアップ</h3><span>限定枠 合計20%（装備可能な候補がある場合）</span></div>
             <div id="christmas-equipment-gacha-featured" class="equipment-gacha-featured"></div>
             <div class="menu-grid christmas-equipment-gacha-actions">
               <button id="btn-christmas-gacha-1" class="btn" type="button">1回引く (150G)</button>
@@ -568,7 +588,7 @@
               <button id="btn-christmas-gacha-ticket" class="btn" type="button">10連チケットで10回引く</button>
             </div>
             <div id="christmas-gacha-results" class="log-box christmas-gacha-results"></div>
-            <div class="gacha-collection-heading"><h3>通常排出装備</h3><span>通常装備・ガチャ限定装備も抽選対象</span></div>
+            <div class="gacha-collection-heading"><h3>通常排出装備</h3><span>★1 60%・★2 30%・★3 9%・★4 0.7%・★5 0.3%（全体のレア度確率）</span></div>
             <div id="christmas-equipment-gacha-collection" class="equipment-gacha-collection"></div>
           </div>
         </section>
@@ -625,20 +645,24 @@
           <button id="btn-raid-exchange" class="btn">🪙 コイン交換所</button>
           <button id="btn-raid-history" class="btn" style="margin-left:8px;">討伐履歴</button>
         </header>
+        <div id="raid-final-push-announcement" class="raid-final-push-announcement hidden" role="status" aria-live="polite">
+          <strong>🔥 最後の力を振り絞れ！</strong>
+          <span id="raid-final-push-details"></span>
+        </div>
         <section id="raid-rules" class="raid-how-to-play hidden" aria-labelledby="raid-how-to-play-title">
           <h3 id="raid-how-to-play-title">レイドのルール</h3>
           <ol>
             <li><b>ちょうせんする</b><span>問題に答えると、ボスに攻撃！</span></li>
-            <li><b>力を出しきろう</b><span>1問ごとに次のステージの問題へ。まちがえると反撃されるよ。自分のHPが0になっても、あたえたダメージは記録されるよ。</span></li>
-            <li><b>レイドコイン</b><span>挑戦ごとに、その回のダメージ÷4（端数切り上げ）を獲得。討伐時の順位報酬は1位50枚・2位30枚・3位15枚・4位以降5枚。コイン交換所で限定装備・スキン・背景・フレームと交換できるよ。</span></li>
-            <li><b>レイドチケット</b><span>挑戦には 🎟️レイドチケットが 1まい いるよ。ボスの レベルが あがるたびに 1まい もらえて、ピックアップステージの ボーナスでも もらえるよ。戦闘中に「わからない」を おすと、負けずに おわれるよ（ダメージは きろくされる）。</span></li>
+            <li><b>力を出しきろう</b><span id="raid-rule-progression">1問ごとに次のステージの問題へ。まちがえると反撃されるよ。自分のHPが0になっても、あたえたダメージは記録されるよ。</span></li>
+            <li><b>レイドコイン</b><span>10ダメージごとに1枚を獲得。討伐時の順位報酬は1位20枚・2位15枚・3位10枚・4〜10位5枚。コイン交換所で限定装備・スキン・背景・フレームと交換できるよ。</span></li>
+            <li><b>参加費なし</b><span>チケットなしで何度でも挑戦できます。戦闘中に「わからない」を押すと終了でき、ここまでのダメージは記録されます。</span></li>
             <li><b>ランキングに挑戦</b><span>開催中は何回でも挑戦して、合計ダメージをのばそう！ ボス討伐後1分で最終順位を集計し、集計が終わると次のレベルがすぐ始まるよ。最後の一撃を与えた人（同時なら複数）には、撃破ボーナスチケットもプレゼント！参加するだけでマグマの背景ももらえるよ。</span></li>
           </ol>
           <p>ランキングとボスのHPは、ほかの端末とも共有されるよ。通信できないときの記録は、再接続すると送られるよ。</p>
         </section>
         <section class="raid-boss-overview">
             <div class="raid-boss-portrait">
-              <img src="assets/raid/raid_boss_dark_bahamut_blueflame_pixel_v2.png" alt="青い炎をまとう暗黒竜ダークバハムートの顔">
+              <img src="assets/raid/raid_boss_dark_bahamut_final_form.png" alt="黒い炎をまとった青い体のダークバハムート最終形態">
             </div>
             <div class="raid-boss-summary">
             <div class="raid-boss-stats">
@@ -678,16 +702,9 @@
         <header class="quest-board-header">
           <button id="btn-quest-board-back" class="window-nav-btn window-back-btn" type="button">← もどる</button>
           <h2 id="quest-board-title" class="quest-board-heading">＊サブクエストボード＊</h2>
-          <div id="quest-medal-count" class="quest-medal-count"></div>
+          <button id="quest-medal-count" class="quest-medal-count" type="button" aria-haspopup="dialog" aria-label="クエストメダル交換所をひらく"></button>
         </header>
-        <div id="quest-medal-shop" class="quest-medal-shop"></div>
-        <section class="math-word-quest-entry" aria-labelledby="math-word-quest-entry-title">
-          <button id="btn-math-word-quests" type="button" class="btn math-word-quest-entry-button">
-            <span id="math-word-quest-entry-title">📖 算数の文章問題（5問まとめて）</span>
-            <small id="math-word-quest-progress">クリア 0 / 180 問</small>
-          </button>
-          <p>5問に答えてから答え合わせ。まちがえた問題はヒントを見てやり直せます。</p>
-        </section>
+        <div id="quest-subject-tabs" class="quest-subject-tabs" role="tablist" aria-label="サブクエストの教科"><button type="button" class="btn" role="tab" data-subject="math" aria-selected="true">🧮 算数</button><button type="button" class="btn" role="tab" data-subject="reading" aria-selected="false">📖 国語</button></div>
         <div id="quest-board-list" class="quest-board-grid"></div>
       </div>
     </div>
@@ -773,8 +790,8 @@
                   <div class="study-card-val-row"><span class="study-card-value" id="player-stat-overall-rate">0</span><span class="study-card-unit">%</span></div>
                 </div>
                 <div class="study-summary-card">
-                  <span class="study-card-label" id="player-stat-growth-label">まだ くらべたデータはないよ</span>
-                  <div class="study-card-val-row"><span class="study-card-value highlight-up" id="player-stat-growth-rate">—</span><span class="study-card-unit">ポイント</span></div>
+                  <span class="study-card-label">せいちょうど (UP!)</span>
+                  <div class="study-card-val-row"><span class="study-card-value highlight-up" id="player-stat-growth-rate">+0</span><span class="study-card-unit">%</span></div>
                 </div>
                 <div class="study-summary-card">
                   <span class="study-card-label">へいきん タイム</span>
@@ -787,8 +804,8 @@
               </div>
 
               <div class="study-chart-section">
-                <h3 style="color:var(--accent); margin-bottom:4px;">📈 ステージごとの せいちょう</h3>
-                <p class="hint" style="margin-bottom:8px;">青＝さいしょの5もん ｜ 金＝24時間たってからの直近5もん。ヒントを使った答えも入るよ。</p>
+                <h3 style="color:var(--accent); margin-bottom:4px;">📈 たんげんべつ せいちょうグラフ</h3>
+                <p class="hint" style="margin-bottom:8px;">青＝さいしょの 正答率 ｜ 金＝いまの 正答率</p>
                 <div class="study-chart-container">
                   <canvas id="player-study-chart" class="study-canvas"></canvas>
                 </div>
@@ -798,6 +815,7 @@
                 <div class="study-section-title-row">
                   <h3 style="color:var(--accent); margin:0;">🎯 ステージごとの せいとうりつ</h3>
                   <select id="player-stats-stage-select" class="admin-select" style="max-width:200px; padding:4px 8px; font-size:12px;"></select>
+                  <label class="study-stage-time-toggle"><input id="player-stage-time-toggle" type="checkbox"> 回答時間</label>
                 </div>
                 <div class="study-chart-container">
                   <canvas id="player-stage-chart" class="study-canvas"></canvas>
@@ -893,36 +911,10 @@
         <div class="battle-top">
           <div class="floor-window" id="battle-floor-title">とう 1かい／10</div>
 
-          <div class="status-window" id="battle-player-window">
-            <div class="status-header-row">
-              <div class="status-line"><span id="battle-player-name">ゆうしゃ</span><span id="battle-player-lv"></span></div>
-            </div>
-            <div class="stat-bar-wrap">
-              <span class="stat-label"><img src="assets/ui_icons/ui_icon_4.png" class="stat-inline-icon">HP</span>
-              <div class="stat-bar hp-bar-container">
-                <div id="battle-player-hp-ghost" class="stat-bar-fill ghost-fill"></div>
-                <div id="battle-player-hp" class="stat-bar-fill hp"></div>
-                <span class="stat-bar-label"><span id="battle-player-hp-num">0</span>/<span id="battle-player-hp-max">0</span></span>
-              </div>
-            </div>
-            <div class="stat-bar-wrap">
-              <span class="stat-label"><img src="assets/ui_icons/ui_icon_6.png" class="stat-inline-icon">MP</span>
-              <div class="stat-bar mp-bar-container">
-                <div id="battle-player-mp-ghost" class="stat-bar-fill ghost-fill"></div>
-                <div id="battle-player-mp" class="stat-bar-fill mp"></div>
-                <span class="stat-bar-label"><span id="battle-player-mp-num">0</span>/<span id="battle-player-mp-max">0</span></span>
-              </div>
-            </div>
-            <div class="stat-bar-wrap">
-              <span class="stat-label">✨</span>
-              <div class="stat-bar exp-bar-container">
-                <div id="battle-player-exp" class="stat-bar-fill exp"></div>
-                <span class="stat-bar-label"><span id="battle-player-exp-num">0</span>/<span id="battle-player-exp-max">0</span></span>
-              </div>
-            </div>
-          </div>
+
         </div>
 
+        <div id="ancient-exp-toast-v2" class="ancient-exp-toast-v2" hidden></div>
         <div id="battle-field" class="battle-field">
           <canvas id="game-canvas"></canvas>
           <div class="battle-field-enemy">
@@ -953,7 +945,38 @@
              この まどの 出し入れは CSS（#battle-challenge が ひらいている あいだだけ 見える） -->
         <div id="calc-problem-center"></div>
 
+        <div id="battle-question-window">
+          <div class="status-window" id="battle-player-window">
+            <div class="status-header-row">
+              <div class="status-line"><span id="battle-player-lv"></span><span id="battle-player-name">ゆうしゃ</span></div>
+              <div class="battle-status-avatar"><img id="battle-player-avatar" alt="ゆうしゃの姿"></div>
+            </div>
+            <div class="stat-bar-wrap battle-stat-hp">
+              <span class="stat-label"><img src="assets/ui_icons/ui_icon_4.png" class="stat-inline-icon">HP</span>
+              <div class="stat-bar hp-bar-container">
+                <div id="battle-player-hp-ghost" class="stat-bar-fill ghost-fill"></div>
+                <div id="battle-player-hp" class="stat-bar-fill hp"></div>
+                <span class="stat-bar-label"><span id="battle-player-hp-num">0</span>/<span id="battle-player-hp-max">0</span></span>
+              </div>
+            </div>
+            <div class="stat-bar-wrap battle-stat-mp">
+              <span class="stat-label"><img src="assets/ui_icons/ui_icon_6.png" class="stat-inline-icon">MP</span>
+              <div class="stat-bar mp-bar-container">
+                <div id="battle-player-mp-ghost" class="stat-bar-fill ghost-fill"></div>
+                <div id="battle-player-mp" class="stat-bar-fill mp"></div>
+                <span class="stat-bar-label"><span id="battle-player-mp-num">0</span>/<span id="battle-player-mp-max">0</span></span>
+              </div>
+            </div>
+            <div class="stat-bar-wrap battle-stat-exp">
+              <span class="stat-label">EXP</span>
+              <div class="stat-bar exp-bar-container">
+                <div id="battle-player-exp" class="stat-bar-fill exp"></div>
+                <span class="stat-bar-label"><span id="battle-player-exp-num">0</span>/<span id="battle-player-exp-max">0</span></span>
+              </div>
+            </div>
+          </div>
         <div id="battle-challenge" class="challenge-area hidden"></div>
+        </div>
         <div id="battle-sub-menu" class="command-window hidden"></div>
 
         <!-- 漢字入力バトルUI (非表示で追加) -->
@@ -975,12 +998,10 @@
           </div>
           <div id="kanji-hint" class="kanji-hint hidden"></div>
           <div class="input-display" id="kanji-input-display">
-            <input type="text" id="challenge-input" placeholder="ひらがなで入力" autocomplete="off" inputmode="text" enterkeyhint="send" readonly>
+            <input type="text" id="challenge-input" placeholder="ひらがなで入力" autocomplete="off" inputmode="text" enterkeyhint="send">
             <button id="btn-submit-answer" class="submit-btn">決定</button>
           </div>
-          <div class="input-mode-toggle" id="kanji-input-toggle">
-            <button id="btn-toggle-input" class="toggle-btn">入力切替：五十音</button>
-          </div>
+
           <div id="kanji-battle-commands" class="battle-inline-commands hidden" style="margin-top: 10px; display: flex; gap: 8px; justify-content: center;">
             <button type="button" id="btn-kanji-skill" class="btn">✨ とくぎ</button>
             <button type="button" id="btn-kanji-item" class="btn">🧪 どうぐ</button>
@@ -1033,6 +1054,10 @@
                 <span class="room-nav-icon">📊</span>
                 <span class="room-nav-text">学習レポート</span>
               </button>
+              <button class="room-nav-btn admin-nav-btn" data-admin-tab="challenges" id="admin-tab-btn-challenges">
+                <span class="room-nav-icon">🎯</span>
+                <span class="room-nav-text">チャレンジ判定</span>
+              </button>
               <button class="room-nav-btn admin-nav-btn" data-admin-tab="timelimit" id="admin-tab-btn-timelimit">
                 <span class="room-nav-icon">⏰</span>
                 <span class="room-nav-text">時間制限</span>
@@ -1064,7 +1089,8 @@
                     <select id="admin-stats-slot-select" class="admin-select" style="min-width:180px; padding:6px 10px; font-size:13px;"></select>
                   </div>
                 </div>
-                <p class="flavor" style="margin:4px 0 14px;">学習の目安としてご覧ください。同じステージの最初の5問と、24時間以上あけた後の直近5問を比較します。各5問がそろうまでは成長度に含めず、ヒントを使った回答も記録します。過去の累積記録は初回測定に流用せず、今後の回答から測定します。学校の成績を判定する評価ではありません。</p>
+                <p class="flavor" style="margin:4px 0 14px;">お子様の単元・ステージごとの解答履歴、最初の正答率と最新の正答率の比較、苦手・得意分野を詳細に可視化します。</p>
+                <button type="button" id="btn-admin-ancient-compensation" class="btn">選択した子の既存エンシェント装備をLv50で引き継ぐ</button>
 
                 <!-- サマリーカード -->
                 <div class="study-summary-cards">
@@ -1077,8 +1103,8 @@
                     <div class="study-card-val-row"><span class="study-card-value" id="admin-stat-overall-rate">0</span><span class="study-card-unit">%</span></div>
                   </div>
                   <div class="study-summary-card">
-                    <span class="study-card-label" id="admin-stat-growth-label">比較できる記録なし</span>
-                    <div class="study-card-val-row"><span class="study-card-value highlight-up" id="admin-stat-growth-rate">—</span><span class="study-card-unit">ポイント</span></div>
+                    <span class="study-card-label">平均成長度 (UP!)</span>
+                    <div class="study-card-val-row"><span class="study-card-value highlight-up" id="admin-stat-growth-rate">+0</span><span class="study-card-unit">%</span></div>
                   </div>
                   <div class="study-summary-card">
                     <span class="study-card-label">平均解答タイム</span>
@@ -1094,17 +1120,17 @@
                   </div>
                 </div>
 
-                <!-- ステージ別 成長比較グラフ -->
+                <!-- 単元別 成長比較グラフ -->
                 <div class="study-chart-section">
                   <div class="study-section-title-row">
-                    <h4 style="color:var(--accent); margin:0;">📈 ステージ別 正答率の比較</h4>
+                    <h4 style="color:var(--accent); margin:0;">📈 単元別 正答率の推移（初回 ➔ 最新）</h4>
                     <div style="display:flex; gap:6px;">
                       <button id="btn-admin-filter-all" class="btn btn-sm btn-filter is-active">すべて</button>
                       <button id="btn-admin-filter-math" class="btn btn-sm btn-filter">さんすう</button>
                       <button id="btn-admin-filter-kanji" class="btn btn-sm btn-filter">こくご(漢字)</button>
                     </div>
                   </div>
-                  <p class="hint" style="margin:4px 0 8px;">青バー＝初回5問 ｜ 金バー＝24時間以上後の直近5問 ｜ 右側＝変化（ポイント）。5問ずつそろうまで比較値は表示しません。</p>
+                  <p class="hint" style="margin:4px 0 8px;">青バー＝初期の正答率 ｜ 金バー＝最新の正答率 ｜ 右側の数値＝成長率（UP!）</p>
                   <div class="study-chart-container">
                     <canvas id="admin-study-chart" class="study-canvas"></canvas>
                   </div>
@@ -1115,6 +1141,7 @@
                   <div class="study-section-title-row">
                     <h4 style="color:var(--accent); margin:0;">🎯 ステージ・エリア別 正答率推移グラフ</h4>
                     <select id="admin-stats-stage-select" class="admin-select" style="max-width:260px; padding:4px 8px; font-size:12px;"></select>
+                    <label class="study-stage-time-toggle"><input id="admin-stage-time-toggle" type="checkbox"> 回答時間</label>
                   </div>
                   <div class="study-chart-container">
                     <canvas id="admin-stage-chart" class="study-canvas"></canvas>
@@ -1123,18 +1150,18 @@
 
                 <!-- 詳細データテーブル -->
                 <div class="study-table-section" style="margin-top:18px;">
-                  <h4 style="color:var(--accent); margin-bottom:8px;">📋 ステージ別 詳細データ一覧</h4>
+                  <h4 style="color:var(--accent); margin-bottom:8px;">📋 単元・ステージ別 詳細データ一覧</h4>
                   <div class="study-table-wrap">
                     <table class="study-data-table" id="admin-study-table">
                       <thead>
                         <tr>
-                          <th>教科</th>
-                          <th>ステージ名</th>
+                          <th>単元名</th>
                           <th>解答数</th>
-                          <th>最初の5問</th>
-                          <th>後日の5問</th>
-                          <th>正答率の変化</th>
-                          <th>確認状況</th>
+                          <th>初期正答率</th>
+                          <th>最新正答率</th>
+                          <th>平均正答率</th>
+                          <th>成長度</th>
+                          <th>評価</th>
                         </tr>
                       </thead>
                       <tbody id="admin-study-table-body">
@@ -1144,6 +1171,24 @@
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div id="admin-tab-pane-challenges" class="room-tab-pane admin-tab-pane">
+              <section class="admin-challenge-overview">
+                <div class="study-section-title-row">
+                  <div>
+                    <h3 style="color:var(--accent); margin:0 0 5px;">🎯 児童ごとのチャレンジステージ</h3>
+                    <p class="flavor" style="margin:0;">挑戦済みの直近記録から、正答率40%以上100%未満のステージを判定します。候補が複数ある場合は正答率が低いステージを優先します。</p>
+                  </div>
+                  <button type="button" id="btn-admin-challenges-refresh" class="btn btn-sm">一覧を更新</button>
+                </div>
+                <div class="study-table-wrap">
+                  <table class="study-data-table admin-challenge-table">
+                    <thead><tr><th>児童</th><th>チャレンジ候補（優先1件）</th><th>判定理由</th><th>到達・参加状況（別枠）</th></tr></thead>
+                    <tbody id="admin-challenge-stage-list"><tr><td colspan="4" style="text-align:center; padding:16px;">一覧を読み込んでいます</td></tr></tbody>
+                  </table>
+                </div>
+              </section>
             </div>
 
             <!-- タブ2: プレイ時間制限 -->
@@ -1316,7 +1361,7 @@
       <div class="modal-panel study-stats-modal-panel" style="position: relative;">
         <button id="btn-admin-cancel-delete-save" class="window-nav-btn window-close-btn">✕ とじる</button>
         <h2>🗂️ セーブデータの 管理</h2>
-        <p class="flavor">アーカイブすると「つづきから」の一覧には出なくなります。必要になったらここから戻せます。</p>
+        <p class="flavor">アーカイブすると「つづきから」の一覧には出なくなります。必要になったらここから戻せます。完全に削除しても、アカウント・購入済みの保存枠・購入権は残ります。</p>
         <div class="admin-save-tools">
           <label class="admin-save-search-label" for="admin-save-search">名前で検索</label>
           <input id="admin-save-search" type="search" placeholder="プレイヤー名を入力" autocomplete="off">
@@ -1333,6 +1378,7 @@
           <button id="btn-admin-unarchive-save" class="btn good" style="flex:1; min-width:160px;">アーカイブから戻す</button>
           <button id="btn-admin-exec-delete-save" class="btn bad" style="flex:1; min-width:160px;">完全にさくじょ</button>
         </div>
+        <p id="admin-save-manage-status" role="status" aria-live="polite"></p>
       </div>
     </div>
 
@@ -1344,7 +1390,7 @@
 <div id="result-overlay" class="hidden">
   <h2 id="result-text"></h2>
 </div>
-<script type="module" src="./main.js"></script>
+<script type="module" src="./main.js?v=rewards1"></script>
 
     <div id="modal-unified-code" class="modal-overlay hidden">
       <div class="panel unified-code-panel">

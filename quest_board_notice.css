@@ -1,0 +1,153 @@
+/* Shared notice artwork for the village board; quest content and rewards stay intact. */
+.quest-villager-medal{display:inline-block;object-fit:contain;vertical-align:middle;flex-shrink:0}
+#screen-quest-board .quest-board-wood.quest-board-wood{isolation:isolate;border:0;border-radius:6px;background:transparent;padding:22px 26px;box-shadow:0 18px 48px #0009;max-height:96dvh}
+#screen-quest-board .quest-board-wood.quest-board-wood::before{content:'';position:absolute;inset:0;z-index:-1;border:44px solid transparent;border-image:url('./assets/quest-board/wooden-board.png') 150 fill / 44px / 0 stretch;pointer-events:none}
+#screen-quest-board .quest-board-wood .quest-board-header{border:0;background:#352417b8;border-radius:5px;padding:7px 10px;margin-bottom:5px}
+#screen-quest-board .quest-board-wood .quest-board-heading{color:#fff3d0;font-family:'Hiragino Mincho ProN','Yu Mincho',serif;text-shadow:0 2px 2px #20140d;font-size:21px}
+#screen-quest-board .quest-board-wood .reading-grade-tabs{background:#53371fe6;border-radius:5px;padding:5px;gap:5px}
+#screen-quest-board .quest-board-wood .quest-subject-tabs .btn,#screen-quest-board .quest-board-wood .reading-grade-tabs .btn{background:#f4e5bf;color:#573d26;border:1px solid #a58450;border-radius:3px;box-shadow:0 2px 3px #25170c55}
+#screen-quest-board .quest-board-wood .quest-subject-tabs [aria-selected=true],#screen-quest-board .quest-board-wood .reading-grade-tabs [aria-pressed=true]{background:#ffe2a0;border-color:#f5bc4f;box-shadow:inset 0 -3px #b67c30}
+#screen-quest-board .quest-board-wood .quest-card.quest-card{isolation:isolate;position:relative;border:0;border-radius:0;background:transparent;padding:24px 14px 27px;box-shadow:none;color:#463021;filter:drop-shadow(0 5px 4px #180d0766)}
+#screen-quest-board .quest-board-wood .quest-card.quest-card::before{content:'';position:absolute;inset:0;z-index:-1;border:28px solid transparent;border-image:url('./assets/reading-quest-letter/letter-paper.png') 150 fill / 28px / 0 stretch;background:none;clip-path:none;box-shadow:none;filter:none}
+#screen-quest-board .quest-board-wood .quest-card.quest-card::after{top:5px;width:9px;height:9px;left:calc(50% - 4px)}
+#screen-quest-board .quest-board-wood .quest-card-ribbon{position:relative;top:auto;left:auto;transform:none;background:transparent;box-shadow:none;border-radius:0;width:100%;height:22px;margin:0 0 3px;order:0}
+#screen-quest-board .quest-board-wood .quest-card-stars span{font-size:16px;color:#c6b99d;text-shadow:none}
+#screen-quest-board .quest-board-wood .quest-card-stars span.on{color:#bd8425;text-shadow:0 1px #fff7d8}
+#screen-quest-board .quest-board-wood .quest-card-art{height:76px;width:100%;margin:0 0 4px;border:0;background:transparent;box-shadow:none}
+#screen-quest-board .quest-board-wood .quest-card-art img{width:100%;height:100%;object-fit:contain}
+#screen-quest-board .quest-board-wood .quest-card-name{font-size:12px;color:#785d40;margin:1px 0}
+#screen-quest-board .quest-board-wood .quest-card-title{font:700 16px/1.5 'Hiragino Mincho ProN','Yu Mincho',serif;color:#3e2c20;margin:3px 0 7px;max-height:none;overflow:visible;text-shadow:none}
+#screen-quest-board .quest-board-wood .quest-card-tag{font-size:10px;background:none;border:0;color:#876b4a;padding:0}
+#screen-quest-board .quest-board-wood .quest-card-rewards{background:transparent;border:0;border-top:1px solid #c4ad84;border-radius:0;padding:7px 0 0;gap:5px;margin-top:auto}
+#screen-quest-board .quest-board-wood .quest-card-rewards .qc-reward{background:#e6d5af66;color:#594125;border:0;padding:4px;border-radius:3px}
+#screen-quest-board .quest-board-wood .reading-card-rewards{grid-template-columns:1fr}
+#screen-quest-board .quest-board-wood .reading-v2-review-teaser{font-size:10px;background:transparent;padding:3px;color:#86602b;line-height:1.5}
+#screen-quest-board .quest-board-wood .quest-card .btn{background:#f6e6be;color:#624629;border:1px solid #a58753;border-radius:3px;box-shadow:0 2px 0 #b99a62;font-size:12px;min-height:30px;padding:6px;line-height:1.4}
+#screen-quest-board .quest-board-wood .quest-card .reading-quest-card-actions .btn:first-child{background:#70503b;color:#fff4db;border-color:#563c29;box-shadow:0 2px 0 #493120}
+#screen-quest-board .quest-board-wood .quest-board-grid{padding:15px 7px 12px}
+#screen-quest-board .quest-board-wood .reading-quest-grid{gap:19px 14px;padding-top:12px}
+#screen-quest-board .quest-board-wood .reading-v2-suggestion{background:#fff1cf;color:#4c3622;border-color:#b6975b;margin-top:8px}
+@media(max-width:640px){
+ #screen-quest-board .quest-board-wood.quest-board-wood{padding:14px 12px;max-height:97dvh}
+ #screen-quest-board .quest-board-wood.quest-board-wood::before{border-width:28px;border-image-width:28px}
+ #screen-quest-board .quest-board-wood .quest-card.quest-card{padding:18px 9px 24px}
+ #screen-quest-board .quest-board-wood .quest-card-art{height:64px}
+ #screen-quest-board .quest-board-wood .quest-card-title{font-size:14px}
+ #screen-quest-board .quest-board-wood .quest-board-heading{font-size:16px}
+ #screen-quest-board .quest-board-wood .quest-card-name{font-size:11px}
+}
+@media(max-height:620px){#screen-quest-board .quest-board-wood .quest-card-art{height:42px}#screen-quest-board .quest-board-wood .quest-card.quest-card{padding-top:16px}#screen-quest-board .quest-board-wood .quest-card-title{font-size:12px}}
+#screen-quest-board .quest-board-wood .quest-card-rewards .qc-reward>b{color:#604424}
+#screen-quest-board .quest-board-wood .quest-card [data-reward-kind=medal]{background:transparent;border:0;box-shadow:none;padding:0}
+/* A quick read: stars, a close portrait, the kind of problem and its reward. */
+#screen-quest-board .quest-board-wood .quest-card-art{position:relative;height:150px;overflow:hidden;margin:0 0 8px;border-radius:3px}
+#screen-quest-board .quest-board-wood .quest-card-art img{position:absolute;top:-5px;left:50%;width:320px;height:320px;max-width:none;max-height:none;transform:translateX(-50%);object-fit:contain;object-position:center top}
+#screen-quest-board .quest-board-wood .quest-card-name,#screen-quest-board .quest-board-wood .reading-v2-review-teaser,#screen-quest-board .quest-board-wood .quest-card-rewards .qc-reward>b{display:none}
+#screen-quest-board .quest-board-wood .quest-card-title{margin:0 0 3px;font-size:16px;line-height:1.45}
+#screen-quest-board .quest-board-wood .quest-card-tag{font-size:12px;margin-bottom:8px;color:#6b5036}
+#screen-quest-board .quest-board-wood .quest-card-rewards .qc-reward{padding:5px 3px;background:transparent}
+#screen-quest-board .quest-board-wood .quest-card .quest-card-print{flex:0 0 34px;max-width:34px;font-size:14px}
+@media(max-width:640px){
+ #screen-quest-board .quest-board-wood .quest-card-art{height:132px;margin-bottom:6px}
+ #screen-quest-board .quest-board-wood .quest-card-art img{width:280px;height:280px;top:-4px}
+ #screen-quest-board .quest-board-wood .quest-card-title{font-size:14px}
+ #screen-quest-board .quest-board-wood .quest-card-tag{font-size:11px;margin-bottom:6px}
+}
+@media(max-height:620px){#screen-quest-board .quest-board-wood .quest-card-art{height:108px}#screen-quest-board .quest-board-wood .quest-card-art img{width:240px;height:240px}}
+/* Smaller notices leave more of the wooden board visible. */
+#screen-quest-board .quest-board-wood .reading-quest-grid{justify-items:center;gap:16px 12px}
+#screen-quest-board .quest-board-wood .quest-card.quest-card{width:100%;max-width:310px;padding:20px 12px 23px}
+#screen-quest-board .quest-board-wood .quest-card-art{height:116px;margin-bottom:5px}
+#screen-quest-board .quest-board-wood .quest-card-art img{width:260px;height:260px;top:-4px}
+#screen-quest-board .quest-board-wood .quest-card-title{font-size:15px;margin-bottom:2px}
+#screen-quest-board .quest-board-wood .quest-card-tag{margin-bottom:5px}
+#screen-quest-board .quest-board-wood .quest-card-rewards{padding-top:5px}
+#screen-quest-board .quest-board-wood .quest-card-rewards .qc-reward{padding:3px}
+@media(max-width:640px){
+ #screen-quest-board .quest-board-wood .quest-card.quest-card{padding:17px 8px 21px}
+ #screen-quest-board .quest-board-wood .quest-card-art{height:108px}
+ #screen-quest-board .quest-board-wood .quest-card-art img{width:240px;height:240px}
+ #screen-quest-board .quest-board-wood .quest-card-title{font-size:14px}
+}
+@media(max-height:620px){#screen-quest-board .quest-board-wood .quest-card-art{height:90px}#screen-quest-board .quest-board-wood .quest-card-art img{width:210px;height:210px}}
+/* The board uses pages only. Every grid gets the measured space left by its controls. */
+#screen-quest-board .quest-board-wood.quest-board-wood{height:96dvh;min-height:0;overflow:hidden;padding:16px 20px}
+#screen-quest-board .quest-board-wood .quest-board-grid{display:flex;flex-direction:column;flex:1 1 0;min-height:0;overflow:hidden;padding:5px 0 0;gap:0}
+#screen-quest-board .quest-board-wood .quest-board-grid>.reading-subquests,#screen-quest-board .quest-board-wood .quest-board-grid>.math-word-subquests,#screen-quest-board .quest-board-wood .reading-v2-subquests{display:flex;flex-direction:column;flex:1 1 0;min-height:0;min-width:0;overflow:hidden}
+#screen-quest-board .quest-board-wood :is(.reading-v2-section-heading,.math-word-quest-heading){flex:0 0 auto;font-size:14px;line-height:1.3;margin:5px 0 3px}
+#screen-quest-board .quest-board-wood .quest-board-progress-summary{flex:0 0 auto;padding:4px 10px;font-size:11px;margin:2px auto 4px}
+#screen-quest-board .quest-board-wood .reading-grade-tabs{position:static;flex:0 0 auto;margin:3px 0;padding:3px}
+#screen-quest-board .quest-board-wood .reading-grade-tabs .btn{padding:5px 3px;min-height:28px;margin:0}
+#screen-quest-board .quest-board-wood .quest-subject-tabs{flex:0 0 auto;margin-top:4px}
+#screen-quest-board .quest-board-wood .quest-subject-tabs .btn{padding:6px;min-height:30px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid{display:grid;flex:1 1 0;min-height:0;min-width:0;overflow:hidden;grid-template-columns:repeat(var(--quest-columns,3),minmax(0,1fr));grid-template-rows:repeat(var(--quest-rows,1),minmax(0,1fr));gap:10px;align-items:stretch;align-content:stretch;justify-items:center;padding:4px}
+#screen-quest-board .quest-board-wood .quest-board-pager{position:static;flex:0 0 auto;min-height:34px;height:34px;padding:2px;margin:3px 0 0;gap:10px}
+#screen-quest-board .quest-board-wood .quest-page-btn{min-height:28px;height:28px;padding:3px 10px;font-size:12px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .quest-card.quest-card{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:16px minmax(30px,1fr) 34px 26px 42px 28px;gap:0;align-items:center;justify-items:center;width:100%;height:100%;max-width:240px;min-width:0;min-height:0;padding:12px 8px 16px;margin:0;transform:none;overflow:hidden;box-sizing:border-box}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .quest-card:hover{transform:none;filter:brightness(1.03);outline-offset:-2px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .quest-card-ribbon{height:16px;margin:0;min-width:0}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .quest-card-stars span{font-size:14px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .quest-card-art{width:100%;height:100%;min-height:0;max-height:100px;margin:0}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .quest-card-art img{width:200px;height:200px;top:-2px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .quest-card-title{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px;line-height:17px;max-height:34px;margin:0;width:100%;align-self:center}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .quest-card-tag{font-size:10px;line-height:12px;max-height:24px;margin:0;overflow:hidden;align-self:center}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .quest-card-rewards{width:100%;min-width:0;align-self:stretch;margin:0;padding:2px 0 0;gap:0}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .qc-reward{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .qc-icons{line-height:18px;font-size:10px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .qc-gold{font-size:10px;line-height:12px;white-space:normal}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .qc-icons img{width:20px!important;height:20px!important}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .reading-quest-card-actions{display:flex;flex-wrap:nowrap;gap:4px;width:100%;height:26px;margin:0}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .quest-card .btn{font-size:11px;line-height:1.2;padding:3px;min-height:26px;height:26px;margin:0;white-space:nowrap}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .quest-card .quest-card-print{flex:0 0 26px;max-width:26px;min-width:26px;font-size:12px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-compact .quest-card.quest-card{grid-template-rows:14px minmax(12px,1fr) 30px 22px 36px 26px;padding:9px 7px 12px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-compact .quest-card-title{font-size:12px;line-height:15px;max-height:30px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-compact .quest-card-art img{width:160px;height:160px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .quest-card.quest-card{grid-template-columns:48px minmax(0,1fr);grid-template-rows:14px 28px 20px 34px 26px;padding:7px 6px 10px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .quest-card-ribbon{grid-column:1/-1;grid-row:1}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .quest-card-art{grid-column:1;grid-row:2/5;height:100%;width:48px;max-height:none}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .quest-card-art img{width:150px;height:150px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .quest-card-title{grid-column:2;grid-row:2;font-size:11px;line-height:14px;max-height:28px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .quest-card-tag{grid-column:2;grid-row:3;font-size:9px;line-height:10px;max-height:20px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .quest-card-rewards{grid-column:2;grid-row:4}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .reading-quest-card-actions{grid-column:1/-1;grid-row:5}
+#screen-quest-board .quest-board-wood .reading-v2-suggestion{display:grid;grid-template-columns:minmax(0,1fr) auto;flex:0 0 auto;gap:2px 8px;padding:5px 8px;margin:3px 0;font-size:10px;line-height:1.2}
+#screen-quest-board .quest-board-wood .reading-v2-suggestion>b{font-size:11px}
+#screen-quest-board .quest-board-wood .reading-v2-suggestion>span{display:none}
+#screen-quest-board .quest-board-wood .reading-v2-suggestion>.reading-v2-reward-icons{grid-column:1;font-size:10px;gap:4px}
+#screen-quest-board .quest-board-wood .reading-v2-suggestion>.btn{grid-column:2;grid-row:1/3;min-height:28px;padding:3px 6px;font-size:11px;margin:0}
+@media(max-width:640px){#screen-quest-board .quest-board-wood.quest-board-wood{height:97dvh;padding:12px 10px}#screen-quest-board .quest-board-wood .quest-board-header{min-height:36px;padding:3px 5px}#screen-quest-board .quest-board-wood .quest-board-grid{padding-top:2px}}
+@media(max-height:500px){
+ #screen-quest-board .quest-board-wood.quest-board-wood{height:98dvh;max-height:98dvh;padding:7px 10px}
+ #screen-quest-board .quest-board-wood .quest-board-header{min-height:29px;padding:1px 5px;margin:0}
+ #screen-quest-board .quest-board-wood .quest-board-heading{font-size:14px}
+ #screen-quest-board .quest-board-wood :is(.math-word-quest-heading,.reading-v2-section-heading){display:none}
+ #screen-quest-board .quest-board-wood .quest-board-progress-summary{display:none}
+ #screen-quest-board .quest-board-wood .quest-board-header .window-nav-btn{padding:2px 6px;font-size:11px}
+}
+
+#screen-quest-board .quest-board-wood .reading-v2-suggestion[hidden]{display:none}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .quest-card.quest-card{max-height:250px;align-self:start}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .qc-icons{display:flex;align-items:center;justify-content:center;gap:2px;min-height:20px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .qc-icons .stage-reward-icon{width:20px;height:20px;min-width:20px;min-height:20px;padding:0;flex:0 0 20px;line-height:20px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .qc-gold{display:block}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .quest-card.quest-card{grid-template-rows:14px 28px 20px 46px minmax(26px,1fr)}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .reading-quest-card-actions{align-self:end}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .qc-reward{height:100%;min-height:0}
+#screen-quest-board .quest-board-wood .quest-fitted-grid .quest-card.quest-card{grid-template-rows:16px minmax(22px,1fr) 34px 26px 50px 28px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-compact .quest-card.quest-card{grid-template-rows:14px minmax(12px,1fr) 30px 22px 50px 26px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .quest-card.quest-card{grid-template-rows:14px 28px 20px 48px minmax(26px,1fr)}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .quest-card.quest-card{max-height:174px}
+/* The quest's seeded draw selects one of four individually generated papers. */
+#screen-quest-board .quest-board-wood .quest-card[data-notice-variant="fold-upper-left"]{--quest-notice-paper:url('./assets/quest-notices/fold-upper-left.png')}
+#screen-quest-board .quest-board-wood .quest-card[data-notice-variant="fold-lower-right"]{--quest-notice-paper:url('./assets/quest-notices/fold-lower-right.png')}
+#screen-quest-board .quest-board-wood .quest-card[data-notice-variant="fold-lower-left"]{--quest-notice-paper:url('./assets/quest-notices/fold-lower-left.png')}
+#screen-quest-board .quest-board-wood .quest-card[data-notice-variant="torn-upper-right"]{--quest-notice-paper:url('./assets/quest-notices/torn-upper-right.png')}
+#screen-quest-board .quest-board-wood .quest-card.quest-card[data-notice-variant]::before{border-image-source:var(--quest-notice-paper)}
+
+#screen-quest-board .quest-board-wood .quest-card[data-notice-variant="fold-upper-left"]{--quest-paper-slice:200}
+#screen-quest-board .quest-board-wood .quest-card[data-notice-variant="fold-lower-right"]{--quest-paper-slice:260}
+#screen-quest-board .quest-board-wood .quest-card[data-notice-variant="fold-lower-left"]{--quest-paper-slice:180}
+#screen-quest-board .quest-board-wood .quest-card[data-notice-variant="torn-upper-right"]{--quest-paper-slice:270}
+#screen-quest-board .quest-board-wood .quest-card.quest-card[data-notice-variant]::before{border-image-slice:var(--quest-paper-slice) fill}
+/* Keep the action row above the visible paper fold whenever the tile has room. */
+#screen-quest-board .quest-board-wood .quest-fitted-grid.has-fold-room .quest-card.quest-card{padding-bottom:28px}

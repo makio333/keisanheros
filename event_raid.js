@@ -1,18 +1,16 @@
 // Event combat rules are separate from stage rewards and world-raid damage.
 export const EVENT_RAID_RULES = Object.freeze({
   durationMs: 120000, enemyHp: 10, slots: 7, hitIntervalMs:120,
-  targetsPerCorrectAnswer: 3, maxNormalTargets: 4,
+  targetsPerCorrect: 4,
   chargeGoal: 5, specialTargets: 7, enemyAtk:2, enemyDef:0,
   hpPerKill:5, atkPerKill:1, defPerKill:1,
 });
 
 export function eventRaidTargetCount(_elapsedMs, rules = EVENT_RAID_RULES) {
-  return rules.targetsPerCorrectAnswer;
+  return rules.targetsPerCorrect;
 }
 
-export function eventRaidGaugeRatio(_elapsedMs, rules = EVENT_RAID_RULES) {
-  return rules.targetsPerCorrectAnswer / rules.maxNormalTargets;
-}
+export function eventRaidGaugeRatio(_elapsedMs) { return 1; }
 export function formatEventRaidTime(remainingMs) {
   const seconds=Math.ceil(Math.max(0,remainingMs)/1000);
   return `${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;

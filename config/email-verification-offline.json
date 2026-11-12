@@ -1,0 +1,20 @@
+{
+  "profile": "email-verification-offline-fixture",
+  "network": "loopback-only",
+  "auth": {
+    "mode": "fixture",
+    "realFirebase": false
+  },
+  "email": {
+    "send": false
+  },
+  "persistence": {
+    "mode": "temporary-directory"
+  },
+  "sales": {
+    "enabled": false,
+    "checkout": false,
+    "webhooks": false,
+    "externalStripe": false
+  }
+}

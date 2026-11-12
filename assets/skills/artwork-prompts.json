@@ -1,0 +1,41 @@
+{
+  "status": "paused; generated candidates only, runtime keeps original skill artwork",
+  "tool": "built-in image_gen",
+  "references": [
+    "assets/halloween/equip_pumpkin_blade.png",
+    "assets/halloween/equip_witch_mantle.png",
+    "assets/halloween/equip_moon_charm.png"
+  ],
+  "prompts": [
+    {
+      "id": "renzoku",
+      "prompt": "Use case: stylized-concept. Single RPG skill icon: two sweeping silver sword slash crescents with a small steel sword, cool cyan speed trails. Match reference images as STYLE ONLY, no pumpkins or Halloween motifs. Coarse 128x128 logical pixel art, 24-32 colors, dark one pixel logical outline, 3-4 flat shades per material, large readable clusters. Centered square composition, subject fills 84%, authentic alpha transparent background, no border card, no letters, no text, no tiny filigree, no blur or smooth gradients. Readable at 48px and88px.",
+      "source": "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/generated_images/exec-94d8377a-ff59-404b-923a-cc0d7265ba52.png"
+    },
+    {
+      "id": "heal",
+      "prompt": "Use case: stylized-concept. Single RPG skill icon: a golden musical eighth-note with emerald healing leaves and three large green sparkles. Match reference images as STYLE ONLY, no pumpkins or Halloween motifs. Coarse 128x128 logical pixel art, 24-32 colors, dark one pixel logical outline, 3-4 flat shades per material, large readable clusters. Centered square composition, subject fills 84%, authentic alpha transparent background, no border card, no letters, no text, no tiny filigree, no blur or smooth gradients. Readable at 48px and88px.",
+      "source": "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/generated_images/exec-f0c6acae-6259-406f-bdbf-c98657c8db8f.png"
+    },
+    {
+      "id": "honoo",
+      "prompt": "Use case: stylized-concept. Single RPG skill icon: a steel sword pointing upper right, grip lower left, wrapped in bold orange red flames. Match reference images as STYLE ONLY, no pumpkins or Halloween motifs. Coarse 128x128 logical pixel art, 24-32 colors, dark one pixel logical outline, 3-4 flat shades per material, large readable clusters. Centered square composition, subject fills 84%, authentic alpha transparent background, no border card, no letters, no text, no tiny filigree, no blur or smooth gradients. Readable at 48px and88px.",
+      "source": "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/generated_images/exec-13f61656-d9f5-4df6-bba0-b601316a1dc2.png"
+    },
+    {
+      "id": "inazuma",
+      "prompt": "Use case: stylized-concept. Single RPG skill icon: a steel sword pointing upper right, grip lower left, struck by bold golden yellow lightning, violet accents. Match reference images as STYLE ONLY, no pumpkins or Halloween motifs. Coarse 128x128 logical pixel art, 24-32 colors, dark one pixel logical outline, 3-4 flat shades per material, large readable clusters. Centered square composition, subject fills 84%, authentic alpha transparent background, no border card, no letters, no text, no tiny filigree, no blur or smooth gradients. Readable at 48px and88px.",
+      "source": "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/generated_images/exec-5a8ec163-d211-4095-b138-eeca352221d9.png"
+    },
+    {
+      "id": "gale",
+      "prompt": "Use case: stylized-concept. Single RPG skill icon: a steel sword pointing upper right, grip lower left, surrounded by mint green wind crescents. Match reference images as STYLE ONLY, no pumpkins or Halloween motifs. Coarse 128x128 logical pixel art, 24-32 colors, dark one pixel logical outline, 3-4 flat shades per material, large readable clusters. Centered square composition, subject fills 84%, authentic alpha transparent background, no border card, no letters, no text, no tiny filigree, no blur or smooth gradients. Readable at 48px and88px.",
+      "source": "/Users/motoyamayuuki/自作ゲーム/keisanheros-main 2/generated_images/exec-579b314a-abf6-42e6-99e0-a45443719900.png"
+    },
+    {
+      "id": "pumpkin_wave",
+      "prompt": "Use case: stylized-concept. Single RPG skill icon for pumpkin wave: a bright orange jack-o-lantern riding a curved violet magical wave, gold sparkles. References STYLE ONLY. Coarse 128x128 logical pixel art,24-32 colors,dark one logical pixel outline,3-4 flat shades,large readable clusters. Centered square,84 percent fill,authentic alpha transparency,no card border,no text,no smooth gradients or blur. Readable at48px/88px.",
+      "source": "generated_images/exec-d9769440-2c02-4f83-8a01-0c1b7e1f3a55.png"
+    }
+  ]
+}

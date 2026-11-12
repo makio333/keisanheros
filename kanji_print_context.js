@@ -1,3 +1,4 @@
+import {KANJI_PRINT_SENTENCES} from './kanji_print_sentences.js';
 // Original short sentences for worksheets. The separator marks the target word.
 const SENTENCES = {
   '十':'一から|まで かぞえる。', '百':'|まで かぞえる。', '千':'|まで かぞえる。',
@@ -115,9 +116,8 @@ const RPG_SENTENCES = {
 export function kanjiPrintContext(problem) {
   if (problem.printContext) return problem.printContext;
   const word = String(problem.text || '');
-  let sentence = RPG_SENTENCES[word] || SENTENCES[word];
-  if (/^[一二三四五六七八九]つ$/.test(word)) sentence = 'たからの ほうせきが|ある。';
+  let sentence = KANJI_PRINT_SENTENCES[word] || RPG_SENTENCES[word] || SENTENCES[word];
   // Unknown words remain grammatical without inventing their meaning or reading.
-  const [before,after] = (sentence || 'ギルドで「|」の いみを しらべる。').split('|');
+  const [before,after] = (sentence || '「|」という 言葉を 使って 文を 作る。').split('|');
   return {before, after};
 }

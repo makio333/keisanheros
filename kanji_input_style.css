@@ -17,8 +17,10 @@
   position: fixed;
   top: 128px;
   right: 12px;
-  bottom: 200px;
+  bottom: auto;
   width: min(320px, 30vw);
+  height: max-content;
+  max-height: calc(100dvh - 144px);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -50,10 +52,11 @@
    「といを 見る場所」と「うつ場所」が わかれて 見やすい。
    ========================================== */
 #kanji-problem-center {
+  align-self: center;
   width: min(600px, 92vw);
   margin-top: 10px;
   margin-left: auto;
-  margin-right: var(--kanji-gutter);
+  margin-right: auto;
   z-index: 20;
   text-align: center;
   background: rgba(22, 18, 34, 0.55);
@@ -273,9 +276,9 @@
 .kana-board-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; flex:0 0 auto; }
 .kana-board-tab { font:inherit; font-size:13px; font-weight:bold; min-height:32px; padding:4px 2px; color:#d9eaff; background:#24344d; border:1px solid #6a829f; border-radius:6px; cursor:pointer; }
 .kana-board-tab[aria-pressed="true"] { color:#172133; background:#ffda85; border-color:#ffe9b6; }
-.kana-board-section { display:flex; flex-direction:column; flex:1 1 0; min-height:0; overflow:auto; scrollbar-width:thin; }
-.kana-grid.kana-board-grid { grid-auto-flow:row; grid-template-columns:repeat(2,20px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)); gap:4px; flex:1 0 auto; }
-.kana-board-grid .key-btn { font-size:clamp(17px,1.7vw,23px); font-weight:bold; background:#2c3c57; border-color:#8a9db8; border-radius:6px; min-height:28px; }
+.kana-board-section { display:flex; flex-direction:column; flex:0 1 auto; min-height:0; max-height:min(38dvh,280px); overflow:auto; scrollbar-width:thin; }
+.kana-grid.kana-board-grid { grid-auto-flow:row; grid-template-columns:repeat(2,20px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)); grid-auto-rows:auto; align-content:start; gap:4px; flex:0 0 auto; }
+.kana-board-grid .key-btn { box-sizing:border-box; width:100%; aspect-ratio:1 / 1; height:auto; align-self:center; font-size:clamp(17px,1.7vw,23px); font-weight:bold; background:#2c3c57; border-color:#8a9db8; border-radius:6px; min-height:0 !important; padding:0; line-height:1; }
 .kana-board-grid .key-btn:nth-child(12n+8),.kana-board-grid .key-btn:nth-child(12n+9),.kana-board-grid .key-btn:nth-child(12n+10),.kana-board-grid .key-btn:nth-child(12n+11),.kana-board-grid .key-btn:nth-child(12n+12) { background:#3a3451; }
 .kana-row-label { display:flex; align-items:center; justify-content:center; font-size:10px; color:#ffe2a0; line-height:1.2; text-align:center; }
 .kana-board-actions { display:grid; grid-template-columns:1fr 1fr 2.2fr; gap:5px; flex:0 0 auto; }
@@ -283,7 +286,6 @@
 .kana-board-modifiers { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; flex:0 0 auto; }
 .kana-board-modifiers .key-btn { min-height:30px; padding:3px 1px; font-size:12px; font-weight:bold; }
 .kana-board-modifiers .key-btn:nth-child(-n+2) { font-size:24px; line-height:1; }
-.kana-board-grid .key-btn { min-height:22px; }
 .kana-grid.kana-board-grid { gap:2px 4px; }
 .kana-board-actions .key-btn { min-height:34px; font-size:17px; font-weight:bold; }
 .kana-board-actions .key-fn { font-size:12px; color:#ffe0bb; }
@@ -470,7 +472,9 @@
   }
   #kanji-problem-center {
     width: auto;
-    margin: 8px var(--kanji-gutter) 0 146px;
+    align-self: center;
+    margin: 8px auto 0;
+    width: min(600px, calc(100% - 16px));
   }
   #kanji-problem-center .problem-text { font-size: clamp(20px, 6vh, 34px); }
   /* たてが みじかいので、てきの エリアを おもいきり ちぢめて
@@ -511,12 +515,12 @@
   #screen-battle:has(#kanji-prompt:not(.hidden)) #kanji-challenge {
     position: static;
     width: auto;
-    height: 280px;
-    max-height: none;
+    height: max-content;
+    max-height: min(280px, calc(100dvh - 24px));
     margin: 0 8px;
     flex: 0 0 auto;
   }
-  #screen-battle #kanji-problem-center { width: auto; margin: 0 8px; flex: none; }
+  #screen-battle #kanji-problem-center { align-self: center; width: calc(100% - 16px); margin: 0 auto; flex: none; }
   #kanji-problem-center .problem-text { font-size: 28px; overflow-wrap: anywhere; }
   #kanji-problem-center .input-display input { font-size: 16px; }
   #screen-battle.kanji-battle .battle-field { height: 160px; min-height: 160px; flex: none; }
@@ -525,6 +529,21 @@
   #kanji-challenge .key-btn { font-size: 14px; min-height: 32px; }
   #kanji-challenge .control-btn { min-height: 36px; font-size: 12px; }
   .kana-choice-btn { min-width: 0; }
+}
+
+/* タッチ主体の端末では端末標準のフリック入力を使い、ゲーム内五十音ボードを出さない。 */
+@media (pointer: coarse) {
+  #screen-battle #kanji-challenge,
+  #kanji-challenge,
+  #kanji-input-toggle { display: none !important; }
+}
+
+/* 画面の高さ・幅による固定余白を打ち消し、漢字の入力欄を常に中央へ置く。 */
+#screen-battle.kanji-battle #kanji-problem-center {
+  align-self: center;
+  width: min(600px, calc(100% - 16px));
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 #kana-choice-buttons { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; justify-content: center; width: 100%; }
 .kana-choice-button { display: flex; flex-direction: column; gap: 8px; justify-content: center; align-items: center; width: auto; flex: 1 1 180px; min-width: 0; max-width: 360px; padding: 16px; font-size: clamp(20px, 4vw, 28px); font-weight: bold; overflow-wrap: anywhere; border: 3px solid #6a8fff; border-radius: 12px; background: #3a5fc8; color: #fff; }

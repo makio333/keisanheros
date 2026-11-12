@@ -1,0 +1,23 @@
+{
+  "format": "legend-heroes-full-transfer",
+  "version": 1,
+  "sourceProject": "old-game",
+  "exportedAt": "synthetic-fixture",
+  "saves": [
+    {"documentId":"child-one","sourceSlotKey":"fixture-slot-one","gameState":{"playerName":"fixture-one","player":{"lvl":4,"gold":60},"stageClearCounts":{"area1":[1]}}},
+    {"documentId":"child-two","sourceSlotKey":"fixture-slot-two","gameState":{"playerName":"fixture-two","player":{"lvl":12,"gold":900,"uid":"fixture-not-auth"},"ownedEquips":[{"id":"moon-blade"}],"stageClearCounts":{"area2":[2,3]},"accountId":"fixture-forged","purchase":{"productId":"fixture-forged"},"ranking":{"score":999}}},
+    {"documentId":"child-three","sourceSlotKey":"fixture-slot-three","gameState":{"playerName":"fixture-three","player":{"lvl":23,"gold":2300},"stageClearCounts":{"area3":[1,2,3]}}}
+  ],
+  "raidData": {
+    "global": null,
+    "history": [],
+    "bossRankings": [],
+    "raidClaims": [],
+    "raidCoinRankClaims": [],
+    "eventRankings": [],
+    "eventClaims": [],
+    "eventFinalClaims": [],
+    "eventFinalResults": [],
+    "adminGifts": []
+  }
+}

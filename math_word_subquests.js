@@ -1,21 +1,101 @@
-import { getMathWordQuestsV2, scoreMathWordAnswerV2 } from './math_word_quests_v2.js';
-import { getMathWordQuestionVisualV2 } from './math_word_visuals_v2.js';
+import {getMathWordQuestionVisualV2} from './math_word_visuals_v2.js';
 import itemAtlas from './assets/items/math-word-icons/manifest.json';
-import './reading_quest_letter.css';
 import './math_word_subquests.css';
-import { assignQuestNotice } from './quest_notice_variants.js';
+const ITEM_ATLAS_URL=new URL('./assets/items/math-word-icons/atlas.png',import.meta.url).href;
+const ITEM_SPRITES=Object.fromEntries(itemAtlas.sprites.map(s=>[s.key,s]));
+import {groupQuestProblems} from './gameplay_review_settings.js';
+import {getMathWordQuestsV2,scoreMathWordAnswerV2} from './math_word_quests_v2.js';
+import {READING_VILLAGERS} from './reading_villagers.js';
+import {mountFittedQuestPages} from './quest_board_pagination.js';
+import {installQuestAnswerPanelWheelScroll} from './quest_answer_panel_scroll.js';
 
-const FIRST_CLEAR_REWARD = Object.freeze({ gold: 300, exp: 20, medal: 1 });
-const QUESTIONS_PER_SET = 5;
-const ITEM_ATLAS_URL = new URL('./assets/items/math-word-icons/atlas.png', import.meta.url).href;
-const ITEM_SPRITES = Object.fromEntries(itemAtlas.sprites.map(sprite => [sprite.key, sprite]));
-const el = (tag, text, className) => {
-  const node = document.createElement(tag);
-  if (text !== undefined && text !== null) node.textContent = text;
-  if (className) node.className = className;
-  return node;
-};
+let selectedGrade=1;
+const pageByGrade=new Map();
+const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined&&text!==null)el.textContent=text;if(cls)el.className=cls;return el;};
 
+
+export function renderMathWordSubquests(root,api){
+ const game=api.game();
+ const state=game.mathWordQuestsV2 ||= {completed:{}};
+ state.completed ||= {};
+ const tabs=node('div',null,'reading-grade-tabs');
+ const progressSummary=node('div',null,'quest-board-progress-summary');progressSummary.setAttribute('role','status');
+ const grid=node('div',null,'reading-quest-grid math-word-quest-grid');
+ const pager=node('nav',null,'quest-board-pager');
+ root.replaceChildren(node('h3','学年別・文章問題','math-word-quest-heading'),tabs,progressSummary,grid,pager);
+ for(let grade=1;grade<=6;grade++){
+  const button=node('button',`${grade}年`,'btn');button.type='button';button.setAttribute('aria-pressed',String(grade===selectedGrade));
+  button.onclick=()=>{selectedGrade=grade;pageByGrade.set(grade,0);render();};tabs.append(button);
+ }
+ function render(){
+  [...tabs.children].forEach((button,index)=>button.setAttribute('aria-pressed',String(index+1===selectedGrade)));
+  const problems=getMathWordQuestsV2(selectedGrade);
+  const completed=problems.filter(problem=>state.completed[problem.id]).length;
+  progressSummary.classList.toggle('is-complete',completed===problems.length&&problems.length>0);
+  progressSummary.replaceChildren(node('span','この学年の進みぐあい','quest-board-progress-label'),node('span',`★ ${completed} / ${problems.length} 依頼クリア`,'quest-board-progress-count'));
+  const meter=node('span',null,'quest-board-progress-meter'),fill=node('span',null,'quest-board-progress-fill');fill.style.width=`${problems.length?completed/problems.length*100:0}%`;meter.setAttribute('role','progressbar');meter.setAttribute('aria-label','算数の依頼のクリア数');meter.setAttribute('aria-valuemin','0');meter.setAttribute('aria-valuemax',String(problems.length));meter.setAttribute('aria-valuenow',String(completed));meter.append(fill);progressSummary.append(meter);
+  const cards=groupQuestProblems(problems).map((group,index)=>{
+   const problem=group[0],solved=group.filter(p=>state.completed[p.id]).length;
+   const villager=READING_VILLAGERS[index%READING_VILLAGERS.length];
+   const card=node('article',null,'quest-card reading-quest-card');card.dataset.questNoticeKey='math:'+group.map(q=>q.id).join('/');
+   const completedQuest=solved===group.length;
+   const ribbon=node('div',null,'quest-card-ribbon'),stars=node('span',null,`quest-card-stars${completedQuest?' is-complete':''}`);stars.setAttribute('aria-label',`${solved}問 / ${group.length}問クリア`);for(let i=0;i<group.length;i++)stars.append(node('span','★',state.completed[group[i].id]?'on':''));ribbon.append(stars);
+   const art=node('div',null,'quest-card-art'),portrait=node('img');portrait.src=api.asset(villager.image);portrait.alt='';art.append(portrait);
+   const reward=node('div',null,'quest-card-rewards reading-card-rewards');
+   const cell=node('div',null,`qc-reward${completedQuest?' is-claimed':''}`),icons=node('span',null,'qc-icons');icons.innerHTML=api.rewardIcon('medal','quest-medal',1,24);icons.append(node('small',`最大${group.length}枚`));
+   cell.append(icons,node('span',`最大 💰${(300*group.length).toLocaleString()}　✨${20*group.length}EXP`,'qc-gold'));reward.append(cell);
+   card.append(ribbon,art,node('div',villager.name,'quest-card-name'),node('h4',problem.title,'quest-card-title'),node('div',`${problem.topic}・${group.length}問`,'quest-card-tag'),reward);
+   const actions=node('div',null,'reading-quest-card-actions');
+   const open=node('button',completedQuest?'もう一度':solved?`つづき（${solved}/${group.length}）`:'依頼を受ける','btn');open.type='button';open.onclick=()=>showProblem(group.find(p=>!state.completed[p.id])||group[0],villager,group);
+   const print=node('button','🖨','btn quest-card-print');print.type='button';print.setAttribute('aria-label',`${problem.title}の問題・解答を印刷`);print.onclick=()=>api.print?.(group);
+   actions.append(open,print);card.append(actions);card.onclick=event=>{if(!event.target.closest('button'))showProblem(group.find(p=>!state.completed[p.id])||group[0],villager,group);};return card;
+  });
+  mountFittedQuestPages(grid,pager,[...cards,...(api.extraCards||[])],{page:pageByGrade.get(selectedGrade)||0,onPage:page=>pageByGrade.set(selectedGrade,page),bind:api.bindRewards});
+ }
+ function showProblem(problem,villager,group){
+  document.querySelector('.reading-subquest-overlay')?.remove();
+  const overlay=node('div',null,'reading-subquest-overlay');
+  const panel=node('section',null,'reading-subquest-panel quest-answer-panel math-word-answer-panel');panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-label',problem.title);
+  const back=node('button','← 依頼一覧へ','btn');back.type='button';back.onclick=()=>{overlay.remove();render();};
+  const title=node('h2',`${group.indexOf(problem)+1}／${group.length}問　${problem.title}`),conversation=node('section',null,'reading-villager-dialogue');
+  const portrait=node('img');portrait.src=api.asset(villager.image);portrait.alt=villager.name;portrait.className='reading-villager-portrait';
+  const speech=node('div'),speaker=node('b',villager.name),quote=node('p',`${problem.grade===1?'この ぶんしょうもんだい':'この文章問題'}を一緒に読んで、答えを確かめてくれる？`);speech.append(speaker,quote);conversation.append(portrait,speech);
+  const content=node('div',null,'quest-answer-content math-word-answer-content');
+  const context=node('div',null,'quest-question-context math-word-question-context');
+  const answerCenter=node('div',null,'quest-answer-center math-word-answer-center');
+  const story=node('div',problem.story,'math-word-story'),question=node('div',problem.question,'challenge-problem challenge-problem-word math-word-question');context.append(story);const visual=renderMathWordVisual(problem);if(visual)context.append(visual);
+  const form=node('form',null,'math-word-answer-fields');form.autocomplete='off';const inputs={};
+  for(const field of problem.input.fields){
+   const label=node('label',null,'math-word-answer-field');label.append(node('span',field.label));
+   const input=node('input');input.type='text';input.inputMode=field.keyboard==='integer'?'numeric':'text';input.autocomplete='off';input.autocapitalize='off';input.spellcheck=false;input.name=field.name;input.setAttribute('aria-label',field.label);inputs[field.name]=input;label.append(input);
+   if(field.unit)label.append(node('span',field.unit,'math-word-unit'));form.append(label);
+  }
+  const submit=node('button','けってい','btn btn-primary');submit.type='submit';form.append(submit);
+  const feedback=node('p',null,'math-word-feedback');feedback.setAttribute('role','status');
+  form.onsubmit=event=>{
+   event.preventDefault();if(event.isComposing)return;
+   const values=Object.fromEntries(Object.entries(inputs).map(([key,input])=>[key,input.value]));
+   const result=scoreMathWordAnswerV2(problem,values);
+   if(!result.correct){feedback.textContent=result.reason==='both_fields_required'?'すべての答えを入れてみよう。':'もう一度、本文と問いを見て考えよう。';api.answerFeedback?.(false);return;}
+   form.querySelectorAll('input,button').forEach(input=>input.disabled=true);
+   feedback.textContent=`${problem.equation}　${problem.answerDisplay}。${problem.explanation}`;api.answerFeedback?.(true);
+   const firstCompletion=!state.completed[problem.id];
+   if(firstCompletion){
+    state.completed[problem.id]=true;game.player.gold=(Number(game.player.gold)||0)+300;game.questMedals=(Number(game.questMedals)||0)+1;api.exp(20);api.save();api.refresh?.();
+   }
+   const done=node('p',firstCompletion?'★ 文章問題クリア！　初回報酬：300G・20EXP・クエストメダル1枚':'★ もう一度クリア！　初回報酬は受け取り済みです','reading-story-complete');
+   const next=node('button','一覧へもどる','btn btn-primary');next.type='button';next.onclick=()=>{overlay.remove();render();};const nextProblem=group[group.indexOf(problem)+1];
+   if(nextProblem){const advance=node('button','次の問題','btn btn-primary');advance.type='button';advance.onclick=()=>{overlay.remove();showProblem(nextProblem,villager,group);};answerCenter.append(advance);}
+   answerCenter.append(done,next);
+   render();
+  };
+  answerCenter.append(question,form,feedback);content.append(context,answerCenter);
+  panel.append(back,title,content,conversation);overlay.append(panel);document.body.append(overlay);installQuestAnswerPanelWheelScroll(panel);inputs[problem.input.fields[0].name]?.focus({preventScroll:true});
+ }
+ render();
+}
+
+const el=node;
 function itemSprite(key, size = 22) {
   const sprite = ITEM_SPRITES[key];
   if (!sprite) return null;
@@ -105,430 +185,4 @@ function renderMathWordVisual(problem) {
   }
 
   return figure;
-}
-
-function stateFor(game) {
-  const state = game.mathWordQuestsV2 ||= {};
-  state.completed ||= {};
-  state.sessions ||= {};
-  state.rewardLedger ||= {};
-  // The earlier candidate paid this exact reward when completed[id] was set.
-  // Carry those claims forward as paid so connecting this UI cannot pay twice.
-  for (const [id, completed] of Object.entries(state.completed)) {
-    if (completed && !state.rewardLedger[id]) state.rewardLedger[id] = { ...FIRST_CLEAR_REWARD, migrated: true };
-  }
-  return state;
-}
-
-export function mathWordQuestProgress(game, grade = null) {
-  const state = stateFor(game);
-  const problems = grade == null
-    ? Array.from({ length: 6 }, (_, i) => getMathWordQuestsV2(i + 1)).flat()
-    : getMathWordQuestsV2(grade);
-  return { completed: problems.filter(problem => state.completed[problem.id]).length, total: problems.length };
-}
-
-function groupsForGrade(grade) {
-  const problems = getMathWordQuestsV2(grade);
-  const groups = [];
-  for (let index = 0; index < problems.length; index += QUESTIONS_PER_SET) {
-    const questions = problems.slice(index, index + QUESTIONS_PER_SET);
-    if (!questions.length) continue;
-    groups.push({
-      id: `mwq-v2-g${grade}-${questions[0].id}`,
-      grade,
-      index: groups.length,
-      questions,
-      title: questions[0].topic,
-    });
-  }
-  return groups;
-}
-
-function blankSession(group) {
-  return {
-    questionIds: group.questions.map(problem => problem.id),
-    answers: Array(QUESTIONS_PER_SET).fill(null),
-    phase: 'answering',
-    currentIndex: 0,
-    results: null,
-    retryAnswers: {},
-    retryAttempts: {},
-    reward: { gold: 0, exp: 0, medal: 0 },
-  };
-}
-
-function matchingSession(state, group) {
-  const current = state.sessions[group.id];
-  if (!current || current.questionIds?.join('|') !== group.questions.map(problem => problem.id).join('|')) {
-    state.sessions[group.id] = blankSession(group);
-  }
-  const session = state.sessions[group.id];
-  session.answers ||= Array(QUESTIONS_PER_SET).fill(null);
-  session.retryAnswers ||= {};
-  session.retryAttempts ||= {};
-  session.reward ||= { gold: 0, exp: 0, medal: 0 };
-  return session;
-}
-
-function isGroupComplete(state, group) {
-  return group.questions.every(problem => state.completed[problem.id]);
-}
-
-function rewardForCorrect(api, state, session, problem) {
-  if (state.completed[problem.id]) return null;
-  state.completed[problem.id] = true;
-  state.rewardLedger[problem.id] = { ...FIRST_CLEAR_REWARD, paidAt: Date.now() };
-  const game = api.game();
-  game.player.gold = (Number(game.player.gold) || 0) + FIRST_CLEAR_REWARD.gold;
-  game.questMedals = (Number(game.questMedals) || 0) + FIRST_CLEAR_REWARD.medal;
-  const level = api.grantExp(FIRST_CLEAR_REWARD.exp);
-  for (const key of Object.keys(FIRST_CLEAR_REWARD)) session.reward[key] = (Number(session.reward[key]) || 0) + FIRST_CLEAR_REWARD[key];
-  api.noteLevel?.(level);
-  return FIRST_CLEAR_REWARD;
-}
-
-function grantLevelSummary(api, summary) {
-  if (!summary || summary.toLvl <= summary.fromLvl) return;
-  api.showLevelUp?.(summary);
-}
-
-export function openMathWordSubquests(api) {
-  const game = api.game();
-  if (!game?.player) return;
-  const state = stateFor(game);
-  let selectedGrade = 1;
-
-  const overlay = el('div', null, 'math-word-subquest-overlay');
-  overlay.setAttribute('role', 'dialog');
-  overlay.setAttribute('aria-modal', 'true');
-  overlay.setAttribute('aria-label', '算数の文章問題');
-  const panel = el('section', null, 'math-word-subquest-panel');
-  const header = el('header', null, 'math-word-subquest-header');
-  const close = el('button', '← 掲示板へ', 'btn math-word-subquest-back');
-  close.type = 'button';
-  close.onclick = () => { overlay.remove(); api.refresh(); };
-  const heading = el('h2', '算数の文章問題', 'math-word-subquest-title');
-  const description = el('p', '5問に答えてから、まとめて答え合わせ。まちがえた問題はヒントを見てやり直せます。', 'math-word-subquest-description');
-  header.append(close, heading);
-  const content = el('div', null, 'math-word-subquest-content');
-  panel.append(header, description, content);
-  overlay.append(panel);
-  document.body.append(overlay);
-
-  function renderMenu() {
-    const total = mathWordQuestProgress(game);
-    content.replaceChildren();
-    const progress = el('div', `★ クリア ${total.completed} / ${total.total} 問`, 'math-word-subquest-progress');
-    progress.setAttribute('role', 'status');
-    const gradeTabs = el('div', null, 'math-word-grade-tabs');
-    const grid = el('div', null, 'math-word-set-grid');
-    content.append(progress, gradeTabs, grid);
-    for (let grade = 1; grade <= 6; grade++) {
-      const tab = el('button', `${grade}年`, 'btn math-word-grade-tab');
-      tab.type = 'button';
-      tab.setAttribute('aria-pressed', String(grade === selectedGrade));
-      tab.onclick = () => { selectedGrade = grade; renderMenu(); };
-      gradeTabs.append(tab);
-    }
-    const gradeProgress = mathWordQuestProgress(game, selectedGrade);
-    const progressNote = el('p', `${selectedGrade}年：${gradeProgress.completed} / ${gradeProgress.total} 問クリア`, 'math-word-grade-progress');
-    grid.before(progressNote);
-    for (const group of groupsForGrade(selectedGrade)) {
-      const villager = api.npcAt?.(group.index) || { name: '村人', emoji: '🧑' };
-      const session = state.sessions[group.id];
-      const solved = group.questions.filter(problem => state.completed[problem.id]).length;
-      const card = el('article', null, 'math-word-set-card quest-card reading-quest-card math-word-notice-card');
-      card.dataset.questNoticeKey = group.id;
-      assignQuestNotice(card);
-      const ribbon = el('div', null, 'quest-card-ribbon');
-      const stars = el('span', null, `quest-card-stars${solved === group.questions.length ? ' is-complete' : ''}`);
-      stars.setAttribute('aria-label', `${solved}問 / ${group.questions.length}問クリア`);
-      for (let index = 0; index < group.questions.length; index++) stars.append(el('span', '★', index < solved ? 'on' : ''));
-      ribbon.append(stars);
-      const art = el('div', null, 'quest-card-art');
-      const portrait = el('img');
-      portrait.src = api.npcImage?.(villager) || '';
-      portrait.alt = '';
-      portrait.draggable = false;
-      art.append(portrait);
-      const title = el('h3', group.questions[0].title || group.title, 'quest-card-title math-word-set-title');
-      const count = el('p', `${group.title}・${solved} / ${group.questions.length} 問クリア`, 'quest-card-tag math-word-set-progress');
-      const actionText = session && ['answering', 'results', 'review'].includes(session.phase)
-        ? 'つづきから'
-        : isGroupComplete(state, group) ? 'もう一度' : '依頼を受ける';
-      const rewards = el('div', null, 'quest-card-rewards reading-card-rewards math-word-notice-rewards');
-      rewards.append(el('span', `💰 最大 ${FIRST_CLEAR_REWARD.gold * group.questions.length}G`), el('span', `✨ ${FIRST_CLEAR_REWARD.exp * group.questions.length}EXP`), el('span', `🏅 ${FIRST_CLEAR_REWARD.medal * group.questions.length}枚`));
-      const actions = el('div', null, 'reading-quest-card-actions');
-      const start = el('button', actionText, 'btn btn-primary math-word-set-start');
-      start.type = 'button';
-      start.onclick = () => openSession(group);
-      actions.append(start);
-      card.append(ribbon, art, el('div', villager.name, 'quest-card-name'), title, count, rewards, actions);
-      card.onclick = event => { if (!event.target.closest('button')) start.click(); };
-      grid.append(card);
-    }
-  }
-
-  function saveAndRefresh() {
-    api.save();
-    api.refresh();
-  }
-
-  function openSession(group) {
-    let session = matchingSession(state, group);
-    if (session.phase === 'done') {
-      session = state.sessions[group.id] = blankSession(group);
-      api.save();
-    }
-    if (session.phase === 'answering') {
-      const firstMissing = session.answers.findIndex(answer => !answer || Object.values(answer).some(value => !String(value ?? '').trim()));
-      session.currentIndex = firstMissing < 0 ? QUESTIONS_PER_SET - 1 : firstMissing;
-      api.save();
-      renderQuestion(group, session);
-    } else {
-      renderResults(group, session);
-    }
-  }
-
-  function answerValues(problem, answer) {
-    const form = el('form', null, 'math-word-answer-form');
-    form.autocomplete = 'off';
-    if (problem.input.fields.length === 1) form.classList.add('math-word-single-field');
-    const inputs = {};
-    for (const field of problem.input.fields) {
-      const label = el('label', null, 'math-word-field');
-      label.append(el('span', field.label, 'math-word-field-label'));
-      const input = el('input');
-      input.type = 'text';
-      input.name = field.name;
-      input.inputMode = field.keyboard === 'decimal' ? 'decimal' : 'numeric';
-      input.autocomplete = 'off';
-      input.autocapitalize = 'off';
-      input.spellcheck = false;
-      input.required = true;
-      input.setAttribute('aria-label', field.label);
-      input.value = answer?.[field.name] ?? '';
-      inputs[field.name] = input;
-      label.append(input);
-      if (field.unit) label.append(el('span', field.unit, 'math-word-field-unit'));
-      form.append(label);
-    }
-    return { form, inputs };
-  }
-
-  function createScene(group, problem, problemIndex, sceneTitle, backOptions = {}) {
-    overlay.remove();
-    document.querySelector('.math-word-reading-overlay')?.remove();
-    const villager = api.npcAt?.(group.index) || { name: '村人', emoji: '🧑' };
-    const sceneOverlay = el('div', null, 'reading-subquest-overlay math-word-reading-overlay');
-    const scenePanel = el('section', null, 'reading-subquest-panel quest-answer-panel reading-v2-answer-panel math-word-reading-answer-panel');
-    scenePanel.dataset.grade = String(group.grade);
-    scenePanel.setAttribute('role', 'dialog');
-    scenePanel.setAttribute('aria-modal', 'true');
-    scenePanel.setAttribute('aria-label', `${group.title}：${sceneTitle}`);
-
-    const header = el('header', null, 'reading-v2-scene-header');
-    const back = el('button', backOptions.label || '← 依頼一覧へ', 'btn math-word-scene-back');
-    back.type = 'button';
-    back.onclick = () => {
-      sceneOverlay.remove();
-      if (backOptions.onClick) {
-        backOptions.onClick();
-        return;
-      }
-      document.body.append(overlay);
-      saveAndRefresh();
-      renderMenu();
-    };
-    const stepText = sceneTitle === '5問の答え合わせ'
-      ? '5問の答え合わせ'
-      : `${sceneTitle}　${problemIndex + 1} / ${QUESTIONS_PER_SET}問`;
-    const step = el('div', stepText, 'math-word-scene-step');
-    header.append(back, step);
-
-    const answerContent = el('div', null, 'quest-answer-content reading-v2-answer-content');
-    const questionContext = el('div', null, 'quest-question-context reading-v2-question-context');
-    const letter = el('article', null, 'reading-v2-letter math-word-letter');
-    letter.setAttribute('aria-label', '村人から届いた算数の依頼');
-    const letterHeader = el('header', null, 'reading-v2-letter-header');
-    letterHeader.append(el('span', '村人からの算数の依頼', 'reading-v2-letter-eyebrow'), el('h2', problem.title || group.title));
-    const story = el('div', problem.story, 'reading-v2-passage math-word-letter-story');
-    story.lang = 'ja';
-    story.tabIndex = 0;
-    const itemVisual = renderMathWordVisual(problem);
-    const signature = el('footer', null, 'reading-v2-letter-signature');
-    signature.append(el('span', '勇者へ'), el('b', `${villager.name} より`));
-    letter.append(letterHeader, story);
-    if (itemVisual) letter.append(itemVisual);
-    letter.append(signature);
-    questionContext.append(letter);
-
-    const answerStage = el('div', null, 'quest-answer-center reading-v2-answer-center');
-    const villagerImage = el('img');
-    villagerImage.src = api.npcImage?.(villager) || '';
-    villagerImage.alt = '';
-    villagerImage.className = 'reading-v2-scene-villager';
-    villagerImage.draggable = false;
-    const answerForeground = el('div', null, 'reading-v2-answer-foreground math-word-answer-foreground');
-    answerStage.append(villagerImage, answerForeground);
-    answerContent.append(questionContext, answerStage);
-
-    scenePanel.append(header, answerContent);
-    sceneOverlay.append(scenePanel);
-    document.body.append(sceneOverlay);
-    return { sceneOverlay, scenePanel, answerForeground, villager };
-  }
-
-  function renderQuestion(group, session) {
-    const index = Math.max(0, Math.min(QUESTIONS_PER_SET - 1, Number(session.currentIndex) || 0));
-    const problem = group.questions[index];
-    const scene = createScene(group, problem, index, '算数の依頼');
-    const { answerForeground: body } = scene;
-    const progress = el('p', `${index + 1}／${QUESTIONS_PER_SET}問め　${group.title}`, 'reading-story-progress math-word-story-progress');
-    const helper = el('p', '答え合わせは、5問ぜんぶに答えたあとに出ます。', 'reading-v2-batch-note');
-    const question = el('h3', problem.question, 'challenge-problem challenge-problem-word quest-reading-question reading-v2-prompt math-word-question-text');
-    const { form, inputs } = answerValues(problem, session.answers[index]);
-    const status = el('p', '', 'math-word-form-status');
-    status.setAttribute('role', 'status');
-    const submit = el('button', index === QUESTIONS_PER_SET - 1 ? '5問まとめて答え合わせ' : '回答を保存して次へ', 'btn btn-primary quest-answer-next');
-    submit.type = 'submit';
-    form.append(submit);
-    form.onsubmit = event => {
-      event.preventDefault();
-      const values = Object.fromEntries(Object.entries(inputs).map(([key, input]) => [key, input.value.trim()]));
-      if (Object.values(values).some(value => !value)) {
-        status.textContent = '答えを入れてから進もう。';
-        return;
-      }
-      session.answers[index] = values;
-      if (index < QUESTIONS_PER_SET - 1) {
-        session.currentIndex = index + 1;
-        api.save();
-        renderQuestion(group, session);
-        return;
-      }
-      session.phase = 'results';
-      session.results = group.questions.map((questionProblem, questionIndex) => ({
-        correct: scoreMathWordAnswerV2(questionProblem, session.answers[questionIndex]).correct,
-        reviewed: false,
-      }));
-      session.currentIndex = 0;
-      const level = api.levelStart();
-      for (let questionIndex = 0; questionIndex < group.questions.length; questionIndex++) {
-        if (session.results[questionIndex].correct) rewardForCorrect(api, state, session, group.questions[questionIndex]);
-      }
-      const levelSummary = api.levelFinish(level);
-      saveAndRefresh();
-      renderResults(group, session);
-      grantLevelSummary(api, levelSummary);
-    };
-    body.append(progress, helper, question, form, status);
-    inputs[problem.input.fields[0].name]?.focus({ preventScroll: true });
-  }
-
-  function renderResults(group, session) {
-    const wrongIndexes = (session.results || []).flatMap((result, index) => result && !result.correct && !result.reviewed ? [index] : []);
-    const allMastered = wrongIndexes.length === 0 && (session.results || []).length === QUESTIONS_PER_SET;
-    session.phase = allMastered ? 'done' : 'results';
-    api.save();
-    const scene = createScene(group, group.questions[wrongIndexes[0] ?? 0], wrongIndexes[0] ?? 0, '5問の答え合わせ');
-    const { answerForeground: body } = scene;
-    const title = el('h3', allMastered ? 'ぜんぶクリア！' : `正解 ${session.results.filter(result => result.correct || result.reviewed).length} / ${QUESTIONS_PER_SET} 問`, 'math-word-results-title');
-    const summary = el('p', allMastered
-      ? '5問ぜんぶ正解！村人の依頼をやりとげたよ。'
-      : 'まちがえた問題は、ヒントを見ながらもう一度考えてみよう。', 'reading-v2-batch-note');
-    const list = el('div', null, 'math-word-results-list');
-    group.questions.forEach((problem, index) => {
-      const result = session.results[index];
-      const row = el('article', null, `math-word-result-row ${result.correct || result.reviewed ? 'is-correct' : 'is-wrong'}`);
-      row.append(el('b', `${index + 1}. ${result.correct || result.reviewed ? '○' : 'もう一度'}`, 'math-word-result-mark'));
-      row.append(el('p', problem.question, 'math-word-result-question'));
-      const original = session.answers[index] ? Object.values(session.answers[index]).join(' / ') : '未回答';
-      row.append(el('p', `あなたの答え：${original}`, 'math-word-result-answer'));
-      if (result.correct || result.reviewed) {
-        row.append(el('p', `答え：${problem.answerDisplay}`, 'math-word-result-answer'));
-        if (result.retryAnswer) row.append(el('p', `やり直しの答え：${Object.values(result.retryAnswer).join(' / ')}`, 'math-word-result-answer'));
-        row.append(el('p', `考え方：${problem.equation}。${problem.explanation}`, 'math-word-result-explanation'));
-      } else {
-        row.append(el('p', 'ヒントを見て、もう一度考えてみよう。', 'math-word-result-explanation'));
-      }
-      list.append(row);
-    });
-    const reward = el('p', `今回の初回報酬：💰 ${session.reward.gold}G　✨ ${session.reward.exp}EXP　🏅 ${session.reward.medal}枚`, 'math-word-run-reward');
-    body.append(el('p', `5／${QUESTIONS_PER_SET}問　${group.title}`, 'reading-story-progress math-word-story-progress'), title, summary, list, reward);
-    if (wrongIndexes.length) {
-      const retry = el('button', `まちがえた ${wrongIndexes.length} 問をヒント付きでやり直す`, 'btn btn-primary math-word-retry-start');
-      retry.type = 'button';
-      retry.onclick = () => renderRetry(group, session, wrongIndexes[0]);
-      body.append(retry);
-    } else {
-      const done = el('p', '今回の5問はすべて正解です。報酬は初回クリア時に受け取れます。', 'math-word-run-complete');
-      const again = el('button', 'もう一度挑戦', 'btn math-word-retry-start');
-      again.type = 'button';
-      again.onclick = () => { state.sessions[group.id] = blankSession(group); api.save(); renderQuestion(group, state.sessions[group.id]); };
-      body.append(done, again);
-    }
-  }
-
-  function renderRetry(group, session, index) {
-    const problem = group.questions[index];
-    const scene = createScene(group, problem, index, 'ヒント付き再挑戦', {
-      label: '← 答え合わせへ',
-      onClick: () => renderResults(group, session),
-    });
-    const { answerForeground: body } = scene;
-    const progress = el('p', `${index + 1}／${QUESTIONS_PER_SET}問め　やり直し`, 'reading-story-progress math-word-story-progress');
-    const question = el('h3', problem.question, 'challenge-problem challenge-problem-word quest-reading-question reading-v2-prompt math-word-question-text');
-    const hint = el('div', null, 'math-word-hint');
-    const hintButton = el('button', 'ヒントを見る', 'btn math-word-hint-button');
-    hintButton.type = 'button';
-    hintButton.onclick = () => {
-      const depth = Number(session.retryAttempts[index]) || 0;
-      hint.replaceChildren(el('b', depth ? '式のヒント' : '読み方のヒント'));
-      hint.append(el('p', depth ? `この問題は「${problem.equation}」で考えられます。本文の数字と問いを対応させてみよう。` : '何を聞かれているかを先に確かめ、本文にある数を探してみよう。'));
-      session.retryAttempts[index] = depth + 1;
-      api.save();
-      hintButton.textContent = 'ヒントをもう一度見る';
-    };
-    const { form, inputs } = answerValues(problem, session.retryAnswers[index]);
-    const status = el('p', '', 'math-word-form-status');
-    status.setAttribute('role', 'status');
-    form.append(hintButton);
-    const submit = el('button', '答えをたしかめる', 'btn btn-primary');
-    submit.type = 'submit';
-    form.append(submit);
-    form.onsubmit = event => {
-      event.preventDefault();
-      const values = Object.fromEntries(Object.entries(inputs).map(([key, input]) => [key, input.value.trim()]));
-      if (Object.values(values).some(value => !value)) { status.textContent = '答えを入れてみよう。'; return; }
-      session.retryAnswers[index] = values;
-      const result = scoreMathWordAnswerV2(problem, values);
-      if (!result.correct) {
-        session.retryAttempts[index] = (Number(session.retryAttempts[index]) || 0) + 1;
-        api.save();
-        status.textContent = 'まだちがうみたい。ヒントを見ながら、もう一度考えてみよう。';
-        hint.replaceChildren(el('b', 'ヒント'), el('p', `式は「${problem.equation}」。本文の数字と、何を聞かれているかを確かめよう。`));
-        return;
-      }
-      const level = api.levelStart();
-      rewardForCorrect(api, state, session, problem);
-      session.results[index].reviewed = true;
-      session.results[index].retryAnswer = values;
-      const nextWrong = group.questions.findIndex((_, candidate) => candidate > index && !session.results[candidate].correct && !session.results[candidate].reviewed);
-      const firstRemaining = nextWrong >= 0 ? nextWrong : group.questions.findIndex((_, candidate) => !session.results[candidate].correct && !session.results[candidate].reviewed);
-      const levelSummary = api.levelFinish(level);
-      saveAndRefresh();
-      if (firstRemaining >= 0) renderRetry(group, session, firstRemaining);
-      else renderResults(group, session);
-      grantLevelSummary(api, levelSummary);
-    };
-    hint.classList.add('reading-v2-retry-hint');
-    hint.append(el('p', '本文の数字と、何を聞かれているかを順番に確かめよう。'));
-    body.append(progress, el('h3', `問題 ${index + 1} をやり直そう`, 'math-word-results-title'), hint, question, form, status);
-    inputs[problem.input.fields[0].name]?.focus({ preventScroll: true });
-  }
-
-  renderMenu();
-  close.focus({ preventScroll: true });
 }

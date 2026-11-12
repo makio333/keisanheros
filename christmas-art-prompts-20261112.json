@@ -1,0 +1,19 @@
+{
+  "tool": "built-in image_gen",
+  "style": "pixel-art",
+  "prompts": [
+    {
+      "key": "christmasBanner",
+      "prompt": "Use case: illustration-story. Asset type: wide 3:1 Christmas event banner illustration for a Japanese children's pixel-art RPG, no lettering. Primary request: illustrate recovering stolen Christmas presents and returning them to Santa's snowy workshop in Lapland. Warm, kind elderly Santa in red and two youthful human adventurers carry red gift boxes with gold ribbon back toward a warmly lit wooden workshop; one friendly reindeer nearby; in the far distant snow forest a tiny mischievous dark Santa silhouette retreats. A joyful hopeful adventure, child-friendly, not scary. Snowy fir trees and teal-green aurora in deep midnight-blue sky. Polished 16-bit JRPG pixel art, crisp chunky square pixel clusters and stepped outlines, limited jewel-tone palette, no smooth painterly gradients or vector art. Wide cinematic horizontal composition with main characters in the middle-right and some dark sky at left for an HTML title overlay. Match reference image's pixel scale, snow shading, warm windows, and aurora palette. No text, numbers, logos, border or watermark.",
+      "referenced_image_paths": [
+        "/private/tmp/keisanheros-christmas-test-20261112/assets/christmas/rovaniemi_santa_village.png"
+      ],
+      "transparent_background": false
+    },
+    {
+      "key": "christmasGift",
+      "prompt": "Use case: stylized-concept. Asset type: single inventory currency icon for a children's 16-bit pixel-art Christmas RPG. ONE closed Christmas present box, a stout red square cardboard gift with a wide golden ribbon crossing its top and front, a large readable golden bow on top, a tiny golden jingle bell attached to the bow, one small green holly leaf. Simple three-quarter view, strong readable silhouette even at 24px, crisp chunky square pixel clusters, dark burgundy stepped outline, 3-tone shading per material, limited palette. Centered isolated complete box with comfortable margin, item fills 75% of square canvas. Actually transparent background with alpha. No scenery, floor, ground shadow, drop shadow, particles, glow, letters, numbers, label, watermark, additional loose items or second gift. This is the only currency collectible in the Christmas event.",
+      "transparent_background": true
+    }
+  ]
+}

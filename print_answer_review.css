@@ -1,0 +1,9 @@
+.print-score-overlay .print-score-panel{width:min(100%,620px);max-height:calc(100dvh - 24px);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+.print-score-overlay .print-answer-review{margin:18px 0;text-align:left;max-height:36vh;overflow:auto;overscroll-behavior:contain;padding:4px;scrollbar-gutter:stable}
+.print-answer-review h3{font-size:17px;margin:0 0 12px}
+.print-answer-review-row{border:1px solid #91889d;border-left:5px solid #85dfb3;border-radius:8px;padding:12px;margin:10px 0;background:#ffffff08;overflow-wrap:anywhere}
+.print-answer-review-row.is-wrong{border-left-color:#ffad91}
+.print-answer-review-row h4{margin:0 0 8px;font-size:16px}.print-answer-review-row h4 span{color:#a9f4c6}.print-answer-review-row.is-wrong h4 span{color:#ffc2ab}
+.print-answer-review-row p{font-size:15px;line-height:1.7;margin:4px 0}.print-answer-review-row .print-review-problem{color:#ded4ee}.print-answer-review-row b{color:#fff1b5}
+.print-answer-review:focus-visible{outline:2px solid #ffe18a;outline-offset:2px}
+@media(max-height:600px){.print-score-overlay .print-score-panel{padding:16px}.print-score-overlay .print-score-value strong{font-size:52px}.print-score-overlay .print-answer-review{max-height:40vh}}

@@ -1,0 +1,14 @@
+/* One dismiss location for game windows, independent of their content scroll. */
+.window-dismiss-bar{position:sticky;top:0;left:0;z-index:65;display:flex;justify-content:flex-start;align-items:center;gap:8px;grid-column:1 / -1;flex:0 0 auto;align-self:stretch;margin:0 0 8px;padding:0 0 6px;background:inherit;isolation:isolate}
+.window-dismiss-header{position:sticky;top:0;z-index:65;justify-content:flex-start!important;gap:12px;background:inherit}
+.window-dismiss-header>.window-dismiss-action{order:-1;margin-right:0!important}
+.window-dismiss-panel .window-dismiss-action{position:static!important;inset:auto!important;transform:none!important;display:inline-flex!important;align-items:center;justify-content:center;flex:0 0 auto!important;width:auto!important;min-width:0!important;max-width:100%;height:auto;min-height:34px;margin:0!important;padding:6px 12px;font-size:13px;line-height:1.3;white-space:nowrap;z-index:66;align-self:flex-start}
+:is(.modal-overlay,.confirm-overlay)>.window-dismiss-panel{box-sizing:border-box;max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain}
+#screen-battle #battle-sub-menu:not(.hidden){position:fixed;top:76px;left:50%;right:auto;bottom:auto;transform:translateX(-50%);width:min(600px,calc(100vw - 24px));max-width:calc(100vw - 24px);height:auto;max-height:calc(100dvh - 96px);min-height:0;margin:0;padding:12px;box-sizing:border-box;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;z-index:100002;text-align:left}
+#battle-sub-menu>.window-dismiss-bar{background:#211c31;padding:0 0 8px;margin-bottom:8px;border-bottom:1px solid #746080}
+#battle-sub-menu .battle-menu-list{max-height:none!important;overflow:visible!important;min-width:0}
+#battle-sub-menu .battle-menu-list>.btn{min-width:0;max-width:100%;white-space:normal;gap:10px;overflow-wrap:anywhere}
+#battle-sub-menu .battle-menu-list>.btn>strong{min-width:0}
+#battle-sub-menu .battle-menu-list>.btn>small{font-size:12px;line-height:1.4}
+@media(max-width:600px){#battle-sub-menu .battle-menu-list>.btn:not(.battle-skill-option){flex-direction:column;align-items:flex-start!important;padding:10px!important}.window-dismiss-header{flex-wrap:wrap}}
+@media(max-height:520px){#screen-battle #battle-sub-menu:not(.hidden){top:12px;max-height:calc(100dvh - 24px)}}

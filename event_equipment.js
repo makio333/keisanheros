@@ -1,5 +1,10 @@
 // Event equipment always has a special ability, including older owned copies.
 export const EVENT_EQUIPMENT_ABILITIES = Object.freeze({
+  quest_quill_blade: 'crit_up',
+  quest_archivist_robe: 'guard',
+  quest_wisdom_bookmark: 'mp_save',
+  christmas_exchange_candy_sword:'crit_up',christmas_exchange_aurora_mantle:'guard',christmas_exchange_winter_charm:'mp_save',
+  christmas_candy_cane_blade:'crit_up',christmas_aurora_mantle:'guard',christmas_winter_star_charm:'mp_save',
   halloween_rank_blade: 'lifesteal',
   halloween_candy_saber: 'crit_up',
   halloween_light_cape: 'guard',
@@ -10,6 +15,9 @@ export const EVENT_EQUIPMENT_ABILITIES = Object.freeze({
   halloween_pumpkin_blade: 'crit_up',
   halloween_witch_mantle: 'guard',
   halloween_moon_charm: 'mp_save',
+  raid_moon_blade: 'crit_up',
+  raid_moon_mantle: 'guard',
+  raid_moon_charm: 'mp_save',
   raid_star_blade: 'power',
   raid_ward_armor: 'guard',
   raid_focus_charm: 'mp_save',

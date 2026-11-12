@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>セーブの引っ越し | レジェンドヒーローズ</title></head>
+<body class="private-migration-ui">
+<header><span>レジェンドヒーローズ</span><h1>セーブの引っ越し</h1><p>施設で管理するアカウントでログインしてください。</p></header>
+<main>
+<div id="migration-loading" hidden role="status" aria-live="polite"><p id="migration-loading-label"></p><progress id="migration-progress" max="100" aria-label="読み込みの進み具合" style="width:100%;height:20px"></progress></div>
+<p id="migration-status" role="status" aria-live="polite"></p>
+<section id="migration-login"><h2>ログイン</h2>
+<button id="migration-google" type="button">Googleでログイン</button>
+<button id="migration-line" type="button">LINEでログイン</button>
+<p class="auth-browser-help">スマホではSafariまたはChromeで開いてください。ログイン画面が別に開いたら、その画面で手続きを完了してゲームへ戻ってください。スマホのLINEログインは、ブラウザ内で行います。</p>
+<details class="line-login-help"><summary>スマホでLINEログインに失敗する場合</summary><p>エラーの画面を閉じ、Safariなどの同じブラウザでゲームを開き直して、下のボタンを押してください。LINEアプリへの自動切り替えを使わずにログインします。</p><button id="migration-line-browser" type="button">LINEにブラウザ内でログイン</button></details>
+<form id="migration-email-form"><label>メールアドレス<input id="migration-email" type="email" autocomplete="username" required></label><label>パスワード<input id="migration-password" type="password" autocomplete="current-password" required minlength="6"></label><button type="submit">メールでログイン</button></form>
+<div class="secondary"><button id="migration-register" type="button">メールで新規登録</button><button id="migration-reset" type="button">パスワードを再設定</button></div></section>
+<section id="migration-account" hidden><div class="account-row"><h2>ログイン中のアカウント</h2><button id="migration-logout" type="button">ログアウト</button></div><p id="migration-user"></p><button id="migration-refresh" type="button">確認して続ける</button>
+<section id="migration-email-registration" hidden aria-live="polite"><h3>購入者・団体管理者の登録</h3><p id="migration-email-registration-copy">レジェンドヒーローズの購入者・団体管理者アカウントはメール確認後に登録完了となります。届いた確認リンクを開いてから確認して続けるを押してください。メール確認だけで購入や決済は行われません。</p><button id="migration-resend-email" type="button">確認メールを再送</button></section>
+<div id="migration-upload" hidden><h2>引っ越しファイル</h2><label>JSONファイルを選択<input id="migration-json" type="file" accept=".json,application/json"></label><p id="migration-preview"></p><ul id="migration-names"></ul><button id="migration-apply" type="button" hidden>このアカウントへ取り込む</button></div>
+<h2>保存済み</h2><p id="migration-count"></p><ul id="migration-saved"></ul><div id="migration-downloads"></div>
+<h2>同じ保存先にログイン方法を追加</h2><div class="secondary"><button id="migration-link-google" type="button">Googleを追加</button><button id="migration-link-line" type="button">LINEを追加</button></div>
+<form id="migration-link-email-form"><label>追加するメールアドレス<input id="migration-link-email" type="email" autocomplete="email" required></label><label>新しいパスワード<input id="migration-link-password" type="password" autocomplete="new-password" minlength="8" required></label><button type="submit">メールログインを追加</button></form>
+<form id="migration-change-email-form"><label>新しいメールアドレス<input id="migration-change-email" type="email" autocomplete="email" required></label><button type="submit">メールアドレスの変更を確認する</button><p>新しいメールの確認が終わるまで変更手続き未完了。別アカウントと自動統合しません。</p></form>
+</section>
+<aside>元のJSONと旧版は、確認が終わるまで保管してください。この画面は移行データの保管・確認用です。ゲームの通常セーブやLINEアカウントへの紐付け、購入情報はまだ変更しません。</aside>
+</main><script type="module" src="/save_migration_client.js"></script></body></html>

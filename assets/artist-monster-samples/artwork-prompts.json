@@ -1,0 +1,63 @@
+{
+  "generator": "built-in image_gen",
+  "userDirection": "Apply hand-drawn stage background and redraw several existing enemies in user's own style, then test in local game",
+  "references": [
+    "/Users/motoyamayuuki/Desktop/自分の絵柄/チラシ.PNG",
+    "/Users/motoyamayuuki/Desktop/自分の絵柄/コミック52.PNG",
+    "/Users/motoyamayuuki/Desktop/自分の絵柄/コミック53 2.PNG",
+    "/Users/motoyamayuuki/Desktop/自分の絵柄/コミック53.PNG"
+  ],
+  "assets": [
+    {
+      "key": "slime",
+      "name": "そらとぶスライム",
+      "zone": "tower",
+      "enemyKey": 0,
+      "original": "assets/monsters_refreshed/monster_1.png",
+      "file": "assets/artist-monster-samples/flying-slime-handdrawn-v1.png",
+      "prompt": "Use case: style-transfer\nAsset type: one NON-PIXEL hand-drawn enemy creature for a children's fantasy RPG, transparent full-body monster illustration.\nInputs1–4 are the user's OWN original illustrations and PRIMARY STYLE references: rounded expressive storybook animal faces, lively mouths, slightly uneven warm reddish/chocolate-brown pencil outlines, variable line pressure, loose short diagonal hatching for shadows, broad softly brushed flat colored-pencil/pastel fills with restrained interior grain. The user's flyer and wolf comics show how THIS illustrator draws animal characters: broad simple silhouettes, small nose, tall simple oval eyes with small highlights, expressive brows/cheek marks/mouth and a lightly humorous warmth. Build shape and expression from those originals, do not just texture a generic monster.\nInput5 is the existing MONSTER DESIGN only. Preserve species, iconic silhouette, color blocks, defining appendages and motifs, but discard original pixel-art grid, black heavy pixel outline, glossy digital gradients and dense tiny detailing. Redraw as natural freehand pencil curves and broad soft color. Creature remains charming and slightly mischievous, recognizable as a game opponent, without frightening horror or gore. Draw exactly ONE creature.\nComposition: 1:1 square, entire creature including ears/wings/tail/horns/mushrooms/feet clearly inside canvas with at least8% transparent breathing room. Three-quarter front view, strong readable silhouette and face large enough for game scale. Large expressive pose appropriate to species. Genuine alpha transparency; ALL areas outside silhouette transparent. No scene, paper rectangle, floor, shadow oval, diffuse matte, halo, glossy VFX, frame, text, labels, watermark, extra creatures, human characters or props unrelated to target. Texture stays inside object. No pixel art, block grid, dithering, vector-perfect lines or 3D modeling.\nSubject: existing そらとぶスライム. One simple soft turquoise-blue teardrop blob, rounded dome top, two tiny outward soft wing-like nubs on sides, wavy jelly-like base, big simple dark-brown vertical oval eyes with ONE small cream highlight each, cheek marks, lively happy open mouth with coral tongue. Same recognizable blue blob from image5, not a humanized slime girl. Tilt body slightly into a playful forward bounce, one side nub lifted in a cheeky challenge. Paint blue as2–3 broad softly brushed shades with a tiny ivory hand-drawn highlight and some short pencil shadow strokes, not a glossy reflective candy/glass surface. No ambient droplets or floating effects, no ground or shadow.",
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a1bbb2-16fa-7dc0-904a-b4c93a4fe88d/exec-f3bff38e-5cc2-4ff9-8c2c-6fc8bbde17d1.png",
+      "references": [
+        "/Users/motoyamayuuki/Desktop/自分の絵柄/チラシ.PNG",
+        "/Users/motoyamayuuki/Desktop/自分の絵柄/コミック52.PNG",
+        "/Users/motoyamayuuki/Desktop/自分の絵柄/コミック53 2.PNG",
+        "/Users/motoyamayuuki/Desktop/自分の絵柄/コミック53.PNG",
+        "assets/monsters_refreshed/monster_1.png"
+      ]
+    },
+    {
+      "key": "hedgehog",
+      "name": "キノコやまあらし",
+      "zone": "tower",
+      "enemyKey": 8,
+      "original": "assets/monsters_refreshed/m3_2.png",
+      "file": "assets/artist-monster-samples/mushroom-hedgehog-handdrawn-v1.png",
+      "prompt": "Use case: style-transfer\nAsset type: one NON-PIXEL hand-drawn enemy creature for a children's fantasy RPG, transparent full-body monster illustration.\nInputs1–4 are the user's OWN original illustrations and PRIMARY STYLE references: rounded expressive storybook animal faces, lively mouths, slightly uneven warm reddish/chocolate-brown pencil outlines, variable line pressure, loose short diagonal hatching for shadows, broad softly brushed flat colored-pencil/pastel fills with restrained interior grain. The user's flyer and wolf comics show how THIS illustrator draws animal characters: broad simple silhouettes, small nose, tall simple oval eyes with small highlights, expressive brows/cheek marks/mouth and a lightly humorous warmth. Build shape and expression from those originals, do not just texture a generic monster.\nInput5 is the existing MONSTER DESIGN only. Preserve species, iconic silhouette, color blocks, defining appendages and motifs, but discard original pixel-art grid, black heavy pixel outline, glossy digital gradients and dense tiny detailing. Redraw as natural freehand pencil curves and broad soft color. Creature remains charming and slightly mischievous, recognizable as a game opponent, without frightening horror or gore. Draw exactly ONE creature.\nComposition: 1:1 square, entire creature including ears/wings/tail/horns/mushrooms/feet clearly inside canvas with at least8% transparent breathing room. Three-quarter front view, strong readable silhouette and face large enough for game scale. Large expressive pose appropriate to species. Genuine alpha transparency; ALL areas outside silhouette transparent. No scene, paper rectangle, floor, shadow oval, diffuse matte, halo, glossy VFX, frame, text, labels, watermark, extra creatures, human characters or props unrelated to target. Texture stays inside object. No pixel art, block grid, dithering, vector-perfect lines or 3D modeling.\nSubject: existing キノコやまあらし. ONE small plump brown hedgehog/porcupine with cream face/belly, four small feet, short simple pointed nose, dark-brown oval eyes, rosy cheek and a shy clever little smile. Broad chunky soft brown quill tufts around its round body, with FIVE distinct mushrooms growing from back: one big red/cream spotted cap in center, smaller red cap in front, green cap at rear, amber cap behind and tiny teal cap at far side. Preserve main image5 silhouette and color motifs, render as softly irregular pencil-drawn storybook shapes and hand-hatched quills instead of pixel blocks. A lively small step, head turned toward viewer, facing left at three-quarter angle with face readable. Mushroom group belongs to same single creature, not extra floating mushrooms. No forest floor/grass/background or sparkles.",
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a1bbb2-16fa-7dc0-904a-b4c93a4fe88d/exec-61d4f517-7db7-45e4-91e7-f2c2c458c411.png",
+      "references": [
+        "/Users/motoyamayuuki/Desktop/自分の絵柄/チラシ.PNG",
+        "/Users/motoyamayuuki/Desktop/自分の絵柄/コミック52.PNG",
+        "/Users/motoyamayuuki/Desktop/自分の絵柄/コミック53 2.PNG",
+        "/Users/motoyamayuuki/Desktop/自分の絵柄/コミック53.PNG",
+        "assets/monsters_refreshed/m3_2.png"
+      ]
+    },
+    {
+      "key": "boss",
+      "name": "くさはらのぬし",
+      "zone": "boss",
+      "enemyKey": "tower5",
+      "original": "assets/monsters_refreshed/boss1_1.png",
+      "file": "assets/artist-monster-samples/meadow-lord-handdrawn-v1.png",
+      "prompt": "Use case: style-transfer\nAsset type: one NON-PIXEL hand-drawn enemy creature for a children's fantasy RPG, transparent full-body monster illustration.\nInputs1–4 are the user's OWN original illustrations and PRIMARY STYLE references: rounded expressive storybook animal faces, lively mouths, slightly uneven warm reddish/chocolate-brown pencil outlines, variable line pressure, loose short diagonal hatching for shadows, broad softly brushed flat colored-pencil/pastel fills with restrained interior grain. The user's flyer and wolf comics show how THIS illustrator draws animal characters: broad simple silhouettes, small nose, tall simple oval eyes with small highlights, expressive brows/cheek marks/mouth and a lightly humorous warmth. Build shape and expression from those originals, do not just texture a generic monster.\nInput5 is the existing MONSTER DESIGN only. Preserve species, iconic silhouette, color blocks, defining appendages and motifs, but discard original pixel-art grid, black heavy pixel outline, glossy digital gradients and dense tiny detailing. Redraw as natural freehand pencil curves and broad soft color. Creature remains charming and slightly mischievous, recognizable as a game opponent, without frightening horror or gore. Draw exactly ONE creature.\nComposition: 1:1 square, entire creature including ears/wings/tail/horns/mushrooms/feet clearly inside canvas with at least8% transparent breathing room. Three-quarter front view, strong readable silhouette and face large enough for game scale. Large expressive pose appropriate to species. Genuine alpha transparency; ALL areas outside silhouette transparent. No scene, paper rectangle, floor, shadow oval, diffuse matte, halo, glossy VFX, frame, text, labels, watermark, extra creatures, human characters or props unrelated to target. Texture stays inside object. No pixel art, block grid, dithering, vector-perfect lines or 3D modeling.\nSubject: existing くさはらのぬし from image5. ONE majestic but approachable fantasy meadow guardian, a sturdy golden-lion quadruped with TWO large feathered warm-brown/gold wings, TWO curled stone-gray ram horns, moss-green leafy mane and tail tuft decorated with just a FEW small pink flowers, broad lion paws. Preserve this distinctive lion/ram/wing/leaf combination, no rider or human features. Warm brown expressive eyes, small dark lion nose, an alert confident slightly challenging friendly smile and subtly lowered brows; use the original artist's expressive wolves as facial style inspiration. Standing with front paw lifted and wings raised asymmetrically, lively readable silhouette. Chunky large feather groups, broad hand-colored gold patches and loose brown pencil hatching. Not a realistic lion or shiny heroic griffin. All wings, horn tips, four paws and curled tail fully inside square with generous margin. Boss looks powerful through pose and size, without extra aura, crown, weapons, floating petals or background.",
+      "source": "/Users/motoyamayuuki/.codex/generated_images/01a1bbb2-16fa-7dc0-904a-b4c93a4fe88d/exec-9e6c7b41-0714-41af-a8fe-856d21ba25ba.png",
+      "references": [
+        "/Users/motoyamayuuki/Desktop/自分の絵柄/チラシ.PNG",
+        "/Users/motoyamayuuki/Desktop/自分の絵柄/コミック52.PNG",
+        "/Users/motoyamayuuki/Desktop/自分の絵柄/コミック53 2.PNG",
+        "/Users/motoyamayuuki/Desktop/自分の絵柄/コミック53.PNG",
+        "assets/monsters_refreshed/boss1_1.png"
+      ]
+    }
+  ]
+}

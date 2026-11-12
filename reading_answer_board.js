@@ -1,0 +1,11 @@
+// Reusable kana entry for reading quests; keyboard input remains available.
+export function mountReadingAnswerBoard(input,container){
+ let katakana=false;
+ const keys=['あかさたなはまやらわ','いきしちにひみ　りを','うくすつぬふむゆるん','えけせてねへめ　れー','おこそとのほもよろ　'];
+ const kana=s=>katakana?s.replace(/[ぁ-ゖ]/g,c=>String.fromCharCode(c.charCodeAt(0)+0x60)):s;
+ const replace=(text,remove=false)=>{const start=input.selectionStart??input.value.length,end=input.selectionEnd??start;const from=remove&&start===end?Math.max(0,start-1):start;input.setRangeText(text,from,end,'end');input.dispatchEvent(new Event('input',{bubbles:true}));};
+ const modify=type=>{const end=input.selectionStart??input.value.length;if(!end)return;const char=input.value[end-1];let next=char;const groups=type==='small'?['あぁ','いぃ','うぅ','えぇ','おぉ','つっ','やゃ','ゆゅ','よょ','わゎ','アァ','イィ','ウゥ','エェ','オォ','ツッ','ヤャ','ユュ','ヨョ','ワヮ']:type==='voice'?['かが','きぎ','くぐ','けげ','こご','さざ','しじ','すず','せぜ','そぞ','ただ','ちぢ','つづ','てで','とど','はば','ひび','ふぶ','へべ','ほぼ','うゔ','カガ','キギ','クグ','ケゲ','コゴ','サザ','シジ','スズ','セゼ','ソゾ','タダ','チヂ','ツヅ','テデ','トド','ハバ','ヒビ','フブ','ヘベ','ホボ','ウヴ']:['はぱ','ひぴ','ふぷ','へぺ','ほぽ','ハパ','ヒピ','フプ','ヘペ','ホポ','ばぱ','びぴ','ぶぷ','べぺ','ぼぽ','バパ','ビピ','ブプ','ベペ','ボポ'];for(const pair of groups)if(pair.includes(char)){next=pair[0]===char?pair[1]:pair[0];break;}input.setRangeText(next,end-1,end,'end');input.dispatchEvent(new Event('input',{bubbles:true}));};
+ const button=(label,action)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.onpointerdown=e=>e.preventDefault();b.onclick=action;return b;};
+ function render(){container.replaceChildren();const grid=document.createElement('div');grid.className='reading-kana-grid';grid.setAttribute('role','group');grid.setAttribute('aria-label','50音キー');for(const row of keys)for(const char of row){if(char==='　'){const space=document.createElement('span');grid.append(space);}else grid.append(button(kana(char),()=>replace(kana(char))));}const controls=document.createElement('div');controls.className='reading-kana-controls';controls.append(button(katakana?'ひらがなへ':'カタカナへ',()=>{katakana=!katakana;render();}),button('小さい文字',()=>modify('small')),button('゛',()=>modify('voice')),button('゜',()=>modify('semi')),button('1文字けす',()=>replace('',true)));container.append(grid,controls);}
+ render();
+}
