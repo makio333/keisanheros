@@ -16,7 +16,25 @@
       "power": 6,
       "lifesteal": 12
     },
-    "ancientProtected": true
+    "ancientProtected": true,
+    "proposal": {
+      "trialOnly": true,
+      "originalStatMultipliers": {
+        "1": 1,
+        "2": 1.5,
+        "3": 2,
+        "4": 3,
+        "5": 4.2
+      },
+      "costEfficiency": {
+        "1": 1,
+        "2": 1.05,
+        "3": 1.1,
+        "4": 1.15,
+        "5": 1.2
+      },
+      "preservesFullStats": true
+    }
   },
   "rows": [
     {
@@ -46,7 +64,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 5
+        },
+        "cost": 3,
+        "ability": null,
+        "statResources": 5,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": -1
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "shop_light_sword",
@@ -75,7 +108,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 7
+        },
+        "cost": 4,
+        "ability": null,
+        "statResources": 7,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": 0
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "shop_light_sword",
@@ -104,7 +152,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 10
+        },
+        "cost": 5,
+        "ability": null,
+        "statResources": 10,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 2
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "shop_light_sword",
@@ -133,7 +196,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 15
+        },
+        "cost": 7,
+        "ability": null,
+        "statResources": 15,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 6
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "shop_light_sword",
@@ -162,7 +240,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "crit_up",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 21
+        },
+        "cost": 10,
+        "ability": "crit_up",
+        "statResources": 21,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 14
+      },
+      "proposalCostDelta": 7,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "shop_guard_vest",
@@ -194,7 +287,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "def": 4,
+          "hp": 6
+        },
+        "cost": 3,
+        "ability": null,
+        "statResources": 5.5,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "def": 0,
+        "hp": -2
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "shop_guard_vest",
@@ -226,7 +336,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "def": 6,
+          "hp": 9
+        },
+        "cost": 4,
+        "ability": null,
+        "statResources": 8.25,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "def": 1,
+        "hp": 1
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "shop_guard_vest",
@@ -258,7 +385,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 8,
+          "hp": 12
+        },
+        "cost": 5,
+        "ability": null,
+        "statResources": 11,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "def": 2,
+        "hp": 4
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "shop_guard_vest",
@@ -290,7 +434,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 12,
+          "hp": 18
+        },
+        "cost": 8,
+        "ability": null,
+        "statResources": 16.5,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "def": 5,
+        "hp": 10
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "shop_guard_vest",
@@ -322,7 +483,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "guard",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 16,
+          "hp": 25
+        },
+        "cost": 11,
+        "ability": "guard",
+        "statResources": 22.25,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "def": 11,
+        "hp": 17
+      },
+      "proposalCostDelta": 8,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "shop_mana_charm",
@@ -354,7 +532,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "mp": 8,
+          "spd": 1
+        },
+        "cost": 5,
+        "ability": null,
+        "statResources": 9,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "mp": 1,
+        "spd": 0
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "shop_mana_charm",
@@ -386,7 +581,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "mp": 12,
+          "spd": 1
+        },
+        "cost": 7,
+        "ability": null,
+        "statResources": 13,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "mp": 4,
+        "spd": 0
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "shop_mana_charm",
@@ -418,7 +630,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "mp": 16,
+          "spd": 2
+        },
+        "cost": 9,
+        "ability": null,
+        "statResources": 18,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "mp": 7,
+        "spd": 1
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "shop_mana_charm",
@@ -450,7 +679,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "mp": 24,
+          "spd": 3
+        },
+        "cost": 12,
+        "ability": null,
+        "statResources": 27,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "mp": 14,
+        "spd": 2
+      },
+      "proposalCostDelta": 8,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "shop_mana_charm",
@@ -482,7 +728,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "mp_save",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "mp": 33,
+          "spd": 4
+        },
+        "cost": 17,
+        "ability": "mp_save",
+        "statResources": 37,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "mp": 25,
+        "spd": 3
+      },
+      "proposalCostDelta": 13,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "w1",
@@ -511,7 +774,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 2
+        },
+        "cost": 1,
+        "ability": null,
+        "statResources": 2,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w1",
@@ -540,7 +818,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 3
+        },
+        "cost": 2,
+        "ability": null,
+        "statResources": 3,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": 0
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w1",
@@ -569,7 +862,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 4
+        },
+        "cost": 2,
+        "ability": null,
+        "statResources": 4,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 0
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w1",
@@ -598,7 +906,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 6
+        },
+        "cost": 3,
+        "ability": null,
+        "statResources": 6,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 1
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w1",
@@ -627,7 +950,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "crit_up",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 8
+        },
+        "cost": 5,
+        "ability": "crit_up",
+        "statResources": 8,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 5
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "w2",
@@ -656,7 +994,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 4
+        },
+        "cost": 2,
+        "ability": null,
+        "statResources": 4,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w2",
@@ -685,7 +1038,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 6
+        },
+        "cost": 3,
+        "ability": null,
+        "statResources": 6,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": 1
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w2",
@@ -714,7 +1082,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 8
+        },
+        "cost": 4,
+        "ability": null,
+        "statResources": 8,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 2
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w2",
@@ -743,7 +1126,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 12
+        },
+        "cost": 6,
+        "ability": null,
+        "statResources": 12,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 5
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w2",
@@ -772,7 +1170,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "crit_up",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 16
+        },
+        "cost": 8,
+        "ability": "crit_up",
+        "statResources": 16,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 11
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "w3",
@@ -801,7 +1214,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 7
+        },
+        "cost": 4,
+        "ability": null,
+        "statResources": 7,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": 1
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w3",
@@ -830,7 +1258,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 10
+        },
+        "cost": 5,
+        "ability": null,
+        "statResources": 10,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": 3
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w3",
@@ -859,7 +1302,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 14
+        },
+        "cost": 7,
+        "ability": null,
+        "statResources": 14,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 6
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w3",
@@ -888,7 +1346,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 21
+        },
+        "cost": 10,
+        "ability": null,
+        "statResources": 21,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 12
+      },
+      "proposalCostDelta": 7,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w3",
@@ -917,7 +1390,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "crit_up",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 29
+        },
+        "cost": 13,
+        "ability": "crit_up",
+        "statResources": 29,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 22
+      },
+      "proposalCostDelta": 10,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "w4",
@@ -946,7 +1434,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 9
+        },
+        "cost": 5,
+        "ability": null,
+        "statResources": 9,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": 1
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w4",
@@ -975,7 +1478,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 13
+        },
+        "cost": 7,
+        "ability": null,
+        "statResources": 13,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": 4
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w4",
@@ -1004,7 +1522,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 18
+        },
+        "cost": 9,
+        "ability": null,
+        "statResources": 18,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 8
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w4",
@@ -1033,7 +1566,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 27
+        },
+        "cost": 12,
+        "ability": null,
+        "statResources": 27,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 16
+      },
+      "proposalCostDelta": 8,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w4",
@@ -1062,7 +1610,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "crit_up",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 37
+        },
+        "cost": 17,
+        "ability": "crit_up",
+        "statResources": 37,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 28
+      },
+      "proposalCostDelta": 13,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "w5",
@@ -1091,7 +1654,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 13
+        },
+        "cost": 7,
+        "ability": null,
+        "statResources": 13,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": 1
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w5",
@@ -1120,7 +1698,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 19
+        },
+        "cost": 10,
+        "ability": null,
+        "statResources": 19,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": 6
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w5",
@@ -1149,7 +1742,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 26
+        },
+        "cost": 12,
+        "ability": null,
+        "statResources": 26,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 12
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w5",
@@ -1178,7 +1786,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 39
+        },
+        "cost": 17,
+        "ability": null,
+        "statResources": 39,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 24
+      },
+      "proposalCostDelta": 11,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w5",
@@ -1207,7 +1830,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "crit_up",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 54
+        },
+        "cost": 24,
+        "ability": "crit_up",
+        "statResources": 54,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 41
+      },
+      "proposalCostDelta": 18,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "w6",
@@ -1236,7 +1874,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 15
+        },
+        "cost": 8,
+        "ability": null,
+        "statResources": 15,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": 1
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w6",
@@ -1265,7 +1918,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 22
+        },
+        "cost": 11,
+        "ability": null,
+        "statResources": 22,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": 7
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w6",
@@ -1294,7 +1962,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 30
+        },
+        "cost": 14,
+        "ability": null,
+        "statResources": 30,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 14
+      },
+      "proposalCostDelta": 7,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w6",
@@ -1323,7 +2006,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 45
+        },
+        "cost": 20,
+        "ability": null,
+        "statResources": 45,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 28
+      },
+      "proposalCostDelta": 13,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w6",
@@ -1352,7 +2050,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "crit_up",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 63
+        },
+        "cost": 28,
+        "ability": "crit_up",
+        "statResources": 63,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 48
+      },
+      "proposalCostDelta": 21,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "w7",
@@ -1381,7 +2094,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 22
+        },
+        "cost": 11,
+        "ability": null,
+        "statResources": 22,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": 2
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w7",
@@ -1410,7 +2138,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 33
+        },
+        "cost": 16,
+        "ability": null,
+        "statResources": 33,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": 12
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w7",
@@ -1439,7 +2182,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 44
+        },
+        "cost": 20,
+        "ability": null,
+        "statResources": 44,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 22
+      },
+      "proposalCostDelta": 10,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w7",
@@ -1468,7 +2226,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 66
+        },
+        "cost": 29,
+        "ability": null,
+        "statResources": 66,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 43
+      },
+      "proposalCostDelta": 19,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w7",
@@ -1497,7 +2270,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "crit_up",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 92
+        },
+        "cost": 40,
+        "ability": "crit_up",
+        "statResources": 92,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 71
+      },
+      "proposalCostDelta": 30,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "w8",
@@ -1526,7 +2314,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 25
+        },
+        "cost": 13,
+        "ability": null,
+        "statResources": 25,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": 1
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w8",
@@ -1555,7 +2358,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 37
+        },
+        "cost": 18,
+        "ability": null,
+        "statResources": 37,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": 12
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w8",
@@ -1584,7 +2402,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 50
+        },
+        "cost": 23,
+        "ability": null,
+        "statResources": 50,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 24
+      },
+      "proposalCostDelta": 11,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w8",
@@ -1613,7 +2446,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 75
+        },
+        "cost": 33,
+        "ability": null,
+        "statResources": 75,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 48
+      },
+      "proposalCostDelta": 21,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "w8",
@@ -1642,7 +2490,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "crit_up",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 105
+        },
+        "cost": 45,
+        "ability": "crit_up",
+        "statResources": 105,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 80
+      },
+      "proposalCostDelta": 33,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "a1",
@@ -1671,7 +2534,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "def": 2
+        },
+        "cost": 1,
+        "ability": null,
+        "statResources": 2,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "def": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a1",
@@ -1700,7 +2578,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "def": 3
+        },
+        "cost": 2,
+        "ability": null,
+        "statResources": 3,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "def": 0
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a1",
@@ -1729,7 +2622,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 4
+        },
+        "cost": 2,
+        "ability": null,
+        "statResources": 4,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "def": 0
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a1",
@@ -1758,7 +2666,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 6
+        },
+        "cost": 3,
+        "ability": null,
+        "statResources": 6,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "def": 1
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a1",
@@ -1787,7 +2710,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "guard",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 8
+        },
+        "cost": 5,
+        "ability": "guard",
+        "statResources": 8,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "def": 5
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "a2",
@@ -1816,7 +2754,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "def": 4
+        },
+        "cost": 2,
+        "ability": null,
+        "statResources": 4,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "def": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a2",
@@ -1845,7 +2798,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "def": 6
+        },
+        "cost": 3,
+        "ability": null,
+        "statResources": 6,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "def": 1
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a2",
@@ -1874,7 +2842,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 8
+        },
+        "cost": 4,
+        "ability": null,
+        "statResources": 8,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "def": 2
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a2",
@@ -1903,7 +2886,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 12
+        },
+        "cost": 6,
+        "ability": null,
+        "statResources": 12,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "def": 5
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a2",
@@ -1932,7 +2930,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "guard",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 16
+        },
+        "cost": 8,
+        "ability": "guard",
+        "statResources": 16,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "def": 11
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "a3",
@@ -1961,7 +2974,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "def": 7
+        },
+        "cost": 4,
+        "ability": null,
+        "statResources": 7,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "def": 1
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a3",
@@ -1990,7 +3018,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "def": 10
+        },
+        "cost": 5,
+        "ability": null,
+        "statResources": 10,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "def": 3
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a3",
@@ -2019,7 +3062,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 14
+        },
+        "cost": 7,
+        "ability": null,
+        "statResources": 14,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "def": 6
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a3",
@@ -2048,7 +3106,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 21
+        },
+        "cost": 10,
+        "ability": null,
+        "statResources": 21,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "def": 12
+      },
+      "proposalCostDelta": 7,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a3",
@@ -2077,7 +3150,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "guard",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 29
+        },
+        "cost": 13,
+        "ability": "guard",
+        "statResources": 29,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "def": 22
+      },
+      "proposalCostDelta": 10,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "a4",
@@ -2106,7 +3194,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "def": 9
+        },
+        "cost": 5,
+        "ability": null,
+        "statResources": 9,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "def": 1
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a4",
@@ -2135,7 +3238,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "def": 13
+        },
+        "cost": 7,
+        "ability": null,
+        "statResources": 13,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "def": 4
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a4",
@@ -2164,7 +3282,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 18
+        },
+        "cost": 9,
+        "ability": null,
+        "statResources": 18,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "def": 8
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a4",
@@ -2193,7 +3326,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 27
+        },
+        "cost": 12,
+        "ability": null,
+        "statResources": 27,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "def": 16
+      },
+      "proposalCostDelta": 8,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a4",
@@ -2222,7 +3370,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "guard",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 37
+        },
+        "cost": 17,
+        "ability": "guard",
+        "statResources": 37,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "def": 28
+      },
+      "proposalCostDelta": 13,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "a5",
@@ -2251,7 +3414,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "def": 13
+        },
+        "cost": 7,
+        "ability": null,
+        "statResources": 13,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "def": 1
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a5",
@@ -2280,7 +3458,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "def": 19
+        },
+        "cost": 10,
+        "ability": null,
+        "statResources": 19,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "def": 6
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a5",
@@ -2309,7 +3502,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 26
+        },
+        "cost": 12,
+        "ability": null,
+        "statResources": 26,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "def": 12
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a5",
@@ -2338,7 +3546,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 39
+        },
+        "cost": 17,
+        "ability": null,
+        "statResources": 39,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "def": 24
+      },
+      "proposalCostDelta": 11,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a5",
@@ -2367,7 +3590,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "guard",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 54
+        },
+        "cost": 24,
+        "ability": "guard",
+        "statResources": 54,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "def": 41
+      },
+      "proposalCostDelta": 18,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "a6",
@@ -2396,7 +3634,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "def": 15
+        },
+        "cost": 8,
+        "ability": null,
+        "statResources": 15,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "def": 1
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a6",
@@ -2425,7 +3678,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "def": 22
+        },
+        "cost": 11,
+        "ability": null,
+        "statResources": 22,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "def": 7
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a6",
@@ -2454,7 +3722,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 30
+        },
+        "cost": 14,
+        "ability": null,
+        "statResources": 30,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "def": 14
+      },
+      "proposalCostDelta": 7,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a6",
@@ -2483,7 +3766,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 45
+        },
+        "cost": 20,
+        "ability": null,
+        "statResources": 45,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "def": 28
+      },
+      "proposalCostDelta": 13,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a6",
@@ -2512,7 +3810,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "guard",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 63
+        },
+        "cost": 28,
+        "ability": "guard",
+        "statResources": 63,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "def": 48
+      },
+      "proposalCostDelta": 21,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "a7",
@@ -2541,7 +3854,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "def": 22
+        },
+        "cost": 11,
+        "ability": null,
+        "statResources": 22,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "def": 2
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a7",
@@ -2570,7 +3898,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "def": 33
+        },
+        "cost": 16,
+        "ability": null,
+        "statResources": 33,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "def": 12
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a7",
@@ -2599,7 +3942,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 44
+        },
+        "cost": 20,
+        "ability": null,
+        "statResources": 44,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "def": 22
+      },
+      "proposalCostDelta": 10,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a7",
@@ -2628,7 +3986,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 66
+        },
+        "cost": 29,
+        "ability": null,
+        "statResources": 66,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "def": 43
+      },
+      "proposalCostDelta": 19,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "a7",
@@ -2657,7 +4030,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "guard",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 92
+        },
+        "cost": 40,
+        "ability": "guard",
+        "statResources": 92,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "def": 71
+      },
+      "proposalCostDelta": 30,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "c1",
@@ -2686,7 +4074,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "spd": 2
+        },
+        "cost": 1,
+        "ability": null,
+        "statResources": 2,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "spd": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "c1",
@@ -2715,7 +4118,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "spd": 3
+        },
+        "cost": 2,
+        "ability": null,
+        "statResources": 3,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "spd": 0
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "c1",
@@ -2744,7 +4162,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "spd": 4
+        },
+        "cost": 2,
+        "ability": null,
+        "statResources": 4,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "spd": 0
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "c1",
@@ -2773,7 +4206,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "spd": 6
+        },
+        "cost": 3,
+        "ability": null,
+        "statResources": 6,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "spd": 1
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "c1",
@@ -2802,7 +4250,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "mp_save",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "spd": 8
+        },
+        "cost": 5,
+        "ability": "mp_save",
+        "statResources": 8,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "spd": 5
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "c2",
@@ -2831,7 +4294,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "spd": 4
+        },
+        "cost": 2,
+        "ability": null,
+        "statResources": 4,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "spd": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "c2",
@@ -2860,7 +4338,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "spd": 6
+        },
+        "cost": 3,
+        "ability": null,
+        "statResources": 6,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "spd": 1
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "c2",
@@ -2889,7 +4382,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "spd": 8
+        },
+        "cost": 4,
+        "ability": null,
+        "statResources": 8,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "spd": 2
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "c2",
@@ -2918,7 +4426,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "spd": 12
+        },
+        "cost": 6,
+        "ability": null,
+        "statResources": 12,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "spd": 5
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "c2",
@@ -2947,7 +4470,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "mp_save",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "spd": 16
+        },
+        "cost": 8,
+        "ability": "mp_save",
+        "statResources": 16,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "spd": 11
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "c3",
@@ -2976,7 +4514,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "mp": 8
+        },
+        "cost": 4,
+        "ability": null,
+        "statResources": 8,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "mp": 2
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "c3",
@@ -3005,7 +4558,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "mp": 12
+        },
+        "cost": 6,
+        "ability": null,
+        "statResources": 12,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "mp": 5
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "c3",
@@ -3034,7 +4602,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "mp": 16
+        },
+        "cost": 8,
+        "ability": null,
+        "statResources": 16,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "mp": 8
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "c3",
@@ -3063,7 +4646,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "mp": 24
+        },
+        "cost": 11,
+        "ability": null,
+        "statResources": 24,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "mp": 15
+      },
+      "proposalCostDelta": 8,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "c3",
@@ -3092,7 +4690,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "mp_save",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "mp": 33
+        },
+        "cost": 15,
+        "ability": "mp_save",
+        "statResources": 33,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "mp": 26
+      },
+      "proposalCostDelta": 12,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "c4",
@@ -3124,7 +4737,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "spd": 6,
+          "mp": 5
+        },
+        "cost": 6,
+        "ability": null,
+        "statResources": 11,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "spd": 1,
+        "mp": 0
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "c4",
@@ -3156,7 +4786,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "spd": 9,
+          "mp": 7
+        },
+        "cost": 8,
+        "ability": null,
+        "statResources": 16,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "spd": 3,
+        "mp": 2
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "c4",
@@ -3188,7 +4835,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "spd": 12,
+          "mp": 10
+        },
+        "cost": 10,
+        "ability": null,
+        "statResources": 22,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "spd": 5,
+        "mp": 5
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "c4",
@@ -3220,7 +4884,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "spd": 18,
+          "mp": 15
+        },
+        "cost": 15,
+        "ability": null,
+        "statResources": 33,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "spd": 11,
+        "mp": 9
+      },
+      "proposalCostDelta": 10,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "c4",
@@ -3252,7 +4933,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "mp_save",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "spd": 25,
+          "mp": 21
+        },
+        "cost": 20,
+        "ability": "mp_save",
+        "statResources": 46,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "spd": 19,
+        "mp": 16
+      },
+      "proposalCostDelta": 15,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "ast1",
@@ -3275,7 +4973,19 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {},
+        "cost": 1,
+        "ability": null,
+        "statResources": 0,
+        "enchantResources": 0,
+        "efficiency": 1,
+        "helper": true
+      },
+      "proposalStatDelta": {},
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "ast1",
@@ -3298,7 +5008,19 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {},
+        "cost": 1,
+        "ability": null,
+        "statResources": 0,
+        "enchantResources": 0,
+        "efficiency": 1,
+        "helper": true
+      },
+      "proposalStatDelta": {},
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "ast1",
@@ -3321,7 +5043,19 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {},
+        "cost": 1,
+        "ability": null,
+        "statResources": 0,
+        "enchantResources": 0,
+        "efficiency": 1,
+        "helper": true
+      },
+      "proposalStatDelta": {},
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "ast1",
@@ -3344,7 +5078,19 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {},
+        "cost": 1,
+        "ability": null,
+        "statResources": 0,
+        "enchantResources": 0,
+        "efficiency": 1,
+        "helper": true
+      },
+      "proposalStatDelta": {},
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "ast1",
@@ -3367,7 +5113,19 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {},
+        "cost": 1,
+        "ability": null,
+        "statResources": 0,
+        "enchantResources": 0,
+        "efficiency": 1,
+        "helper": true
+      },
+      "proposalStatDelta": {},
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "anc_w1",
@@ -3397,7 +5155,20 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（★6保護）"
+      "enchantChange": "変更なし（★6保護）",
+      "proposal": {
+        "protected": true,
+        "stats": {
+          "atk": 11
+        },
+        "cost": 8,
+        "ability": null
+      },
+      "proposalStatDelta": {
+        "atk": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_w1",
@@ -3427,7 +5198,20 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（★6保護）"
+      "enchantChange": "変更なし（★6保護）",
+      "proposal": {
+        "protected": true,
+        "stats": {
+          "atk": 55
+        },
+        "cost": 8,
+        "ability": null
+      },
+      "proposalStatDelta": {
+        "atk": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_w3",
@@ -3457,7 +5241,20 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（★6保護）"
+      "enchantChange": "変更なし（★6保護）",
+      "proposal": {
+        "protected": true,
+        "stats": {
+          "atk": 11
+        },
+        "cost": 8,
+        "ability": null
+      },
+      "proposalStatDelta": {
+        "atk": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_w3",
@@ -3487,7 +5284,20 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（★6保護）"
+      "enchantChange": "変更なし（★6保護）",
+      "proposal": {
+        "protected": true,
+        "stats": {
+          "atk": 55
+        },
+        "cost": 8,
+        "ability": null
+      },
+      "proposalStatDelta": {
+        "atk": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_a1",
@@ -3520,7 +5330,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（★6保護）"
+      "enchantChange": "変更なし（★6保護）",
+      "proposal": {
+        "protected": true,
+        "stats": {
+          "def": 38,
+          "hp": 22
+        },
+        "cost": 7,
+        "ability": null
+      },
+      "proposalStatDelta": {
+        "def": 0,
+        "hp": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_a1",
@@ -3553,7 +5378,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（★6保護）"
+      "enchantChange": "変更なし（★6保護）",
+      "proposal": {
+        "protected": true,
+        "stats": {
+          "def": 192,
+          "hp": 110
+        },
+        "cost": 7,
+        "ability": null
+      },
+      "proposalStatDelta": {
+        "def": 0,
+        "hp": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_c1",
@@ -3583,7 +5423,20 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（★6保護）"
+      "enchantChange": "変更なし（★6保護）",
+      "proposal": {
+        "protected": true,
+        "stats": {
+          "spd": 13
+        },
+        "cost": 8,
+        "ability": null
+      },
+      "proposalStatDelta": {
+        "spd": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_c1",
@@ -3613,7 +5466,20 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（★6保護）"
+      "enchantChange": "変更なし（★6保護）",
+      "proposal": {
+        "protected": true,
+        "stats": {
+          "spd": 66
+        },
+        "cost": 8,
+        "ability": null
+      },
+      "proposalStatDelta": {
+        "spd": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_w2",
@@ -3646,7 +5512,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（★6保護）"
+      "enchantChange": "変更なし（★6保護）",
+      "proposal": {
+        "protected": true,
+        "stats": {
+          "atk": 9,
+          "spd": 8
+        },
+        "cost": 7,
+        "ability": null
+      },
+      "proposalStatDelta": {
+        "atk": 0,
+        "spd": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_w2",
@@ -3679,7 +5560,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（★6保護）"
+      "enchantChange": "変更なし（★6保護）",
+      "proposal": {
+        "protected": true,
+        "stats": {
+          "atk": 46,
+          "spd": 44
+        },
+        "cost": 7,
+        "ability": null
+      },
+      "proposalStatDelta": {
+        "atk": 0,
+        "spd": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_a2",
@@ -3712,7 +5608,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（★6保護）"
+      "enchantChange": "変更なし（★6保護）",
+      "proposal": {
+        "protected": true,
+        "stats": {
+          "def": 31,
+          "hp": 22
+        },
+        "cost": 7,
+        "ability": null
+      },
+      "proposalStatDelta": {
+        "def": 0,
+        "hp": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_a2",
@@ -3745,7 +5656,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（★6保護）"
+      "enchantChange": "変更なし（★6保護）",
+      "proposal": {
+        "protected": true,
+        "stats": {
+          "def": 159,
+          "hp": 110
+        },
+        "cost": 7,
+        "ability": null
+      },
+      "proposalStatDelta": {
+        "def": 0,
+        "hp": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "変更なし（★6保護）"
     },
     {
       "id": "demon_sword",
@@ -3774,7 +5700,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 50
+        },
+        "cost": 25,
+        "ability": null,
+        "statResources": 50,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": 10
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "demon_sword",
@@ -3803,7 +5744,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 75
+        },
+        "cost": 36,
+        "ability": null,
+        "statResources": 75,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": 34
+      },
+      "proposalCostDelta": 16,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "demon_sword",
@@ -3832,7 +5788,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 100
+        },
+        "cost": 46,
+        "ability": null,
+        "statResources": 100,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 58
+      },
+      "proposalCostDelta": 26,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "demon_sword",
@@ -3861,7 +5832,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 150
+        },
+        "cost": 66,
+        "ability": null,
+        "statResources": 150,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 107
+      },
+      "proposalCostDelta": 46,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "demon_sword",
@@ -3890,7 +5876,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "crit_up",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 210
+        },
+        "cost": 89,
+        "ability": "crit_up",
+        "statResources": 210,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 169
+      },
+      "proposalCostDelta": 69,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "limited_star_sword",
@@ -3919,7 +5920,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 8
+        },
+        "cost": 4,
+        "ability": null,
+        "statResources": 8,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": 2
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "limited_star_sword",
@@ -3948,7 +5964,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "atk": 12
+        },
+        "cost": 6,
+        "ability": null,
+        "statResources": 12,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": 5
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "limited_star_sword",
@@ -3977,7 +6008,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 16
+        },
+        "cost": 8,
+        "ability": null,
+        "statResources": 16,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 8
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "limited_star_sword",
@@ -4006,7 +6052,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 24
+        },
+        "cost": 11,
+        "ability": null,
+        "statResources": 24,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 15
+      },
+      "proposalCostDelta": 8,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "limited_star_sword",
@@ -4035,7 +6096,22 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "crit_up",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "atk": 33
+        },
+        "cost": 15,
+        "ability": "crit_up",
+        "statResources": 33,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 26
+      },
+      "proposalCostDelta": 12,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "limited_phoenix_armor",
@@ -4067,7 +6143,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "def": 7,
+          "hp": 5
+        },
+        "cost": 5,
+        "ability": null,
+        "statResources": 8.25,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "def": 2,
+        "hp": 1
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "limited_phoenix_armor",
@@ -4099,7 +6192,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "def": 10,
+          "hp": 7
+        },
+        "cost": 6,
+        "ability": null,
+        "statResources": 11.75,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "def": 4,
+        "hp": 3
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "limited_phoenix_armor",
@@ -4131,7 +6241,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 14,
+          "hp": 10
+        },
+        "cost": 8,
+        "ability": null,
+        "statResources": 16.5,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "def": 7,
+        "hp": 6
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "limited_phoenix_armor",
@@ -4163,7 +6290,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 21,
+          "hp": 15
+        },
+        "cost": 11,
+        "ability": null,
+        "statResources": 24.75,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "def": 13,
+        "hp": 11
+      },
+      "proposalCostDelta": 8,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "limited_phoenix_armor",
@@ -4195,7 +6339,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "guard",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "def": 29,
+          "hp": 21
+        },
+        "cost": 16,
+        "ability": "guard",
+        "statResources": 34.25,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "def": 23,
+        "hp": 17
+      },
+      "proposalCostDelta": 13,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "limited_moon_charm",
@@ -4227,7 +6388,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "spd": 3,
+          "mp": 6
+        },
+        "cost": 5,
+        "ability": null,
+        "statResources": 9,
+        "enchantResources": 0,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "spd": 1,
+        "mp": 2
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "limited_moon_charm",
@@ -4259,7 +6437,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "変更なし（なし）"
+      "enchantChange": "変更なし（なし）",
+      "proposal": {
+        "stats": {
+          "spd": 4,
+          "mp": 9
+        },
+        "cost": 7,
+        "ability": null,
+        "statResources": 13,
+        "enchantResources": 0,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "spd": 2,
+        "mp": 4
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "limited_moon_charm",
@@ -4291,7 +6486,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "spd": 6,
+          "mp": 12
+        },
+        "cost": 9,
+        "ability": null,
+        "statResources": 18,
+        "enchantResources": 0,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "spd": 3,
+        "mp": 7
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "limited_moon_charm",
@@ -4323,7 +6535,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": null,
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "spd": 9,
+          "mp": 18
+        },
+        "cost": 12,
+        "ability": null,
+        "statResources": 27,
+        "enchantResources": 0,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "spd": 6,
+        "mp": 12
+      },
+      "proposalCostDelta": 9,
+      "proposalEffectChange": "変更なし（なし）"
     },
     {
       "id": "limited_moon_charm",
@@ -4355,7 +6584,24 @@
       "oldAbilityId": null,
       "oldAbilityKnown": false,
       "newAbilityId": "mp_save",
-      "enchantChange": "旧ランダム効果：未指定"
+      "enchantChange": "旧ランダム効果：未指定",
+      "proposal": {
+        "stats": {
+          "spd": 12,
+          "mp": 25
+        },
+        "cost": 17,
+        "ability": "mp_save",
+        "statResources": 37,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "spd": 10,
+        "mp": 20
+      },
+      "proposalCostDelta": 14,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "raid_moon_blade",
@@ -4387,7 +6633,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 6,
+          "spd": 1
+        },
+        "cost": 5,
+        "ability": "crit_up",
+        "statResources": 7,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": -1,
+        "spd": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "raid_moon_blade",
@@ -4419,7 +6682,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 9,
+          "spd": 1
+        },
+        "cost": 6,
+        "ability": "crit_up",
+        "statResources": 10,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": 1,
+        "spd": 0
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "raid_moon_blade",
@@ -4451,7 +6731,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 12,
+          "spd": 2
+        },
+        "cost": 8,
+        "ability": "crit_up",
+        "statResources": 14,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 3,
+        "spd": 1
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "raid_moon_blade",
@@ -4483,7 +6780,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 18,
+          "spd": 3
+        },
+        "cost": 10,
+        "ability": "crit_up",
+        "statResources": 21,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 9,
+        "spd": 1
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "raid_moon_blade",
@@ -4515,7 +6829,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 25,
+          "spd": 4
+        },
+        "cost": 13,
+        "ability": "crit_up",
+        "statResources": 29,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 16,
+        "spd": 2
+      },
+      "proposalCostDelta": 8,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "raid_moon_mantle",
@@ -4547,7 +6878,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 5,
+          "hp": 10
+        },
+        "cost": 5,
+        "ability": "guard",
+        "statResources": 7.5,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "def": 0,
+        "hp": -2
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_moon_mantle",
@@ -4579,7 +6927,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 7,
+          "hp": 15
+        },
+        "cost": 7,
+        "ability": "guard",
+        "statResources": 10.75,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "def": 1,
+        "hp": 3
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_moon_mantle",
@@ -4611,7 +6976,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 10,
+          "hp": 20
+        },
+        "cost": 8,
+        "ability": "guard",
+        "statResources": 15,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "def": 3,
+        "hp": 8
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_moon_mantle",
@@ -4643,7 +7025,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 15,
+          "hp": 30
+        },
+        "cost": 11,
+        "ability": "guard",
+        "statResources": 22.5,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "def": 8,
+        "hp": 14
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_moon_mantle",
@@ -4675,7 +7074,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 21,
+          "hp": 42
+        },
+        "cost": 14,
+        "ability": "guard",
+        "statResources": 31.5,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "def": 14,
+        "hp": 26
+      },
+      "proposalCostDelta": 9,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_moon_charm",
@@ -4707,7 +7123,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 8,
+          "spd": 2
+        },
+        "cost": 6,
+        "ability": "mp_save",
+        "statResources": 10,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "mp": 3,
+        "spd": 1
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "raid_moon_charm",
@@ -4739,7 +7172,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 12,
+          "spd": 3
+        },
+        "cost": 9,
+        "ability": "mp_save",
+        "statResources": 15,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "mp": 6,
+        "spd": 2
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "raid_moon_charm",
@@ -4771,7 +7221,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 16,
+          "spd": 4
+        },
+        "cost": 10,
+        "ability": "mp_save",
+        "statResources": 20,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "mp": 10,
+        "spd": 2
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "raid_moon_charm",
@@ -4803,7 +7270,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 24,
+          "spd": 6
+        },
+        "cost": 14,
+        "ability": "mp_save",
+        "statResources": 30,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "mp": 17,
+        "spd": 4
+      },
+      "proposalCostDelta": 10,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "raid_moon_charm",
@@ -4835,7 +7319,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 33,
+          "spd": 8
+        },
+        "cost": 18,
+        "ability": "mp_save",
+        "statResources": 41,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "mp": 26,
+        "spd": 6
+      },
+      "proposalCostDelta": 14,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_bat_buckler",
@@ -4864,7 +7365,22 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 2
+        },
+        "cost": 3,
+        "ability": "guard",
+        "statResources": 2,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "def": -2
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_bat_buckler",
@@ -4893,7 +7409,22 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 3
+        },
+        "cost": 3,
+        "ability": "guard",
+        "statResources": 3,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "def": -2
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_bat_buckler",
@@ -4922,7 +7453,22 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 4
+        },
+        "cost": 3,
+        "ability": "guard",
+        "statResources": 4,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "def": -2
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_bat_buckler",
@@ -4951,7 +7497,22 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 6
+        },
+        "cost": 4,
+        "ability": "guard",
+        "statResources": 6,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "def": -1
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_bat_buckler",
@@ -4980,7 +7541,22 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 8
+        },
+        "cost": 5,
+        "ability": "guard",
+        "statResources": 8,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "def": 1
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_pumpkin_bell",
@@ -5012,7 +7588,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "hp": 2,
+          "mp": 2
+        },
+        "cost": 3,
+        "ability": "mp_save",
+        "statResources": 2.5,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "hp": -2,
+        "mp": -1
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_pumpkin_bell",
@@ -5044,7 +7637,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "hp": 3,
+          "mp": 3
+        },
+        "cost": 3,
+        "ability": "mp_save",
+        "statResources": 3.75,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "hp": -1,
+        "mp": -1
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_pumpkin_bell",
@@ -5076,7 +7686,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "hp": 4,
+          "mp": 4
+        },
+        "cost": 4,
+        "ability": "mp_save",
+        "statResources": 5,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "hp": 0,
+        "mp": -1
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_pumpkin_bell",
@@ -5108,7 +7735,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "hp": 6,
+          "mp": 6
+        },
+        "cost": 5,
+        "ability": "mp_save",
+        "statResources": 7.5,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "hp": 2,
+        "mp": 0
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_pumpkin_bell",
@@ -5140,7 +7784,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "hp": 8,
+          "mp": 8
+        },
+        "cost": 5,
+        "ability": "mp_save",
+        "statResources": 10,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "hp": 4,
+        "mp": 2
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_rank_blade",
@@ -5172,7 +7833,24 @@
       "oldAbilityId": "lifesteal",
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "削除：HP吸収15%"
+      "enchantChange": "削除：HP吸収15%",
+      "proposal": {
+        "stats": {
+          "atk": 8,
+          "spd": 2
+        },
+        "cost": 11,
+        "ability": "lifesteal",
+        "statResources": 10,
+        "enchantResources": 12,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": 0,
+        "spd": 0
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "追加：HP吸収15%"
     },
     {
       "id": "halloween_rank_blade",
@@ -5204,7 +7882,24 @@
       "oldAbilityId": "lifesteal",
       "oldAbilityKnown": true,
       "newAbilityId": null,
-      "enchantChange": "削除：HP吸収15%"
+      "enchantChange": "削除：HP吸収15%",
+      "proposal": {
+        "stats": {
+          "atk": 12,
+          "spd": 3
+        },
+        "cost": 13,
+        "ability": "lifesteal",
+        "statResources": 15,
+        "enchantResources": 12,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": 3,
+        "spd": 1
+      },
+      "proposalCostDelta": 8,
+      "proposalEffectChange": "追加：HP吸収15%"
     },
     {
       "id": "halloween_rank_blade",
@@ -5236,7 +7931,24 @@
       "oldAbilityId": "lifesteal",
       "oldAbilityKnown": true,
       "newAbilityId": "lifesteal",
-      "enchantChange": "維持：HP吸収15%"
+      "enchantChange": "維持：HP吸収15%",
+      "proposal": {
+        "stats": {
+          "atk": 16,
+          "spd": 4
+        },
+        "cost": 15,
+        "ability": "lifesteal",
+        "statResources": 20,
+        "enchantResources": 12,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 16,
+        "spd": 4
+      },
+      "proposalCostDelta": 10,
+      "proposalEffectChange": "維持：HP吸収15%"
     },
     {
       "id": "halloween_rank_blade",
@@ -5268,7 +7980,24 @@
       "oldAbilityId": "lifesteal",
       "oldAbilityKnown": true,
       "newAbilityId": "lifesteal",
-      "enchantChange": "維持：HP吸収15%"
+      "enchantChange": "維持：HP吸収15%",
+      "proposal": {
+        "stats": {
+          "atk": 24,
+          "spd": 6
+        },
+        "cost": 19,
+        "ability": "lifesteal",
+        "statResources": 30,
+        "enchantResources": 12,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 23,
+        "spd": 6
+      },
+      "proposalCostDelta": 14,
+      "proposalEffectChange": "維持：HP吸収15%"
     },
     {
       "id": "halloween_rank_blade",
@@ -5300,7 +8029,24 @@
       "oldAbilityId": "lifesteal",
       "oldAbilityKnown": true,
       "newAbilityId": "lifesteal",
-      "enchantChange": "維持：HP吸収15%"
+      "enchantChange": "維持：HP吸収15%",
+      "proposal": {
+        "stats": {
+          "atk": 33,
+          "spd": 8
+        },
+        "cost": 23,
+        "ability": "lifesteal",
+        "statResources": 41,
+        "enchantResources": 12,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 32,
+        "spd": 8
+      },
+      "proposalCostDelta": 18,
+      "proposalEffectChange": "維持：HP吸収15%"
     },
     {
       "id": "halloween_candy_saber",
@@ -5329,7 +8075,22 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 3
+        },
+        "cost": 3,
+        "ability": "crit_up",
+        "statResources": 3,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": -1
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_candy_saber",
@@ -5358,7 +8119,22 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 4
+        },
+        "cost": 3,
+        "ability": "crit_up",
+        "statResources": 4,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": -1
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_candy_saber",
@@ -5387,7 +8163,22 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 6
+        },
+        "cost": 4,
+        "ability": "crit_up",
+        "statResources": 6,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 0
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_candy_saber",
@@ -5416,7 +8207,22 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 9
+        },
+        "cost": 5,
+        "ability": "crit_up",
+        "statResources": 9,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 2
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_candy_saber",
@@ -5445,7 +8251,22 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 12
+        },
+        "cost": 6,
+        "ability": "crit_up",
+        "statResources": 12,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 5
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_light_cape",
@@ -5477,7 +8298,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 3,
+          "hp": 4
+        },
+        "cost": 4,
+        "ability": "guard",
+        "statResources": 4,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "def": -2,
+        "hp": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_light_cape",
@@ -5509,7 +8347,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 4,
+          "hp": 6
+        },
+        "cost": 4,
+        "ability": "guard",
+        "statResources": 5.5,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "def": -1,
+        "hp": -2
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_light_cape",
@@ -5541,7 +8396,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 6,
+          "hp": 8
+        },
+        "cost": 5,
+        "ability": "guard",
+        "statResources": 8,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "def": 0,
+        "hp": 0
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_light_cape",
@@ -5573,7 +8445,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 9,
+          "hp": 12
+        },
+        "cost": 7,
+        "ability": "guard",
+        "statResources": 12,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "def": 2,
+        "hp": 4
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_light_cape",
@@ -5605,7 +8494,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 12,
+          "hp": 16
+        },
+        "cost": 8,
+        "ability": "guard",
+        "statResources": 16,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "def": 5,
+        "hp": 8
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_moon_pin",
@@ -5637,7 +8543,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 3,
+          "spd": 1
+        },
+        "cost": 3,
+        "ability": "mp_save",
+        "statResources": 4,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "mp": 0,
+        "spd": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_moon_pin",
@@ -5669,7 +8592,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 4,
+          "spd": 1
+        },
+        "cost": 4,
+        "ability": "mp_save",
+        "statResources": 5,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "mp": 0,
+        "spd": 0
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_moon_pin",
@@ -5701,7 +8641,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 6,
+          "spd": 2
+        },
+        "cost": 5,
+        "ability": "mp_save",
+        "statResources": 8,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "mp": 1,
+        "spd": 1
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_moon_pin",
@@ -5733,7 +8690,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 9,
+          "spd": 3
+        },
+        "cost": 7,
+        "ability": "mp_save",
+        "statResources": 12,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "mp": 4,
+        "spd": 1
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_moon_pin",
@@ -5765,7 +8739,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 12,
+          "spd": 4
+        },
+        "cost": 8,
+        "ability": "mp_save",
+        "statResources": 16,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "mp": 7,
+        "spd": 2
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "raid_star_blade",
@@ -5797,7 +8788,24 @@
       "oldAbilityId": "power",
       "oldAbilityKnown": true,
       "newAbilityId": "power",
-      "enchantChange": "維持：攻撃力+15%"
+      "enchantChange": "維持：攻撃力+15%",
+      "proposal": {
+        "stats": {
+          "atk": 5,
+          "spd": 1
+        },
+        "cost": 6,
+        "ability": "power",
+        "statResources": 6,
+        "enchantResources": 6,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": 2,
+        "spd": 0
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "維持：攻撃力+15%"
     },
     {
       "id": "raid_star_blade",
@@ -5829,7 +8837,24 @@
       "oldAbilityId": "power",
       "oldAbilityKnown": true,
       "newAbilityId": "power",
-      "enchantChange": "維持：攻撃力+15%"
+      "enchantChange": "維持：攻撃力+15%",
+      "proposal": {
+        "stats": {
+          "atk": 7,
+          "spd": 1
+        },
+        "cost": 7,
+        "ability": "power",
+        "statResources": 8,
+        "enchantResources": 6,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": 3,
+        "spd": 0
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "維持：攻撃力+15%"
     },
     {
       "id": "raid_star_blade",
@@ -5861,7 +8886,24 @@
       "oldAbilityId": "power",
       "oldAbilityKnown": true,
       "newAbilityId": "power",
-      "enchantChange": "維持：攻撃力+15%"
+      "enchantChange": "維持：攻撃力+15%",
+      "proposal": {
+        "stats": {
+          "atk": 10,
+          "spd": 2
+        },
+        "cost": 9,
+        "ability": "power",
+        "statResources": 12,
+        "enchantResources": 6,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 5,
+        "spd": 1
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "維持：攻撃力+15%"
     },
     {
       "id": "raid_star_blade",
@@ -5893,7 +8935,24 @@
       "oldAbilityId": "power",
       "oldAbilityKnown": true,
       "newAbilityId": "power",
-      "enchantChange": "維持：攻撃力+15%"
+      "enchantChange": "維持：攻撃力+15%",
+      "proposal": {
+        "stats": {
+          "atk": 15,
+          "spd": 3
+        },
+        "cost": 11,
+        "ability": "power",
+        "statResources": 18,
+        "enchantResources": 6,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 9,
+        "spd": 2
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "維持：攻撃力+15%"
     },
     {
       "id": "raid_star_blade",
@@ -5925,7 +8984,24 @@
       "oldAbilityId": "power",
       "oldAbilityKnown": true,
       "newAbilityId": "power",
-      "enchantChange": "維持：攻撃力+15%"
+      "enchantChange": "維持：攻撃力+15%",
+      "proposal": {
+        "stats": {
+          "atk": 21,
+          "spd": 4
+        },
+        "cost": 13,
+        "ability": "power",
+        "statResources": 25,
+        "enchantResources": 6,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 15,
+        "spd": 3
+      },
+      "proposalCostDelta": 8,
+      "proposalEffectChange": "維持：攻撃力+15%"
     },
     {
       "id": "raid_ward_armor",
@@ -5957,7 +9033,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 5,
+          "hp": 8
+        },
+        "cost": 5,
+        "ability": "guard",
+        "statResources": 7,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "def": -1,
+        "hp": 0
+      },
+      "proposalCostDelta": 0,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_ward_armor",
@@ -5989,7 +9082,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 7,
+          "hp": 12
+        },
+        "cost": 6,
+        "ability": "guard",
+        "statResources": 10,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "def": 1,
+        "hp": 0
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_ward_armor",
@@ -6021,7 +9131,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 10,
+          "hp": 16
+        },
+        "cost": 8,
+        "ability": "guard",
+        "statResources": 14,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "def": 3,
+        "hp": 4
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_ward_armor",
@@ -6053,7 +9180,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 15,
+          "hp": 24
+        },
+        "cost": 10,
+        "ability": "guard",
+        "statResources": 21,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "def": 7,
+        "hp": 12
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_ward_armor",
@@ -6085,7 +9229,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 21,
+          "hp": 33
+        },
+        "cost": 14,
+        "ability": "guard",
+        "statResources": 29.25,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "def": 13,
+        "hp": 21
+      },
+      "proposalCostDelta": 9,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_focus_charm",
@@ -6117,7 +9278,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 6,
+          "spd": 2
+        },
+        "cost": 5,
+        "ability": "mp_save",
+        "statResources": 8,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "mp": 1,
+        "spd": 1
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "raid_focus_charm",
@@ -6149,7 +9327,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 9,
+          "spd": 3
+        },
+        "cost": 7,
+        "ability": "mp_save",
+        "statResources": 12,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "mp": 4,
+        "spd": 1
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "raid_focus_charm",
@@ -6181,7 +9376,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 12,
+          "spd": 4
+        },
+        "cost": 9,
+        "ability": "mp_save",
+        "statResources": 16,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "mp": 6,
+        "spd": 2
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "raid_focus_charm",
@@ -6213,7 +9425,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 18,
+          "spd": 6
+        },
+        "cost": 12,
+        "ability": "mp_save",
+        "statResources": 24,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "mp": 11,
+        "spd": 4
+      },
+      "proposalCostDelta": 8,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "raid_focus_charm",
@@ -6245,7 +9474,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 25,
+          "spd": 8
+        },
+        "cost": 15,
+        "ability": "mp_save",
+        "statResources": 33,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "mp": 18,
+        "spd": 6
+      },
+      "proposalCostDelta": 11,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_lantern_staff",
@@ -6274,7 +9520,22 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "atk": 7
+        },
+        "cost": 5,
+        "ability": "mp_save",
+        "statResources": 7,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": 1
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_lantern_staff",
@@ -6303,7 +9564,22 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "atk": 10
+        },
+        "cost": 6,
+        "ability": "mp_save",
+        "statResources": 10,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": 3
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_lantern_staff",
@@ -6332,7 +9608,22 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "atk": 14
+        },
+        "cost": 8,
+        "ability": "mp_save",
+        "statResources": 14,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 6
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_lantern_staff",
@@ -6361,7 +9652,22 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "atk": 21
+        },
+        "cost": 10,
+        "ability": "mp_save",
+        "statResources": 21,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 12
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_lantern_staff",
@@ -6390,7 +9696,22 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "atk": 29
+        },
+        "cost": 13,
+        "ability": "mp_save",
+        "statResources": 29,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 20
+      },
+      "proposalCostDelta": 9,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_pumpkin_blade",
@@ -6419,7 +9740,22 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 6
+        },
+        "cost": 4,
+        "ability": "crit_up",
+        "statResources": 6,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": 2
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_pumpkin_blade",
@@ -6448,7 +9784,22 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 9
+        },
+        "cost": 6,
+        "ability": "crit_up",
+        "statResources": 9,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": 4
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_pumpkin_blade",
@@ -6477,7 +9828,22 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 12
+        },
+        "cost": 7,
+        "ability": "crit_up",
+        "statResources": 12,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 6
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_pumpkin_blade",
@@ -6506,7 +9872,22 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 18
+        },
+        "cost": 9,
+        "ability": "crit_up",
+        "statResources": 18,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 11
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_pumpkin_blade",
@@ -6535,7 +9916,22 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 25
+        },
+        "cost": 12,
+        "ability": "crit_up",
+        "statResources": 25,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 18
+      },
+      "proposalCostDelta": 9,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_witch_mantle",
@@ -6567,7 +9963,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 5,
+          "hp": 8
+        },
+        "cost": 5,
+        "ability": "guard",
+        "statResources": 7,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "def": 2,
+        "hp": 4
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_witch_mantle",
@@ -6599,7 +10012,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 7,
+          "hp": 12
+        },
+        "cost": 6,
+        "ability": "guard",
+        "statResources": 10,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "def": 3,
+        "hp": 8
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_witch_mantle",
@@ -6631,7 +10061,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 10,
+          "hp": 16
+        },
+        "cost": 8,
+        "ability": "guard",
+        "statResources": 14,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "def": 6,
+        "hp": 8
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_witch_mantle",
@@ -6663,7 +10110,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 15,
+          "hp": 24
+        },
+        "cost": 10,
+        "ability": "guard",
+        "statResources": 21,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "def": 10,
+        "hp": 16
+      },
+      "proposalCostDelta": 7,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_witch_mantle",
@@ -6695,7 +10159,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 21,
+          "hp": 33
+        },
+        "cost": 14,
+        "ability": "guard",
+        "statResources": 29.25,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "def": 16,
+        "hp": 25
+      },
+      "proposalCostDelta": 11,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_moon_charm",
@@ -6727,7 +10208,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "spd": 2,
+          "mp": 4
+        },
+        "cost": 4,
+        "ability": "mp_save",
+        "statResources": 6,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "spd": 1,
+        "mp": 1
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_moon_charm",
@@ -6759,7 +10257,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "spd": 3,
+          "mp": 6
+        },
+        "cost": 6,
+        "ability": "mp_save",
+        "statResources": 9,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "spd": 1,
+        "mp": 3
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_moon_charm",
@@ -6791,7 +10306,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "spd": 4,
+          "mp": 8
+        },
+        "cost": 7,
+        "ability": "mp_save",
+        "statResources": 12,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "spd": 2,
+        "mp": 4
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_moon_charm",
@@ -6823,7 +10355,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "spd": 6,
+          "mp": 12
+        },
+        "cost": 9,
+        "ability": "mp_save",
+        "statResources": 18,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "spd": 4,
+        "mp": 7
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_moon_charm",
@@ -6855,7 +10404,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "spd": 8,
+          "mp": 16
+        },
+        "cost": 11,
+        "ability": "mp_save",
+        "statResources": 24,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "spd": 6,
+        "mp": 11
+      },
+      "proposalCostDelta": 8,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_exchange_candy_sword",
@@ -6887,7 +10453,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 7,
+          "spd": 1
+        },
+        "cost": 5,
+        "ability": "crit_up",
+        "statResources": 8,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": 2,
+        "spd": 0
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_exchange_candy_sword",
@@ -6919,7 +10502,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 10,
+          "spd": 1
+        },
+        "cost": 7,
+        "ability": "crit_up",
+        "statResources": 11,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": 4,
+        "spd": 0
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_exchange_candy_sword",
@@ -6951,7 +10551,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 14,
+          "spd": 2
+        },
+        "cost": 9,
+        "ability": "crit_up",
+        "statResources": 16,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 7,
+        "spd": 1
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_exchange_candy_sword",
@@ -6983,7 +10600,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 21,
+          "spd": 3
+        },
+        "cost": 12,
+        "ability": "crit_up",
+        "statResources": 24,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 13,
+        "spd": 2
+      },
+      "proposalCostDelta": 8,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_exchange_candy_sword",
@@ -7015,7 +10649,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 29,
+          "spd": 4
+        },
+        "cost": 15,
+        "ability": "crit_up",
+        "statResources": 33,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 21,
+        "spd": 3
+      },
+      "proposalCostDelta": 11,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_exchange_aurora_mantle",
@@ -7047,7 +10698,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 7,
+          "hp": 8
+        },
+        "cost": 6,
+        "ability": "guard",
+        "statResources": 9,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "def": 2,
+        "hp": 4
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_exchange_aurora_mantle",
@@ -7079,7 +10747,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 10,
+          "hp": 12
+        },
+        "cost": 8,
+        "ability": "guard",
+        "statResources": 13,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "def": 5,
+        "hp": 4
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_exchange_aurora_mantle",
@@ -7111,7 +10796,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 14,
+          "hp": 16
+        },
+        "cost": 10,
+        "ability": "guard",
+        "statResources": 18,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "def": 8,
+        "hp": 8
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_exchange_aurora_mantle",
@@ -7143,7 +10845,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 21,
+          "hp": 24
+        },
+        "cost": 13,
+        "ability": "guard",
+        "statResources": 27,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "def": 14,
+        "hp": 16
+      },
+      "proposalCostDelta": 9,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_exchange_aurora_mantle",
@@ -7175,7 +10894,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 29,
+          "hp": 33
+        },
+        "cost": 17,
+        "ability": "guard",
+        "statResources": 37.25,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "def": 22,
+        "hp": 25
+      },
+      "proposalCostDelta": 13,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_exchange_winter_charm",
@@ -7207,7 +10943,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 6,
+          "spd": 2
+        },
+        "cost": 5,
+        "ability": "mp_save",
+        "statResources": 8,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "mp": 1,
+        "spd": 1
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_exchange_winter_charm",
@@ -7239,7 +10992,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 9,
+          "spd": 3
+        },
+        "cost": 7,
+        "ability": "mp_save",
+        "statResources": 12,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "mp": 4,
+        "spd": 1
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_exchange_winter_charm",
@@ -7271,7 +11041,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 12,
+          "spd": 4
+        },
+        "cost": 9,
+        "ability": "mp_save",
+        "statResources": 16,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "mp": 6,
+        "spd": 2
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_exchange_winter_charm",
@@ -7303,7 +11090,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 18,
+          "spd": 6
+        },
+        "cost": 12,
+        "ability": "mp_save",
+        "statResources": 24,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "mp": 11,
+        "spd": 4
+      },
+      "proposalCostDelta": 8,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_exchange_winter_charm",
@@ -7335,7 +11139,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 25,
+          "spd": 8
+        },
+        "cost": 15,
+        "ability": "mp_save",
+        "statResources": 33,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "mp": 18,
+        "spd": 6
+      },
+      "proposalCostDelta": 11,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_candy_cane_blade",
@@ -7367,7 +11188,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 6,
+          "spd": 1
+        },
+        "cost": 5,
+        "ability": "crit_up",
+        "statResources": 7,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": 1,
+        "spd": 0
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_candy_cane_blade",
@@ -7399,7 +11237,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 9,
+          "spd": 1
+        },
+        "cost": 6,
+        "ability": "crit_up",
+        "statResources": 10,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": 3,
+        "spd": 0
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_candy_cane_blade",
@@ -7431,7 +11286,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 12,
+          "spd": 2
+        },
+        "cost": 8,
+        "ability": "crit_up",
+        "statResources": 14,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 5,
+        "spd": 1
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_candy_cane_blade",
@@ -7463,7 +11335,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 18,
+          "spd": 3
+        },
+        "cost": 10,
+        "ability": "crit_up",
+        "statResources": 21,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 10,
+        "spd": 2
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_candy_cane_blade",
@@ -7495,7 +11384,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 25,
+          "spd": 4
+        },
+        "cost": 13,
+        "ability": "crit_up",
+        "statResources": 29,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 17,
+        "spd": 3
+      },
+      "proposalCostDelta": 9,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_aurora_mantle",
@@ -7527,7 +11433,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 6,
+          "hp": 8
+        },
+        "cost": 5,
+        "ability": "guard",
+        "statResources": 8,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "def": 1,
+        "hp": 4
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_aurora_mantle",
@@ -7559,7 +11482,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 9,
+          "hp": 12
+        },
+        "cost": 7,
+        "ability": "guard",
+        "statResources": 12,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "def": 4,
+        "hp": 4
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_aurora_mantle",
@@ -7591,7 +11531,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 12,
+          "hp": 16
+        },
+        "cost": 9,
+        "ability": "guard",
+        "statResources": 16,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "def": 6,
+        "hp": 8
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_aurora_mantle",
@@ -7623,7 +11580,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 18,
+          "hp": 24
+        },
+        "cost": 12,
+        "ability": "guard",
+        "statResources": 24,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "def": 11,
+        "hp": 16
+      },
+      "proposalCostDelta": 8,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_aurora_mantle",
@@ -7655,7 +11629,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 25,
+          "hp": 33
+        },
+        "cost": 15,
+        "ability": "guard",
+        "statResources": 33.25,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "def": 18,
+        "hp": 25
+      },
+      "proposalCostDelta": 11,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_winter_star_charm",
@@ -7687,7 +11678,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 5,
+          "spd": 2
+        },
+        "cost": 5,
+        "ability": "mp_save",
+        "statResources": 7,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "mp": 1,
+        "spd": 0
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_winter_star_charm",
@@ -7719,7 +11727,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 7,
+          "spd": 3
+        },
+        "cost": 6,
+        "ability": "mp_save",
+        "statResources": 10,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "mp": 2,
+        "spd": 1
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_winter_star_charm",
@@ -7751,7 +11776,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 10,
+          "spd": 4
+        },
+        "cost": 8,
+        "ability": "mp_save",
+        "statResources": 14,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "mp": 4,
+        "spd": 2
+      },
+      "proposalCostDelta": 4,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_winter_star_charm",
@@ -7783,7 +11825,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 15,
+          "spd": 6
+        },
+        "cost": 10,
+        "ability": "mp_save",
+        "statResources": 21,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "mp": 9,
+        "spd": 3
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_winter_star_charm",
@@ -7815,7 +11874,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 21,
+          "spd": 8
+        },
+        "cost": 13,
+        "ability": "mp_save",
+        "statResources": 29,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "mp": 15,
+        "spd": 5
+      },
+      "proposalCostDelta": 9,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "quest_quill_blade",
@@ -7847,7 +11923,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 7,
+          "spd": 1
+        },
+        "cost": 5,
+        "ability": "crit_up",
+        "statResources": 8,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "atk": 2,
+        "spd": 0
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "quest_quill_blade",
@@ -7879,7 +11972,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 10,
+          "spd": 1
+        },
+        "cost": 7,
+        "ability": "crit_up",
+        "statResources": 11,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "atk": 4,
+        "spd": 0
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "quest_quill_blade",
@@ -7911,7 +12021,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 14,
+          "spd": 2
+        },
+        "cost": 9,
+        "ability": "crit_up",
+        "statResources": 16,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "atk": 7,
+        "spd": 1
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "quest_quill_blade",
@@ -7943,7 +12070,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 21,
+          "spd": 3
+        },
+        "cost": 12,
+        "ability": "crit_up",
+        "statResources": 24,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "atk": 13,
+        "spd": 2
+      },
+      "proposalCostDelta": 8,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "quest_quill_blade",
@@ -7975,7 +12119,24 @@
       "oldAbilityId": "crit_up",
       "oldAbilityKnown": true,
       "newAbilityId": "crit_up",
-      "enchantChange": "維持：会心率+10%"
+      "enchantChange": "維持：会心率+10%",
+      "proposal": {
+        "stats": {
+          "atk": 29,
+          "spd": 4
+        },
+        "cost": 15,
+        "ability": "crit_up",
+        "statResources": 33,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "atk": 21,
+        "spd": 3
+      },
+      "proposalCostDelta": 11,
+      "proposalEffectChange": "維持：会心率+10%"
     },
     {
       "id": "quest_archivist_robe",
@@ -8007,7 +12168,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 6,
+          "hp": 8
+        },
+        "cost": 5,
+        "ability": "guard",
+        "statResources": 8,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "def": 1,
+        "hp": 4
+      },
+      "proposalCostDelta": 1,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "quest_archivist_robe",
@@ -8039,7 +12217,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 9,
+          "hp": 12
+        },
+        "cost": 7,
+        "ability": "guard",
+        "statResources": 12,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "def": 4,
+        "hp": 4
+      },
+      "proposalCostDelta": 3,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "quest_archivist_robe",
@@ -8071,7 +12266,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 12,
+          "hp": 16
+        },
+        "cost": 9,
+        "ability": "guard",
+        "statResources": 16,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "def": 6,
+        "hp": 8
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "quest_archivist_robe",
@@ -8103,7 +12315,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 18,
+          "hp": 24
+        },
+        "cost": 12,
+        "ability": "guard",
+        "statResources": 24,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "def": 11,
+        "hp": 16
+      },
+      "proposalCostDelta": 8,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "quest_archivist_robe",
@@ -8135,7 +12364,24 @@
       "oldAbilityId": "guard",
       "oldAbilityKnown": true,
       "newAbilityId": "guard",
-      "enchantChange": "維持：被ダメージ-5%"
+      "enchantChange": "維持：被ダメージ-5%",
+      "proposal": {
+        "stats": {
+          "def": 25,
+          "hp": 33
+        },
+        "cost": 15,
+        "ability": "guard",
+        "statResources": 33.25,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "def": 18,
+        "hp": 25
+      },
+      "proposalCostDelta": 11,
+      "proposalEffectChange": "維持：被ダメージ-5%"
     },
     {
       "id": "quest_wisdom_bookmark",
@@ -8167,7 +12413,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 8,
+          "spd": 2
+        },
+        "cost": 6,
+        "ability": "mp_save",
+        "statResources": 10,
+        "enchantResources": 2,
+        "efficiency": 1
+      },
+      "proposalStatDelta": {
+        "mp": 3,
+        "spd": 1
+      },
+      "proposalCostDelta": 2,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "quest_wisdom_bookmark",
@@ -8199,7 +12462,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 12,
+          "spd": 3
+        },
+        "cost": 9,
+        "ability": "mp_save",
+        "statResources": 15,
+        "enchantResources": 2,
+        "efficiency": 1.05
+      },
+      "proposalStatDelta": {
+        "mp": 6,
+        "spd": 2
+      },
+      "proposalCostDelta": 5,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "quest_wisdom_bookmark",
@@ -8231,7 +12511,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 16,
+          "spd": 4
+        },
+        "cost": 10,
+        "ability": "mp_save",
+        "statResources": 20,
+        "enchantResources": 2,
+        "efficiency": 1.1
+      },
+      "proposalStatDelta": {
+        "mp": 10,
+        "spd": 2
+      },
+      "proposalCostDelta": 6,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "quest_wisdom_bookmark",
@@ -8263,7 +12560,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 24,
+          "spd": 6
+        },
+        "cost": 14,
+        "ability": "mp_save",
+        "statResources": 30,
+        "enchantResources": 2,
+        "efficiency": 1.15
+      },
+      "proposalStatDelta": {
+        "mp": 17,
+        "spd": 4
+      },
+      "proposalCostDelta": 10,
+      "proposalEffectChange": "維持：消費MP-1"
     },
     {
       "id": "quest_wisdom_bookmark",
@@ -8295,7 +12609,24 @@
       "oldAbilityId": "mp_save",
       "oldAbilityKnown": true,
       "newAbilityId": "mp_save",
-      "enchantChange": "維持：消費MP-1"
+      "enchantChange": "維持：消費MP-1",
+      "proposal": {
+        "stats": {
+          "mp": 33,
+          "spd": 8
+        },
+        "cost": 18,
+        "ability": "mp_save",
+        "statResources": 41,
+        "enchantResources": 2,
+        "efficiency": 1.2
+      },
+      "proposalStatDelta": {
+        "mp": 26,
+        "spd": 6
+      },
+      "proposalCostDelta": 14,
+      "proposalEffectChange": "維持：消費MP-1"
     }
   ]
 }
