@@ -37,7 +37,16 @@
       "budget": 6,
       "statResources": 6,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": 1
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "shop_light_sword",
@@ -57,7 +66,16 @@
       "budget": 7,
       "statResources": 7,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": 0
+      },
+      "costDelta": -2,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "shop_light_sword",
@@ -77,7 +95,16 @@
       "budget": 8,
       "statResources": 8,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -2
+      },
+      "costDelta": -3,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "shop_light_sword",
@@ -97,7 +124,16 @@
       "budget": 9,
       "statResources": 9,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -6
+      },
+      "costDelta": -6,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "shop_light_sword",
@@ -117,7 +153,16 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "atk": -14
+      },
+      "costDelta": -10,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "crit_up",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "shop_guard_vest",
@@ -139,7 +184,17 @@
       "budget": 6,
       "statResources": 6,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": 0,
+        "hp": 2
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "shop_guard_vest",
@@ -161,7 +216,17 @@
       "budget": 7,
       "statResources": 7,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -1,
+        "hp": -1
+      },
+      "costDelta": -2,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "shop_guard_vest",
@@ -183,7 +248,17 @@
       "budget": 8,
       "statResources": 8,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -2,
+        "hp": -4
+      },
+      "costDelta": -3,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "shop_guard_vest",
@@ -205,7 +280,17 @@
       "budget": 9,
       "statResources": 9,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -5,
+        "hp": -10
+      },
+      "costDelta": -6,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "shop_guard_vest",
@@ -227,7 +312,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "def": -11,
+        "hp": -17
+      },
+      "costDelta": -10,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "guard",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "shop_mana_charm",
@@ -249,7 +344,17 @@
       "budget": 8,
       "statResources": 8,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "mp": -1,
+        "spd": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "shop_mana_charm",
@@ -271,7 +376,17 @@
       "budget": 9,
       "statResources": 9,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "mp": -4,
+        "spd": 0
+      },
+      "costDelta": -2,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "shop_mana_charm",
@@ -293,7 +408,17 @@
       "budget": 10,
       "statResources": 10,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "mp": -7,
+        "spd": -1
+      },
+      "costDelta": -4,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "shop_mana_charm",
@@ -315,7 +440,17 @@
       "budget": 11,
       "statResources": 11,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "mp": -14,
+        "spd": -2
+      },
+      "costDelta": -8,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "shop_mana_charm",
@@ -337,7 +472,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "mp": -25,
+        "spd": -3
+      },
+      "costDelta": -13,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "mp_save",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w1",
@@ -357,7 +502,16 @@
       "budget": 2,
       "statResources": 2,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "w1",
@@ -377,7 +531,16 @@
       "budget": 3,
       "statResources": 3,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": 0
+      },
+      "costDelta": -1,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "w1",
@@ -397,7 +560,16 @@
       "budget": 4,
       "statResources": 4,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": 0
+      },
+      "costDelta": -1,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w1",
@@ -417,7 +589,16 @@
       "budget": 5,
       "statResources": 5,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -1
+      },
+      "costDelta": -2,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w1",
@@ -437,7 +618,16 @@
       "budget": 5,
       "statResources": 3,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "atk": -5
+      },
+      "costDelta": -4,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "crit_up",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w2",
@@ -457,7 +647,16 @@
       "budget": 4,
       "statResources": 4,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "w2",
@@ -477,7 +676,16 @@
       "budget": 5,
       "statResources": 5,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -1
+      },
+      "costDelta": -1,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "w2",
@@ -497,7 +705,16 @@
       "budget": 6,
       "statResources": 6,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -2
+      },
+      "costDelta": -2,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w2",
@@ -517,7 +734,16 @@
       "budget": 7,
       "statResources": 7,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -5
+      },
+      "costDelta": -4,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w2",
@@ -537,7 +763,16 @@
       "budget": 7,
       "statResources": 5,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "atk": -11
+      },
+      "costDelta": -7,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "crit_up",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w3",
@@ -557,7 +792,16 @@
       "budget": 6,
       "statResources": 6,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "w3",
@@ -577,7 +821,16 @@
       "budget": 7,
       "statResources": 7,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -3
+      },
+      "costDelta": -2,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "w3",
@@ -597,7 +850,16 @@
       "budget": 8,
       "statResources": 8,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -6
+      },
+      "costDelta": -3,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w3",
@@ -617,7 +879,16 @@
       "budget": 9,
       "statResources": 9,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -12
+      },
+      "costDelta": -6,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w3",
@@ -637,7 +908,16 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "atk": -22
+      },
+      "costDelta": -10,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "crit_up",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w4",
@@ -657,7 +937,16 @@
       "budget": 8,
       "statResources": 8,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "w4",
@@ -677,7 +966,16 @@
       "budget": 9,
       "statResources": 9,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -4
+      },
+      "costDelta": -2,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "w4",
@@ -697,7 +995,16 @@
       "budget": 10,
       "statResources": 10,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -8
+      },
+      "costDelta": -4,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w4",
@@ -717,7 +1024,16 @@
       "budget": 11,
       "statResources": 11,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -16
+      },
+      "costDelta": -8,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w4",
@@ -737,7 +1053,16 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "atk": -28
+      },
+      "costDelta": -13,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "crit_up",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w5",
@@ -757,7 +1082,16 @@
       "budget": 12,
       "statResources": 12,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "w5",
@@ -777,7 +1111,16 @@
       "budget": 13,
       "statResources": 13,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -6
+      },
+      "costDelta": -3,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "w5",
@@ -797,7 +1140,16 @@
       "budget": 14,
       "statResources": 14,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -12
+      },
+      "costDelta": -6,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w5",
@@ -817,7 +1169,16 @@
       "budget": 15,
       "statResources": 15,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -24
+      },
+      "costDelta": -12,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w5",
@@ -837,7 +1198,16 @@
       "budget": 15,
       "statResources": 13,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "atk": -41
+      },
+      "costDelta": -20,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "crit_up",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w6",
@@ -857,7 +1227,16 @@
       "budget": 14,
       "statResources": 14,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "w6",
@@ -877,7 +1256,16 @@
       "budget": 15,
       "statResources": 15,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -7
+      },
+      "costDelta": -4,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "w6",
@@ -897,7 +1285,16 @@
       "budget": 16,
       "statResources": 16,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -14
+      },
+      "costDelta": -7,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w6",
@@ -917,7 +1314,16 @@
       "budget": 17,
       "statResources": 17,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -28
+      },
+      "costDelta": -14,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w6",
@@ -937,7 +1343,16 @@
       "budget": 17,
       "statResources": 15,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "atk": -48
+      },
+      "costDelta": -23,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "crit_up",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w7",
@@ -957,7 +1372,16 @@
       "budget": 20,
       "statResources": 20,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -2
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "w7",
@@ -977,7 +1401,16 @@
       "budget": 21,
       "statResources": 21,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -12
+      },
+      "costDelta": -5,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "w7",
@@ -997,7 +1430,16 @@
       "budget": 22,
       "statResources": 22,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -22
+      },
+      "costDelta": -10,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w7",
@@ -1017,7 +1459,16 @@
       "budget": 23,
       "statResources": 23,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -43
+      },
+      "costDelta": -20,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w7",
@@ -1037,7 +1488,16 @@
       "budget": 23,
       "statResources": 21,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "atk": -71
+      },
+      "costDelta": -32,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "crit_up",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w8",
@@ -1057,7 +1517,16 @@
       "budget": 24,
       "statResources": 24,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "w8",
@@ -1077,7 +1546,16 @@
       "budget": 25,
       "statResources": 25,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -12
+      },
+      "costDelta": -6,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "w8",
@@ -1097,7 +1575,16 @@
       "budget": 26,
       "statResources": 26,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -24
+      },
+      "costDelta": -12,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w8",
@@ -1117,7 +1604,16 @@
       "budget": 27,
       "statResources": 27,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -48
+      },
+      "costDelta": -24,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "w8",
@@ -1137,7 +1633,16 @@
       "budget": 27,
       "statResources": 25,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "atk": -80
+      },
+      "costDelta": -39,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "crit_up",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a1",
@@ -1157,7 +1662,16 @@
       "budget": 2,
       "statResources": 2,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "a1",
@@ -1177,7 +1691,16 @@
       "budget": 3,
       "statResources": 3,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": 0
+      },
+      "costDelta": -1,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "a1",
@@ -1197,7 +1720,16 @@
       "budget": 4,
       "statResources": 4,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": 0
+      },
+      "costDelta": -1,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a1",
@@ -1217,7 +1749,16 @@
       "budget": 5,
       "statResources": 5,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -1
+      },
+      "costDelta": -2,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a1",
@@ -1237,7 +1778,16 @@
       "budget": 5,
       "statResources": 3,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "def": -5
+      },
+      "costDelta": -4,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "guard",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a2",
@@ -1257,7 +1807,16 @@
       "budget": 4,
       "statResources": 4,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "a2",
@@ -1277,7 +1836,16 @@
       "budget": 5,
       "statResources": 5,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -1
+      },
+      "costDelta": -1,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "a2",
@@ -1297,7 +1865,16 @@
       "budget": 6,
       "statResources": 6,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -2
+      },
+      "costDelta": -2,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a2",
@@ -1317,7 +1894,16 @@
       "budget": 7,
       "statResources": 7,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -5
+      },
+      "costDelta": -4,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a2",
@@ -1337,7 +1923,16 @@
       "budget": 7,
       "statResources": 5,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "def": -11
+      },
+      "costDelta": -7,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "guard",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a3",
@@ -1357,7 +1952,16 @@
       "budget": 6,
       "statResources": 6,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "a3",
@@ -1377,7 +1981,16 @@
       "budget": 7,
       "statResources": 7,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -3
+      },
+      "costDelta": -2,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "a3",
@@ -1397,7 +2010,16 @@
       "budget": 8,
       "statResources": 8,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -6
+      },
+      "costDelta": -3,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a3",
@@ -1417,7 +2039,16 @@
       "budget": 9,
       "statResources": 9,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -12
+      },
+      "costDelta": -6,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a3",
@@ -1437,7 +2068,16 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "def": -22
+      },
+      "costDelta": -10,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "guard",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a4",
@@ -1457,7 +2097,16 @@
       "budget": 8,
       "statResources": 8,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "a4",
@@ -1477,7 +2126,16 @@
       "budget": 9,
       "statResources": 9,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -4
+      },
+      "costDelta": -2,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "a4",
@@ -1497,7 +2155,16 @@
       "budget": 10,
       "statResources": 10,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -8
+      },
+      "costDelta": -4,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a4",
@@ -1517,7 +2184,16 @@
       "budget": 11,
       "statResources": 11,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -16
+      },
+      "costDelta": -8,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a4",
@@ -1537,7 +2213,16 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "def": -28
+      },
+      "costDelta": -13,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "guard",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a5",
@@ -1557,7 +2242,16 @@
       "budget": 12,
       "statResources": 12,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "a5",
@@ -1577,7 +2271,16 @@
       "budget": 13,
       "statResources": 13,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -6
+      },
+      "costDelta": -3,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "a5",
@@ -1597,7 +2300,16 @@
       "budget": 14,
       "statResources": 14,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -12
+      },
+      "costDelta": -6,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a5",
@@ -1617,7 +2329,16 @@
       "budget": 15,
       "statResources": 15,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -24
+      },
+      "costDelta": -12,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a5",
@@ -1637,7 +2358,16 @@
       "budget": 15,
       "statResources": 13,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "def": -41
+      },
+      "costDelta": -20,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "guard",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a6",
@@ -1657,7 +2387,16 @@
       "budget": 14,
       "statResources": 14,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "a6",
@@ -1677,7 +2416,16 @@
       "budget": 15,
       "statResources": 15,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -7
+      },
+      "costDelta": -4,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "a6",
@@ -1697,7 +2445,16 @@
       "budget": 16,
       "statResources": 16,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -14
+      },
+      "costDelta": -7,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a6",
@@ -1717,7 +2474,16 @@
       "budget": 17,
       "statResources": 17,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -28
+      },
+      "costDelta": -14,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a6",
@@ -1737,7 +2503,16 @@
       "budget": 17,
       "statResources": 15,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "def": -48
+      },
+      "costDelta": -23,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "guard",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a7",
@@ -1757,7 +2532,16 @@
       "budget": 20,
       "statResources": 20,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -2
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "a7",
@@ -1777,7 +2561,16 @@
       "budget": 21,
       "statResources": 21,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -12
+      },
+      "costDelta": -5,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "a7",
@@ -1797,7 +2590,16 @@
       "budget": 22,
       "statResources": 22,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -22
+      },
+      "costDelta": -10,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a7",
@@ -1817,7 +2619,16 @@
       "budget": 23,
       "statResources": 23,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -43
+      },
+      "costDelta": -20,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "a7",
@@ -1837,7 +2648,16 @@
       "budget": 23,
       "statResources": 21,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "def": -71
+      },
+      "costDelta": -32,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "guard",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "c1",
@@ -1857,7 +2677,16 @@
       "budget": 2,
       "statResources": 2,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "spd": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "c1",
@@ -1877,7 +2706,16 @@
       "budget": 3,
       "statResources": 3,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "spd": 0
+      },
+      "costDelta": -1,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "c1",
@@ -1897,7 +2735,16 @@
       "budget": 4,
       "statResources": 4,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "spd": 0
+      },
+      "costDelta": -1,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "c1",
@@ -1917,7 +2764,16 @@
       "budget": 5,
       "statResources": 5,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "spd": -1
+      },
+      "costDelta": -2,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "c1",
@@ -1937,7 +2793,16 @@
       "budget": 5,
       "statResources": 3,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "spd": -5
+      },
+      "costDelta": -4,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "mp_save",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "c2",
@@ -1957,7 +2822,16 @@
       "budget": 4,
       "statResources": 4,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "spd": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "c2",
@@ -1977,7 +2851,16 @@
       "budget": 5,
       "statResources": 5,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "spd": -1
+      },
+      "costDelta": -1,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "c2",
@@ -1997,7 +2880,16 @@
       "budget": 6,
       "statResources": 6,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "spd": -2
+      },
+      "costDelta": -2,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "c2",
@@ -2017,7 +2909,16 @@
       "budget": 7,
       "statResources": 7,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "spd": -5
+      },
+      "costDelta": -4,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "c2",
@@ -2037,7 +2938,16 @@
       "budget": 7,
       "statResources": 5,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "spd": -11
+      },
+      "costDelta": -7,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "mp_save",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "c3",
@@ -2057,7 +2967,16 @@
       "budget": 6,
       "statResources": 6,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "mp": -2
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "c3",
@@ -2077,7 +2996,16 @@
       "budget": 7,
       "statResources": 7,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "mp": -5
+      },
+      "costDelta": -2,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "c3",
@@ -2097,7 +3025,16 @@
       "budget": 8,
       "statResources": 8,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "mp": -8
+      },
+      "costDelta": -3,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "c3",
@@ -2117,7 +3054,16 @@
       "budget": 9,
       "statResources": 9,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "mp": -15
+      },
+      "costDelta": -6,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "c3",
@@ -2137,7 +3083,16 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "mp": -26
+      },
+      "costDelta": -10,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "mp_save",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "c4",
@@ -2159,7 +3114,17 @@
       "budget": 10,
       "statResources": 10,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "spd": -1,
+        "mp": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "c4",
@@ -2181,7 +3146,17 @@
       "budget": 11,
       "statResources": 11,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "spd": -3,
+        "mp": -2
+      },
+      "costDelta": -3,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "c4",
@@ -2203,7 +3178,17 @@
       "budget": 12,
       "statResources": 12,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "spd": -5,
+        "mp": -5
+      },
+      "costDelta": -5,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "c4",
@@ -2225,7 +3210,17 @@
       "budget": 13,
       "statResources": 13,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "spd": -11,
+        "mp": -9
+      },
+      "costDelta": -10,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "c4",
@@ -2247,7 +3242,17 @@
       "budget": 13,
       "statResources": 11,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "spd": -19,
+        "mp": -16
+      },
+      "costDelta": -16,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "mp_save",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "ast1",
@@ -2263,7 +3268,14 @@
       "budget": 2,
       "statResources": 0,
       "enchantResources": 0,
-      "note": "計算補助機能の装備：能力値なしを維持"
+      "note": "計算補助機能の装備：能力値なしを維持",
+      "statDelta": {},
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "ast1",
@@ -2279,7 +3291,14 @@
       "budget": 3,
       "statResources": 0,
       "enchantResources": 0,
-      "note": "計算補助機能の装備：能力値なしを維持"
+      "note": "計算補助機能の装備：能力値なしを維持",
+      "statDelta": {},
+      "costDelta": -1,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "ast1",
@@ -2295,7 +3314,14 @@
       "budget": 4,
       "statResources": 0,
       "enchantResources": 0,
-      "note": "計算補助機能の装備：能力値なしを維持"
+      "note": "計算補助機能の装備：能力値なしを維持",
+      "statDelta": {},
+      "costDelta": -1,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "ast1",
@@ -2311,7 +3337,14 @@
       "budget": 5,
       "statResources": 0,
       "enchantResources": 0,
-      "note": "計算補助機能の装備：能力値なしを維持"
+      "note": "計算補助機能の装備：能力値なしを維持",
+      "statDelta": {},
+      "costDelta": -2,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "ast1",
@@ -2327,7 +3360,14 @@
       "budget": 5,
       "statResources": 0,
       "enchantResources": 0,
-      "note": "計算補助機能の装備：能力値なしを維持"
+      "note": "計算補助機能の装備：能力値なしを維持",
+      "statDelta": {},
+      "costDelta": -4,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "anc_w1",
@@ -2348,7 +3388,16 @@
       "budget": null,
       "statResources": null,
       "enchantResources": null,
-      "note": "★6保護対象：マナレシオ適用外"
+      "note": "★6保護対象：マナレシオ適用外",
+      "statDelta": {
+        "atk": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_w1",
@@ -2369,7 +3418,16 @@
       "budget": null,
       "statResources": null,
       "enchantResources": null,
-      "note": "★6保護対象：マナレシオ適用外"
+      "note": "★6保護対象：マナレシオ適用外",
+      "statDelta": {
+        "atk": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_w3",
@@ -2390,7 +3448,16 @@
       "budget": null,
       "statResources": null,
       "enchantResources": null,
-      "note": "★6保護対象：マナレシオ適用外"
+      "note": "★6保護対象：マナレシオ適用外",
+      "statDelta": {
+        "atk": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_w3",
@@ -2411,7 +3478,16 @@
       "budget": null,
       "statResources": null,
       "enchantResources": null,
-      "note": "★6保護対象：マナレシオ適用外"
+      "note": "★6保護対象：マナレシオ適用外",
+      "statDelta": {
+        "atk": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_a1",
@@ -2434,7 +3510,17 @@
       "budget": null,
       "statResources": null,
       "enchantResources": null,
-      "note": "★6保護対象：マナレシオ適用外"
+      "note": "★6保護対象：マナレシオ適用外",
+      "statDelta": {
+        "def": 0,
+        "hp": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_a1",
@@ -2457,7 +3543,17 @@
       "budget": null,
       "statResources": null,
       "enchantResources": null,
-      "note": "★6保護対象：マナレシオ適用外"
+      "note": "★6保護対象：マナレシオ適用外",
+      "statDelta": {
+        "def": 0,
+        "hp": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_c1",
@@ -2478,7 +3574,16 @@
       "budget": null,
       "statResources": null,
       "enchantResources": null,
-      "note": "★6保護対象：マナレシオ適用外"
+      "note": "★6保護対象：マナレシオ適用外",
+      "statDelta": {
+        "spd": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_c1",
@@ -2499,7 +3604,16 @@
       "budget": null,
       "statResources": null,
       "enchantResources": null,
-      "note": "★6保護対象：マナレシオ適用外"
+      "note": "★6保護対象：マナレシオ適用外",
+      "statDelta": {
+        "spd": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_w2",
@@ -2522,7 +3636,17 @@
       "budget": null,
       "statResources": null,
       "enchantResources": null,
-      "note": "★6保護対象：マナレシオ適用外"
+      "note": "★6保護対象：マナレシオ適用外",
+      "statDelta": {
+        "atk": 0,
+        "spd": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_w2",
@@ -2545,7 +3669,17 @@
       "budget": null,
       "statResources": null,
       "enchantResources": null,
-      "note": "★6保護対象：マナレシオ適用外"
+      "note": "★6保護対象：マナレシオ適用外",
+      "statDelta": {
+        "atk": 0,
+        "spd": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_a2",
@@ -2568,7 +3702,17 @@
       "budget": null,
       "statResources": null,
       "enchantResources": null,
-      "note": "★6保護対象：マナレシオ適用外"
+      "note": "★6保護対象：マナレシオ適用外",
+      "statDelta": {
+        "def": 0,
+        "hp": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（★6保護）"
     },
     {
       "id": "anc_a2",
@@ -2591,7 +3735,17 @@
       "budget": null,
       "statResources": null,
       "enchantResources": null,
-      "note": "★6保護対象：マナレシオ適用外"
+      "note": "★6保護対象：マナレシオ適用外",
+      "statDelta": {
+        "def": 0,
+        "hp": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（★6保護）"
     },
     {
       "id": "demon_sword",
@@ -2611,7 +3765,16 @@
       "budget": 40,
       "statResources": 40,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -10
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "demon_sword",
@@ -2631,7 +3794,16 @@
       "budget": 41,
       "statResources": 41,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -34
+      },
+      "costDelta": -10,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "demon_sword",
@@ -2651,7 +3823,16 @@
       "budget": 42,
       "statResources": 42,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -58
+      },
+      "costDelta": -20,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "demon_sword",
@@ -2671,7 +3852,16 @@
       "budget": 43,
       "statResources": 43,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -107
+      },
+      "costDelta": -40,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "demon_sword",
@@ -2691,7 +3881,16 @@
       "budget": 43,
       "statResources": 41,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "atk": -169
+      },
+      "costDelta": -64,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "crit_up",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "limited_star_sword",
@@ -2711,7 +3910,16 @@
       "budget": 6,
       "statResources": 6,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -2
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "limited_star_sword",
@@ -2731,7 +3939,16 @@
       "budget": 7,
       "statResources": 7,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -5
+      },
+      "costDelta": -2,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "limited_star_sword",
@@ -2751,7 +3968,16 @@
       "budget": 8,
       "statResources": 8,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -8
+      },
+      "costDelta": -3,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "limited_star_sword",
@@ -2771,7 +3997,16 @@
       "budget": 9,
       "statResources": 9,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "atk": -15
+      },
+      "costDelta": -6,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "limited_star_sword",
@@ -2791,7 +4026,16 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "atk": -26
+      },
+      "costDelta": -10,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "crit_up",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "limited_phoenix_armor",
@@ -2813,7 +4057,17 @@
       "budget": 6,
       "statResources": 6,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -2,
+        "hp": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "limited_phoenix_armor",
@@ -2835,7 +4089,17 @@
       "budget": 7,
       "statResources": 7,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -4,
+        "hp": -3
+      },
+      "costDelta": -2,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "limited_phoenix_armor",
@@ -2857,7 +4121,17 @@
       "budget": 8,
       "statResources": 8,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -7,
+        "hp": -6
+      },
+      "costDelta": -3,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "limited_phoenix_armor",
@@ -2879,7 +4153,17 @@
       "budget": 9,
       "statResources": 9,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "def": -13,
+        "hp": -11
+      },
+      "costDelta": -6,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "limited_phoenix_armor",
@@ -2901,7 +4185,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "def": -23,
+        "hp": -17
+      },
+      "costDelta": -10,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "guard",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "limited_moon_charm",
@@ -2923,7 +4217,17 @@
       "budget": 6,
       "statResources": 6,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "spd": -1,
+        "mp": -2
+      },
+      "costDelta": 0,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "limited_moon_charm",
@@ -2945,7 +4249,17 @@
       "budget": 7,
       "statResources": 7,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "spd": -2,
+        "mp": -4
+      },
+      "costDelta": -2,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "変更なし（なし）"
     },
     {
       "id": "limited_moon_charm",
@@ -2967,7 +4281,17 @@
       "budget": 8,
       "statResources": 8,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "spd": -3,
+        "mp": -7
+      },
+      "costDelta": -3,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "limited_moon_charm",
@@ -2989,7 +4313,17 @@
       "budget": 9,
       "statResources": 9,
       "enchantResources": 0,
-      "note": "特殊効果なし"
+      "note": "特殊効果なし",
+      "statDelta": {
+        "spd": -6,
+        "mp": -12
+      },
+      "costDelta": -6,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": null,
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "limited_moon_charm",
@@ -3011,7 +4345,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "★5効果未指定時の表示例（枠に合うTier1効果）"
+      "note": "★5効果未指定時の表示例（枠に合うTier1効果）",
+      "statDelta": {
+        "spd": -10,
+        "mp": -20
+      },
+      "costDelta": -10,
+      "fixedAbility": null,
+      "oldAbilityId": null,
+      "oldAbilityKnown": false,
+      "newAbilityId": "mp_save",
+      "enchantChange": "旧ランダム効果：未指定"
     },
     {
       "id": "raid_moon_blade",
@@ -3033,7 +4377,17 @@
       "budget": 10,
       "statResources": 8,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": 1,
+        "spd": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "raid_moon_blade",
@@ -3055,7 +4409,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -1,
+        "spd": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "raid_moon_blade",
@@ -3077,7 +4441,17 @@
       "budget": 12,
       "statResources": 10,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -3,
+        "spd": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "raid_moon_blade",
@@ -3099,7 +4473,17 @@
       "budget": 13,
       "statResources": 11,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -9,
+        "spd": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "raid_moon_blade",
@@ -3121,7 +4505,17 @@
       "budget": 13,
       "statResources": 11,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -16,
+        "spd": -2
+      },
+      "costDelta": 0,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "raid_moon_mantle",
@@ -3143,7 +4537,17 @@
       "budget": 10,
       "statResources": 8,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": 0,
+        "hp": 2
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_moon_mantle",
@@ -3165,7 +4569,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -1,
+        "hp": -3
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_moon_mantle",
@@ -3187,7 +4601,17 @@
       "budget": 12,
       "statResources": 10,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -3,
+        "hp": -8
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_moon_mantle",
@@ -3209,7 +4633,17 @@
       "budget": 13,
       "statResources": 11,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -8,
+        "hp": -14
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_moon_mantle",
@@ -3231,7 +4665,17 @@
       "budget": 13,
       "statResources": 11,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -14,
+        "hp": -26
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_moon_charm",
@@ -3253,7 +4697,17 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -3,
+        "spd": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "raid_moon_charm",
@@ -3275,7 +4729,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -6,
+        "spd": -2
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "raid_moon_charm",
@@ -3297,7 +4761,17 @@
       "budget": 10,
       "statResources": 8,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -10,
+        "spd": -2
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "raid_moon_charm",
@@ -3319,7 +4793,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -17,
+        "spd": -4
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "raid_moon_charm",
@@ -3341,7 +4825,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -26,
+        "spd": -6
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_bat_buckler",
@@ -3361,7 +4855,16 @@
       "budget": 6,
       "statResources": 4,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": 2
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_bat_buckler",
@@ -3381,7 +4884,16 @@
       "budget": 7,
       "statResources": 5,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": 2
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_bat_buckler",
@@ -3401,7 +4913,16 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": 2
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_bat_buckler",
@@ -3421,7 +4942,16 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": 1
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_bat_buckler",
@@ -3441,7 +4971,16 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_pumpkin_bell",
@@ -3463,7 +5002,17 @@
       "budget": 6,
       "statResources": 4,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "hp": 2,
+        "mp": 1
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_pumpkin_bell",
@@ -3485,7 +5034,17 @@
       "budget": 7,
       "statResources": 5,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "hp": 1,
+        "mp": 1
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_pumpkin_bell",
@@ -3507,7 +5066,17 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "hp": 0,
+        "mp": 1
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_pumpkin_bell",
@@ -3529,7 +5098,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "hp": -2,
+        "mp": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_pumpkin_bell",
@@ -3551,7 +5130,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "hp": -4,
+        "mp": -2
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_rank_blade",
@@ -3573,7 +5162,17 @@
       "budget": 10,
       "statResources": 10,
       "enchantResources": 0,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": 0,
+        "spd": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": "lifesteal",
+      "oldAbilityId": "lifesteal",
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "削除：HP吸収15%"
     },
     {
       "id": "halloween_rank_blade",
@@ -3595,7 +5194,17 @@
       "budget": 11,
       "statResources": 11,
       "enchantResources": 0,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -3,
+        "spd": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": "lifesteal",
+      "oldAbilityId": "lifesteal",
+      "oldAbilityKnown": true,
+      "newAbilityId": null,
+      "enchantChange": "削除：HP吸収15%"
     },
     {
       "id": "halloween_rank_blade",
@@ -3617,7 +5226,17 @@
       "budget": 12,
       "statResources": 0,
       "enchantResources": 12,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -16,
+        "spd": -4
+      },
+      "costDelta": 0,
+      "fixedAbility": "lifesteal",
+      "oldAbilityId": "lifesteal",
+      "oldAbilityKnown": true,
+      "newAbilityId": "lifesteal",
+      "enchantChange": "維持：HP吸収15%"
     },
     {
       "id": "halloween_rank_blade",
@@ -3639,7 +5258,17 @@
       "budget": 13,
       "statResources": 1,
       "enchantResources": 12,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -23,
+        "spd": -6
+      },
+      "costDelta": 0,
+      "fixedAbility": "lifesteal",
+      "oldAbilityId": "lifesteal",
+      "oldAbilityKnown": true,
+      "newAbilityId": "lifesteal",
+      "enchantChange": "維持：HP吸収15%"
     },
     {
       "id": "halloween_rank_blade",
@@ -3661,7 +5290,17 @@
       "budget": 13,
       "statResources": 1,
       "enchantResources": 12,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -32,
+        "spd": -8
+      },
+      "costDelta": 0,
+      "fixedAbility": "lifesteal",
+      "oldAbilityId": "lifesteal",
+      "oldAbilityKnown": true,
+      "newAbilityId": "lifesteal",
+      "enchantChange": "維持：HP吸収15%"
     },
     {
       "id": "halloween_candy_saber",
@@ -3681,7 +5320,16 @@
       "budget": 6,
       "statResources": 4,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": 1
+      },
+      "costDelta": 0,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_candy_saber",
@@ -3701,7 +5349,16 @@
       "budget": 7,
       "statResources": 5,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": 1
+      },
+      "costDelta": 0,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_candy_saber",
@@ -3721,7 +5378,16 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_candy_saber",
@@ -3741,7 +5407,16 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -2
+      },
+      "costDelta": 0,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_candy_saber",
@@ -3761,7 +5436,16 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -5
+      },
+      "costDelta": 0,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_light_cape",
@@ -3783,7 +5467,17 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": 2,
+        "hp": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_light_cape",
@@ -3805,7 +5499,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": 1,
+        "hp": 2
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_light_cape",
@@ -3827,7 +5531,17 @@
       "budget": 10,
       "statResources": 8,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": 0,
+        "hp": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_light_cape",
@@ -3849,7 +5563,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -2,
+        "hp": -4
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_light_cape",
@@ -3871,7 +5595,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -5,
+        "hp": -8
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_moon_pin",
@@ -3893,7 +5627,17 @@
       "budget": 6,
       "statResources": 4,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": 0,
+        "spd": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_moon_pin",
@@ -3915,7 +5659,17 @@
       "budget": 7,
       "statResources": 5,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": 0,
+        "spd": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_moon_pin",
@@ -3937,7 +5691,17 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -1,
+        "spd": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_moon_pin",
@@ -3959,7 +5723,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -4,
+        "spd": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_moon_pin",
@@ -3981,7 +5755,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -7,
+        "spd": -2
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "raid_star_blade",
@@ -4003,7 +5787,17 @@
       "budget": 10,
       "statResources": 4,
       "enchantResources": 6,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -2,
+        "spd": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": "power",
+      "oldAbilityId": "power",
+      "oldAbilityKnown": true,
+      "newAbilityId": "power",
+      "enchantChange": "維持：攻撃力+15%"
     },
     {
       "id": "raid_star_blade",
@@ -4025,7 +5819,17 @@
       "budget": 11,
       "statResources": 5,
       "enchantResources": 6,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -3,
+        "spd": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": "power",
+      "oldAbilityId": "power",
+      "oldAbilityKnown": true,
+      "newAbilityId": "power",
+      "enchantChange": "維持：攻撃力+15%"
     },
     {
       "id": "raid_star_blade",
@@ -4047,7 +5851,17 @@
       "budget": 12,
       "statResources": 6,
       "enchantResources": 6,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -5,
+        "spd": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": "power",
+      "oldAbilityId": "power",
+      "oldAbilityKnown": true,
+      "newAbilityId": "power",
+      "enchantChange": "維持：攻撃力+15%"
     },
     {
       "id": "raid_star_blade",
@@ -4069,7 +5883,17 @@
       "budget": 13,
       "statResources": 7,
       "enchantResources": 6,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -9,
+        "spd": -2
+      },
+      "costDelta": 0,
+      "fixedAbility": "power",
+      "oldAbilityId": "power",
+      "oldAbilityKnown": true,
+      "newAbilityId": "power",
+      "enchantChange": "維持：攻撃力+15%"
     },
     {
       "id": "raid_star_blade",
@@ -4091,7 +5915,17 @@
       "budget": 13,
       "statResources": 7,
       "enchantResources": 6,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -15,
+        "spd": -3
+      },
+      "costDelta": 0,
+      "fixedAbility": "power",
+      "oldAbilityId": "power",
+      "oldAbilityKnown": true,
+      "newAbilityId": "power",
+      "enchantChange": "維持：攻撃力+15%"
     },
     {
       "id": "raid_ward_armor",
@@ -4113,7 +5947,17 @@
       "budget": 10,
       "statResources": 8,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": 1,
+        "hp": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_ward_armor",
@@ -4135,7 +5979,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -1,
+        "hp": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_ward_armor",
@@ -4157,7 +6011,17 @@
       "budget": 12,
       "statResources": 10,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -3,
+        "hp": -4
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_ward_armor",
@@ -4179,7 +6043,17 @@
       "budget": 13,
       "statResources": 11,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -7,
+        "hp": -12
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_ward_armor",
@@ -4201,7 +6075,17 @@
       "budget": 13,
       "statResources": 11,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -13,
+        "hp": -21
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "raid_focus_charm",
@@ -4223,7 +6107,17 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -1,
+        "spd": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "raid_focus_charm",
@@ -4245,7 +6139,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -4,
+        "spd": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "raid_focus_charm",
@@ -4267,7 +6171,17 @@
       "budget": 10,
       "statResources": 8,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -6,
+        "spd": -2
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "raid_focus_charm",
@@ -4289,7 +6203,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -11,
+        "spd": -4
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "raid_focus_charm",
@@ -4311,7 +6235,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -18,
+        "spd": -6
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_lantern_staff",
@@ -4331,7 +6265,16 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_lantern_staff",
@@ -4351,7 +6294,16 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -3
+      },
+      "costDelta": -2,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_lantern_staff",
@@ -4371,7 +6323,16 @@
       "budget": 10,
       "statResources": 8,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -6
+      },
+      "costDelta": -4,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_lantern_staff",
@@ -4391,7 +6352,16 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -12
+      },
+      "costDelta": -8,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_lantern_staff",
@@ -4411,7 +6381,16 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -20
+      },
+      "costDelta": -13,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_pumpkin_blade",
@@ -4431,7 +6410,16 @@
       "budget": 6,
       "statResources": 4,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -2
+      },
+      "costDelta": 0,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_pumpkin_blade",
@@ -4451,7 +6439,16 @@
       "budget": 7,
       "statResources": 5,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -4
+      },
+      "costDelta": -2,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_pumpkin_blade",
@@ -4471,7 +6468,16 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -6
+      },
+      "costDelta": -3,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_pumpkin_blade",
@@ -4491,7 +6497,16 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -11
+      },
+      "costDelta": -6,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_pumpkin_blade",
@@ -4511,7 +6526,16 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -18
+      },
+      "costDelta": -10,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "halloween_witch_mantle",
@@ -4533,7 +6557,17 @@
       "budget": 6,
       "statResources": 4,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -2,
+        "hp": -4
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_witch_mantle",
@@ -4555,7 +6589,17 @@
       "budget": 7,
       "statResources": 5,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -3,
+        "hp": -8
+      },
+      "costDelta": -2,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_witch_mantle",
@@ -4577,7 +6621,17 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -6,
+        "hp": -8
+      },
+      "costDelta": -3,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_witch_mantle",
@@ -4599,7 +6653,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -10,
+        "hp": -16
+      },
+      "costDelta": -6,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_witch_mantle",
@@ -4621,7 +6685,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -16,
+        "hp": -25
+      },
+      "costDelta": -10,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "halloween_moon_charm",
@@ -4643,7 +6717,17 @@
       "budget": 6,
       "statResources": 4,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "spd": -1,
+        "mp": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_moon_charm",
@@ -4665,7 +6749,17 @@
       "budget": 7,
       "statResources": 5,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "spd": -1,
+        "mp": -3
+      },
+      "costDelta": -2,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_moon_charm",
@@ -4687,7 +6781,17 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "spd": -2,
+        "mp": -4
+      },
+      "costDelta": -3,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_moon_charm",
@@ -4709,7 +6813,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "spd": -4,
+        "mp": -7
+      },
+      "costDelta": -6,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "halloween_moon_charm",
@@ -4731,7 +6845,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "spd": -6,
+        "mp": -11
+      },
+      "costDelta": -10,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_exchange_candy_sword",
@@ -4753,7 +6877,17 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -2,
+        "spd": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_exchange_candy_sword",
@@ -4775,7 +6909,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -4,
+        "spd": 0
+      },
+      "costDelta": -2,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_exchange_candy_sword",
@@ -4797,7 +6941,17 @@
       "budget": 10,
       "statResources": 8,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -7,
+        "spd": -1
+      },
+      "costDelta": -4,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_exchange_candy_sword",
@@ -4819,7 +6973,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -13,
+        "spd": -2
+      },
+      "costDelta": -8,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_exchange_candy_sword",
@@ -4841,7 +7005,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -21,
+        "spd": -3
+      },
+      "costDelta": -13,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_exchange_aurora_mantle",
@@ -4863,7 +7037,17 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -2,
+        "hp": -4
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_exchange_aurora_mantle",
@@ -4885,7 +7069,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -5,
+        "hp": -4
+      },
+      "costDelta": -2,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_exchange_aurora_mantle",
@@ -4907,7 +7101,17 @@
       "budget": 10,
       "statResources": 8,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -8,
+        "hp": -8
+      },
+      "costDelta": -4,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_exchange_aurora_mantle",
@@ -4929,7 +7133,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -14,
+        "hp": -16
+      },
+      "costDelta": -8,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_exchange_aurora_mantle",
@@ -4951,7 +7165,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -22,
+        "hp": -25
+      },
+      "costDelta": -13,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_exchange_winter_charm",
@@ -4973,7 +7197,17 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -1,
+        "spd": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_exchange_winter_charm",
@@ -4995,7 +7229,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -4,
+        "spd": -1
+      },
+      "costDelta": -2,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_exchange_winter_charm",
@@ -5017,7 +7261,17 @@
       "budget": 10,
       "statResources": 8,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -6,
+        "spd": -2
+      },
+      "costDelta": -4,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_exchange_winter_charm",
@@ -5039,7 +7293,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -11,
+        "spd": -4
+      },
+      "costDelta": -8,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_exchange_winter_charm",
@@ -5061,7 +7325,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -18,
+        "spd": -6
+      },
+      "costDelta": -13,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_candy_cane_blade",
@@ -5083,7 +7357,17 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -1,
+        "spd": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_candy_cane_blade",
@@ -5105,7 +7389,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -3,
+        "spd": 0
+      },
+      "costDelta": -2,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_candy_cane_blade",
@@ -5127,7 +7421,17 @@
       "budget": 10,
       "statResources": 8,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -5,
+        "spd": -1
+      },
+      "costDelta": -4,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_candy_cane_blade",
@@ -5149,7 +7453,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -10,
+        "spd": -2
+      },
+      "costDelta": -8,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_candy_cane_blade",
@@ -5171,7 +7485,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -17,
+        "spd": -3
+      },
+      "costDelta": -13,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "christmas_aurora_mantle",
@@ -5193,7 +7517,17 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -1,
+        "hp": -4
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_aurora_mantle",
@@ -5215,7 +7549,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -4,
+        "hp": -4
+      },
+      "costDelta": -2,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_aurora_mantle",
@@ -5237,7 +7581,17 @@
       "budget": 10,
       "statResources": 8,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -6,
+        "hp": -8
+      },
+      "costDelta": -4,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_aurora_mantle",
@@ -5259,7 +7613,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -11,
+        "hp": -16
+      },
+      "costDelta": -8,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_aurora_mantle",
@@ -5281,7 +7645,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -18,
+        "hp": -25
+      },
+      "costDelta": -13,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "christmas_winter_star_charm",
@@ -5303,7 +7677,17 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -1,
+        "spd": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_winter_star_charm",
@@ -5325,7 +7709,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -2,
+        "spd": -1
+      },
+      "costDelta": -2,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_winter_star_charm",
@@ -5347,7 +7741,17 @@
       "budget": 10,
       "statResources": 8,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -4,
+        "spd": -2
+      },
+      "costDelta": -4,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_winter_star_charm",
@@ -5369,7 +7773,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -9,
+        "spd": -3
+      },
+      "costDelta": -8,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "christmas_winter_star_charm",
@@ -5391,7 +7805,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -15,
+        "spd": -5
+      },
+      "costDelta": -13,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "quest_quill_blade",
@@ -5413,7 +7837,17 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -2,
+        "spd": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "quest_quill_blade",
@@ -5435,7 +7869,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -4,
+        "spd": 0
+      },
+      "costDelta": 0,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "quest_quill_blade",
@@ -5457,7 +7901,17 @@
       "budget": 10,
       "statResources": 8,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -7,
+        "spd": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "quest_quill_blade",
@@ -5479,7 +7933,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -13,
+        "spd": -2
+      },
+      "costDelta": 0,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "quest_quill_blade",
@@ -5501,7 +7965,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "atk": -21,
+        "spd": -3
+      },
+      "costDelta": 0,
+      "fixedAbility": "crit_up",
+      "oldAbilityId": "crit_up",
+      "oldAbilityKnown": true,
+      "newAbilityId": "crit_up",
+      "enchantChange": "維持：会心率+10%"
     },
     {
       "id": "quest_archivist_robe",
@@ -5523,7 +7997,17 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -1,
+        "hp": -4
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "quest_archivist_robe",
@@ -5545,7 +8029,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -4,
+        "hp": -4
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "quest_archivist_robe",
@@ -5567,7 +8061,17 @@
       "budget": 10,
       "statResources": 8,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -6,
+        "hp": -8
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "quest_archivist_robe",
@@ -5589,7 +8093,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -11,
+        "hp": -16
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "quest_archivist_robe",
@@ -5611,7 +8125,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "def": -18,
+        "hp": -25
+      },
+      "costDelta": 0,
+      "fixedAbility": "guard",
+      "oldAbilityId": "guard",
+      "oldAbilityKnown": true,
+      "newAbilityId": "guard",
+      "enchantChange": "維持：被ダメージ-5%"
     },
     {
       "id": "quest_wisdom_bookmark",
@@ -5633,7 +8157,17 @@
       "budget": 8,
       "statResources": 6,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -3,
+        "spd": -1
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "quest_wisdom_bookmark",
@@ -5655,7 +8189,17 @@
       "budget": 9,
       "statResources": 7,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -6,
+        "spd": -2
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "quest_wisdom_bookmark",
@@ -5677,7 +8221,17 @@
       "budget": 10,
       "statResources": 8,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -10,
+        "spd": -2
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "quest_wisdom_bookmark",
@@ -5699,7 +8253,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -17,
+        "spd": -4
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     },
     {
       "id": "quest_wisdom_bookmark",
@@ -5721,7 +8285,17 @@
       "budget": 11,
       "statResources": 9,
       "enchantResources": 2,
-      "note": "イベント固定効果込み"
+      "note": "イベント固定効果込み",
+      "statDelta": {
+        "mp": -26,
+        "spd": -6
+      },
+      "costDelta": 0,
+      "fixedAbility": "mp_save",
+      "oldAbilityId": "mp_save",
+      "oldAbilityKnown": true,
+      "newAbilityId": "mp_save",
+      "enchantChange": "維持：消費MP-1"
     }
   ]
 }
