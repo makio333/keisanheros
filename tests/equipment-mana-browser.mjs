@@ -15,8 +15,8 @@ try{
  const tooltip=await p.evaluate(()=>manaQA.tooltip());assert.ok(!tooltip.includes('きゅうけつ'));assert.ok(tooltip.includes('+9'));
  const ancient=await p.evaluate(()=>manaQA.ancient());assert.equal(ancient.bonus.atk,55);assert.equal(ancient.cost,16);
  await p.screenshot({path:out+'/equipment-room.png'});
- await p.goto('http://127.0.0.1:5195/equipment_mana_ratio_report.html');assert.equal(await p.locator('#rows tr').count(),272);
+ await p.goto('http://127.0.0.1:5195/equipment_mana_ratio_report.html');assert.equal(await p.locator('#rows tr').count(),260);
  await p.locator('#slot').selectOption('weapon');await p.locator('#rarity').selectOption('3');assert.equal(await p.locator('#rows tr').count(),21);await p.screenshot({path:out+'/weapon-report.png'});
  await p.locator('#search').fill('はがね');assert.equal(await p.locator('#rows tr').count(),1);assert.match(await p.locator('#rows').innerText(),/6 → 6/);
- assert.deepEqual(errors,[]);console.log('PASS: 58 templates, rarity-scaled costs across ★1–5, removed over-budget enchant absent in battle/tooltip, ★6 stats/cost preserved, searchable 272-row report');
+ assert.deepEqual(errors,[]);console.log('PASS: 58 templates, rarity-scaled costs across ★1–5, removed over-budget enchant absent in battle/tooltip, ★6 stats/cost preserved, searchable report with ★6 excluded by default');
 }finally{await b.close();}

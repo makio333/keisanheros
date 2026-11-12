@@ -3,7 +3,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>装備比較：旧ステータス → 最新ステータス</title>
 <style>
-body{font:15px/1.65 system-ui;background:#111827;color:#e5e7eb;margin:24px}h1{font-size:24px;color:#fcd34d}a{color:#93c5fd}header,nav{max-width:1400px}p{margin:8px 0}.notice{color:#c4b5fd}details{margin:12px 0}summary{cursor:pointer}nav{position:sticky;top:0;z-index:4;background:#111827;padding:10px 0;display:flex;gap:10px;flex-wrap:wrap}select,input{padding:8px;border-radius:6px}.wrap{overflow:auto;max-height:70dvh;isolation:isolate;border:1px solid #374151}table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px}th,td{padding:10px;border-right:1px solid #374151;border-bottom:1px solid #374151;vertical-align:top}thead th{position:sticky;top:0;z-index:2;background:#1f2937;box-shadow:0 1px 0 #64748b;white-space:nowrap}.increase{color:#60a5fa}.decrease{color:#f87171}.unchanged,.old,small{color:#9ca3af}small{display:block}.changes{min-width:110px}.change-line{white-space:nowrap}.equipment-label{display:flex;align-items:center;gap:12px;min-width:220px}.report-equipment-icon{width:64px;height:64px;flex:0 0 64px;box-sizing:border-box;display:grid;place-items:center;border:2px solid var(--tone);border-radius:8px;background:#20283a}.report-equipment-icon img{width:52px;height:52px;object-fit:contain;image-rendering:pixelated}.report-equipment-icon span{font-size:32px}@media(max-width:600px){body{margin:12px}.wrap{max-height:65dvh}h1{font-size:20px}}
+body{font:15px/1.65 system-ui;background:#111827;color:#e5e7eb;margin:24px}h1{font-size:24px;color:#fcd34d}a{color:#93c5fd}header,nav{max-width:1400px}p{margin:8px 0}.notice{color:#c4b5fd}details{margin:12px 0}summary{cursor:pointer}nav{position:sticky;top:0;z-index:4;background:#111827;padding:10px 0;display:flex;gap:10px;flex-wrap:wrap}select,input{padding:8px;border-radius:6px}nav label{display:flex;align-items:center;gap:5px}nav input[type=checkbox]{width:16px;height:16px}.sort-value{min-width:105px;font-weight:700}#sort-help{width:100%;font-size:12px;color:#cbd5e1;margin:0}.wrap{overflow:auto;max-height:70dvh;isolation:isolate;border:1px solid #374151}table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px}th,td{padding:10px;border-right:1px solid #374151;border-bottom:1px solid #374151;vertical-align:top}thead th{position:sticky;top:0;z-index:2;background:#1f2937;box-shadow:0 1px 0 #64748b;white-space:nowrap}.increase{color:#60a5fa}.decrease{color:#f87171}.unchanged,.old,small{color:#9ca3af}small{display:block}.changes{min-width:110px}.change-line{white-space:nowrap}.equipment-label{display:flex;align-items:center;gap:12px;min-width:220px}.report-equipment-icon{width:64px;height:64px;flex:0 0 64px;box-sizing:border-box;display:grid;place-items:center;border:2px solid var(--tone);border-radius:8px;background:#20283a}.report-equipment-icon img{width:52px;height:52px;object-fit:contain;image-rendering:pixelated}.report-equipment-icon span{font-size:32px}@media(max-width:600px){body{margin:12px}.wrap{max-height:65dvh}h1{font-size:20px}}
 </style>
 <header>
 <h1>装備比較：旧ステータス → 最新ステータス</h1>
@@ -17,13 +17,17 @@ body{font:15px/1.65 system-ui;background:#111827;color:#e5e7eb;margin:24px}h1{fo
 <select id="slot" aria-label="装備の種類"><option value="">全装備</option><option value="weapon">武器</option><option value="armor">防具</option><option value="accessory">アクセサリー</option></select>
 <select id="rarity" aria-label="レア度"><option value="">全レア度</option><option value="1">★1</option><option value="2">★2</option><option value="3">★3</option><option value="4">★4</option><option value="5">★5</option><option value="6">★6</option></select>
 <select id="enchant" aria-label="比較する旧ランダム効果"><option value="auto">旧ランダム効果：未指定</option><option value="none">旧効果：なし</option></select>
-<input id="search" placeholder="装備名・IDで検索" aria-label="装備名・IDで検索"><span id="count"></span>
+<label><input id="exclude-ancient" type="checkbox" checked>★6を除外</label>
+<select id="sort-stat" aria-label="並び替えるステータス"><option value="">元の並び</option><option value="atk">攻撃力</option><option value="def">守備力</option><option value="hp">HP</option><option value="mp">MP</option><option value="spd">素早さ</option><option value="sp">合計SP</option></select>
+<select id="sort-mode" aria-label="並び替えの基準"><option value="value">上昇値の大きさ</option><option value="efficiency">コスト1当たりの上昇量</option><option value="change">旧からの増減率（％）</option></select>
+<select id="sort-direction" aria-label="並び順"><option value="desc">高い順</option><option value="asc">低い順</option></select>
+<input id="search" placeholder="装備名・IDで検索" aria-label="装備名・IDで検索"><span id="count" aria-live="polite"></span><p id="sort-help">ステータスと並び替えの基準を選べます。同率は低コスト順です。</p>
 </nav>
-<div class="wrap" tabindex="0" role="region" aria-label="装備比較表（見出し固定）"><table><thead><tr><th scope="col">装備名</th><th scope="col">レア度</th><th scope="col">コスト 旧→最新</th><th scope="col">旧ステータス</th><th scope="col">最新ステータス</th><th scope="col">能力変化量</th><th scope="col">エンチャント変化</th><th scope="col">最新の効果・SP</th></tr></thead><tbody id="rows"></tbody></table></div>
+<div class="wrap" tabindex="0" role="region" aria-label="装備比較表（見出し固定）"><table><thead><tr><th scope="col">装備名</th><th scope="col">レア度</th><th scope="col">コスト 旧→最新</th><th scope="col">旧ステータス</th><th scope="col">最新ステータス</th><th scope="col">能力変化量</th><th scope="col">エンチャント変化</th><th scope="col">最新の効果・SP</th><th scope="col" id="sort-value-header" hidden>比較指標</th></tr></thead><tbody id="rows"></tbody></table></div>
 <script>
 const data=__ROWS__,variantsData=__VARIANTS__,labels=__LABELS__,abilityLabels=__ABILITY_NAMES__;
 const variantsByKey=new Map(variantsData.map(v=>[v.id+'|'+v.rarity+'|'+v.requested,v]));
-const controls=Object.fromEntries(['slot','rarity','enchant','search','rows','count'].map(id=>[id,document.getElementById(id)]));
+const controls=Object.fromEntries(['slot','rarity','enchant','search','rows','count','sort-stat','sort-mode','sort-direction','exclude-ancient','sort-help','sort-value-header'].map(id=>[id,document.getElementById(id)]));
 for(const [id,label] of Object.entries(abilityLabels))controls.enchant.add(new Option('旧効果：'+label,id));
 const escape=s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const signed=n=>n>0?'+'+n:n<0?'−'+Math.abs(n):'±0';
@@ -35,6 +39,28 @@ function comparison(row){const selected=controls.enchant.value;if(selected==='au
 function statsHtml(r){return Object.entries(r.newStats).map(([k,v])=>escape(labels[k]||k)+'<strong class="'+deltaClass(r.statDelta[k]||0)+'">+'+v+'</strong>').join(' / ')||'能力値なし';}
 function deltaHtml(r){return Object.entries(r.statDelta).map(([k,v])=>'<div class="change-line">'+escape(labels[k]||k)+' <strong class="'+deltaClass(v)+'">'+signed(v)+'</strong></div>').join('')||'<span class="unchanged">変化なし</span>';}
 function enchantHtml(r){let type='unchanged';if(r.oldAbilityKnown&&r.rarity!==6){if(r.oldAbilityId&&!r.newAbilityId)type='decrease';else if(!r.oldAbilityId&&r.newAbilityId)type='increase';}return '<span class="'+type+'">'+escape(r.enchantChange)+'</span>';}
-function render(){const list=data.filter(r=>(!controls.slot.value||r.slot===controls.slot.value)&&(!controls.rarity.value||r.rarity==controls.rarity.value)&&(!controls.search.value||(r.name+' '+r.id).includes(controls.search.value))).map(comparison);controls.count.textContent=list.length+'件 / 全'+data.length+'件';controls.rows.innerHTML=list.map(r=>'<tr><td><div class="equipment-label">'+icon(r)+'<div>'+escape(r.name)+'<small>'+escape(r.id)+'</small></div></div></td><td>★'+r.rarity+(r.level?' / 覚醒Lv'+r.level:'')+'</td><td>'+r.oldCost+' → <strong class="'+deltaClass(r.costDelta)+'">'+r.newCost+'</strong><small>差 '+signed(r.costDelta)+'</small></td><td class="old">'+escape(text(r.oldStats))+'</td><td>'+statsHtml(r)+'</td><td class="changes">'+deltaHtml(r)+'</td><td>'+enchantHtml(r)+'</td><td>'+escape(r.ability)+'<small>'+(r.rarity===6?'★6保護：変更なし':r.note.includes('補助')?escape(r.note):r.statResources+'SP ＋ 効果'+r.enchantResources+'SP')+'</small></td></tr>').join('');}
-for(const id of ['slot','rarity','enchant','search'])controls[id].oninput=()=>{render();document.querySelector('.wrap').scrollTop=0;};render();
+const spValue=stats=>Object.entries(stats).reduce((sum,[key,value])=>sum+(key==='hp'?value/4:value),0);
+function metric(row){
+ const key=controls['sort-stat'].value,mode=controls['sort-mode'].value;
+ const current=key==='sp'?spValue(row.newStats):Number(row.newStats[key]||0);
+ const old=key==='sp'?spValue(row.oldStats):Number(row.oldStats[key]||0);
+ if(!current&&!old)return null;
+ if(mode==='change')return old===0?null:(current-old)/old*100;
+ return mode==='efficiency'?current/row.newCost:current;
+}
+function sortedRows(rows){
+ if(!controls['sort-stat'].value)return rows;
+ const sign=controls['sort-direction'].value==='asc'?1:-1;
+ return rows.sort((a,b)=>{const av=metric(a),bv=metric(b);if(av===null)return bv===null?0:1;if(bv===null)return -1;return sign*(av-bv)||a.newCost-b.newCost;});
+}
+function metricText(row){const value=metric(row);if(value===null)return '—';const n=Number(value.toFixed(3));return controls['sort-mode'].value==='change'?(n>0?'+':'')+n+'%':String(n);}
+function render(){
+ const key=controls['sort-stat'].value,mode=controls['sort-mode'].value,modeLabels={value:'最新の上昇値',efficiency:'コスト1当たり',change:'旧からの増減率'};
+ const list=sortedRows(data.filter(r=>(!controls['exclude-ancient'].checked||r.rarity!==6)&&(!controls.slot.value||r.slot===controls.slot.value)&&(!controls.rarity.value||r.rarity==controls.rarity.value)&&(!controls.search.value||(r.name+' '+r.id).includes(controls.search.value))).map(comparison));
+ controls.count.textContent=list.length+'件 / 全'+data.length+'件';
+ controls['sort-value-header'].hidden=!key;controls['sort-value-header'].textContent=(labels[key]||'合計SP')+'：'+modeLabels[mode];
+ controls['sort-help'].textContent=!key?'ステータスと並び替えの基準を選べます。同率は低コスト順です。':mode==='efficiency'?'最新の上昇値 ÷ 最新の要求コストで比較します。合計SPはHP4＝1SPで換算。エンチャント効果は含みません。':mode==='change'?'（最新値−旧値）÷旧値×100。旧値が0の項目は算出不可として末尾に表示します。':'装備による最新の加算能力値で比較します。同率は低コスト順です。';
+ controls.rows.innerHTML=list.map(r=>'<tr data-equip-id="'+escape(r.id)+'" data-rarity="'+r.rarity+'"><td><div class="equipment-label">'+icon(r)+'<div>'+escape(r.name)+'<small>'+escape(r.id)+'</small></div></div></td><td>★'+r.rarity+(r.level?' / 覚醒Lv'+r.level:'')+'</td><td>'+r.oldCost+' → <strong class="'+deltaClass(r.costDelta)+'">'+r.newCost+'</strong><small>差 '+signed(r.costDelta)+'</small></td><td class="old">'+escape(text(r.oldStats))+'</td><td>'+statsHtml(r)+'</td><td class="changes">'+deltaHtml(r)+'</td><td>'+enchantHtml(r)+'</td><td>'+escape(r.ability)+'<small>'+(r.rarity===6?'★6保護：変更なし':r.note.includes('補助')?escape(r.note):r.statResources+'SP ＋ 効果'+r.enchantResources+'SP')+'</small></td>'+(key?'<td class="sort-value">'+metricText(r)+'</td>':'')+'</tr>').join('');
+}
+for(const id of ['slot','rarity','enchant','search','sort-stat','sort-mode','sort-direction','exclude-ancient'])controls[id].oninput=()=>{render();document.querySelector('.wrap').scrollTop=0;};render();
 </script></html>
