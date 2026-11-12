@@ -1,8 +1,8 @@
 import './storage_polyfill.js';
-import './style.css';
+import './style.css?v=gacha-icons2';
 import './kanji_input_style.css';
 import './christmas_battle_layout.css?v=presents5';
-import './christmas_event_hub.css?v=presents5';
+import './christmas_event_hub.css?v=gacha-icons2';
 import './adventure_viewport_fit.css?v=fit3';
 import './adventure_viewport_fit.js?v=fit3';
 import './assets_bundle.js';
