@@ -1,3 +1,4 @@
+import {equipmentChestMarkup} from './equipment_chest_intro.js';
 import {QUEST_MEDAL_IMAGE} from './quest_medal_art.js';
 const LOCAL_ART_PREVIEW = import.meta.env.DEV && new URLSearchParams(location.search).get('art-preview') === '1';
 let localArtEnemyRef = null;
@@ -11085,14 +11086,31 @@ function showSkinGachaSummon(prize, hero, theme = 'standard') {
    いまのコスト上限におさまるもの」から えらぶ。
    レベルが ひくすぎて どれも おさまらない時だけ、いちばん コストの ひくいものを わたす */
 function showEquipmentGachaSummon(results,theme,onDone){
- const overlay=document.createElement('div');overlay.className='skin-gacha-reveal equipment-gacha-summon';overlay.dataset.phase='summoning';
- overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','装備ガチャ召喚');
+ const overlay=document.createElement('div');
+ overlay.className='skin-gacha-reveal equipment-gacha-summon';
+ overlay.dataset.phase='falling';
+ overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','装備ガチャの宝箱');
  overlay.style.backgroundImage=`url("${av(theme==='christmas'?'assets/christmas/background_north_star_sanctuary.webp':'assets/characters/bg_skin_starlight.png')}")`;
- overlay.innerHTML='<div class="skin-gacha-summoning"><canvas class="skin-gacha-magic" aria-hidden="true"></canvas><div class="skin-gacha-summon-label" role="status">装備を召喚中…</div><button class="btn skin-gacha-skip" type="button">スキップ</button></div>';
- document.body.append(overlay);const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,stop=startSkinGachaMagic(overlay.querySelector('canvas'),reduced);let done=false,timer;
- const reveal=()=>{if(done)return;done=true;clearTimeout(timer);stop();overlay.remove();playItemRevealSequence(results,{badge:theme==='christmas'?'クリスマス装備ガチャ':'装備ガチャ',title:'獲得した装備',showSummary:true,onDone});};
- overlay.querySelector('button').onclick=reveal;overlay.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();reveal();}if(e.key==='Tab'){e.preventDefault();overlay.querySelector('button').focus();}};
- SM.play('se_decide');overlay.querySelector('button').focus({preventScroll:true});timer=setTimeout(reveal,reduced?150:2900);
+ overlay.innerHTML=`<div class="skin-gacha-summoning">${equipmentChestMarkup()}<div class="skin-gacha-summon-label" role="status">宝箱が落ちてきた！</div><button class="btn skin-gacha-skip" type="button">スキップ</button></div>`;
+ document.body.append(overlay);
+ const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ let done=false;const timers=[];
+ const schedule=(ms,action)=>timers.push(setTimeout(()=>{if(!done)action();},ms));
+ const phase=(name,label)=>{overlay.dataset.phase=name;overlay.querySelector('[role="status"]').textContent=label;};
+ const reveal=()=>{
+   if(done)return;done=true;timers.forEach(clearTimeout);overlay.remove();
+   playItemRevealSequence(results,{badge:theme==='christmas'?'クリスマス装備ガチャ':'装備ガチャ',title:'獲得した装備',showSummary:true,onDone});
+ };
+ const button=overlay.querySelector('button');button.onclick=reveal;
+ overlay.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();reveal();}if(e.key==='Tab'){e.preventDefault();button.focus();}};
+ SM.play('se_decide');button.focus({preventScroll:true});
+ if(reduced){phase('opening','宝箱を開けます…');schedule(150,reveal);}
+ else {
+   schedule(750,()=>{phase('landed','宝箱が届いた！');SM.play('se_decide');});
+   schedule(1150,()=>phase('opening','宝箱が開く…！'));
+   schedule(1650,()=>{phase('flash','光の中から装備が…！');SM.play('se_clear');});
+   schedule(2300,reveal);
+ }
 }
 
 function gachaEquipPick(rarity, includeChristmas = false){

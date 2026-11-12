@@ -1,0 +1,26 @@
+.equipment-gacha-summon { box-sizing:border-box; }
+.equipment-chest-stage { position:relative; width:min(360px,76vw,52dvh); aspect-ratio:1; perspective:700px; }
+.equipment-chest { position:absolute; inset:0; width:100%; height:100%; overflow:visible; filter:drop-shadow(0 12px 6px #0008); transform-origin:50% 82%; animation:equipment-chest-drop .75s both; }
+.equipment-chest-shadow { position:absolute; left:17%; right:17%; bottom:5%; height:8%; border-radius:50%; background:#040916a8; filter:blur(5px); animation:equipment-chest-shadow .75s both; }
+.equipment-chest-lid { transform-box:view-box; transform-origin:50% 50%; transition:transform .4s cubic-bezier(.2,.7,.2,1); }
+.equipment-chest-inner { opacity:0; transition:opacity .15s; }
+.equipment-chest-rays { position:absolute; inset:-15%; border-radius:50%; opacity:0; background:repeating-conic-gradient(from 0deg,#ffe7a666 0deg 9deg,transparent 9deg 25deg); mask-image:radial-gradient(circle,#000 10%,transparent 68%); }
+.equipment-chest-sparkles { position:absolute; inset:0; color:#fff5b2; font-size:44px; opacity:0; pointer-events:none; }
+.equipment-chest-sparkles>i { position:absolute; right:0; top:18%; font-size:30px; font-style:normal; }
+.equipment-chest-sparkles>b { position:absolute; left:15%; bottom:0; font-size:24px; }
+.equipment-chest-flash { position:fixed; inset:0; pointer-events:none; opacity:0; background:radial-gradient(ellipse,#fffde8 0%,#fff5ccdf 28%,#ffd98500 75%); }
+.equipment-gacha-summon:is([data-phase="opening"],[data-phase="flash"]) .equipment-chest-lid { transform:translateY(-20px) rotateX(-115deg); }
+.equipment-gacha-summon:is([data-phase="opening"],[data-phase="flash"]) .equipment-chest-inner { opacity:1; }
+.equipment-gacha-summon:is([data-phase="opening"],[data-phase="flash"]) .equipment-chest-rays { animation:equipment-chest-rays 1s both; }
+.equipment-gacha-summon:is([data-phase="opening"],[data-phase="flash"]) .equipment-chest-sparkles { animation:equipment-chest-sparkles 1s both; }
+.equipment-gacha-summon[data-phase="flash"] .equipment-chest-flash { animation:equipment-chest-flash .65s both; }
+@keyframes equipment-chest-drop { 0%{transform:translateY(-90dvh) scale(.85);opacity:0} 12%{opacity:1} 62%{transform:translateY(0) scale(1.12,.86)} 80%{transform:translateY(-24px) scale(.96,1.04)} 100%{transform:translateY(0) scale(1)} }
+@keyframes equipment-chest-shadow { from{transform:scale(.25);opacity:0} to{transform:scale(1);opacity:1} }
+@keyframes equipment-chest-rays { from{opacity:0;transform:scale(.5) rotate(-12deg)} to{opacity:1;transform:scale(1.25) rotate(12deg)} }
+@keyframes equipment-chest-sparkles { from{opacity:0;transform:translateY(20px) scale(.6)} to{opacity:1;transform:translateY(-15px) scale(1)} }
+@keyframes equipment-chest-flash { 0%{opacity:0} 22%{opacity:1} 100%{opacity:0} }
+@media(prefers-reduced-motion:reduce){
+ .equipment-chest,.equipment-chest-shadow,.equipment-chest-rays,.equipment-chest-sparkles,.equipment-chest-flash { animation:none!important; }
+ .equipment-chest-lid { transition:none; }
+ .equipment-gacha-summon .skin-gacha-summon-label { animation:none; }
+}

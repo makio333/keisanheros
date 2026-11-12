@@ -1,8 +1,9 @@
 import './storage_polyfill.js';
-import './style.css?v=town-icons1';
+import './equipment_chest_intro.css';
+import './style.css?v=chest-intro1';
 import './kanji_input_style.css';
 import './christmas_battle_layout.css?v=presents5';
-import './christmas_event_hub.css?v=town-icons1';
+import './christmas_event_hub.css?v=chest-intro1';
 import './adventure_viewport_fit.css?v=fit3';
 import './adventure_viewport_fit.js?v=fit3';
 import './assets_bundle.js';
