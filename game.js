@@ -1,3 +1,4 @@
+import {manaEquipmentStats,manaEquipmentAbility,equipmentManaBudget,ENCHANT_RESOURCE_COST} from './equipment_mana_ratio.js';
 import {equipmentChestMarkup} from './equipment_chest_intro.js';
 import {QUEST_MEDAL_IMAGE} from './quest_medal_art.js';
 const LOCAL_ART_PREVIEW = import.meta.env.DEV && new URLSearchParams(location.search).get('art-preview') === '1';
@@ -2394,7 +2395,7 @@ function exchangeQuestMedals(key){
     addItem(m.id, m.count);
     reward = { kind:'item', name:m.label, icon:iconSrc };
   } else if (m.kind === 'equip') {
-    const ability = rollAbility(m.rarity);
+    const ability = rollAbility(m.rarity,getEquipTemplate(m.id));
     G.ownedEquips.push({ uid: G.nextUid++, id: m.id, rarity: m.rarity, ability });
     reward = { kind:'equip', name:getEquipTemplate(m.id).name, icon:iconSrc, rarity:m.rarity, ability };
   } else if (m.kind === 'background') {
@@ -3124,7 +3125,14 @@ const RARITY_MULTI = { 1: 1.0, 2: 1.5, 3: 2.0, 4: 3.0, 5: 4.2, 6: 5.5 };
 const RARITY_NAME = { 1: 'ノーマル', 2: 'レア', 3: '激レア', 4: '超激レア', 5: 'レジェンド', 6: 'エンシェントレア ★6' };
 const RARITY_MAX = 5;
 
-function calcEquipStat(baseStat, rarity, owned = null) {
+function calcEquipStat(baseStat, rarity, owned = null, definition = null, ability = null) {
+  // ★6 and its awakening formula are protected from resource normalization.
+  if(Number(rarity)!==6){
+    const db=definition || (owned?.id ? getEquipTemplate(owned.id) : null)
+      || [...EQUIP_DB,...ANCIENT_EQUIP_DB,...LIMITED_EQUIP_DB,...HALLOWEEN_EQUIP_DB,...CHRISTMAS_EQUIP_DB,...QUEST_MEDAL_EQUIPMENT].find(item=>item.stat===baseStat);
+    if(db)return manaEquipmentStats(db,rarity,ability || owned?.ability || db.ability || eventEquipmentAbility(db.id));
+    throw new Error('Equipment definition is required for mana-ratio stats');
+  }
   const r = (RARITY_MULTI[rarity] || 1.0) * awakeningScale(owned || {rarity});
   const res = {};
   for(let k in baseStat) res[k] = Math.max(1, Math.floor(baseStat[k] * r));
@@ -3135,7 +3143,7 @@ function rarityLabelHtml(rarity){
 }
 
 /* ==========================================================
-   そうびの 特殊能力（★3以上で 確率／確定で 付与）
+   そうびの 特殊能力（通常装備は★5、イベント固定効果と既存効果は予算内で適用）
    ========================================================== */
 const SPECIAL_ABILITIES = [
   { id:'crit_up', name:'会心のちから', desc:'会心率+10%' },
@@ -3145,10 +3153,11 @@ const SPECIAL_ABILITIES = [
   { id:'mp_save', name:'せつやくの心得', desc:'とくぎのMPしょうひ-1' },
 ];
 function getAbility(id){ return SPECIAL_ABILITIES.find(a => a.id === id); }
-function rollAbility(rarity){
-  if (rarity < 3) return null;
-  if (rarity === 3 && Math.random() >= 0.5) return null;
-  return pick(SPECIAL_ABILITIES).id;
+function rollAbility(rarity, definition = null){
+  if (rarity < 5) return null;
+  const candidates=definition&&Number(rarity)!==6
+    ? SPECIAL_ABILITIES.filter(ability=>ENCHANT_RESOURCE_COST[ability.id]<=equipmentManaBudget(definition,rarity)) : SPECIAL_ABILITIES;
+  return pick(candidates).id;
 }
 /* 現在そうび中の 特殊能力ID の集合 */
 function equippedAbilities(){
@@ -3157,7 +3166,7 @@ function equippedAbilities(){
     const eq = G.equipment[slot];
     if (!eq) continue;
     const owned = G.ownedEquips.find(o => o.uid === eq.uid);
-    if (owned) { const ability=owned.ability || eventEquipmentAbility(owned.id);if(ability)set.add(ability); }
+    if (owned) { const ability=manaEquipmentAbility(getEquipTemplate(owned.id),owned.rarity,owned.ability || eventEquipmentAbility(owned.id));if(ability)set.add(ability); }
   }
   return set;
 }
@@ -3521,7 +3530,7 @@ function resolveSaveSlotEquip(data, ref){
     rarity: owned.rarity || 1,
     emoji: db.emoji,
     slot: db.slot,
-    stat: db.stat || {},
+    stat: calcEquipStat(db.stat,owned.rarity || 1,owned,db),
     desc: db.desc || '',
   };
 }
@@ -3849,7 +3858,7 @@ function equipBonus(){
     if (!owned) continue;
     const db = getEquipTemplate(owned.id);
     if (!db) continue;
-    const stat = calcEquipStat(db.stat, owned.rarity, owned);
+    const stat = calcEquipStat(db.stat, owned.rarity, owned, db);
     for (const k in stat) b[k] += stat[k];
     if (owned.id === 'anc_c1') b.mp += Math.floor(100 * awakeningScale(owned));
     if (owned.id === 'anc_w2') b.spd += Math.floor(30 * awakeningScale(owned));
@@ -3861,6 +3870,7 @@ function equipBonus(){
    そうびコスト（レベル＝そうびできる合計コスト上限）
    ========================================================== */
 function equipCost(db, rarity){
+  if(Number(rarity)!==6)return Math.max(1,Math.ceil(Number(db?.cost)||1));
   if(db?.fixedCost)return Math.max(1,db.cost || 1);
   if (db && db.id && db.id.startsWith('anc_')) return Math.max(1, db.cost || 1);
   return Math.max(1, Math.ceil((db.cost || 1) * (RARITY_MULTI[rarity] || 1)));
@@ -6268,7 +6278,7 @@ function rollBattleDrops(e, rewards){
   if (Math.random() < dropChance(e.isBoss ? rewardSettings.bossEquipDrop : 0.04, e.isBoss ? 1 : rewardSettings.dropMultEquip)){
     const db = pick(EQUIP_DB);
     const rarity = pick(e.isBoss ? [2, 3, 3, 4] : [1, 2, 2]);
-    const ability = rollAbility(rarity);
+    const ability = rollAbility(rarity,db);
     G.ownedEquips.push({ uid: G.nextUid++, id: db.id, rarity, ability });
     drops.push({ kind:'equip', id:db.id, name:db.name, rarity, icon:db.emoji, ability });
     rewards.push(`そうび「<span class="rarity-${rarity}">${db.name}</span>」を てにいれた！`);
@@ -6467,7 +6477,9 @@ function iconHtml(icon, sizePx){
 /* item-card: そうび/アイテム 1個ぶんの表示（アイコン＋名前＋レアリティ＋能力）。
    1個演出のカードと、けっか一覧のミニカードで きょうつうして つかう */
 function itemCardBodyHtml(res, iconSize){
-  const ability = res.ability ? getAbility(res.ability) : null;
+  const rewardDb=res.kind==='equip'?getEquipTemplate(res.id):null;
+  const abilityId=rewardDb?manaEquipmentAbility(rewardDb,res.rarity,res.ability || rewardDb.ability):res.ability;
+  const ability = abilityId ? getAbility(abilityId) : null;
   const rarityClass = res.rarity ? ` rarity-${res.rarity}` : '';
   const frameSize=Math.max(80,Number(iconSize)+16);
   const frameStyle=res.kind==='equip'?` style="width:${frameSize}px;height:${frameSize}px;flex-shrink:0;box-sizing:border-box;padding:0"`:'';
@@ -6892,7 +6904,7 @@ function applyZoneClearState(zone, extraRewards, opts){
     /* レジェンド装備は 出すぎていたので、設定（zoneClearLegend=1）のときだけ わたす */
     if (rewardSettings.zoneClearLegend) {
       const db = EQUIP_DB.find(d => d.id === reward.equipId);
-      const ability = rollAbility(5);
+      const ability = rollAbility(5,db);
       G.ownedEquips.push({ uid: G.nextUid++, id: db.id, rarity: 5, ability });
       const abilityInfo = ability ? getAbility(ability) : null;
       logs.push(`おれいに「<span class="rarity-5">${rarityLabelHtml(5)} ${db.name}</span>」を もらった！${abilityInfo ? `<br><span class="tag ability">✨ ${abilityInfo.name}（${abilityInfo.desc}）</span>` : ''}`);
@@ -7388,7 +7400,7 @@ function checkDemonCastleReward() {
     storageSet('guest_demon_castle_cleared', null);
     G.player.exp += 1000;
     G.player.gold += 10000;
-    const ability = rollAbility(5);
+    const ability = rollAbility(5,getEquipTemplate('demon_sword'));
     const equip = {
       uid: G.nextUid++,
       id: 'demon_sword',
@@ -7498,11 +7510,11 @@ function stageWeaponReward(areaId, stageIndex){
   const targetAtk = 2 + recLv + stageIndex * 2;
   const initial = getEquipTemplate('w1');
   const wRarity = areaId === 'area14' || areaId === 'area15' ? 1 : Math.min(4, Math.max(1, Math.round(rewardSettings.firstWeaponRarity) || 2));
-  let reward = { db: initial, rarity: wRarity, atk: calcEquipStat(initial.stat, wRarity).atk };
+  let reward = { db: initial, rarity: wRarity, atk: calcEquipStat(initial.stat, wRarity, null, initial).atk };
   for (const base of EQUIP_DB.filter(db => db.slot === 'weapon' && !db.assist)) {
     const db = getEquipTemplate(base.id);
     const rarity = wRarity;
-    const atk = calcEquipStat(db.stat, rarity).atk;
+    const atk = calcEquipStat(db.stat, rarity, null, db).atk;
     if (equipCost(db, rarity) <= budget && atk <= targetAtk && atk > reward.atk) reward = { db, rarity, atk };
   }
   return reward;
@@ -8808,13 +8820,10 @@ function statName(k) {
 /* そうびの各ステータスの理論上の最大値（★5の最強装備基準）。
    バー表示のパーセント計算に使う */
 function equipStatCap(key){
-  let maxBase = 0;
-  for (const db of [EQUIP_DB, ANCIENT_EQUIP_DB, LIMITED_EQUIP_DB, CHRISTMAS_EQUIP_DB, QUEST_MEDAL_EQUIPMENT]){
-    for (const item of db){
-      if (item.stat[key] && item.stat[key] > maxBase) maxBase = item.stat[key];
-    }
-  }
-  return Math.max(1, Math.floor(maxBase * RARITY_MULTI[RARITY_MAX]));
+  let max=1;
+  for(const db of [...EQUIP_DB,...ANCIENT_EQUIP_DB.filter(item=>!item.id.startsWith('anc_')),...LIMITED_EQUIP_DB,...HALLOWEEN_EQUIP_DB,...CHRISTMAS_EQUIP_DB,...QUEST_MEDAL_EQUIPMENT])
+    max=Math.max(max,calcEquipStat(db.stat,5,null,db)[key] || 0);
+  return max;
 }
 const EQUIP_STAT_CAP = { atk:equipStatCap('atk'), def:equipStatCap('def'), spd:equipStatCap('spd'), mp:equipStatCap('mp'), hp:equipStatCap('hp') };
 
@@ -8906,9 +8915,9 @@ function bindEquipDetailTooltip(element, db, options = {}) {
 
 function generateEquipDetailHtml(db, options = {}){
   const rarity = options.rarity || db.rarity || 1;
-  const stat = calcEquipStat(db.stat, rarity, options.owned);
+  const stat = calcEquipStat(db.stat, rarity, options.owned, db, options.ability);
   const cost = equipCost(db, rarity);
-  const abilityId = options.ability || db.ability || null;
+  const abilityId = manaEquipmentAbility(db,rarity,options.ability || options.owned?.ability || db.ability || eventEquipmentAbility(db.id));
   const abilityInfo = abilityId ? getAbility(abilityId) : null;
   const slot = db.slot;
   const SLOT_ICONS = { weapon:'⚔️', armor:'🛡️', accessory:'💍' };
@@ -9211,7 +9220,7 @@ function renderWeaponShopList(){
     
     if (i < items.length) {
       const db = items[i];
-      const stat = calcEquipStat(db.stat, 1);
+      const stat = calcEquipStat(db.stat, 1, null, db);
       const owned = G.ownedEquips.some(o => o.id === db.id);
       const isOverCost = db.cost > costCap();
       const canBuy = !owned && !isOverCost && G.player.gold >= db.price;
@@ -9518,8 +9527,9 @@ function openEquipSelectModal(targetSlot) {
     const wouldExceed = !equipped && (usedCost(db.slot) + cost > costCap());
     const row = document.createElement('div');
     row.className = 'inv-row';
-    const stat = calcEquipStat(db.stat, owned.rarity, owned);
-    const abilityInfo = owned.ability ? getAbility(owned.ability) : null;
+    const stat = calcEquipStat(db.stat, owned.rarity, owned, db);
+    const effectiveAbility=manaEquipmentAbility(db,owned.rarity,owned.ability || db.ability || eventEquipmentAbility(db.id));
+    const abilityInfo = effectiveAbility ? getAbility(effectiveAbility) : null;
     row.innerHTML = `<div class="equip-icon rarity-${owned.rarity}">${iconHtml(db.emoji, 56)}</div>
     <div class="info">
       <span class="rarity-${owned.rarity}">${rarityLabelHtml(owned.rarity)} ${db.name}</span>
@@ -10270,7 +10280,7 @@ function openDemonCastleCodeInput(){
       if (G) {
         G.player.exp += 1000;
         G.player.gold += 10000;
-        const ability = rollAbility(5);
+        const ability = rollAbility(5,getEquipTemplate('demon_sword'));
         const equip = {
           uid: G.nextUid++,
           id: 'demon_sword',
@@ -10657,10 +10667,12 @@ function renderEquipmentGachaPreviewRarity() {
   const db = getEquipTemplate(equipmentPreviewEquipId);
   if (!db) return;
   const names = { atk: 'こうげき', def: 'ぼうぎょ', hp: 'HP', mp: 'MP', spd: 'すばやさ' };
-  const rarityStats = calcEquipStat(db.stat, equipmentPreviewRarity);
+  const rarityStats = calcEquipStat(db.stat, equipmentPreviewRarity, null, db);
   const rarityNames = { 3: '激レア', 4: '超激レア', 5: 'レジェンド' };
   $('equipment-preview-rarities').querySelectorAll('button').forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.rarity) === equipmentPreviewRarity)));
-  $('skin-gacha-preview-description').textContent = `★${equipmentPreviewRarity} ${rarityNames[equipmentPreviewRarity]} / ${SLOT_LABELS[db.slot]} / コスト ${equipCost(db, equipmentPreviewRarity)} / ${Object.entries(rarityStats).map(([key, value]) => `${names[key]} +${value}`).join('・')}`;
+  const previewAbility=manaEquipmentAbility(db,equipmentPreviewRarity,db.ability);
+  const effect=previewAbility?getAbility(previewAbility):null;
+  $('skin-gacha-preview-description').textContent = `★${equipmentPreviewRarity} ${rarityNames[equipmentPreviewRarity]} / ${SLOT_LABELS[db.slot]} / コスト ${equipCost(db, equipmentPreviewRarity)} / ${Object.entries(rarityStats).map(([key, value]) => `${names[key]} +${value}`).join('・')}${effect?` / ${effect.name}（${effect.desc}）`:''}${equipmentPreviewRarity===5&&!db.ability?' / 特殊効果が異なると能力値も変わります（表示例）':''}`;
 }
 
 const SKIN_GACHA_GOLD_COST = 2500;
@@ -11162,7 +11174,7 @@ function doGacha(times, cost, payment) {
     else rarity = 1;
 
     const db = gachaEquipPick(rarity);
-    const ability = rollAbility(rarity);
+    const ability = rollAbility(rarity,db);
     G.ownedEquips.push({ uid: G.nextUid++, id: db.id, rarity, ability });
     results.push({ kind:'equip', id:db.id, name:db.name, rarity, icon:db.emoji, ability });
   }
@@ -11209,7 +11221,7 @@ function doChristmasEquipGacha(times, cost, payment) {
     else rarity = 1;
 
     const db = gachaEquipPick(rarity,true);
-    const ability = eventEquipmentAbility(db.id) || rollAbility(rarity);
+    const ability = eventEquipmentAbility(db.id) || rollAbility(rarity,db);
     G.ownedEquips.push({ uid:G.nextUid++, id:db.id, rarity, ability });
     results.push({ kind:'equip', id:db.id, name:db.name, rarity, icon:db.emoji, ability });
   }
@@ -11236,7 +11248,7 @@ function synthesisPairValid(baseUid, materialUid, game = G) {
 function commitSynthesis(baseUid, materialUid) {
   if (!synthesisPairValid(baseUid, materialUid)) return null;
   const base = G.ownedEquips.find(eq => eq.uid === baseUid);
-  const result = { uid:G.nextUid++, id:base.id, rarity:base.rarity + 1, ability:eventEquipmentAbility(base.id) || rollAbility(base.rarity + 1) };
+  const result = { uid:G.nextUid++, id:base.id, rarity:base.rarity + 1, ability:eventEquipmentAbility(base.id) || rollAbility(base.rarity + 1,getEquipTemplate(base.id)) };
   G.ownedEquips = G.ownedEquips.filter(eq => eq.uid !== baseUid && eq.uid !== materialUid);
   for (const slot of EQUIP_SLOTS) {
     if ([baseUid, materialUid].includes(G.equipment[slot]?.uid)) G.equipment[slot] = null;
@@ -15809,7 +15821,7 @@ function grantPrintRewards(cur, correct, total, rate) {
   if (meta.targetId === 'demon_castle' && rate >= 0.5) {
       G.player.exp += 1000;
       G.player.gold += 10000;
-      const ability = rollAbility(5);
+      const ability = rollAbility(5,getEquipTemplate('demon_sword'));
       const equip = { uid: G.nextUid++, id: 'demon_sword', rarity: 5, ability };
       G.ownedEquips.push(equip);
       rewards.push({ kind:'item', name:'魔王の特別報酬 10,000 G', icon:'💰' });
@@ -17723,7 +17735,7 @@ function applyGiftEntry(game, e) {
   const kind = giftEntryKind(e);
   if (kind === 'equip') {
     const rarity = Math.min(6, Math.max(1, Math.floor(Number(e.rarity) || 1)));
-    for (let i = 0; i < n; i++) game.ownedEquips.push({ uid: game.nextUid++, id: e.id, rarity, ability: rollAbility(rarity) });
+    for (let i = 0; i < n; i++) game.ownedEquips.push({ uid: game.nextUid++, id: e.id, rarity, ability: rollAbility(rarity,getEquipTemplate(e.id)) });
   } else if (kind === 'ticket') {
     if (e.id === 'equip-ten-ticket') game.equipGachaTenPullTickets = (game.equipGachaTenPullTickets || 0) + n;
     else if (e.id === 'skin-ticket') game.skinGachaTickets = (game.skinGachaTickets || 0) + n;

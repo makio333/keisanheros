@@ -1,3 +1,4 @@
+import {manaEquipmentStats} from '../equipment_mana_ratio.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {awakeningState,awakeningScale,awakeningExpNext,grantAwakeningExp,masterExistingAncients} from '../ancient_awakening.js';
@@ -27,7 +28,7 @@ test('explicit compensation only upgrades currently owned copies; later acquisit
 test('actual equipment calculations restore original stats at 50 and scale numeric ancient effects',async()=>{
  const {readFileSync}=await import('node:fs');const vm=await import('node:vm');
  const source=readFileSync(new URL('../game.js',import.meta.url),'utf8');
- const ctx={awakeningScale,awakeningState,grantAwakeningExp,masterExistingAncients,equippedAncients:(game)=>Object.values(game.equipment).flatMap(ref=>game.ownedEquips.filter(e=>e.uid===ref?.uid&&e.rarity===6))};vm.createContext(ctx);
+ const ctx={manaEquipmentStats,eventEquipmentAbility:()=>null,awakeningScale,awakeningState,grantAwakeningExp,masterExistingAncients,equippedAncients:(game)=>Object.values(game.equipment).flatMap(ref=>game.ownedEquips.filter(e=>e.uid===ref?.uid&&e.rarity===6))};vm.createContext(ctx);
  vm.runInContext(source.slice(source.indexOf('const RARITY_MULTI ='),source.indexOf('function rarityLabelHtml(')),ctx);
  for(const stat of [{atk:10},{def:35,hp:20},{mp:6,spd:12}]){
   for(const [key,value]of Object.entries(stat)){
@@ -35,7 +36,7 @@ test('actual equipment calculations restore original stats at 50 and scale numer
    assert.ok(ctx.calcEquipStat(stat,6,{rarity:6})[key]<ctx.calcEquipStat(stat,6,{rarity:6,awakeningLevel:50})[key]);
   }
  }
- assert.equal(ctx.calcEquipStat({atk:10},5).atk,42);
+ assert.equal(ctx.calcEquipStat({atk:10},5,null,{cost:5,slot:'weapon',stat:{atk:10}}).atk,11);
  ctx.G={equipment:{weapon:{uid:1},armor:{uid:2}},ownedEquips:[{id:'anc_w3',uid:1,rarity:6},{id:'anc_a2',uid:2,rarity:6}]};
  vm.runInContext(source.slice(source.indexOf('function equippedAncientScale('),source.indexOf('function rollAncientBlueprintReward(')),ctx);
  assert.equal(ctx.ancientCritBonus(),.06);assert.equal(ctx.ancientDamageReduction(100),94);
