@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>装備比較：旧ステータス → 最新調整案</title>
+<style>
+body{font:15px/1.65 system-ui;background:#111827;color:#e5e7eb;margin:24px}h1{font-size:24px;color:#fcd34d}a{color:#93c5fd}header,nav{max-width:1400px}p{margin:8px 0}.notice{color:#c4b5fd}details{margin:12px 0}summary{cursor:pointer}nav{position:sticky;top:0;z-index:4;background:#111827;padding:10px 0;display:flex;gap:10px;flex-wrap:wrap}select,input{padding:8px;border-radius:6px}.wrap{overflow:auto;max-height:70dvh;isolation:isolate;border:1px solid #374151}table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px}th,td{padding:10px;border-right:1px solid #374151;border-bottom:1px solid #374151;vertical-align:top}thead th{position:sticky;top:0;z-index:2;background:#1f2937;box-shadow:0 1px 0 #64748b;white-space:nowrap}.increase{color:#60a5fa}.decrease{color:#f87171}.unchanged,.old,small{color:#9ca3af}small{display:block}.changes{min-width:110px}.change-line{white-space:nowrap}.equipment-label{display:flex;align-items:center;gap:12px;min-width:220px}.report-equipment-icon{width:64px;height:64px;flex:0 0 64px;box-sizing:border-box;display:grid;place-items:center;border:2px solid var(--tone);border-radius:8px;background:#20283a}.report-equipment-icon img{width:52px;height:52px;object-fit:contain;image-rendering:pixelated}.report-equipment-icon span{font-size:32px}@media(max-width:600px){body{margin:12px}.wrap{max-height:65dvh}h1{font-size:20px}}
+</style>
+<header>
+<h1>装備比較：旧ステータス → 最新調整案</h1>
+<p class="notice">最新調整案の試算です。ゲーム内の性能にはまだ適用していません。</p>
+<p>元の性能を維持する案なので、能力値は旧ステータスと同じです。強さに合わせてコストを再計算し、エンチャントも攻撃力を削らずコストで負担します。★6は変更しません。</p>
+<details><summary>算出ルール</summary><p>最新コスト＝切り上げ［（能力値SP＋エンチャントSP）÷（2×レア度優遇）］。基本コストを下限とし、優遇は★1＝1.00、★2＝1.05、★3＝1.10、★4＝1.15、★5＝1.20です。HP4＝SP1、他能力1＝SP1。旧能力値と旧レア倍率をそのまま使います。</p><p>エンチャントはTier1＝2、Tier2＝6、Tier3＝12SP。旧ランダム効果を比較するときは下の選択欄で指定してください。固定効果・★6は指定の対象外です。標準装備の比較で、個人セーブ・管理者のカスタム値は含みません。</p></details>
+<p><a href="equipment_mana_ratio_changes.csv" download>旧・最新比較CSV</a> ／ <a href="equipment_mana_ratio_enchant_variants.csv" download>エンチャント別比較CSV</a></p>
+<p>数値の増加＝<strong class="increase">青</strong> ／ 減少＝<strong class="decrease">赤</strong> ／ 変化なし＝<strong class="unchanged">灰色</strong></p>
+</header>
+<nav aria-label="比較表の絞り込み">
+<select id="slot" aria-label="装備の種類"><option value="">全装備</option><option value="weapon">武器</option><option value="armor">防具</option><option value="accessory">アクセサリー</option></select>
+<select id="rarity" aria-label="レア度"><option value="">全レア度</option><option value="1">★1</option><option value="2">★2</option><option value="3">★3</option><option value="4">★4</option><option value="5">★5</option><option value="6">★6</option></select>
+<select id="enchant" aria-label="比較する旧ランダム効果"><option value="auto">旧ランダム効果：未指定</option><option value="none">旧効果：なし</option></select>
+<input id="search" placeholder="装備名・IDで検索" aria-label="装備名・IDで検索"><span id="count"></span>
+</nav>
+<div class="wrap" tabindex="0" role="region" aria-label="装備比較表（見出し固定）"><table><thead><tr><th scope="col">装備名</th><th scope="col">レア度</th><th scope="col">コスト 旧→最新</th><th scope="col">旧ステータス</th><th scope="col">最新ステータス</th><th scope="col">能力変化量</th><th scope="col">エンチャント変化</th><th scope="col">最新の効果・SP</th></tr></thead><tbody id="rows"></tbody></table></div>
+<script>
+const data=__ROWS__,variantsData=__VARIANTS__,labels=__LABELS__,abilityLabels=__ABILITY_NAMES__;
+const variantsByKey=new Map(variantsData.map(v=>[v.id+'|'+v.rarity+'|'+v.requested,v]));
+const controls=Object.fromEntries(['slot','rarity','enchant','search','rows','count'].map(id=>[id,document.getElementById(id)]));
+for(const [id,label] of Object.entries(abilityLabels))controls.enchant.add(new Option('旧効果：'+label,id));
+const escape=s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+const signed=n=>n>0?'+'+n:n<0?'−'+Math.abs(n):'±0';
+const deltaClass=n=>n>0?'increase':n<0?'decrease':'unchanged';
+const tones={1:'#4da6ff',2:'#4ddd7a',3:'#ffe066',4:'#ff5c5c',5:'#b26bff',6:'#ff9f43'};
+const text=s=>Object.entries(s).map(([k,v])=>(labels[k]||k)+'+'+v).join(' / ')||'能力値なし';
+function icon(r){const art=r.icon?.startsWith('assets/')?'<img src="'+escape(r.icon)+'" alt="" width="52" height="52">':'<span>'+escape(r.icon||'')+'</span>';return '<span class="report-equipment-icon" style="--tone:'+tones[r.rarity]+'" aria-hidden="true">'+art+'</span>';}
+function comparison(row){const selected=controls.enchant.value;if(selected==='auto'||row.rarity===6||row.fixedAbility||row.note.includes('補助'))return row;const v=variantsByKey.get(row.id+'|'+row.rarity+'|'+selected);return v?{...row,...v,oldAbilityKnown:true}:row;}
+function statsHtml(r){return Object.entries(r.newStats).map(([k,v])=>escape(labels[k]||k)+'<strong class="'+deltaClass(r.statDelta[k]||0)+'">+'+v+'</strong>').join(' / ')||'能力値なし';}
+function deltaHtml(r){return Object.entries(r.statDelta).map(([k,v])=>'<div class="change-line">'+escape(labels[k]||k)+' <strong class="'+deltaClass(v)+'">'+signed(v)+'</strong></div>').join('')||'<span class="unchanged">変化なし</span>';}
+function enchantHtml(r){let type='unchanged';if(r.oldAbilityKnown&&r.rarity!==6){if(r.oldAbilityId&&!r.newAbilityId)type='decrease';else if(!r.oldAbilityId&&r.newAbilityId)type='increase';}return '<span class="'+type+'">'+escape(r.enchantChange)+'</span>';}
+function render(){const list=data.filter(r=>(!controls.slot.value||r.slot===controls.slot.value)&&(!controls.rarity.value||r.rarity==controls.rarity.value)&&(!controls.search.value||(r.name+' '+r.id).includes(controls.search.value))).map(comparison);controls.count.textContent=list.length+'件 / 全'+data.length+'件';controls.rows.innerHTML=list.map(r=>'<tr><td><div class="equipment-label">'+icon(r)+'<div>'+escape(r.name)+'<small>'+escape(r.id)+'</small></div></div></td><td>★'+r.rarity+(r.level?' / 覚醒Lv'+r.level:'')+'</td><td>'+r.oldCost+' → <strong class="'+deltaClass(r.costDelta)+'">'+r.newCost+'</strong><small>差 '+signed(r.costDelta)+'</small></td><td class="old">'+escape(text(r.oldStats))+'</td><td>'+statsHtml(r)+'</td><td class="changes">'+deltaHtml(r)+'</td><td>'+enchantHtml(r)+'</td><td>'+escape(r.ability)+'<small>'+(r.rarity===6?'★6保護：変更なし':r.note.includes('補助')?escape(r.note):r.statResources+'SP ＋ 効果'+r.enchantResources+'SP')+'</small></td></tr>').join('');}
+for(const id of ['slot','rarity','enchant','search'])controls[id].oninput=()=>{render();document.querySelector('.wrap').scrollTop=0;};render();
+</script></html>
