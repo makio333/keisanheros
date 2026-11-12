@@ -22,6 +22,7 @@
     {
       "id": "shop_light_sword",
       "name": "旅人の軽い剣",
+      "icon": "assets/event-pixel/traveler_sword.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 3,
@@ -41,6 +42,7 @@
     {
       "id": "shop_light_sword",
       "name": "旅人の軽い剣",
+      "icon": "assets/event-pixel/traveler_sword.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 5,
@@ -60,6 +62,7 @@
     {
       "id": "shop_light_sword",
       "name": "旅人の軽い剣",
+      "icon": "assets/event-pixel/traveler_sword.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 6,
@@ -79,6 +82,7 @@
     {
       "id": "shop_light_sword",
       "name": "旅人の軽い剣",
+      "icon": "assets/event-pixel/traveler_sword.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 9,
@@ -98,6 +102,7 @@
     {
       "id": "shop_light_sword",
       "name": "旅人の軽い剣",
+      "icon": "assets/event-pixel/traveler_sword.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 13,
@@ -117,6 +122,7 @@
     {
       "id": "shop_guard_vest",
       "name": "旅人のベスト",
+      "icon": "assets/items/a2.png",
       "slot": "armor",
       "rarity": 1,
       "oldCost": 3,
@@ -138,6 +144,7 @@
     {
       "id": "shop_guard_vest",
       "name": "旅人のベスト",
+      "icon": "assets/items/a2.png",
       "slot": "armor",
       "rarity": 2,
       "oldCost": 5,
@@ -159,6 +166,7 @@
     {
       "id": "shop_guard_vest",
       "name": "旅人のベスト",
+      "icon": "assets/items/a2.png",
       "slot": "armor",
       "rarity": 3,
       "oldCost": 6,
@@ -180,6 +188,7 @@
     {
       "id": "shop_guard_vest",
       "name": "旅人のベスト",
+      "icon": "assets/items/a2.png",
       "slot": "armor",
       "rarity": 4,
       "oldCost": 9,
@@ -201,6 +210,7 @@
     {
       "id": "shop_guard_vest",
       "name": "旅人のベスト",
+      "icon": "assets/items/a2.png",
       "slot": "armor",
       "rarity": 5,
       "oldCost": 13,
@@ -222,6 +232,7 @@
     {
       "id": "shop_mana_charm",
       "name": "小さな魔力のお守り",
+      "icon": "assets/halloween/equip_moon_charm.png",
       "slot": "accessory",
       "rarity": 1,
       "oldCost": 4,
@@ -243,6 +254,7 @@
     {
       "id": "shop_mana_charm",
       "name": "小さな魔力のお守り",
+      "icon": "assets/halloween/equip_moon_charm.png",
       "slot": "accessory",
       "rarity": 2,
       "oldCost": 6,
@@ -264,6 +276,7 @@
     {
       "id": "shop_mana_charm",
       "name": "小さな魔力のお守り",
+      "icon": "assets/halloween/equip_moon_charm.png",
       "slot": "accessory",
       "rarity": 3,
       "oldCost": 8,
@@ -285,6 +298,7 @@
     {
       "id": "shop_mana_charm",
       "name": "小さな魔力のお守り",
+      "icon": "assets/halloween/equip_moon_charm.png",
       "slot": "accessory",
       "rarity": 4,
       "oldCost": 12,
@@ -306,6 +320,7 @@
     {
       "id": "shop_mana_charm",
       "name": "小さな魔力のお守り",
+      "icon": "assets/halloween/equip_moon_charm.png",
       "slot": "accessory",
       "rarity": 5,
       "oldCost": 17,
@@ -327,6 +342,7 @@
     {
       "id": "w1",
       "name": "木の剣",
+      "icon": "assets/event-pixel/wood_sword.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 1,
@@ -346,6 +362,7 @@
     {
       "id": "w1",
       "name": "木の剣",
+      "icon": "assets/event-pixel/wood_sword.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 2,
@@ -365,6 +382,7 @@
     {
       "id": "w1",
       "name": "木の剣",
+      "icon": "assets/event-pixel/wood_sword.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 2,
@@ -384,6 +402,7 @@
     {
       "id": "w1",
       "name": "木の剣",
+      "icon": "assets/event-pixel/wood_sword.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 3,
@@ -403,6 +422,7 @@
     {
       "id": "w1",
       "name": "木の剣",
+      "icon": "assets/event-pixel/wood_sword.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 5,
@@ -422,6 +442,7 @@
     {
       "id": "w2",
       "name": "どうの剣",
+      "icon": "assets/event-pixel/copper_sword.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 2,
@@ -441,6 +462,7 @@
     {
       "id": "w2",
       "name": "どうの剣",
+      "icon": "assets/event-pixel/copper_sword.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 3,
@@ -460,6 +482,7 @@
     {
       "id": "w2",
       "name": "どうの剣",
+      "icon": "assets/event-pixel/copper_sword.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 4,
@@ -479,6 +502,7 @@
     {
       "id": "w2",
       "name": "どうの剣",
+      "icon": "assets/event-pixel/copper_sword.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 6,
@@ -498,6 +522,7 @@
     {
       "id": "w2",
       "name": "どうの剣",
+      "icon": "assets/event-pixel/copper_sword.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 9,
@@ -517,6 +542,7 @@
     {
       "id": "w3",
       "name": "はがねの剣",
+      "icon": "assets/items/w3.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 3,
@@ -536,6 +562,7 @@
     {
       "id": "w3",
       "name": "はがねの剣",
+      "icon": "assets/items/w3.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 5,
@@ -555,6 +582,7 @@
     {
       "id": "w3",
       "name": "はがねの剣",
+      "icon": "assets/items/w3.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 6,
@@ -574,6 +602,7 @@
     {
       "id": "w3",
       "name": "はがねの剣",
+      "icon": "assets/items/w3.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 9,
@@ -593,6 +622,7 @@
     {
       "id": "w3",
       "name": "はがねの剣",
+      "icon": "assets/items/w3.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 13,
@@ -612,6 +642,7 @@
     {
       "id": "w4",
       "name": "ほのおの斧",
+      "icon": "assets/items/w4.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 4,
@@ -631,6 +662,7 @@
     {
       "id": "w4",
       "name": "ほのおの斧",
+      "icon": "assets/items/w4.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 6,
@@ -650,6 +682,7 @@
     {
       "id": "w4",
       "name": "ほのおの斧",
+      "icon": "assets/items/w4.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 8,
@@ -669,6 +702,7 @@
     {
       "id": "w4",
       "name": "ほのおの斧",
+      "icon": "assets/items/w4.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 12,
@@ -688,6 +722,7 @@
     {
       "id": "w4",
       "name": "ほのおの斧",
+      "icon": "assets/items/w4.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 17,
@@ -707,6 +742,7 @@
     {
       "id": "w5",
       "name": "いなずまの太刀",
+      "icon": "assets/event-pixel/thunder_katana.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 6,
@@ -726,6 +762,7 @@
     {
       "id": "w5",
       "name": "いなずまの太刀",
+      "icon": "assets/event-pixel/thunder_katana.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 9,
@@ -745,6 +782,7 @@
     {
       "id": "w5",
       "name": "いなずまの太刀",
+      "icon": "assets/event-pixel/thunder_katana.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 12,
@@ -764,6 +802,7 @@
     {
       "id": "w5",
       "name": "いなずまの太刀",
+      "icon": "assets/event-pixel/thunder_katana.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 18,
@@ -783,6 +822,7 @@
     {
       "id": "w5",
       "name": "いなずまの太刀",
+      "icon": "assets/event-pixel/thunder_katana.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 26,
@@ -802,6 +842,7 @@
     {
       "id": "w6",
       "name": "まけんグラム",
+      "icon": "assets/items/w6_right.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 7,
@@ -821,6 +862,7 @@
     {
       "id": "w6",
       "name": "まけんグラム",
+      "icon": "assets/items/w6_right.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 11,
@@ -840,6 +882,7 @@
     {
       "id": "w6",
       "name": "まけんグラム",
+      "icon": "assets/items/w6_right.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 14,
@@ -859,6 +902,7 @@
     {
       "id": "w6",
       "name": "まけんグラム",
+      "icon": "assets/items/w6_right.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 21,
@@ -878,6 +922,7 @@
     {
       "id": "w6",
       "name": "まけんグラム",
+      "icon": "assets/items/w6_right.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 30,
@@ -897,6 +942,7 @@
     {
       "id": "w7",
       "name": "せいけんエクスカリバー",
+      "icon": "assets/event-pixel/excalibur.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 10,
@@ -916,6 +962,7 @@
     {
       "id": "w7",
       "name": "せいけんエクスカリバー",
+      "icon": "assets/event-pixel/excalibur.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 15,
@@ -935,6 +982,7 @@
     {
       "id": "w7",
       "name": "せいけんエクスカリバー",
+      "icon": "assets/event-pixel/excalibur.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 20,
@@ -954,6 +1002,7 @@
     {
       "id": "w7",
       "name": "せいけんエクスカリバー",
+      "icon": "assets/event-pixel/excalibur.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 30,
@@ -973,6 +1022,7 @@
     {
       "id": "w7",
       "name": "せいけんエクスカリバー",
+      "icon": "assets/event-pixel/excalibur.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 42,
@@ -992,6 +1042,7 @@
     {
       "id": "w8",
       "name": "りゅうごろしの槍",
+      "icon": "assets/items/w8.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 12,
@@ -1011,6 +1062,7 @@
     {
       "id": "w8",
       "name": "りゅうごろしの槍",
+      "icon": "assets/items/w8.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 18,
@@ -1030,6 +1082,7 @@
     {
       "id": "w8",
       "name": "りゅうごろしの槍",
+      "icon": "assets/items/w8.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 24,
@@ -1049,6 +1102,7 @@
     {
       "id": "w8",
       "name": "りゅうごろしの槍",
+      "icon": "assets/items/w8.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 36,
@@ -1068,6 +1122,7 @@
     {
       "id": "w8",
       "name": "りゅうごろしの槍",
+      "icon": "assets/items/w8.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 51,
@@ -1087,6 +1142,7 @@
     {
       "id": "a1",
       "name": "布の服",
+      "icon": "assets/items/a1.png",
       "slot": "armor",
       "rarity": 1,
       "oldCost": 1,
@@ -1106,6 +1162,7 @@
     {
       "id": "a1",
       "name": "布の服",
+      "icon": "assets/items/a1.png",
       "slot": "armor",
       "rarity": 2,
       "oldCost": 2,
@@ -1125,6 +1182,7 @@
     {
       "id": "a1",
       "name": "布の服",
+      "icon": "assets/items/a1.png",
       "slot": "armor",
       "rarity": 3,
       "oldCost": 2,
@@ -1144,6 +1202,7 @@
     {
       "id": "a1",
       "name": "布の服",
+      "icon": "assets/items/a1.png",
       "slot": "armor",
       "rarity": 4,
       "oldCost": 3,
@@ -1163,6 +1222,7 @@
     {
       "id": "a1",
       "name": "布の服",
+      "icon": "assets/items/a1.png",
       "slot": "armor",
       "rarity": 5,
       "oldCost": 5,
@@ -1182,6 +1242,7 @@
     {
       "id": "a2",
       "name": "かわの鎧",
+      "icon": "assets/items/a2.png",
       "slot": "armor",
       "rarity": 1,
       "oldCost": 2,
@@ -1201,6 +1262,7 @@
     {
       "id": "a2",
       "name": "かわの鎧",
+      "icon": "assets/items/a2.png",
       "slot": "armor",
       "rarity": 2,
       "oldCost": 3,
@@ -1220,6 +1282,7 @@
     {
       "id": "a2",
       "name": "かわの鎧",
+      "icon": "assets/items/a2.png",
       "slot": "armor",
       "rarity": 3,
       "oldCost": 4,
@@ -1239,6 +1302,7 @@
     {
       "id": "a2",
       "name": "かわの鎧",
+      "icon": "assets/items/a2.png",
       "slot": "armor",
       "rarity": 4,
       "oldCost": 6,
@@ -1258,6 +1322,7 @@
     {
       "id": "a2",
       "name": "かわの鎧",
+      "icon": "assets/items/a2.png",
       "slot": "armor",
       "rarity": 5,
       "oldCost": 9,
@@ -1277,6 +1342,7 @@
     {
       "id": "a3",
       "name": "くさりかたびら",
+      "icon": "assets/items/a3.png",
       "slot": "armor",
       "rarity": 1,
       "oldCost": 3,
@@ -1296,6 +1362,7 @@
     {
       "id": "a3",
       "name": "くさりかたびら",
+      "icon": "assets/items/a3.png",
       "slot": "armor",
       "rarity": 2,
       "oldCost": 5,
@@ -1315,6 +1382,7 @@
     {
       "id": "a3",
       "name": "くさりかたびら",
+      "icon": "assets/items/a3.png",
       "slot": "armor",
       "rarity": 3,
       "oldCost": 6,
@@ -1334,6 +1402,7 @@
     {
       "id": "a3",
       "name": "くさりかたびら",
+      "icon": "assets/items/a3.png",
       "slot": "armor",
       "rarity": 4,
       "oldCost": 9,
@@ -1353,6 +1422,7 @@
     {
       "id": "a3",
       "name": "くさりかたびら",
+      "icon": "assets/items/a3.png",
       "slot": "armor",
       "rarity": 5,
       "oldCost": 13,
@@ -1372,6 +1442,7 @@
     {
       "id": "a4",
       "name": "てつの鎧",
+      "icon": "assets/items/a4.png",
       "slot": "armor",
       "rarity": 1,
       "oldCost": 4,
@@ -1391,6 +1462,7 @@
     {
       "id": "a4",
       "name": "てつの鎧",
+      "icon": "assets/items/a4.png",
       "slot": "armor",
       "rarity": 2,
       "oldCost": 6,
@@ -1410,6 +1482,7 @@
     {
       "id": "a4",
       "name": "てつの鎧",
+      "icon": "assets/items/a4.png",
       "slot": "armor",
       "rarity": 3,
       "oldCost": 8,
@@ -1429,6 +1502,7 @@
     {
       "id": "a4",
       "name": "てつの鎧",
+      "icon": "assets/items/a4.png",
       "slot": "armor",
       "rarity": 4,
       "oldCost": 12,
@@ -1448,6 +1522,7 @@
     {
       "id": "a4",
       "name": "てつの鎧",
+      "icon": "assets/items/a4.png",
       "slot": "armor",
       "rarity": 5,
       "oldCost": 17,
@@ -1467,6 +1542,7 @@
     {
       "id": "a5",
       "name": "ミスリルの鎧",
+      "icon": "assets/items/a5.png",
       "slot": "armor",
       "rarity": 1,
       "oldCost": 6,
@@ -1486,6 +1562,7 @@
     {
       "id": "a5",
       "name": "ミスリルの鎧",
+      "icon": "assets/items/a5.png",
       "slot": "armor",
       "rarity": 2,
       "oldCost": 9,
@@ -1505,6 +1582,7 @@
     {
       "id": "a5",
       "name": "ミスリルの鎧",
+      "icon": "assets/items/a5.png",
       "slot": "armor",
       "rarity": 3,
       "oldCost": 12,
@@ -1524,6 +1602,7 @@
     {
       "id": "a5",
       "name": "ミスリルの鎧",
+      "icon": "assets/items/a5.png",
       "slot": "armor",
       "rarity": 4,
       "oldCost": 18,
@@ -1543,6 +1622,7 @@
     {
       "id": "a5",
       "name": "ミスリルの鎧",
+      "icon": "assets/items/a5.png",
       "slot": "armor",
       "rarity": 5,
       "oldCost": 26,
@@ -1562,6 +1642,7 @@
     {
       "id": "a6",
       "name": "せいきしの鎧",
+      "icon": "assets/items/a6.png",
       "slot": "armor",
       "rarity": 1,
       "oldCost": 7,
@@ -1581,6 +1662,7 @@
     {
       "id": "a6",
       "name": "せいきしの鎧",
+      "icon": "assets/items/a6.png",
       "slot": "armor",
       "rarity": 2,
       "oldCost": 11,
@@ -1600,6 +1682,7 @@
     {
       "id": "a6",
       "name": "せいきしの鎧",
+      "icon": "assets/items/a6.png",
       "slot": "armor",
       "rarity": 3,
       "oldCost": 14,
@@ -1619,6 +1702,7 @@
     {
       "id": "a6",
       "name": "せいきしの鎧",
+      "icon": "assets/items/a6.png",
       "slot": "armor",
       "rarity": 4,
       "oldCost": 21,
@@ -1638,6 +1722,7 @@
     {
       "id": "a6",
       "name": "せいきしの鎧",
+      "icon": "assets/items/a6.png",
       "slot": "armor",
       "rarity": 5,
       "oldCost": 30,
@@ -1657,6 +1742,7 @@
     {
       "id": "a7",
       "name": "りゅうりんの鎧",
+      "icon": "assets/items/a7.png",
       "slot": "armor",
       "rarity": 1,
       "oldCost": 10,
@@ -1676,6 +1762,7 @@
     {
       "id": "a7",
       "name": "りゅうりんの鎧",
+      "icon": "assets/items/a7.png",
       "slot": "armor",
       "rarity": 2,
       "oldCost": 15,
@@ -1695,6 +1782,7 @@
     {
       "id": "a7",
       "name": "りゅうりんの鎧",
+      "icon": "assets/items/a7.png",
       "slot": "armor",
       "rarity": 3,
       "oldCost": 20,
@@ -1714,6 +1802,7 @@
     {
       "id": "a7",
       "name": "りゅうりんの鎧",
+      "icon": "assets/items/a7.png",
       "slot": "armor",
       "rarity": 4,
       "oldCost": 30,
@@ -1733,6 +1822,7 @@
     {
       "id": "a7",
       "name": "りゅうりんの鎧",
+      "icon": "assets/items/a7.png",
       "slot": "armor",
       "rarity": 5,
       "oldCost": 42,
@@ -1752,6 +1842,7 @@
     {
       "id": "c1",
       "name": "はやての靴",
+      "icon": "assets/items/c1.png",
       "slot": "accessory",
       "rarity": 1,
       "oldCost": 1,
@@ -1771,6 +1862,7 @@
     {
       "id": "c1",
       "name": "はやての靴",
+      "icon": "assets/items/c1.png",
       "slot": "accessory",
       "rarity": 2,
       "oldCost": 2,
@@ -1790,6 +1882,7 @@
     {
       "id": "c1",
       "name": "はやての靴",
+      "icon": "assets/items/c1.png",
       "slot": "accessory",
       "rarity": 3,
       "oldCost": 2,
@@ -1809,6 +1902,7 @@
     {
       "id": "c1",
       "name": "はやての靴",
+      "icon": "assets/items/c1.png",
       "slot": "accessory",
       "rarity": 4,
       "oldCost": 3,
@@ -1828,6 +1922,7 @@
     {
       "id": "c1",
       "name": "はやての靴",
+      "icon": "assets/items/c1.png",
       "slot": "accessory",
       "rarity": 5,
       "oldCost": 5,
@@ -1847,6 +1942,7 @@
     {
       "id": "c2",
       "name": "ぎんの指輪",
+      "icon": "assets/items/c2.png",
       "slot": "accessory",
       "rarity": 1,
       "oldCost": 2,
@@ -1866,6 +1962,7 @@
     {
       "id": "c2",
       "name": "ぎんの指輪",
+      "icon": "assets/items/c2.png",
       "slot": "accessory",
       "rarity": 2,
       "oldCost": 3,
@@ -1885,6 +1982,7 @@
     {
       "id": "c2",
       "name": "ぎんの指輪",
+      "icon": "assets/items/c2.png",
       "slot": "accessory",
       "rarity": 3,
       "oldCost": 4,
@@ -1904,6 +2002,7 @@
     {
       "id": "c2",
       "name": "ぎんの指輪",
+      "icon": "assets/items/c2.png",
       "slot": "accessory",
       "rarity": 4,
       "oldCost": 6,
@@ -1923,6 +2022,7 @@
     {
       "id": "c2",
       "name": "ぎんの指輪",
+      "icon": "assets/items/c2.png",
       "slot": "accessory",
       "rarity": 5,
       "oldCost": 9,
@@ -1942,6 +2042,7 @@
     {
       "id": "c3",
       "name": "けんじゃのお守り",
+      "icon": "assets/items/c3.png",
       "slot": "accessory",
       "rarity": 1,
       "oldCost": 3,
@@ -1961,6 +2062,7 @@
     {
       "id": "c3",
       "name": "けんじゃのお守り",
+      "icon": "assets/items/c3.png",
       "slot": "accessory",
       "rarity": 2,
       "oldCost": 5,
@@ -1980,6 +2082,7 @@
     {
       "id": "c3",
       "name": "けんじゃのお守り",
+      "icon": "assets/items/c3.png",
       "slot": "accessory",
       "rarity": 3,
       "oldCost": 6,
@@ -1999,6 +2102,7 @@
     {
       "id": "c3",
       "name": "けんじゃのお守り",
+      "icon": "assets/items/c3.png",
       "slot": "accessory",
       "rarity": 4,
       "oldCost": 9,
@@ -2018,6 +2122,7 @@
     {
       "id": "c3",
       "name": "けんじゃのお守り",
+      "icon": "assets/items/c3.png",
       "slot": "accessory",
       "rarity": 5,
       "oldCost": 13,
@@ -2037,6 +2142,7 @@
     {
       "id": "c4",
       "name": "しんそくの首かざり",
+      "icon": "assets/items/c4.png",
       "slot": "accessory",
       "rarity": 1,
       "oldCost": 5,
@@ -2058,6 +2164,7 @@
     {
       "id": "c4",
       "name": "しんそくの首かざり",
+      "icon": "assets/items/c4.png",
       "slot": "accessory",
       "rarity": 2,
       "oldCost": 8,
@@ -2079,6 +2186,7 @@
     {
       "id": "c4",
       "name": "しんそくの首かざり",
+      "icon": "assets/items/c4.png",
       "slot": "accessory",
       "rarity": 3,
       "oldCost": 10,
@@ -2100,6 +2208,7 @@
     {
       "id": "c4",
       "name": "しんそくの首かざり",
+      "icon": "assets/items/c4.png",
       "slot": "accessory",
       "rarity": 4,
       "oldCost": 15,
@@ -2121,6 +2230,7 @@
     {
       "id": "c4",
       "name": "しんそくの首かざり",
+      "icon": "assets/items/c4.png",
       "slot": "accessory",
       "rarity": 5,
       "oldCost": 21,
@@ -2142,6 +2252,7 @@
     {
       "id": "ast1",
       "name": "かぞえだま",
+      "icon": "🧮",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 1,
@@ -2157,6 +2268,7 @@
     {
       "id": "ast1",
       "name": "かぞえだま",
+      "icon": "🧮",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 2,
@@ -2172,6 +2284,7 @@
     {
       "id": "ast1",
       "name": "かぞえだま",
+      "icon": "🧮",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 2,
@@ -2187,6 +2300,7 @@
     {
       "id": "ast1",
       "name": "かぞえだま",
+      "icon": "🧮",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 3,
@@ -2202,6 +2316,7 @@
     {
       "id": "ast1",
       "name": "かぞえだま",
+      "icon": "🧮",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 5,
@@ -2217,6 +2332,7 @@
     {
       "id": "anc_w1",
       "name": "古代の双剣",
+      "icon": "assets/items/ancient_dual_swords_v1.png",
       "slot": "weapon",
       "rarity": 6,
       "level": 1,
@@ -2237,6 +2353,7 @@
     {
       "id": "anc_w1",
       "name": "古代の双剣",
+      "icon": "assets/items/ancient_dual_swords_v1.png",
       "slot": "weapon",
       "rarity": 6,
       "level": 50,
@@ -2257,6 +2374,7 @@
     {
       "id": "anc_w3",
       "name": "古代の大剣",
+      "icon": "assets/items/ancient_greatsword_v2.png",
       "slot": "weapon",
       "rarity": 6,
       "level": 1,
@@ -2277,6 +2395,7 @@
     {
       "id": "anc_w3",
       "name": "古代の大剣",
+      "icon": "assets/items/ancient_greatsword_v2.png",
       "slot": "weapon",
       "rarity": 6,
       "level": 50,
@@ -2297,6 +2416,7 @@
     {
       "id": "anc_a1",
       "name": "古代の鎧",
+      "icon": "assets/items/ancient_armor_v2.png",
       "slot": "armor",
       "rarity": 6,
       "level": 1,
@@ -2319,6 +2439,7 @@
     {
       "id": "anc_a1",
       "name": "古代の鎧",
+      "icon": "assets/items/ancient_armor_v2.png",
       "slot": "armor",
       "rarity": 6,
       "level": 50,
@@ -2341,6 +2462,7 @@
     {
       "id": "anc_c1",
       "name": "古代の指輪",
+      "icon": "assets/items/ancient_ring_v2.png",
       "slot": "accessory",
       "rarity": 6,
       "level": 1,
@@ -2361,6 +2483,7 @@
     {
       "id": "anc_c1",
       "name": "古代の指輪",
+      "icon": "assets/items/ancient_ring_v2.png",
       "slot": "accessory",
       "rarity": 6,
       "level": 50,
@@ -2381,6 +2504,7 @@
     {
       "id": "anc_w2",
       "name": "古代の槍",
+      "icon": "assets/items/ancient_spear_v2.png",
       "slot": "weapon",
       "rarity": 6,
       "level": 1,
@@ -2403,6 +2527,7 @@
     {
       "id": "anc_w2",
       "name": "古代の槍",
+      "icon": "assets/items/ancient_spear_v2.png",
       "slot": "weapon",
       "rarity": 6,
       "level": 50,
@@ -2425,6 +2550,7 @@
     {
       "id": "anc_a2",
       "name": "古代の盾",
+      "icon": "assets/items/ancient_shield_v2.png",
       "slot": "armor",
       "rarity": 6,
       "level": 1,
@@ -2447,6 +2573,7 @@
     {
       "id": "anc_a2",
       "name": "古代の盾",
+      "icon": "assets/items/ancient_shield_v2.png",
       "slot": "armor",
       "rarity": 6,
       "level": 50,
@@ -2469,6 +2596,7 @@
     {
       "id": "demon_sword",
       "name": "魔王の覇剣",
+      "icon": "assets/items/w6_right.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 20,
@@ -2488,6 +2616,7 @@
     {
       "id": "demon_sword",
       "name": "魔王の覇剣",
+      "icon": "assets/items/w6_right.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 30,
@@ -2507,6 +2636,7 @@
     {
       "id": "demon_sword",
       "name": "魔王の覇剣",
+      "icon": "assets/items/w6_right.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 40,
@@ -2526,6 +2656,7 @@
     {
       "id": "demon_sword",
       "name": "魔王の覇剣",
+      "icon": "assets/items/w6_right.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 60,
@@ -2545,6 +2676,7 @@
     {
       "id": "demon_sword",
       "name": "魔王の覇剣",
+      "icon": "assets/items/w6_right.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 84,
@@ -2564,6 +2696,7 @@
     {
       "id": "limited_star_sword",
       "name": "星晶の剣",
+      "icon": "assets/items/limited_star_sword_right.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 3,
@@ -2583,6 +2716,7 @@
     {
       "id": "limited_star_sword",
       "name": "星晶の剣",
+      "icon": "assets/items/limited_star_sword_right.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 5,
@@ -2602,6 +2736,7 @@
     {
       "id": "limited_star_sword",
       "name": "星晶の剣",
+      "icon": "assets/items/limited_star_sword_right.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 6,
@@ -2621,6 +2756,7 @@
     {
       "id": "limited_star_sword",
       "name": "星晶の剣",
+      "icon": "assets/items/limited_star_sword_right.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 9,
@@ -2640,6 +2776,7 @@
     {
       "id": "limited_star_sword",
       "name": "星晶の剣",
+      "icon": "assets/items/limited_star_sword_right.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 13,
@@ -2659,6 +2796,7 @@
     {
       "id": "limited_phoenix_armor",
       "name": "鳳凰の鎧",
+      "icon": "assets/items/limited_phoenix_armor.png",
       "slot": "armor",
       "rarity": 1,
       "oldCost": 3,
@@ -2680,6 +2818,7 @@
     {
       "id": "limited_phoenix_armor",
       "name": "鳳凰の鎧",
+      "icon": "assets/items/limited_phoenix_armor.png",
       "slot": "armor",
       "rarity": 2,
       "oldCost": 5,
@@ -2701,6 +2840,7 @@
     {
       "id": "limited_phoenix_armor",
       "name": "鳳凰の鎧",
+      "icon": "assets/items/limited_phoenix_armor.png",
       "slot": "armor",
       "rarity": 3,
       "oldCost": 6,
@@ -2722,6 +2862,7 @@
     {
       "id": "limited_phoenix_armor",
       "name": "鳳凰の鎧",
+      "icon": "assets/items/limited_phoenix_armor.png",
       "slot": "armor",
       "rarity": 4,
       "oldCost": 9,
@@ -2743,6 +2884,7 @@
     {
       "id": "limited_phoenix_armor",
       "name": "鳳凰の鎧",
+      "icon": "assets/items/limited_phoenix_armor.png",
       "slot": "armor",
       "rarity": 5,
       "oldCost": 13,
@@ -2764,6 +2906,7 @@
     {
       "id": "limited_moon_charm",
       "name": "月光のお守り",
+      "icon": "assets/items/limited_moon_charm.png",
       "slot": "accessory",
       "rarity": 1,
       "oldCost": 3,
@@ -2785,6 +2928,7 @@
     {
       "id": "limited_moon_charm",
       "name": "月光のお守り",
+      "icon": "assets/items/limited_moon_charm.png",
       "slot": "accessory",
       "rarity": 2,
       "oldCost": 5,
@@ -2806,6 +2950,7 @@
     {
       "id": "limited_moon_charm",
       "name": "月光のお守り",
+      "icon": "assets/items/limited_moon_charm.png",
       "slot": "accessory",
       "rarity": 3,
       "oldCost": 6,
@@ -2827,6 +2972,7 @@
     {
       "id": "limited_moon_charm",
       "name": "月光のお守り",
+      "icon": "assets/items/limited_moon_charm.png",
       "slot": "accessory",
       "rarity": 4,
       "oldCost": 9,
@@ -2848,6 +2994,7 @@
     {
       "id": "limited_moon_charm",
       "name": "月光のお守り",
+      "icon": "assets/items/limited_moon_charm.png",
       "slot": "accessory",
       "rarity": 5,
       "oldCost": 13,
@@ -2869,6 +3016,7 @@
     {
       "id": "raid_moon_blade",
       "name": "月封じの剣",
+      "icon": "assets/raid/moon_blade.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 5,
@@ -2890,6 +3038,7 @@
     {
       "id": "raid_moon_blade",
       "name": "月封じの剣",
+      "icon": "assets/raid/moon_blade.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 5,
@@ -2911,6 +3060,7 @@
     {
       "id": "raid_moon_blade",
       "name": "月封じの剣",
+      "icon": "assets/raid/moon_blade.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 5,
@@ -2932,6 +3082,7 @@
     {
       "id": "raid_moon_blade",
       "name": "月封じの剣",
+      "icon": "assets/raid/moon_blade.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 5,
@@ -2953,6 +3104,7 @@
     {
       "id": "raid_moon_blade",
       "name": "月封じの剣",
+      "icon": "assets/raid/moon_blade.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 5,
@@ -2974,6 +3126,7 @@
     {
       "id": "raid_moon_mantle",
       "name": "霊護りの外套",
+      "icon": "assets/raid/moon_mantle.png",
       "slot": "armor",
       "rarity": 1,
       "oldCost": 5,
@@ -2995,6 +3148,7 @@
     {
       "id": "raid_moon_mantle",
       "name": "霊護りの外套",
+      "icon": "assets/raid/moon_mantle.png",
       "slot": "armor",
       "rarity": 2,
       "oldCost": 5,
@@ -3016,6 +3170,7 @@
     {
       "id": "raid_moon_mantle",
       "name": "霊護りの外套",
+      "icon": "assets/raid/moon_mantle.png",
       "slot": "armor",
       "rarity": 3,
       "oldCost": 5,
@@ -3037,6 +3192,7 @@
     {
       "id": "raid_moon_mantle",
       "name": "霊護りの外套",
+      "icon": "assets/raid/moon_mantle.png",
       "slot": "armor",
       "rarity": 4,
       "oldCost": 5,
@@ -3058,6 +3214,7 @@
     {
       "id": "raid_moon_mantle",
       "name": "霊護りの外套",
+      "icon": "assets/raid/moon_mantle.png",
       "slot": "armor",
       "rarity": 5,
       "oldCost": 5,
@@ -3079,6 +3236,7 @@
     {
       "id": "raid_moon_charm",
       "name": "魂灯のお守り",
+      "icon": "assets/raid/moon_charm.png",
       "slot": "accessory",
       "rarity": 1,
       "oldCost": 4,
@@ -3100,6 +3258,7 @@
     {
       "id": "raid_moon_charm",
       "name": "魂灯のお守り",
+      "icon": "assets/raid/moon_charm.png",
       "slot": "accessory",
       "rarity": 2,
       "oldCost": 4,
@@ -3121,6 +3280,7 @@
     {
       "id": "raid_moon_charm",
       "name": "魂灯のお守り",
+      "icon": "assets/raid/moon_charm.png",
       "slot": "accessory",
       "rarity": 3,
       "oldCost": 4,
@@ -3142,6 +3302,7 @@
     {
       "id": "raid_moon_charm",
       "name": "魂灯のお守り",
+      "icon": "assets/raid/moon_charm.png",
       "slot": "accessory",
       "rarity": 4,
       "oldCost": 4,
@@ -3163,6 +3324,7 @@
     {
       "id": "raid_moon_charm",
       "name": "魂灯のお守り",
+      "icon": "assets/raid/moon_charm.png",
       "slot": "accessory",
       "rarity": 5,
       "oldCost": 4,
@@ -3184,6 +3346,7 @@
     {
       "id": "halloween_bat_buckler",
       "name": "コウモリの小盾",
+      "icon": "assets/event-pixel/bat_buckler.png",
       "slot": "armor",
       "rarity": 1,
       "oldCost": 3,
@@ -3203,6 +3366,7 @@
     {
       "id": "halloween_bat_buckler",
       "name": "コウモリの小盾",
+      "icon": "assets/event-pixel/bat_buckler.png",
       "slot": "armor",
       "rarity": 2,
       "oldCost": 3,
@@ -3222,6 +3386,7 @@
     {
       "id": "halloween_bat_buckler",
       "name": "コウモリの小盾",
+      "icon": "assets/event-pixel/bat_buckler.png",
       "slot": "armor",
       "rarity": 3,
       "oldCost": 3,
@@ -3241,6 +3406,7 @@
     {
       "id": "halloween_bat_buckler",
       "name": "コウモリの小盾",
+      "icon": "assets/event-pixel/bat_buckler.png",
       "slot": "armor",
       "rarity": 4,
       "oldCost": 3,
@@ -3260,6 +3426,7 @@
     {
       "id": "halloween_bat_buckler",
       "name": "コウモリの小盾",
+      "icon": "assets/event-pixel/bat_buckler.png",
       "slot": "armor",
       "rarity": 5,
       "oldCost": 3,
@@ -3279,6 +3446,7 @@
     {
       "id": "halloween_pumpkin_bell",
       "name": "かぼちゃの小鈴",
+      "icon": "assets/event-pixel/pumpkin_bell.png",
       "slot": "accessory",
       "rarity": 1,
       "oldCost": 3,
@@ -3300,6 +3468,7 @@
     {
       "id": "halloween_pumpkin_bell",
       "name": "かぼちゃの小鈴",
+      "icon": "assets/event-pixel/pumpkin_bell.png",
       "slot": "accessory",
       "rarity": 2,
       "oldCost": 3,
@@ -3321,6 +3490,7 @@
     {
       "id": "halloween_pumpkin_bell",
       "name": "かぼちゃの小鈴",
+      "icon": "assets/event-pixel/pumpkin_bell.png",
       "slot": "accessory",
       "rarity": 3,
       "oldCost": 3,
@@ -3342,6 +3512,7 @@
     {
       "id": "halloween_pumpkin_bell",
       "name": "かぼちゃの小鈴",
+      "icon": "assets/event-pixel/pumpkin_bell.png",
       "slot": "accessory",
       "rarity": 4,
       "oldCost": 3,
@@ -3363,6 +3534,7 @@
     {
       "id": "halloween_pumpkin_bell",
       "name": "かぼちゃの小鈴",
+      "icon": "assets/event-pixel/pumpkin_bell.png",
       "slot": "accessory",
       "rarity": 5,
       "oldCost": 3,
@@ -3384,6 +3556,7 @@
     {
       "id": "halloween_rank_blade",
       "name": "月影の短剣",
+      "icon": "assets/event-pixel/rank_blade.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 5,
@@ -3405,6 +3578,7 @@
     {
       "id": "halloween_rank_blade",
       "name": "月影の短剣",
+      "icon": "assets/event-pixel/rank_blade.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 5,
@@ -3426,6 +3600,7 @@
     {
       "id": "halloween_rank_blade",
       "name": "月影の短剣",
+      "icon": "assets/event-pixel/rank_blade.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 5,
@@ -3447,6 +3622,7 @@
     {
       "id": "halloween_rank_blade",
       "name": "月影の短剣",
+      "icon": "assets/event-pixel/rank_blade.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 5,
@@ -3468,6 +3644,7 @@
     {
       "id": "halloween_rank_blade",
       "name": "月影の短剣",
+      "icon": "assets/event-pixel/rank_blade.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 5,
@@ -3489,6 +3666,7 @@
     {
       "id": "halloween_candy_saber",
       "name": "お菓子のサーベル",
+      "icon": "assets/event-pixel/candy_saber.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 3,
@@ -3508,6 +3686,7 @@
     {
       "id": "halloween_candy_saber",
       "name": "お菓子のサーベル",
+      "icon": "assets/event-pixel/candy_saber.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 3,
@@ -3527,6 +3706,7 @@
     {
       "id": "halloween_candy_saber",
       "name": "お菓子のサーベル",
+      "icon": "assets/event-pixel/candy_saber.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 3,
@@ -3546,6 +3726,7 @@
     {
       "id": "halloween_candy_saber",
       "name": "お菓子のサーベル",
+      "icon": "assets/event-pixel/candy_saber.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 3,
@@ -3565,6 +3746,7 @@
     {
       "id": "halloween_candy_saber",
       "name": "お菓子のサーベル",
+      "icon": "assets/event-pixel/candy_saber.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 3,
@@ -3584,6 +3766,7 @@
     {
       "id": "halloween_light_cape",
       "name": "こあくまの軽いケープ",
+      "icon": "assets/event-pixel/light_cape.png",
       "slot": "armor",
       "rarity": 1,
       "oldCost": 4,
@@ -3605,6 +3788,7 @@
     {
       "id": "halloween_light_cape",
       "name": "こあくまの軽いケープ",
+      "icon": "assets/event-pixel/light_cape.png",
       "slot": "armor",
       "rarity": 2,
       "oldCost": 4,
@@ -3626,6 +3810,7 @@
     {
       "id": "halloween_light_cape",
       "name": "こあくまの軽いケープ",
+      "icon": "assets/event-pixel/light_cape.png",
       "slot": "armor",
       "rarity": 3,
       "oldCost": 4,
@@ -3647,6 +3832,7 @@
     {
       "id": "halloween_light_cape",
       "name": "こあくまの軽いケープ",
+      "icon": "assets/event-pixel/light_cape.png",
       "slot": "armor",
       "rarity": 4,
       "oldCost": 4,
@@ -3668,6 +3854,7 @@
     {
       "id": "halloween_light_cape",
       "name": "こあくまの軽いケープ",
+      "icon": "assets/event-pixel/light_cape.png",
       "slot": "armor",
       "rarity": 5,
       "oldCost": 4,
@@ -3689,6 +3876,7 @@
     {
       "id": "halloween_moon_pin",
       "name": "小さな月のピン",
+      "icon": "assets/event-pixel/moon_pin.png",
       "slot": "accessory",
       "rarity": 1,
       "oldCost": 3,
@@ -3710,6 +3898,7 @@
     {
       "id": "halloween_moon_pin",
       "name": "小さな月のピン",
+      "icon": "assets/event-pixel/moon_pin.png",
       "slot": "accessory",
       "rarity": 2,
       "oldCost": 3,
@@ -3731,6 +3920,7 @@
     {
       "id": "halloween_moon_pin",
       "name": "小さな月のピン",
+      "icon": "assets/event-pixel/moon_pin.png",
       "slot": "accessory",
       "rarity": 3,
       "oldCost": 3,
@@ -3752,6 +3942,7 @@
     {
       "id": "halloween_moon_pin",
       "name": "小さな月のピン",
+      "icon": "assets/event-pixel/moon_pin.png",
       "slot": "accessory",
       "rarity": 4,
       "oldCost": 3,
@@ -3773,6 +3964,7 @@
     {
       "id": "halloween_moon_pin",
       "name": "小さな月のピン",
+      "icon": "assets/event-pixel/moon_pin.png",
       "slot": "accessory",
       "rarity": 5,
       "oldCost": 3,
@@ -3794,6 +3986,7 @@
     {
       "id": "raid_star_blade",
       "name": "マグマの剣",
+      "icon": "assets/event-pixel/magma_blade.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 5,
@@ -3815,6 +4008,7 @@
     {
       "id": "raid_star_blade",
       "name": "マグマの剣",
+      "icon": "assets/event-pixel/magma_blade.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 5,
@@ -3836,6 +4030,7 @@
     {
       "id": "raid_star_blade",
       "name": "マグマの剣",
+      "icon": "assets/event-pixel/magma_blade.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 5,
@@ -3857,6 +4052,7 @@
     {
       "id": "raid_star_blade",
       "name": "マグマの剣",
+      "icon": "assets/event-pixel/magma_blade.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 5,
@@ -3878,6 +4074,7 @@
     {
       "id": "raid_star_blade",
       "name": "マグマの剣",
+      "icon": "assets/event-pixel/magma_blade.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 5,
@@ -3899,6 +4096,7 @@
     {
       "id": "raid_ward_armor",
       "name": "マグマの鎧",
+      "icon": "assets/event-pixel/magma_armor.png",
       "slot": "armor",
       "rarity": 1,
       "oldCost": 5,
@@ -3920,6 +4118,7 @@
     {
       "id": "raid_ward_armor",
       "name": "マグマの鎧",
+      "icon": "assets/event-pixel/magma_armor.png",
       "slot": "armor",
       "rarity": 2,
       "oldCost": 5,
@@ -3941,6 +4140,7 @@
     {
       "id": "raid_ward_armor",
       "name": "マグマの鎧",
+      "icon": "assets/event-pixel/magma_armor.png",
       "slot": "armor",
       "rarity": 3,
       "oldCost": 5,
@@ -3962,6 +4162,7 @@
     {
       "id": "raid_ward_armor",
       "name": "マグマの鎧",
+      "icon": "assets/event-pixel/magma_armor.png",
       "slot": "armor",
       "rarity": 4,
       "oldCost": 5,
@@ -3983,6 +4184,7 @@
     {
       "id": "raid_ward_armor",
       "name": "マグマの鎧",
+      "icon": "assets/event-pixel/magma_armor.png",
       "slot": "armor",
       "rarity": 5,
       "oldCost": 5,
@@ -4004,6 +4206,7 @@
     {
       "id": "raid_focus_charm",
       "name": "マグマの護符",
+      "icon": "assets/event-pixel/magma_charm.png",
       "slot": "accessory",
       "rarity": 1,
       "oldCost": 4,
@@ -4025,6 +4228,7 @@
     {
       "id": "raid_focus_charm",
       "name": "マグマの護符",
+      "icon": "assets/event-pixel/magma_charm.png",
       "slot": "accessory",
       "rarity": 2,
       "oldCost": 4,
@@ -4046,6 +4250,7 @@
     {
       "id": "raid_focus_charm",
       "name": "マグマの護符",
+      "icon": "assets/event-pixel/magma_charm.png",
       "slot": "accessory",
       "rarity": 3,
       "oldCost": 4,
@@ -4067,6 +4272,7 @@
     {
       "id": "raid_focus_charm",
       "name": "マグマの護符",
+      "icon": "assets/event-pixel/magma_charm.png",
       "slot": "accessory",
       "rarity": 4,
       "oldCost": 4,
@@ -4088,6 +4294,7 @@
     {
       "id": "raid_focus_charm",
       "name": "マグマの護符",
+      "icon": "assets/event-pixel/magma_charm.png",
       "slot": "accessory",
       "rarity": 5,
       "oldCost": 4,
@@ -4109,6 +4316,7 @@
     {
       "id": "halloween_lantern_staff",
       "name": "月灯りのランタン杖",
+      "icon": "assets/halloween/exchange_equip_lantern_staff.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 4,
@@ -4128,6 +4336,7 @@
     {
       "id": "halloween_lantern_staff",
       "name": "月灯りのランタン杖",
+      "icon": "assets/halloween/exchange_equip_lantern_staff.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 6,
@@ -4147,6 +4356,7 @@
     {
       "id": "halloween_lantern_staff",
       "name": "月灯りのランタン杖",
+      "icon": "assets/halloween/exchange_equip_lantern_staff.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 8,
@@ -4166,6 +4376,7 @@
     {
       "id": "halloween_lantern_staff",
       "name": "月灯りのランタン杖",
+      "icon": "assets/halloween/exchange_equip_lantern_staff.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 12,
@@ -4185,6 +4396,7 @@
     {
       "id": "halloween_lantern_staff",
       "name": "月灯りのランタン杖",
+      "icon": "assets/halloween/exchange_equip_lantern_staff.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 17,
@@ -4204,6 +4416,7 @@
     {
       "id": "halloween_pumpkin_blade",
       "name": "かぼちゃの魔剣",
+      "icon": "assets/halloween/equip_pumpkin_blade.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 3,
@@ -4223,6 +4436,7 @@
     {
       "id": "halloween_pumpkin_blade",
       "name": "かぼちゃの魔剣",
+      "icon": "assets/halloween/equip_pumpkin_blade.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 5,
@@ -4242,6 +4456,7 @@
     {
       "id": "halloween_pumpkin_blade",
       "name": "かぼちゃの魔剣",
+      "icon": "assets/halloween/equip_pumpkin_blade.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 6,
@@ -4261,6 +4476,7 @@
     {
       "id": "halloween_pumpkin_blade",
       "name": "かぼちゃの魔剣",
+      "icon": "assets/halloween/equip_pumpkin_blade.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 9,
@@ -4280,6 +4496,7 @@
     {
       "id": "halloween_pumpkin_blade",
       "name": "かぼちゃの魔剣",
+      "icon": "assets/halloween/equip_pumpkin_blade.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 13,
@@ -4299,6 +4516,7 @@
     {
       "id": "halloween_witch_mantle",
       "name": "魔女のマント",
+      "icon": "assets/halloween/equip_witch_mantle.png",
       "slot": "armor",
       "rarity": 1,
       "oldCost": 3,
@@ -4320,6 +4538,7 @@
     {
       "id": "halloween_witch_mantle",
       "name": "魔女のマント",
+      "icon": "assets/halloween/equip_witch_mantle.png",
       "slot": "armor",
       "rarity": 2,
       "oldCost": 5,
@@ -4341,6 +4560,7 @@
     {
       "id": "halloween_witch_mantle",
       "name": "魔女のマント",
+      "icon": "assets/halloween/equip_witch_mantle.png",
       "slot": "armor",
       "rarity": 3,
       "oldCost": 6,
@@ -4362,6 +4582,7 @@
     {
       "id": "halloween_witch_mantle",
       "name": "魔女のマント",
+      "icon": "assets/halloween/equip_witch_mantle.png",
       "slot": "armor",
       "rarity": 4,
       "oldCost": 9,
@@ -4383,6 +4604,7 @@
     {
       "id": "halloween_witch_mantle",
       "name": "魔女のマント",
+      "icon": "assets/halloween/equip_witch_mantle.png",
       "slot": "armor",
       "rarity": 5,
       "oldCost": 13,
@@ -4404,6 +4626,7 @@
     {
       "id": "halloween_moon_charm",
       "name": "おばけ月のお守り",
+      "icon": "assets/halloween/equip_moon_charm.png",
       "slot": "accessory",
       "rarity": 1,
       "oldCost": 3,
@@ -4425,6 +4648,7 @@
     {
       "id": "halloween_moon_charm",
       "name": "おばけ月のお守り",
+      "icon": "assets/halloween/equip_moon_charm.png",
       "slot": "accessory",
       "rarity": 2,
       "oldCost": 5,
@@ -4446,6 +4670,7 @@
     {
       "id": "halloween_moon_charm",
       "name": "おばけ月のお守り",
+      "icon": "assets/halloween/equip_moon_charm.png",
       "slot": "accessory",
       "rarity": 3,
       "oldCost": 6,
@@ -4467,6 +4692,7 @@
     {
       "id": "halloween_moon_charm",
       "name": "おばけ月のお守り",
+      "icon": "assets/halloween/equip_moon_charm.png",
       "slot": "accessory",
       "rarity": 4,
       "oldCost": 9,
@@ -4488,6 +4714,7 @@
     {
       "id": "halloween_moon_charm",
       "name": "おばけ月のお守り",
+      "icon": "assets/halloween/equip_moon_charm.png",
       "slot": "accessory",
       "rarity": 5,
       "oldCost": 13,
@@ -4509,6 +4736,7 @@
     {
       "id": "christmas_exchange_candy_sword",
       "name": "サンタのキャンディソード",
+      "icon": "assets/christmas/equip_candy_cane_blade.webp",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 4,
@@ -4530,6 +4758,7 @@
     {
       "id": "christmas_exchange_candy_sword",
       "name": "サンタのキャンディソード",
+      "icon": "assets/christmas/equip_candy_cane_blade.webp",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 6,
@@ -4551,6 +4780,7 @@
     {
       "id": "christmas_exchange_candy_sword",
       "name": "サンタのキャンディソード",
+      "icon": "assets/christmas/equip_candy_cane_blade.webp",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 8,
@@ -4572,6 +4802,7 @@
     {
       "id": "christmas_exchange_candy_sword",
       "name": "サンタのキャンディソード",
+      "icon": "assets/christmas/equip_candy_cane_blade.webp",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 12,
@@ -4593,6 +4824,7 @@
     {
       "id": "christmas_exchange_candy_sword",
       "name": "サンタのキャンディソード",
+      "icon": "assets/christmas/equip_candy_cane_blade.webp",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 17,
@@ -4614,6 +4846,7 @@
     {
       "id": "christmas_exchange_aurora_mantle",
       "name": "聖夜のオーロラマント",
+      "icon": "assets/christmas/equip_aurora_mantle.webp",
       "slot": "armor",
       "rarity": 1,
       "oldCost": 4,
@@ -4635,6 +4868,7 @@
     {
       "id": "christmas_exchange_aurora_mantle",
       "name": "聖夜のオーロラマント",
+      "icon": "assets/christmas/equip_aurora_mantle.webp",
       "slot": "armor",
       "rarity": 2,
       "oldCost": 6,
@@ -4656,6 +4890,7 @@
     {
       "id": "christmas_exchange_aurora_mantle",
       "name": "聖夜のオーロラマント",
+      "icon": "assets/christmas/equip_aurora_mantle.webp",
       "slot": "armor",
       "rarity": 3,
       "oldCost": 8,
@@ -4677,6 +4912,7 @@
     {
       "id": "christmas_exchange_aurora_mantle",
       "name": "聖夜のオーロラマント",
+      "icon": "assets/christmas/equip_aurora_mantle.webp",
       "slot": "armor",
       "rarity": 4,
       "oldCost": 12,
@@ -4698,6 +4934,7 @@
     {
       "id": "christmas_exchange_aurora_mantle",
       "name": "聖夜のオーロラマント",
+      "icon": "assets/christmas/equip_aurora_mantle.webp",
       "slot": "armor",
       "rarity": 5,
       "oldCost": 17,
@@ -4719,6 +4956,7 @@
     {
       "id": "christmas_exchange_winter_charm",
       "name": "工房の冬星チャーム",
+      "icon": "assets/christmas/equip_winter_star_charm.webp",
       "slot": "accessory",
       "rarity": 1,
       "oldCost": 4,
@@ -4740,6 +4978,7 @@
     {
       "id": "christmas_exchange_winter_charm",
       "name": "工房の冬星チャーム",
+      "icon": "assets/christmas/equip_winter_star_charm.webp",
       "slot": "accessory",
       "rarity": 2,
       "oldCost": 6,
@@ -4761,6 +5000,7 @@
     {
       "id": "christmas_exchange_winter_charm",
       "name": "工房の冬星チャーム",
+      "icon": "assets/christmas/equip_winter_star_charm.webp",
       "slot": "accessory",
       "rarity": 3,
       "oldCost": 8,
@@ -4782,6 +5022,7 @@
     {
       "id": "christmas_exchange_winter_charm",
       "name": "工房の冬星チャーム",
+      "icon": "assets/christmas/equip_winter_star_charm.webp",
       "slot": "accessory",
       "rarity": 4,
       "oldCost": 12,
@@ -4803,6 +5044,7 @@
     {
       "id": "christmas_exchange_winter_charm",
       "name": "工房の冬星チャーム",
+      "icon": "assets/christmas/equip_winter_star_charm.webp",
       "slot": "accessory",
       "rarity": 5,
       "oldCost": 17,
@@ -4824,6 +5066,7 @@
     {
       "id": "christmas_candy_cane_blade",
       "name": "聖夜のヒイラギ氷剣",
+      "icon": "assets/christmas/equip_holly_frost_blade.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 4,
@@ -4845,6 +5088,7 @@
     {
       "id": "christmas_candy_cane_blade",
       "name": "聖夜のヒイラギ氷剣",
+      "icon": "assets/christmas/equip_holly_frost_blade.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 6,
@@ -4866,6 +5110,7 @@
     {
       "id": "christmas_candy_cane_blade",
       "name": "聖夜のヒイラギ氷剣",
+      "icon": "assets/christmas/equip_holly_frost_blade.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 8,
@@ -4887,6 +5132,7 @@
     {
       "id": "christmas_candy_cane_blade",
       "name": "聖夜のヒイラギ氷剣",
+      "icon": "assets/christmas/equip_holly_frost_blade.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 12,
@@ -4908,6 +5154,7 @@
     {
       "id": "christmas_candy_cane_blade",
       "name": "聖夜のヒイラギ氷剣",
+      "icon": "assets/christmas/equip_holly_frost_blade.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 17,
@@ -4929,6 +5176,7 @@
     {
       "id": "christmas_aurora_mantle",
       "name": "サンタ王の祝祭マント",
+      "icon": "assets/christmas/equip_santa_royal_cape.png",
       "slot": "armor",
       "rarity": 1,
       "oldCost": 4,
@@ -4950,6 +5198,7 @@
     {
       "id": "christmas_aurora_mantle",
       "name": "サンタ王の祝祭マント",
+      "icon": "assets/christmas/equip_santa_royal_cape.png",
       "slot": "armor",
       "rarity": 2,
       "oldCost": 6,
@@ -4971,6 +5220,7 @@
     {
       "id": "christmas_aurora_mantle",
       "name": "サンタ王の祝祭マント",
+      "icon": "assets/christmas/equip_santa_royal_cape.png",
       "slot": "armor",
       "rarity": 3,
       "oldCost": 8,
@@ -4992,6 +5242,7 @@
     {
       "id": "christmas_aurora_mantle",
       "name": "サンタ王の祝祭マント",
+      "icon": "assets/christmas/equip_santa_royal_cape.png",
       "slot": "armor",
       "rarity": 4,
       "oldCost": 12,
@@ -5013,6 +5264,7 @@
     {
       "id": "christmas_aurora_mantle",
       "name": "サンタ王の祝祭マント",
+      "icon": "assets/christmas/equip_santa_royal_cape.png",
       "slot": "armor",
       "rarity": 5,
       "oldCost": 17,
@@ -5034,6 +5286,7 @@
     {
       "id": "christmas_winter_star_charm",
       "name": "聖なる鈴の首飾り",
+      "icon": "assets/christmas/equip_holy_bell_necklace.png",
       "slot": "accessory",
       "rarity": 1,
       "oldCost": 4,
@@ -5055,6 +5308,7 @@
     {
       "id": "christmas_winter_star_charm",
       "name": "聖なる鈴の首飾り",
+      "icon": "assets/christmas/equip_holy_bell_necklace.png",
       "slot": "accessory",
       "rarity": 2,
       "oldCost": 6,
@@ -5076,6 +5330,7 @@
     {
       "id": "christmas_winter_star_charm",
       "name": "聖なる鈴の首飾り",
+      "icon": "assets/christmas/equip_holy_bell_necklace.png",
       "slot": "accessory",
       "rarity": 3,
       "oldCost": 8,
@@ -5097,6 +5352,7 @@
     {
       "id": "christmas_winter_star_charm",
       "name": "聖なる鈴の首飾り",
+      "icon": "assets/christmas/equip_holy_bell_necklace.png",
       "slot": "accessory",
       "rarity": 4,
       "oldCost": 12,
@@ -5118,6 +5374,7 @@
     {
       "id": "christmas_winter_star_charm",
       "name": "聖なる鈴の首飾り",
+      "icon": "assets/christmas/equip_holy_bell_necklace.png",
       "slot": "accessory",
       "rarity": 5,
       "oldCost": 17,
@@ -5139,6 +5396,7 @@
     {
       "id": "quest_quill_blade",
       "name": "星詠みの羽根剣",
+      "icon": "assets/quest-medal-limited/weapon.png",
       "slot": "weapon",
       "rarity": 1,
       "oldCost": 4,
@@ -5160,6 +5418,7 @@
     {
       "id": "quest_quill_blade",
       "name": "星詠みの羽根剣",
+      "icon": "assets/quest-medal-limited/weapon.png",
       "slot": "weapon",
       "rarity": 2,
       "oldCost": 4,
@@ -5181,6 +5440,7 @@
     {
       "id": "quest_quill_blade",
       "name": "星詠みの羽根剣",
+      "icon": "assets/quest-medal-limited/weapon.png",
       "slot": "weapon",
       "rarity": 3,
       "oldCost": 4,
@@ -5202,6 +5462,7 @@
     {
       "id": "quest_quill_blade",
       "name": "星詠みの羽根剣",
+      "icon": "assets/quest-medal-limited/weapon.png",
       "slot": "weapon",
       "rarity": 4,
       "oldCost": 4,
@@ -5223,6 +5484,7 @@
     {
       "id": "quest_quill_blade",
       "name": "星詠みの羽根剣",
+      "icon": "assets/quest-medal-limited/weapon.png",
       "slot": "weapon",
       "rarity": 5,
       "oldCost": 4,
@@ -5244,6 +5506,7 @@
     {
       "id": "quest_archivist_robe",
       "name": "大司書のローブ",
+      "icon": "assets/quest-medal-limited/armor.png",
       "slot": "armor",
       "rarity": 1,
       "oldCost": 4,
@@ -5265,6 +5528,7 @@
     {
       "id": "quest_archivist_robe",
       "name": "大司書のローブ",
+      "icon": "assets/quest-medal-limited/armor.png",
       "slot": "armor",
       "rarity": 2,
       "oldCost": 4,
@@ -5286,6 +5550,7 @@
     {
       "id": "quest_archivist_robe",
       "name": "大司書のローブ",
+      "icon": "assets/quest-medal-limited/armor.png",
       "slot": "armor",
       "rarity": 3,
       "oldCost": 4,
@@ -5307,6 +5572,7 @@
     {
       "id": "quest_archivist_robe",
       "name": "大司書のローブ",
+      "icon": "assets/quest-medal-limited/armor.png",
       "slot": "armor",
       "rarity": 4,
       "oldCost": 4,
@@ -5328,6 +5594,7 @@
     {
       "id": "quest_archivist_robe",
       "name": "大司書のローブ",
+      "icon": "assets/quest-medal-limited/armor.png",
       "slot": "armor",
       "rarity": 5,
       "oldCost": 4,
@@ -5349,6 +5616,7 @@
     {
       "id": "quest_wisdom_bookmark",
       "name": "知恵のしおり",
+      "icon": "assets/quest-medal-limited/accessory.png",
       "slot": "accessory",
       "rarity": 1,
       "oldCost": 4,
@@ -5370,6 +5638,7 @@
     {
       "id": "quest_wisdom_bookmark",
       "name": "知恵のしおり",
+      "icon": "assets/quest-medal-limited/accessory.png",
       "slot": "accessory",
       "rarity": 2,
       "oldCost": 4,
@@ -5391,6 +5660,7 @@
     {
       "id": "quest_wisdom_bookmark",
       "name": "知恵のしおり",
+      "icon": "assets/quest-medal-limited/accessory.png",
       "slot": "accessory",
       "rarity": 3,
       "oldCost": 4,
@@ -5412,6 +5682,7 @@
     {
       "id": "quest_wisdom_bookmark",
       "name": "知恵のしおり",
+      "icon": "assets/quest-medal-limited/accessory.png",
       "slot": "accessory",
       "rarity": 4,
       "oldCost": 4,
@@ -5433,6 +5704,7 @@
     {
       "id": "quest_wisdom_bookmark",
       "name": "知恵のしおり",
+      "icon": "assets/quest-medal-limited/accessory.png",
       "slot": "accessory",
       "rarity": 5,
       "oldCost": 4,
