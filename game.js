@@ -1,4 +1,4 @@
-import {manaEquipmentStats,manaEquipmentAbility,equipmentManaBudget,ENCHANT_RESOURCE_COST} from './equipment_mana_ratio.js';
+import {manaEquipmentStats,manaEquipmentAbility,manaEquipmentCost,equipmentManaBudget,ENCHANT_RESOURCE_COST} from './equipment_mana_ratio.js';
 import {equipmentChestMarkup} from './equipment_chest_intro.js';
 import {QUEST_MEDAL_IMAGE} from './quest_medal_art.js';
 const LOCAL_ART_PREVIEW = import.meta.env.DEV && new URLSearchParams(location.search).get('art-preview') === '1';
@@ -3870,7 +3870,7 @@ function equipBonus(){
    そうびコスト（レベル＝そうびできる合計コスト上限）
    ========================================================== */
 function equipCost(db, rarity){
-  if(Number(rarity)!==6)return Math.max(1,Math.ceil(Number(db?.cost)||1));
+  if(Number(rarity)!==6)return manaEquipmentCost(db,rarity);
   if(db?.fixedCost)return Math.max(1,db.cost || 1);
   if (db && db.id && db.id.startsWith('anc_')) return Math.max(1, db.cost || 1);
   return Math.max(1, Math.ceil((db.cost || 1) * (RARITY_MULTI[rarity] || 1)));

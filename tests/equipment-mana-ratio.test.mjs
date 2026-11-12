@@ -1,13 +1,16 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {equipmentCatalog} from '../scripts/lib/equipment-mana-catalog.mjs';
-import {manaEquipmentStats,manaEquipmentAbility,equipmentManaBudget,equipmentResources,ENCHANT_RESOURCE_COST,allocateEquipmentResources} from '../equipment_mana_ratio.js';
+import {manaEquipmentStats,manaEquipmentAbility,equipmentManaBudget,manaEquipmentCost,equipmentResources,ENCHANT_RESOURCE_COST,allocateEquipmentResources} from '../equipment_mana_ratio.js';
 const all=equipmentCatalog();
-test('cost one SP examples and rarity increments match the specification',()=>{
+test('rarity raises the cost first, then cost and rarity determine the SP budget',()=>{
  for(const key of ['atk','def','spd','mp','hp']){
   const db={cost:1,slot:'weapon',stat:{[key]:1}};
-  for(const [rarity,resources] of [[1,2],[2,3],[3,4],[4,5]])assert.equal(manaEquipmentStats(db,rarity)[key],resources*(key==='hp'?4:1));
-  assert.equal(equipmentResources(manaEquipmentStats(db,5))+2,5);
+  for(const [rarity,resources] of [[1,2],[2,5],[3,6],[4,9]])assert.equal(manaEquipmentStats(db,rarity)[key],resources*(key==='hp'?4:1));
+  assert.equal(equipmentResources(manaEquipmentStats(db,5))+2,13);
  }
+});
+test('all regular equipment, including former fixed-cost event rewards, uses the rarity multiplier',()=>{
+ for(const db of all)for(let r=1;r<=5;r++)assert.equal(manaEquipmentCost(db,r),Math.max(1,Math.ceil(db.cost*({1:1,2:1.5,3:2,4:3,5:4.2}[r]))));
 });
 test('every template and enchant combination spends exactly its permitted budget',()=>{
  for(const db of all.filter(d=>!d.id.startsWith('anc_')&&!d.assist))for(let rarity=1;rarity<=5;rarity++)for(const requested of [null,...Object.keys(ENCHANT_RESOURCE_COST)]){
@@ -18,7 +21,10 @@ test('every template and enchant combination spends exactly its permitted budget
 });
 test('over-budget absorption is removed, affordable absorption survives, and no source is mutated',()=>{
  const db={id:'w1',cost:1,slot:'weapon',stat:{atk:2}};const before=JSON.stringify(db);
- assert.equal(manaEquipmentAbility(db,5,'lifesteal'),null);assert.equal(manaEquipmentStats(db,5,'lifesteal').atk,5);
+ assert.deepEqual([1,2,3,4,5].map(r=>manaEquipmentCost(db,r)),[1,2,2,3,5]);
+ assert.equal(manaEquipmentAbility(db,5,'lifesteal'),'lifesteal');
+ assert.equal(manaEquipmentStats(db,5,'lifesteal').atk,1);
+ assert.equal(manaEquipmentAbility(db,4,'lifesteal'),null);assert.equal(manaEquipmentStats(db,4,'lifesteal').atk,9);
  assert.equal(manaEquipmentAbility({...db,cost:5},5,'lifesteal'),'lifesteal');assert.equal(JSON.stringify(db),before);
  assert.deepEqual(allocateEquipmentResources({atk:7,spd:1},8),{atk:7,spd:1});
 });

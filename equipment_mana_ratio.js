@@ -1,13 +1,18 @@
 // SP-equivalent equipment budgets. ★6 is deliberately handled by the legacy
 // caller, including its awakening growth and cost rules.
+export const MANA_COST_MULTIPLIER=Object.freeze({1:1,2:1.5,3:2,4:3,5:4.2});
 export const MANA_RARITY_BONUS=Object.freeze({1:0,2:1,3:2,4:3,5:3});
 export const ENCHANT_RESOURCE_COST=Object.freeze({crit_up:2,guard:2,mp_save:2,power:6,lifesteal:12});
 export const ENCHANT_TIER=Object.freeze({crit_up:1,guard:1,mp_save:1,power:2,lifesteal:3});
 const UNITS=Object.freeze({atk:1,def:1,spd:1,mp:1,hp:4});
 export function equipmentResources(stat){return Object.entries(stat||{}).reduce((sum,[key,value])=>sum+(UNITS[key]?Number(value)/UNITS[key]:0),0);}
+export function manaEquipmentCost(db,rarity){
+ if(Number(rarity)===6)return null;
+ return Math.max(1,Math.ceil((Number(db?.cost)||1)*(MANA_COST_MULTIPLIER[rarity]||1)));
+}
 export function equipmentManaBudget(db,rarity){
  if(Number(rarity)===6)return null;
- return 2*Math.max(1,Math.ceil(Number(db?.cost)||1))+(MANA_RARITY_BONUS[rarity]??0);
+ return 2*manaEquipmentCost(db,rarity)+(MANA_RARITY_BONUS[rarity]??0);
 }
 // Integer SP units, largest remainder, stable stat-key order for ties. This
 // preserves each template's identity while spending exactly the stat budget.

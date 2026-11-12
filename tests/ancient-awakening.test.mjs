@@ -36,7 +36,7 @@ test('actual equipment calculations restore original stats at 50 and scale numer
    assert.ok(ctx.calcEquipStat(stat,6,{rarity:6})[key]<ctx.calcEquipStat(stat,6,{rarity:6,awakeningLevel:50})[key]);
   }
  }
- assert.equal(ctx.calcEquipStat({atk:10},5,null,{cost:5,slot:'weapon',stat:{atk:10}}).atk,11);
+ assert.equal(ctx.calcEquipStat({atk:10},5,null,{cost:5,slot:'weapon',stat:{atk:10}}).atk,43);
  ctx.G={equipment:{weapon:{uid:1},armor:{uid:2}},ownedEquips:[{id:'anc_w3',uid:1,rarity:6},{id:'anc_a2',uid:2,rarity:6}]};
  vm.runInContext(source.slice(source.indexOf('function equippedAncientScale('),source.indexOf('function rollAncientBlueprintReward(')),ctx);
  assert.equal(ctx.ancientCritBonus(),.06);assert.equal(ctx.ancientDamageReduction(100),94);

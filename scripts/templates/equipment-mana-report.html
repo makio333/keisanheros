@@ -1,15 +1,15 @@
 <!doctype html>
 <html lang="ja">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>装備比較：旧ステータス → 最新調整案</title>
+<title>装備比較：旧ステータス → 最新ステータス</title>
 <style>
 body{font:15px/1.65 system-ui;background:#111827;color:#e5e7eb;margin:24px}h1{font-size:24px;color:#fcd34d}a{color:#93c5fd}header,nav{max-width:1400px}p{margin:8px 0}.notice{color:#c4b5fd}details{margin:12px 0}summary{cursor:pointer}nav{position:sticky;top:0;z-index:4;background:#111827;padding:10px 0;display:flex;gap:10px;flex-wrap:wrap}select,input{padding:8px;border-radius:6px}.wrap{overflow:auto;max-height:70dvh;isolation:isolate;border:1px solid #374151}table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px}th,td{padding:10px;border-right:1px solid #374151;border-bottom:1px solid #374151;vertical-align:top}thead th{position:sticky;top:0;z-index:2;background:#1f2937;box-shadow:0 1px 0 #64748b;white-space:nowrap}.increase{color:#60a5fa}.decrease{color:#f87171}.unchanged,.old,small{color:#9ca3af}small{display:block}.changes{min-width:110px}.change-line{white-space:nowrap}.equipment-label{display:flex;align-items:center;gap:12px;min-width:220px}.report-equipment-icon{width:64px;height:64px;flex:0 0 64px;box-sizing:border-box;display:grid;place-items:center;border:2px solid var(--tone);border-radius:8px;background:#20283a}.report-equipment-icon img{width:52px;height:52px;object-fit:contain;image-rendering:pixelated}.report-equipment-icon span{font-size:32px}@media(max-width:600px){body{margin:12px}.wrap{max-height:65dvh}h1{font-size:20px}}
 </style>
 <header>
-<h1>装備比較：旧ステータス → 最新調整案</h1>
-<p class="notice">最新調整案の試算です。ゲーム内の性能にはまだ適用していません。</p>
-<p>元の性能を維持する案なので、能力値は旧ステータスと同じです。強さに合わせてコストを再計算し、エンチャントも攻撃力を削らずコストで負担します。★6は変更しません。</p>
-<details><summary>算出ルール</summary><p>最新コスト＝切り上げ［（能力値SP＋エンチャントSP）÷（2×レア度優遇）］。基本コストを下限とし、優遇は★1＝1.00、★2＝1.05、★3＝1.10、★4＝1.15、★5＝1.20です。HP4＝SP1、他能力1＝SP1。旧能力値と旧レア倍率をそのまま使います。</p><p>エンチャントはTier1＝2、Tier2＝6、Tier3＝12SP。旧ランダム効果を比較するときは下の選択欄で指定してください。固定効果・★6は指定の対象外です。標準装備の比較で、個人セーブ・管理者のカスタム値は含みません。</p></details>
+<h1>装備比較：旧ステータス → 最新ステータス</h1>
+<p class="notice">レア度でコストが上がるマナレシオ方式を、ローカルゲームへ適用済みです。</p>
+<p>コストをレア度で増やし、そのコストに見合うリソースを能力値とエンチャントへ配分します。★6の性能・コスト・覚醒は変更しません。</p>
+<details><summary>算出ルール</summary><p>要求コスト＝切り上げ［基本コスト×レア度倍率］。★1〜5の倍率は1 / 1.5 / 2 / 3 / 4.2です。通常・限定・イベント装備共通で適用します。</p><p>総リソース＝要求コスト×2＋レア度ボーナス（★1〜5：0 / 1 / 2 / 3 / 3SP）。HP4＝SP1、攻撃・守備・素早さ・MPは1＝SP1。元の配分比を保ち、整数SPで配分します。</p><p>エンチャントはTier1＝2、Tier2＝6、Tier3＝12SPを総予算から控除し、残りを能力値へ。予算超過の効果は外して全額を能力値へ配分します。旧ランダム効果の比較は下の選択欄で指定できます。固定効果・★6は選択の対象外です。標準装備の比較で、個人セーブ・管理者のカスタム値は含みません。</p></details>
 <p><a href="equipment_mana_ratio_changes.csv" download>旧・最新比較CSV</a> ／ <a href="equipment_mana_ratio_enchant_variants.csv" download>エンチャント別比較CSV</a></p>
 <p>数値の増加＝<strong class="increase">青</strong> ／ 減少＝<strong class="decrease">赤</strong> ／ 変化なし＝<strong class="unchanged">灰色</strong></p>
 </header>
