@@ -90,5 +90,5 @@ body:has(#screen-battle.active[data-adventure-fit=stacked]) #volume-control-cont
 #screen-battle[data-adventure-fit] #software-keyboard,#screen-battle[data-adventure-fit] .kana-board-content,#screen-battle[data-adventure-fit] .kana-board-section{height:auto!important;max-height:none!important;flex:none!important;overflow:visible!important}
 #screen-battle[data-adventure-fit] #software-keyboard .key-btn{width:40px!important;height:40px!important;min-height:40px!important;aspect-ratio:1!important}
 #screen-battle[data-adventure-fit] #kanji-challenge:not(.hidden){display:flex!important}
-#screen-battle[data-adventure-fit] #battle-player-window .status-header-row{display:flex!important;align-items:center;gap:5px;height:44px;overflow:hidden}
+#screen-battle[data-adventure-fit] #battle-player-window .status-header-row{display:flex!important;flex-direction:row!important;align-items:center;gap:5px;height:44px;overflow:hidden}
 #screen-battle[data-adventure-fit] #battle-player-window .battle-status-avatar{order:-1;flex:none;width:28px!important;height:32px!important;min-height:0!important;max-height:32px!important;margin:0!important;overflow:hidden}
