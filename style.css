@@ -7747,13 +7747,13 @@ body:has(.raid-result-overlay) :is(#analog-clock-widget, #menu-container, #volum
 .equip-unified-main .equipment-card-icon { width:64px; height:64px; flex:0 0 64px; box-sizing:border-box; border:2px solid var(--equip-tone); border-radius:8px; background-clip:border-box; -webkit-text-fill-color:initial; animation:none; filter:none; }
 .equip-unified-header .rarity-label { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
 .equip-detail-rarity-stars { font-size:12px; letter-spacing:1px; }
-.equipment-card-art { position:absolute; inset:0; z-index:1; display:grid; place-items:center; overflow:hidden; min-width:0; min-height:0; border-radius:5px; background:radial-gradient(ellipse at 50% 48%,color-mix(in srgb,var(--equip-tone,#4da6ff) 20%,transparent),transparent 70%); pointer-events:none; }
-.equipment-card-art img { position:static; display:block; width:74%!important; height:74%!important; min-width:0; min-height:0; max-width:100%; max-height:100%; object-fit:contain!important; object-position:center; transform:translate(var(--visual-x,0%),var(--visual-y,0%)); image-rendering:pixelated; filter:drop-shadow(0 3px 2px #0008); }
-.equipment-card-category { position:absolute; top:6px; left:6px; z-index:3; width:26px!important; height:26px!important; object-fit:contain!important; pointer-events:none; }
+:is(.equip-grid-cell, .equipment-card-icon) > .equipment-card-art { position:absolute; inset:0; z-index:1; display:grid; place-items:center; overflow:hidden; min-width:0; min-height:0; border-radius:5px; background:radial-gradient(ellipse at 50% 48%,color-mix(in srgb,var(--equip-tone,#4da6ff) 20%,transparent),transparent 70%); pointer-events:none; }
+.equipment-card-art img { position:static; display:block; margin:0; width:74%!important; height:74%!important; min-width:0; min-height:0; max-width:100%; max-height:100%; object-fit:contain!important; object-position:center; transform:translate(var(--visual-x,0%),var(--visual-y,0%)); image-rendering:pixelated; filter:drop-shadow(0 3px 2px #0008); }
+:is(.equip-grid-cell, .equipment-card-icon) > .equipment-card-category { position:absolute; margin:0; top:6px; left:6px; z-index:3; width:26px!important; height:26px!important; object-fit:contain!important; pointer-events:none; }
 .equipment-card-category { transform:translate(-4px,-4px); }
 .equipment-card-icon .equipment-card-category { top:3px; left:3px; width:20px!important; height:20px!important; }
-.equipment-card-stars { position:absolute; right:2px; bottom:2px; left:2px; z-index:3; display:grid; place-items:center; height:9px; color:var(--rarity-star,#fff0a8); font-size:9px; line-height:1; letter-spacing:0; text-align:center; white-space:nowrap; text-shadow:0 1px 2px #000; pointer-events:none; }
-.equip-grid-cell .equipment-card-stars { bottom:3px; }
+:is(.equip-grid-cell, .equipment-card-icon) > .equipment-card-stars { position:absolute; right:2px; bottom:2px; left:2px; z-index:3; display:grid; place-items:center; height:9px; color:var(--rarity-star,#fff0a8); font-size:9px; line-height:1; letter-spacing:0; text-align:center; white-space:nowrap; text-shadow:0 1px 2px #000; pointer-events:none; }
+.equip-grid-cell > .equipment-card-stars { bottom:3px; }
 .equip-grid-cell.rarity-6::after, .equipment-card-icon.rarity-6::after { content:""; position:absolute; inset:3px; z-index:2; border:1px solid #ffd09a80; border-radius:4px; animation:none; pointer-events:none; }
 .equip-grid-cell:hover, .equip-grid-cell:focus-visible { background: rgba(255,255,255,.2); transform: scale(1.06); z-index: 2; }
 .equip-grid-cell.is-equipped { box-shadow: 0 0 0 2px #5fe0ff; }

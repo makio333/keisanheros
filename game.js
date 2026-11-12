@@ -78,8 +78,7 @@ function showTooltip(e, html) {
   if (equipmentCard) globalTooltip.dataset.equipRarity = equipmentCard.dataset.equipRarity;
   else delete globalTooltip.dataset.equipRarity;
   globalTooltip.style.display = 'block';
-  centerEquipmentCardArtwork(globalTooltip);
-  alignEquipmentCategoryIcons(globalTooltip);
+  finalizeEquipmentCards(globalTooltip);
   updateTooltipPos(e);
 }
 function hideTooltip() {
@@ -9337,6 +9336,7 @@ function centerEquipmentCardArtwork(root){
         equipmentArtworkBounds.set(image.currentSrc,bounds);
       }
       const box=image.getBoundingClientRect();
+      if(!box.width||!box.height)return; // Hidden tabs are aligned when opened.
       const scale=Math.min(box.width/bounds.width,box.height/bounds.height);
       const dx=(bounds.width/2-(bounds.left+bounds.right)/2)*scale/box.width*100;
       const dy=(bounds.height/2-(bounds.top+bounds.bottom)/2)*scale/box.height*100;
@@ -9345,6 +9345,13 @@ function centerEquipmentCardArtwork(root){
     };
     if(image.complete)requestAnimationFrame(align);else image.addEventListener('load',align,{once:true});
   });
+}
+
+// All equipment surfaces use the room artwork and category alignment rules.
+function finalizeEquipmentCards(root){
+  if(!root)return;
+  centerEquipmentCardArtwork(root);
+  alignEquipmentCategoryIcons(root);
 }
 
 function setEquipListMsg(text){
@@ -9392,7 +9399,7 @@ function renderEquipmentSlots(){
     }
   }
   $('equip-cost-bar').innerHTML = costBarHtml(usedCost(), costCap());
-  EQUIP_SLOTS.forEach(slot=>{centerEquipmentCardArtwork($(`slot-${slot}`));alignEquipmentCategoryIcons($(`slot-${slot}`));});
+  EQUIP_SLOTS.forEach(slot=>finalizeEquipmentCards($(`slot-${slot}`)));
   renderEquipList();
 }
 
@@ -9493,8 +9500,7 @@ function renderEquipList(){
       }
     };
     grid.appendChild(cell);
-    centerEquipmentCardArtwork(cell);
-    alignEquipmentCategoryIcons(cell);
+    finalizeEquipmentCards(cell);
   }
 }
 
@@ -10548,6 +10554,7 @@ function setGachaView(view) {
   $('christmas-equip-gacha-section').classList.toggle('hidden', gachaView !== 'christmas-items');
   $('btn-gacha-tab-christmas-skins').setAttribute('aria-selected', String(gachaView === 'christmas-skins'));
   $('btn-gacha-tab-christmas-items').setAttribute('aria-selected', String(gachaView === 'christmas-items'));
+  finalizeEquipmentCards($('screen-gacha'));
 }
 
 function showGacha(view){
@@ -10576,6 +10583,7 @@ function renderEquipmentGachaControls() {
   $('equipment-gacha-featured').innerHTML = LIMITED_EQUIP_DB.map(entry).join('');
   $('equipment-gacha-collection').innerHTML = EQUIP_DB.filter(db => !db.assist).map(entry).join('');
   document.querySelectorAll('.equipment-gacha-preview').forEach(button => {
+    finalizeEquipmentCards(button);
     bindEquipDetailTooltip(button, getEquipTemplate(button.dataset.equipId), { rarity: 3 });
   });
 }
@@ -10597,6 +10605,7 @@ function renderChristmasEquipmentGachaControls() {
   $('christmas-equipment-gacha-featured').innerHTML = CHRISTMAS_EQUIP_DB.filter(db=>!christmasExchangeOnly(db.id)).map(entry).join('');
   $('christmas-equipment-gacha-collection').innerHTML = [...LIMITED_EQUIP_DB,...EQUIP_DB.filter(db => !db.assist)].map(entry).join('');
   document.querySelectorAll('#christmas-equip-gacha-section .equipment-gacha-preview').forEach(button => {
+    finalizeEquipmentCards(button);
     bindEquipDetailTooltip(button,getEquipTemplate(button.dataset.equipId),{rarity:3});
   });
 }
