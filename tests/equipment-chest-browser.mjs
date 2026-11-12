@@ -9,7 +9,13 @@ try{
  async function finish(count){
   await p.locator('.gacha-reveal-overlay').waitFor();
   for(let i=0;i<count;i++)await p.locator('.gacha-reveal-card').click();
-  await p.locator('.gacha-reveal-summary').waitFor();assert.equal(await p.locator('.gacha-reveal-summary .item-card').count(),count);
+  await p.locator('.gacha-reveal-summary').waitFor();
+  await p.waitForFunction(()=>[...document.querySelectorAll('.gacha-reveal-summary .equipment-card-art img')].every(i=>i.complete&&i.naturalWidth>0&&i.getBoundingClientRect().width>=50&&i.getBoundingClientRect().height>=50));
+  await p.waitForFunction(()=>[...document.querySelectorAll('.gacha-reveal-summary .equipment-card-icon')].every(n=>n.getBoundingClientRect().width>=79.9&&n.getBoundingClientRect().height>=79.9));
+  const frames=await p.locator('.gacha-reveal-summary .equipment-card-icon').evaluateAll(ns=>ns.map(n=>({w:n.getBoundingClientRect().width,h:n.getBoundingClientRect().height})));
+  for(const frame of frames)assert.ok(frame.w>=79.9&&frame.h>=79.9,JSON.stringify(frame));
+  await p.screenshot({path:out+`/summary-${count}.png`});
+  assert.equal(await p.locator('.gacha-reveal-summary .item-card').count(),count);
   await p.locator('#btn-gacha-reveal-close').click();await p.locator('.gacha-reveal-overlay').waitFor({state:'detached'});
  }
  await p.evaluate(()=>latestQA.gacha('items'));const before=await p.evaluate(()=>({n:latestQA.state().ownedEquips.length,g:latestQA.state().player.gold}));
@@ -24,7 +30,7 @@ try{
  await chest.waitFor({state:'detached'});assert.deepEqual(await p.evaluate(()=>window.chestPhases),['falling','landed','opening','flash']);
  await finish(1);assert.equal(await p.evaluate(()=>latestQA.state().ownedEquips.length),before.n+1);
  await p.setViewportSize({width:390,height:844});await p.evaluate(()=>latestQA.gacha('christmas-items'));const owned=await p.evaluate(()=>latestQA.state().ownedEquips.length);
- await p.locator('#btn-christmas-gacha-6').click();await chest.waitFor();await p.locator('.skin-gacha-skip').click();await finish(6);await p.waitForTimeout(2400);assert.equal(await p.locator('.gacha-reveal-overlay').count(),0);assert.equal(await p.evaluate(()=>latestQA.state().ownedEquips.length),owned+6);
+ await p.locator('#btn-christmas-gacha-13').click();await chest.waitFor();await p.locator('.skin-gacha-skip').click();await finish(13);await p.waitForTimeout(2400);assert.equal(await p.locator('.gacha-reveal-overlay').count(),0);assert.equal(await p.evaluate(()=>latestQA.state().ownedEquips.length),owned+13);
  await p.emulateMedia({reducedMotion:'reduce'});await p.evaluate(()=>latestQA.gacha('items'));await p.locator('#btn-gacha-1').click();await p.locator('.gacha-reveal-overlay').waitFor();assert.equal(await chest.count(),0);await finish(1);
- assert.deepEqual(errors,[]);console.log('PASS: drop -> land -> open -> flash -> existing cards/summary; Christmas six-pull skip once; reduced motion; no duplicate rewards');
+ assert.deepEqual(errors,[]);console.log('PASS: drop -> land -> open -> flash -> existing cards/summary; Christmas thirteen-pull skip once; reduced motion; no duplicate rewards');
 }finally{await b.close();}

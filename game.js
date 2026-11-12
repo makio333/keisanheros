@@ -6469,8 +6469,10 @@ function iconHtml(icon, sizePx){
 function itemCardBodyHtml(res, iconSize){
   const ability = res.ability ? getAbility(res.ability) : null;
   const rarityClass = res.rarity ? ` rarity-${res.rarity}` : '';
+  const frameSize=Math.max(80,Number(iconSize)+16);
+  const frameStyle=res.kind==='equip'?` style="width:${frameSize}px;height:${frameSize}px;flex-shrink:0;box-sizing:border-box;padding:0"`:'';
   return `
-    <div class="item-card-icon${rarityClass}${res.kind==='equip'?' equipment-card-icon':''}">${res.kind==='equip'&&getEquipTemplate(res.id)?equipmentCardLayers(getEquipTemplate(res.id),res.rarity,iconSize):iconHtml(res.icon,iconSize)}</div>
+    <div class="item-card-icon${rarityClass}${res.kind==='equip'?' equipment-card-icon':''}"${frameStyle}>${res.kind==='equip'&&getEquipTemplate(res.id)?equipmentCardLayers(getEquipTemplate(res.id),res.rarity,iconSize):iconHtml(res.icon,iconSize)}</div>
     <div class="item-card-name${rarityClass}">${res.count ? res.name.replace(/\s*[×✕]\s*\d+\s*$/, '') : res.name}${res.count > 1 ? ` ×${res.count}` : ''}</div>
     ${res.rarity ? `<div class="item-card-stars${rarityClass}">${RARITY_NAME[res.rarity] || res.rarity}</div>` : ''}
     ${res.kind==='christmas-present'?`<p class="christmas-recovered-total">もっている数：${christmasPresentBalance(G)}個</p>`:''}
@@ -6505,6 +6507,7 @@ function playItemRevealSequence(items, opts){
       ${itemCardBodyHtml(res, 72)}
       <div class="gacha-reveal-tap">タップで つぎへ</div>
     `;
+    finalizeEquipmentCards(card);
     void card.offsetWidth;
     card.classList.add('gacha-reveal-flip');
     if (res.kind === 'equip') {
@@ -6532,6 +6535,7 @@ function playItemRevealSequence(items, opts){
         <div class="item-card-grid">${cardsHtml}</div>
         <button class="btn btn-primary" id="btn-gacha-reveal-close">とじる</button>
       </div>`;
+      finalizeEquipmentCards(overlay);
       overlay.querySelectorAll('.item-card').forEach((element, index) => {
         const res = items[index];
         if (res.kind === 'equip') {
