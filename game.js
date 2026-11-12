@@ -3969,16 +3969,7 @@ function updateHud(){
     ensureTestModeSupplies();
   }
   renderAwakeningHud();
-  const town = $('town-map');
-  if (town) {
-    const background = getAvatarBackground(G.avatarBackground);
-    const image = background.image || (background.id === 'default' ? '画像/home_town_v2.png' : null);
-    const townImage = town.querySelector(':scope > .town-map-img');
-    if (townImage && townImage.getAttribute('src') !== (image || '画像/home_town_v2.png')) townImage.src = image || '画像/home_town_v2.png';
-    town.style.setProperty('--mobile-home-background',image ? `url("${av(image)}")` : 'none');
-    town.style.setProperty('--mobile-home-color',background.color);
-    town.dataset.mobileBackground = background.id;
-  }
+  renderHomeBackground();
   const p = G.player;
 
   // バトル画面、拠点、自分の部屋のステータスウィンドウ（およびアバター等）更新
@@ -12318,14 +12309,28 @@ function isChristmasActive(now = Date.now()) {
 function renderChristmasEntry() {
   const active = isChristmasActive();
   $('hotspot-christmas')?.classList.toggle('hidden', !active);
-  const town = $('town-map');
-  const image = town?.querySelector('.town-map-img');
-  if (image) {
-    const background = active ? CHRISTMAS_EVENT.homeBackground : '画像/home_town_v2.png';
-    if (image.getAttribute('src') !== background) image.setAttribute('src', background);
-    image.alt = active ? 'オーロラと灯りに彩られた夜のクリスマス拠点' : '噴水広場と工房が並ぶ拠点の街';
+  renderHomeBackground();
+}
+
+// The map image and portrait CSS backdrop must resolve the same seasonal choice.
+function renderHomeBackground(){
+  if(!G)return;
+  const town=$('town-map');
+  if(!town)return;
+  const active=isChristmasActive();
+  const selected=getAvatarBackground(G.avatarBackground);
+  const background=active ? CHRISTMAS_EVENT.homeBackground
+    : selected.image || (selected.id==='default' ? '画像/home_town_v2.png' : null);
+  const image=town.querySelector(':scope > .town-map-img');
+  if(image){
+    const src=av(background || '画像/home_town_v2.png');
+    if(image.getAttribute('src')!==src)image.src=src;
+    image.alt=active ? 'オーロラと灯りに彩られた夜のクリスマス拠点' : '拠点の街';
   }
-  town?.classList.toggle('christmas-home', active);
+  town.style.setProperty('--mobile-home-background',background ? `url("${av(background)}")` : 'none');
+  town.style.setProperty('--mobile-home-color',active ? '#102b43' : selected.color);
+  town.dataset.mobileBackground=active ? 'christmas' : selected.id;
+  town.classList.toggle('christmas-home',active);
 }
 
 const HALLOWEEN_GACHA_PRIZES = [

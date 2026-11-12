@@ -326,25 +326,25 @@
           <div id="home-tickets" class="home-tickets"></div>
         </div>
         <button id="hotspot-training" class="town-hotspot" style="left:13%; top:10%;">
-          <span class="hotspot-tag">🏹 修練場</span>
+          <span class="hotspot-tag"><span class="town-service-icon service-training" aria-hidden="true"></span><span>修練場</span></span>
         </button>
         <button id="hotspot-item-shop" class="town-hotspot" style="left:35%; top:66%;">
-          <span class="hotspot-tag">🧪 道具屋</span>
+          <span class="hotspot-tag"><span class="town-service-icon service-item-shop" aria-hidden="true"></span><span>道具屋</span></span>
         </button>
         <button id="hotspot-weapon-shop" class="town-hotspot" style="left:76%; top:57%;">
-          <span class="hotspot-tag">⚔ 武器屋</span>
+          <span class="hotspot-tag"><span class="town-service-icon service-weapon-shop" aria-hidden="true"></span><span>武器屋</span></span>
         </button>
         <button id="hotspot-status" class="town-hotspot" style="left:31%; top:54%;">
-          <span class="hotspot-tag">🏠 自分の部屋</span>
+          <span class="hotspot-tag"><span class="town-service-icon service-status" aria-hidden="true"></span><span>自分の部屋</span></span>
         </button>
         <button id="hotspot-gacha" class="town-hotspot" style="left:50%; top:49%;">
-          <span class="hotspot-tag">🎰 ガチャ</span>
+          <span class="hotspot-tag"><span class="town-service-icon service-gacha" aria-hidden="true"></span><span>ガチャ</span></span>
         </button>
         <button id="hotspot-synthesis" class="town-hotspot" style="left:32%; top:31%;">
-          <span class="hotspot-tag">🌀 合成</span>
+          <span class="hotspot-tag"><span class="town-service-icon service-synthesis" aria-hidden="true"></span><span>合成</span></span>
         </button>
         <button id="hotspot-quest-board" class="town-hotspot" style="left:83%; top:30%;">
-          <span class="hotspot-tag">📋 サブクエスト</span>
+          <span class="hotspot-tag"><span class="town-service-icon service-quest-board" aria-hidden="true"></span><span>サブクエスト</span></span>
         </button>
         <button id="hotspot-raid-boss" class="town-hotspot" style="left:75%; top:15%;">
           <span class="hotspot-tag"><img class="raid-town-icon" src="assets/raid/raid_boss_halloween_moon_wraith.png" alt="" width="32" height="32"><span>レイドボス</span></span>
@@ -504,7 +504,7 @@
       <div class="gacha-page">
         <header class="gacha-page-header">
           <button id="btn-gacha-back" class="window-nav-btn window-back-btn">← もどる</button>
-          <h2>ガチャ</h2>
+          <h2><span class="town-service-icon service-gacha" aria-hidden="true"></span> ガチャ</h2>
           <div class="gacha-wallet"><span>所持ゴールド</span><strong><b id="gacha-current-gold">0</b> G</strong></div>
         </header>
         <div class="gacha-page-tabs" role="tablist" aria-label="ガチャの種類">
@@ -616,7 +616,7 @@
     <section id="screen-synthesis" class="screen">
       <div class="panel synthesis-panel">
         <button id="btn-synthesis-back" class="window-nav-btn window-back-btn">← もどる</button>
-        <h2>🌀 装備の合成</h2>
+        <h2><span class="town-service-icon service-synthesis" aria-hidden="true"></span> 装備の合成</h2>
         <p id="synthesis-step" class="flavor"></p>
         <div id="synthesis-recipe" class="synthesis-recipe"></div>
         <div id="synthesis-list" class="synthesis-grid"></div>
@@ -624,7 +624,7 @@
     </section>
     <section id="screen-synthesis-calc" class="screen">
       <div class="panel synthesis-panel synthesis-calc-panel">
-        <h2>🌀 合成のけいさん</h2>
+        <h2><span class="town-service-icon service-synthesis" aria-hidden="true"></span> 合成のけいさん</h2>
         <div id="synthesis-calc-recipe" class="synthesis-recipe"></div>
         <p id="synthesis-calc-progress" class="flavor" role="status"></p>
         <div id="synthesis-challenge" class="challenge-area"></div>
@@ -701,7 +701,7 @@
       <div class="quest-board-wood" role="dialog" aria-labelledby="quest-board-title">
         <header class="quest-board-header">
           <button id="btn-quest-board-back" class="window-nav-btn window-back-btn" type="button">← もどる</button>
-          <h2 id="quest-board-title" class="quest-board-heading">＊サブクエストボード＊</h2>
+          <h2 id="quest-board-title" class="quest-board-heading"><span class="town-service-icon service-quest-board" aria-hidden="true"></span> サブクエストボード</h2>
           <button id="quest-medal-count" class="quest-medal-count" type="button" aria-haspopup="dialog" aria-label="クエストメダル交換所をひらく"></button>
         </header>
         <div id="quest-subject-tabs" class="quest-subject-tabs" role="tablist" aria-label="サブクエストの教科"><button type="button" class="btn" role="tab" data-subject="math" aria-selected="true">🧮 算数</button><button type="button" class="btn" role="tab" data-subject="reading" aria-selected="false">📖 国語</button></div>
@@ -718,7 +718,7 @@
             <button id="btn-status-back" class="btn room-back-btn">← 🚪 へやを出る</button>
 
             <div class="room-sidebar-header">
-              <span class="room-sidebar-icon">🏠</span>
+              <span class="room-sidebar-icon town-service-icon service-status" aria-hidden="true"></span>
               <span class="room-sidebar-title">自分の部屋</span>
             </div>
 
@@ -849,7 +849,7 @@
     <section id="screen-item-shop" class="screen">
       <div class="panel" style="position: relative;">
         <button id="btn-item-shop-back" class="window-nav-btn window-back-btn">← もどる</button>
-        <h2>＊どうぐや＊</h2>
+        <h2><span class="town-service-icon service-item-shop" aria-hidden="true"></span> どうぐや</h2>
         <p class="flavor">ゴールドで かいふくアイテムを かおう！</p>
         <div class="gold-badge"><span class="gold-badge-icon">💰</span><span id="item-shop-gold" class="gold-badge-num">0</span><span class="gold-badge-unit">G</span></div>
         <div id="item-shop-list" class="item-card-grid"></div>
@@ -860,7 +860,7 @@
     <section id="screen-weapon-shop" class="screen">
       <div class="panel" style="position: relative;">
         <button id="btn-weapon-shop-back" class="window-nav-btn window-back-btn">← もどる</button>
-        <h2>＊ぶきや＊</h2>
+        <h2><span class="town-service-icon service-weapon-shop" aria-hidden="true"></span> ぶきや</h2>
         <p class="flavor">ゴールドで ぶき・ぼうぐを かおう！</p>
         <div class="gold-badge"><span class="gold-badge-icon">💰</span><span id="weapon-shop-gold" class="gold-badge-num">0</span><span class="gold-badge-unit">G</span></div>
         <div id="weapon-shop-tabs" class="shop-tabs"></div>
@@ -882,7 +882,7 @@
     <section id="screen-skills" class="screen">
       <div class="panel" style="position: relative;">
         <button id="btn-skills-back" class="window-nav-btn window-back-btn">← もどる</button>
-        <h2>＊しゅぎょう＊</h2>
+        <h2><span class="town-service-icon service-training" aria-hidden="true"></span> しゅぎょう</h2>
         <button class="btn btn-primary" style="margin-bottom:12px; font-size:18px; padding:12px; width:100%;" onclick="openUnifiedCodeEntry()">🔑 プリントの あんごうを入力</button>
         <p class="flavor">しゅぎょうで けいさんに せいかいすると とくぎを マスター！<br>しゅぎょうの けいさんの しゅるいと せんとうでの はつどうは リンクしている。</p>
         <div id="skill-list" class="skill-list"></div>
@@ -1389,7 +1389,7 @@
 <div id="result-overlay" class="hidden">
   <h2 id="result-text"></h2>
 </div>
-<script type="module" src="./main.js?v=gacha-preview2"></script>
+<script type="module" src="./main.js?v=town-icons1"></script>
 
     <div id="modal-unified-code" class="modal-overlay hidden">
       <div class="panel unified-code-panel">

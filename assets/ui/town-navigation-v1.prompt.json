@@ -1,0 +1,20 @@
+{
+  "mode": "built-in image_gen",
+  "date": "2026-11-12",
+  "asset": "town-navigation-v1.png",
+  "grid": {
+    "columns": 4,
+    "rows": 2
+  },
+  "cells": [
+    "training",
+    "synthesis",
+    "gacha",
+    "status",
+    "item-shop",
+    "weapon-shop",
+    "quest-board",
+    null
+  ],
+  "prompt": "Use case: stylized-concept. Asset type: production pixel-art RPG town navigation icon sprite sheet, TRUE transparent background. Create ONE clean sprite atlas at exactly 2:1 landscape aspect ratio, arranged as FOUR equal square columns and TWO equal square rows, with seven independent symbols in the first seven cells and the bottom-right eighth cell completely empty transparent. Each cell has generous equal transparent padding, no symbol crosses its cell. Identical scale, all symbols centered; each emblem fills about 70% of its square cell. Crisp chunky pixel art with dark navy outlines, jewel colors, gold edges, simple readable silhouette and restrained 2-3 tone shading, suitable for 32-48px game menu icons. No text, no letters, no labels, no numbers, no rectangular tile borders, no background plates, no shadows beyond icon edges. Exact ordering: top row col1 training hall = wooden practice dummy with small crossed wooden training swords; top row col2 synthesis = two cyan and purple crystals fusing above a small golden alchemy ring with a tiny sparkle; top row col3 gacha = fantasy golden treasure chest slightly open emitting a colorful rainbow crystal glow; top row col4 player's own room = cozy small wooden cottage with blue roof and lit window. Bottom row col1 item shop = red and blue potion bottles with corks, paired as one emblem; bottom row col2 weapon shop = steel sword crossed with blacksmith hammer above a compact dark anvil; bottom row col3 subquests = wooden noticeboard with a cream parchment bearing a gold quest seal, no writing; bottom row col4 leave fully blank. All seven must be distinctive at thumbnail size, consistent production quality and same perspective. Transparent alpha background throughout outside the seven isolated emblems, not a checkerboard drawing."
+}
