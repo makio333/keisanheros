@@ -2,18 +2,18 @@
 export const BOOT_MEDIA_CACHE = 'legend-heroes-media-v1';
 // Music and artwork for other screens are fetched on demand by the Service Worker.
 const AUDIO = [];
-const STARTUP_ART = [];
+const STARTUP_ART = ['画像/title_sky_v2.png','画像/title_foreground_v2.png','画像/title_logo_transparent.png'];
 export function startupAssetMap(assetMap){
  const selected={};
  for(const key of STARTUP_ART){const url=assetMap[key] || assetMap['./'+key];if(url)selected[key]=url;}
- if(window.GameMedia)selected.previewAtlas=window.GameMedia.atlasUrl;
+
  return selected;
 }
 
 const PORTRAITS = [
-  ['assets/boot/adventurer.webp','少女の冒険者','一歩ずつ進めば、きっと強くなれる。'],
-  ['assets/boot/knight.webp','青年の騎士','装備を整えて、まだ見ぬ世界へ。'],
-  ['assets/boot/scout.webp','森の斥候','困っている村人の依頼にも耳を傾けよう。'],
+  ['assets/characters/hero_female_1_hd.png','少女の冒険者','一歩ずつ進めば、きっと強くなれる。'],
+  ['assets/characters/hero_male_1_hd.png','青年の騎士','装備を整えて、まだ見ぬ世界へ。'],
+  ['assets/characters/skin_forest_scout_m.png','森の斥候','困っている村人の依頼にも耳を傾けよう。'],
 ];
 export function bootAudioUrl(path) {
   const name=path.split('/').pop().split('?')[0];
@@ -34,9 +34,9 @@ export async function startAssetBoot({screen,resolve,assetMap,onReady}) {
   function progress(n){const value=Math.min(100,Math.max(0,Math.round(n)));text('boot-load-percent',value+'%');el('boot-progress-fill').style.width=value+'%';el('boot-progress-track').setAttribute('aria-valuenow',value);}
   function phase(name,title,description){state.phase=name;screen.dataset.phase=name;text('boot-phase-label',name==='updating'?'DATA UPDATE':'NOW LOADING');text('boot-phase-title',title);text('boot-phase-description',description);}
   const scenery=el('boot-scenery');scenery.fetchPriority='low';
-  const character=el('boot-character');character.fetchPriority='high';
-  // A small existing sprite appears first, while the large skin illustration loads.
-  character.src=resolve('assets/characters/hero_female_1.png');
+  const character=el('boot-character');character.fetchPriority='low';
+  // Display only the original full-resolution illustration.
+  character.src=resolve('assets/characters/hero_female_1_hd.png');
   let slide=0,changing=false;
   const showPortrait=async()=>{
     if(changing)return;
@@ -46,7 +46,7 @@ export async function startAssetBoot({screen,resolve,assetMap,onReady}) {
     try {await next.decode();if(screen.isConnected){character.src=next.src;text('boot-character-name',name);text('boot-tip',tip);slide++;}}catch {}finally{changing=false;}
   };
   // Decoration starts after critical data is ready and never blocks the start button.
-  const rotate=setInterval(()=>{if(!screen.isConnected || state.phase==='ready'){clearInterval(rotate);return;}void showPortrait();},9000);
+  const rotate=undefined; // Do not download rotating decorations while critical images transfer.
   const urls=bootAssetUrls(assetMap);
   let cache;try {cache=await caches.open(BOOT_MEDIA_CACHE);} catch {state.persistent=false;}
   const completed=new Set();
@@ -60,23 +60,23 @@ export async function startAssetBoot({screen,resolve,assetMap,onReady}) {
     const reset=()=>{clearTimeout(timer);timer=setTimeout(()=>{if(Date.now()-lastTransferActivity>=45000)controller.abort();else reset();},45000);};reset();
     try {
       // A fresh response is cached only after the whole transfer succeeds.
-      const response=await fetch(url,{signal:controller.signal});
+      const response=await fetch(url,{signal:controller.signal,priority:'high'});
       if(!response.ok)throw Error('HTTP '+response.status);
       const type=response.headers.get('content-type') || '';
       if(!/^(?:image\/|audio\/|video\/|application\/octet-stream)/i.test(type))throw Error('Unexpected media type');
-      const stored=response.clone();
-      if(response.body){const reader=response.body.getReader();while(true){const {done,value}=await reader.read();if(done)break;lastTransferActivity=Date.now();reset();state.downloadedBytes+=value.byteLength;report();}}
-      else {state.downloadedBytes+=(await response.arrayBuffer()).byteLength;}
-      if(cache){try {await cache.put(url,stored);}catch {state.persistent=false;}}
+      const chunks=[];
+      if(response.body){const reader=response.body.getReader();while(true){const {done,value}=await reader.read();if(done)break;lastTransferActivity=Date.now();reset();chunks.push(value);state.downloadedBytes+=value.byteLength;report();}}
+      else {const bytes=await response.arrayBuffer();chunks.push(bytes);state.downloadedBytes+=bytes.byteLength;}
+      if(cache){try {await cache.put(url,new Response(new Blob(chunks,{type}),{headers:response.headers}));}catch {state.persistent=false;}}
       completed.add(url);
     } finally {clearTimeout(timer);}
   }
   async function normalLoad(){
     phase('loading','冒険を準備中','もうすぐ、あなたの冒険がはじまります。');progress(0);text('boot-status-text','NOW LOADING');text('boot-download-detail','保存済みの素材を読み込んでいます。');
     progress(100);text('boot-status-text','準備完了');
-    if(window.GameMedia)await window.GameMedia.init();
+    if(window.GameMedia){await window.GameMedia.init();await window.GameMedia.warmPaths(STARTUP_ART,100);}
     state.phase='ready';clearInterval(rotate);onReady();window.dispatchEvent(new Event('legend-heroes-ready'));
-    setTimeout(()=>{if(screen.isConnected && !screen.classList.contains('fade-out')){scenery.src=resolve('assets/boot/forest.webp');void showPortrait();}},100);
+    setTimeout(()=>{if(screen.isConnected && !screen.classList.contains('fade-out')){scenery.src=resolve('assets/characters/bg_skin_forest.png');void showPortrait();}},100);
   }
   async function update(){
     const pending=missing();state.done=0;state.total=pending.length;state.failed=0;state.downloadedBytes=0;

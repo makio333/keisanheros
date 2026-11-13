@@ -14,7 +14,7 @@ validateTitleReleaseInfo();
 const config=JSON.parse(await readFile(path.join(root,'firebase.test-hosting.json'),'utf8'));
 if(config.hosting.site!=='legend-heroes-test'||config.hosting.public!=='dist-test'||config.firestore||config.hosting.rewrites)throw Error('Unexpected test deployment target.');
 const deliveryManifest=JSON.parse(await readFile(path.join(root,'assets/runtime/manifest.json'),'utf8'));
-for(const image of deliveryManifest.images){const digest=createHash('sha256').update(await readFile(path.join(root,image.source))).update(deliveryManifest.version).digest('hex').slice(0,16);if(!image.file.includes(digest))throw Error('Runtime artwork is stale: run python3 scripts/build-runtime-art.py');}
+for(const image of deliveryManifest.images){const digest=createHash('sha256').update(await readFile(path.join(root,image.source))).update(deliveryManifest.version).digest('hex').slice(0,16);if(image.lossless!==true || image.pixelVerified!==true || (image.file!==image.source && !image.file.includes(digest)))throw Error('Runtime artwork is stale: run python3 scripts/build-runtime-art.py');}
 const audioVersions={};
 for(const name of await readdir(path.join(root,'public/assets_audio')))audioVersions[name]=createHash('sha256').update(await readFile(path.join(root,'public/assets_audio',name))).digest('hex').slice(0,12);
 await build({root,resolve:{alias:[{find:/^(?:.*\/)?firebase_product_config\.js$/,replacement:path.join(root,'config/firebase-test.js')}]},define:{

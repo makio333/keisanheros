@@ -3939,7 +3939,7 @@ function showScreen(id){
   if (explore?.isEventRaid && id !== 'screen-battle') endEventRaidBattle(false);
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   $(id).classList.add('active');
-  if(!document.body.classList.contains('boot-pending'))$(id).querySelectorAll('img[loading="lazy"]').forEach(img=>{img.loading='eager';img.fetchPriority='auto';});
+  if(!document.body.classList.contains('boot-pending'))$(id).querySelectorAll('img[loading="lazy"]').forEach(img=>{const box=img.getBoundingClientRect();if(box.width && box.height && box.top<innerHeight && box.bottom>0){img.loading='eager';img.fetchPriority='auto';}});
   updateHud();
   window.GameMedia?.onScreen(id);
 
@@ -10732,7 +10732,7 @@ function renderSkinGachaControls(){
     collection.innerHTML = prizes.map(prize => {
       const artwork = prize.kind.includes('background')
         ? `<div class="skin-gacha-background-swatch avatar-selector-swatch${prize.holographic ? ' holo-artwork' : ''}" style="background-image:url('${av(prize.image)}')"></div>`
-        : `<span class="skin-gacha-character-art" style="${prize.holographic ? characterFoilMaskStyle(prize.image) : ''}"><img src="${av(prize.image)}" alt=""></span>`;
+        : `<span class="skin-gacha-character-art" style="${prize.holographic ? characterFoilMaskStyle(prize.image) : ''}"><img loading="lazy" decoding="async" src="${av(prize.image)}" alt=""></span>`;
       return `<button type="button" class="skin-gacha-theme skin-gacha-preview-trigger" data-preview-kind="${prize.kind}" data-preview-id="${prize.id}" aria-label="${prize.name}を拡大表示">${artwork}<b>${prize.name}</b><span class="${prize.owned ? 'is-owned' : ''}">${prize.owned ? '獲得済み' : '未獲得'}</span></button>`;
     }).join('');
   }
@@ -10755,9 +10755,9 @@ function renderChristmasSkinGachaControls() {
     if (prize.kind.includes('background')) {
       artwork = `<div class="skin-gacha-background-swatch avatar-selector-swatch${prize.holographic ? ' holo-artwork' : ''}" style="background-image:url('${av(prize.image)}')"></div>`;
     } else if (prize.kind === 'decoration') {
-      artwork = `<span class="christmas-decoration-art"><img src="${av(prize.image)}" alt=""></span>`;
+      artwork = `<span class="christmas-decoration-art"><img loading="lazy" decoding="async" src="${av(prize.image)}" alt=""></span>`;
     } else {
-      artwork = `<span class="skin-gacha-character-art" style="${prize.holographic ? characterFoilMaskStyle(prize.image) : ''}"><img src="${av(prize.image)}" alt=""></span>`;
+      artwork = `<span class="skin-gacha-character-art" style="${prize.holographic ? characterFoilMaskStyle(prize.image) : ''}"><img loading="lazy" decoding="async" src="${av(prize.image)}" alt=""></span>`;
     }
     const isChristmasPrize = prize.rewardSource === 'christmas' || prize.source === 'christmas';
     const sourceLabel = isChristmasPrize ? '限定ピックアップ・抽選重み1.5倍' : '通常ラインナップ';
@@ -15429,7 +15429,8 @@ function startBootLoader(){
   let ready = false;
   startAssetBoot({screen, resolve:av, assetMap:startupAssetMap(window.__ASSET_MAP__ || {}), onReady(){
     ready=true;
-    void window.GameMedia?.warmPaths(['assets/boot/home.webp','assets/ui/town-navigation-v1.png','画像/title_sky_v2.png','画像/title_foreground_v2.png','画像/title_logo_transparent.png',...getInitialSelectableAvatars().map(hero=>hero.image),'assets/items/w1.png','assets/items/a1.png']);
+    void window.GameMedia?.warmPaths(['画像/home_town_v2.png','assets/ui/town-navigation-v1.png','画像/title_sky_v2.png','画像/title_foreground_v2.png','画像/title_logo_transparent.png',...getInitialSelectableAvatars().map(hero=>hero.image),'assets/items/w1.png','assets/items/a1.png']);
+    void window.GameMedia?.warmPaths(['assets/christmas/skin_gacha_logo.webp','assets/christmas/equipment_gacha_logo.webp','assets/characters/bg_skin_starlight.png','assets/ui/background_skin_gacha_logo.png','assets/ui/equipment_gacha_logo.png'],5);
     if (barArea) barArea.classList.add('hidden');
     if (startArea) startArea.classList.remove('hidden');
     if (startBtn) { startBtn.onclick=begin; startBtn.ontouchend=begin; }

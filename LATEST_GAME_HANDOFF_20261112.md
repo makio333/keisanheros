@@ -117,3 +117,15 @@ node scripts/preview-christmas-local.mjs
 - 公開識別: db5798b3351289e8 / 2026-11-13T04:22:19.533Z。
 
 最終追記: 表示中の画像は高優先度で取得し、ステージ選択時はそのエリアの戦闘背景も先読み。登録の大きなキャラはプレビュー/高解像度とも同じ表示サイズを維持。最終公開版の実通信再確認は初回7303ms・2回目158ms、登録/拠点/道具屋/部屋/ガチャ/戦闘の画像欠け0、HTTP/実行エラー0。公開HTML/manifestとビルドの一致を確認済み。最終公開識別: 1b9518009cd9c29d / 2026-11-13T04:28:38.355Z。
+
+## 2026-11-13 Original-quality correction (supersedes preview-atlas approach)
+
+- User rejected the mosaic rendering and explicitly requires no image-quality reduction. `ed9215c` preview atlases and downsampled/lossy delivery copies must not be restored.
+- Runtime now uses full-resolution original artwork only. Removed the preview canvas/atlas substitution and low-resolution `assets/boot` aliases from all live references. Existing original JPEG/WebP bytes are retained. PNG delivery copies are used only when lossless WebP is smaller AND every RGBA pixel (including transparent RGB) matches the original; no resizing, alpha loss, or lossy transcoding.
+- Verified all 591 media entries: source/delivery dimensions match and decoded RGBA pixels are exact. Total mapped images: 385.07 MiB originals → 301.12 MiB delivery. This is lossless, not the former 49 MiB lossy set. Startup waits for three original-quality title images (3,576,496 bytes; home/navigation/roster prefetch after ready) and reuses cached files; remaining assets prefetch/on-demand. A cold uncached screen can still require network transfer; do not claim zero loading on every connection.
+- Removed await Cache.put(response.clone()) before consuming response.blob(); read once and cache a new Response(blob), avoiding an unread tee branch. Kept media cache and local saves intact. Hashed `/assets/**` files have immutable one-year HTTP caching.
+- Checked fresh/warm start, registration, home, item shop, equipment, Christmas skin/equipment gacha and battle in Chrome and WebKit. Original Christmas skin banner is 2116 × 743; visual inspection confirms sharp lettering/artwork. No runtime or HTTP errors. 13 equipment/ancient/SW unit tests remain passing.
+- Tests: `python3 tests/runtime-art-quality.py`; `ENGINE=webkit PW_TEST_SCREENSHOT_NO_FONTS_READY=1 node tests/runtime-media-browser.mjs` (QUALITY_URL/QUALITY_OUT overrides). Browser test now asserts original banner dimensions and rejects data-URI substitutes instead of accepting tiny previews.
+- Test-only deployment fingerprint: `42954688f1ac3e9f`; project `ailandgames-test`, site `legend-heroes-test`, hosting only. Company/product Firebase and database rules unchanged. Approved equipment balance unchanged.
+
+- Final startup correction: do not rotate/download extra decoration skins during the update; critical fetches are high priority. Gacha collection portraits use native lazy loading; scene activation only promotes images inside the viewport, preserving original resolution while avoiding hidden-tab downloads. Live WebKit initial six-file build exceeded 60 seconds on this connection; local timing is not evidence of public-network startup speed. Recheck live three-file build.

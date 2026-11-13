@@ -1,43 +1,29 @@
-import assert from 'node:assert/strict';
-import {mkdir} from 'node:fs/promises';
-import {chromium} from '/Users/motoyamayuuki/.codex/skills/develop-web-game/node_modules/playwright/index.mjs';
-const base=process.env.RUNTIME_MEDIA_URL || 'http://127.0.0.1:5196';const out=process.env.RUNTIME_MEDIA_OUTPUT || '/private/tmp/runtime-media-check';await mkdir(out,{recursive:true});
-const browser=await chromium.launch({channel:'chrome',headless:true});
+import {chromium,webkit} from '/Users/motoyamayuuki/.codex/skills/develop-web-game/node_modules/playwright/index.mjs';
+import {mkdir,writeFile} from 'node:fs/promises';
+const out=process.env.QUALITY_OUT || '/private/tmp/runtime-media-original-quality';await mkdir(out,{recursive:true});const browser=await (process.env.ENGINE==='webkit'?webkit.launch({headless:true}):chromium.launch({channel:'chrome',headless:true}));
 try{
- const c=await browser.newContext({serviceWorkers:'block',viewport:{width:1366,height:900}});const p=await c.newPage();const errors=[];const held=[];let block=true;
- p.on('pageerror',e=>errors.push(e.message));p.on('dialog',d=>d.accept());
- await p.route('**/*',r=>{
-  const u=new URL(r.request().url());if(u.origin!==new URL(base).origin)return r.fulfill({body:''});
-  if(block && /\.(webp|png|jpe?g)$/.test(u.pathname) && !u.pathname.includes('preview-atlas') && u.pathname.startsWith('/assets/')){held.push(r);return;}
-  return r.continue();
- });
- const start=Date.now();await p.goto(base,{waitUntil:'domcontentloaded'});await p.waitForFunction(()=>window.assetBootState?.phase==='ready',null,{timeout:20000});
- assert.equal(await p.evaluate(()=>GameMedia.stats.atlasReady),true);const bootMs=Date.now()-start;
- await p.locator('#btn-boot-start').click();await p.locator('#btn-newgame').click();await p.waitForFunction(()=>document.getElementById('title-white-fade')?.classList.contains('hidden'));
- async function imagesReady(selector){await p.waitForFunction(sel=>[...document.querySelectorAll(sel)].every(i=>i.complete&&i.naturalWidth>0),selector,{timeout:3000});}
- await imagesReady('.hero-thumb-btn img');assert.equal(await p.locator('.hero-thumb-btn').count(),11);
- const registration=await p.locator('.hero-thumb-btn img').evaluateAll(imgs=>imgs.map(i=>({width:i.clientWidth,height:i.clientHeight,quality:i.dataset.mediaQuality,inline:i.src.startsWith('data:')})));
- assert(registration.every(i=>i.width>=26&&i.height>=26&&i.inline),'every thumbnail is readable without a full-size download');
- await p.screenshot({path:out+'/registration-preview.png'});
- const first=await p.locator('#hero-preview-img').getAttribute('src');await p.locator('.hero-thumb-btn').last().click();await p.waitForTimeout(80);assert.notEqual(await p.locator('#hero-preview-img').getAttribute('src'),first);await imagesReady('#hero-preview-img');
- await p.locator('#new-save-name').fill('画像確認');await p.locator('#btn-new-save-start').click();await p.locator('#btn-intro-sword').click();await p.locator('#screen-home').waitFor({state:'visible'});await p.waitForTimeout(2400);
- await imagesReady('#town-map > .town-map-img,#home-player-avatar');assert((await p.locator('#town-map > .town-map-img').getAttribute('src')).startsWith('data:'));
- assert((await p.locator('.town-service-icon').first().evaluate(e=>getComputedStyle(e).backgroundImage)).includes('data:image/'));
- const homeMissing=await p.locator('#screen-home img').evaluateAll(imgs=>imgs.filter(i=>i.getBoundingClientRect().width>0&&i.getAttribute('src')&&(!i.complete||!i.naturalWidth)).map(i=>i.getAttribute('src')));assert.deepEqual(homeMissing,[]);
- await p.screenshot({path:out+'/home-preview.png'});
- const checks=[];
- for(const [button,screen] of [['hotspot-item-shop','screen-item-shop'],['hotspot-status','screen-status'],['hotspot-gacha','screen-gacha']]){
-  await p.locator('#'+button).click();await p.locator('#'+screen).waitFor({state:'visible'});await p.waitForTimeout(200);
-  const missing=await p.locator('#'+screen+' img').evaluateAll(imgs=>imgs.filter(i=>i.getBoundingClientRect().width>0&&i.getAttribute('src')&&!i.getAttribute('src').startsWith('blob:')&&(!i.complete||!i.naturalWidth)).map(i=>i.getAttribute('src')));
-  assert.deepEqual(missing,[],screen+' has no missing visible artwork while full images are stalled');checks.push(screen);await p.screenshot({path:out+'/'+screen+'-preview.png'});
-  if(screen==='screen-gacha')break;
-  await p.evaluate(()=>document.getElementById('menu-container').querySelector('button').click());
-  const home=p.locator('#btn-menu-home');if(await home.count())await home.click();else await p.locator('#'+screen+' .window-back-btn').first().click();
-  await p.locator('#screen-home').waitFor({state:'visible'});
+ const c=await browser.newContext({viewport:{width:1366,height:900}});const p=await c.newPage();const errors=[],http=[];p.on('pageerror',e=>errors.push(e.message));p.on('response',r=>{if(r.status()>=400)http.push({status:r.status(),url:r.url()});});p.on('dialog',d=>d.accept());
+ const start=Date.now();await p.goto(process.env.QUALITY_URL || 'http://127.0.0.1:5196/',{waitUntil:'domcontentloaded'});await p.waitForFunction(()=>window.assetBootState?.phase==='ready',null,{timeout:180000});const coldMs=Date.now()-start,cold=await p.evaluate(()=>assetBootState);
+ console.log(JSON.stringify({coldMs,cold}));await p.locator('#btn-boot-start').click();await p.locator('#btn-newgame').click();await p.waitForFunction(()=>document.getElementById('title-white-fade').classList.contains('hidden'));await p.waitForTimeout(100);
+ const missing=async sel=>p.locator(sel+' img').evaluateAll(imgs=>imgs.filter(i=>i.getBoundingClientRect().width>0&&i.getAttribute('src')&&(!i.complete||!i.naturalWidth)).map(i=>i.getAttribute('src')));
+ const registrationMissing=await missing('#screen-new-save');await p.screenshot({path:out+'/registration.png',timeout:10000});
+ await p.locator('.hero-thumb-btn').last().click();await p.locator('#new-save-name').fill('表示確認');await p.locator('#btn-new-save-start').click();await p.locator('#btn-intro-sword').click();await p.locator('#screen-home').waitFor({state:'visible'});await p.waitForTimeout(1500);const homeMissing=await missing('#screen-home');await p.screenshot({path:out+'/home-immediate.png',timeout:10000});
+ const checks=[];for(const [button,screen] of [['hotspot-item-shop','screen-item-shop'],['hotspot-status','screen-status'],['hotspot-gacha','screen-gacha']]){
+  await p.locator('#'+button).click();await p.locator('#'+screen).waitFor({state:'visible'});await p.waitForTimeout(1500);checks.push({screen,missing:await missing('#'+screen)});await p.screenshot({path:out+'/'+screen+'.png',timeout:10000});
+  if(screen==='screen-gacha'){
+   await p.locator('#btn-gacha-tab-christmas-skins').click();
+   await p.locator('#christmas-skin-gacha-section img').evaluateAll(imgs=>Promise.all(imgs.filter(i=>{const r=i.getBoundingClientRect();return r.top<innerHeight && r.bottom>0;}).map(i=>i.decode().catch(()=>{}))));
+   const banner=await p.locator('#christmas-skin-gacha-section img').evaluateAll(imgs=>imgs.map(i=>({src:i.getAttribute('src'),width:i.naturalWidth,height:i.naturalHeight})));
+   console.log('Original Christmas banner: 2116 x 743');
+   if(!banner.some(i=>i.width===2116 && i.height===743))throw Error('Original Christmas banner resolution missing');
+   if(banner.some(i=>i.src.startsWith('data:')))throw Error('Low resolution substituted image');
+   await p.screenshot({path:out+'/christmas-skins.png',timeout:10000});
+   await p.locator('#btn-gacha-tab-christmas-items').click();await p.waitForTimeout(1500);await p.screenshot({path:out+'/christmas-equipment.png',timeout:10000});
+   await p.locator('#btn-gacha-back').click();
+  }else{await p.locator('#menu-container > button').click();await p.locator('#btn-menu-home').click();}await p.locator('#screen-home').waitFor({state:'visible'});
  }
- await p.locator('#btn-gacha-back').click();await p.locator('#hotspot-adventure').click();await p.locator('#area-card-tower').click();await p.locator('.stage-select-row').first().click();await p.locator('#screen-battle').waitFor({state:'visible'});await imagesReady('#battle-enemy-emoji img');await p.screenshot({path:out+'/battle-preview.png'});checks.push('screen-battle');
- block=false;await Promise.all(held.map(r=>r.continue().catch(()=>{})));
- await p.waitForFunction(()=>document.querySelector('.screen.active img[data-media-quality="full"]'),null,{timeout:20000});
- const warmStart=Date.now();await p.reload({waitUntil:'domcontentloaded'});await p.waitForFunction(()=>window.assetBootState?.phase==='ready');const warmMs=Date.now()-warmStart;assert.equal(await p.evaluate(()=>assetBootState.total),0);assert.deepEqual(errors,[]);
- console.log(JSON.stringify({passed:true,bootMs,warmMs,registration,checks,stats:await p.evaluate(()=>GameMedia.stats),out}));await c.close();
+ await p.locator('#hotspot-adventure').click();await p.locator('#area-card-tower').click();await p.locator('.stage-select-row').first().click();await p.locator('#screen-battle').waitFor({state:'visible'});await p.waitForTimeout(1500);checks.push({screen:'screen-battle',missing:await missing('#screen-battle')});await p.screenshot({path:out+'/battle.png',timeout:10000});
+ const warmStart=Date.now();await p.reload({waitUntil:'domcontentloaded'});await p.waitForFunction(()=>window.assetBootState?.phase==='ready');const warmMs=Date.now()-warmStart,warm=await p.evaluate(()=>assetBootState);
+ const result={coldMs,warmMs,cold,warm,registrationMissing,homeMissing,checks,errors,http};await writeFile(out+'/result.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result));
+ if(registrationMissing.length||homeMissing.length||checks.some(c=>c.missing.length)||errors.length||http.length)process.exitCode=1;await c.close();
 }finally{await browser.close();}
