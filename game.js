@@ -10566,7 +10566,16 @@ function setGachaView(view) {
   $('christmas-equip-gacha-section').classList.toggle('hidden', gachaView !== 'christmas-items');
   $('btn-gacha-tab-christmas-skins').setAttribute('aria-selected', String(gachaView === 'christmas-skins'));
   $('btn-gacha-tab-christmas-items').setAttribute('aria-selected', String(gachaView === 'christmas-items'));
-  finalizeEquipmentCards($('screen-gacha'));
+  if(G){
+    if(gachaView==='skins')renderSkinGachaControls();
+    else if(gachaView==='items')renderEquipmentGachaControls();
+    else if(gachaView==='christmas-skins')renderChristmasSkinGachaControls();
+    else if(gachaView==='christmas-items')renderChristmasEquipmentGachaControls();
+    else renderHalloweenGacha();
+  }
+  const section=$({skins:'skin-gacha-section',items:'gacha-item-section',halloween:'halloween-gacha-section','christmas-skins':'christmas-skin-gacha-section','christmas-items':'christmas-equip-gacha-section'}[gachaView]);
+  section?.querySelectorAll('img').forEach(img=>{const r=img.getBoundingClientRect();if(r.width && r.top<innerHeight && r.bottom>0){img.loading='eager';img.fetchPriority='high';}});
+  finalizeEquipmentCards(section);
 }
 
 function showGacha(view){
@@ -10578,11 +10587,6 @@ function showGacha(view){
   $('gacha-current-gold').textContent = G.player.gold;
   $('gacha-results').innerHTML = '';
   $('christmas-gacha-results').innerHTML = '';
-  renderSkinGachaControls();
-  renderEquipmentGachaControls();
-  renderChristmasSkinGachaControls();
-  renderChristmasEquipmentGachaControls();
-  renderHalloweenGacha();
 }
 
 function renderEquipmentGachaControls() {
@@ -10731,7 +10735,7 @@ function renderSkinGachaControls(){
   if (collection) {
     collection.innerHTML = prizes.map(prize => {
       const artwork = prize.kind.includes('background')
-        ? `<div class="skin-gacha-background-swatch avatar-selector-swatch${prize.holographic ? ' holo-artwork' : ''}" style="background-image:url('${av(prize.image)}')"></div>`
+        ? `<div class="skin-gacha-background-swatch avatar-selector-swatch${prize.holographic ? ' holo-artwork' : ''}" ><img loading="lazy" decoding="async" src="${av(prize.image)}" style="width:100%;height:100%;object-fit:cover" alt=""></div>`
         : `<span class="skin-gacha-character-art" style="${prize.holographic ? characterFoilMaskStyle(prize.image) : ''}"><img loading="lazy" decoding="async" src="${av(prize.image)}" alt=""></span>`;
       return `<button type="button" class="skin-gacha-theme skin-gacha-preview-trigger" data-preview-kind="${prize.kind}" data-preview-id="${prize.id}" aria-label="${prize.name}を拡大表示">${artwork}<b>${prize.name}</b><span class="${prize.owned ? 'is-owned' : ''}">${prize.owned ? '獲得済み' : '未獲得'}</span></button>`;
     }).join('');
@@ -10753,7 +10757,7 @@ function renderChristmasSkinGachaControls() {
   const card = prize => {
     let artwork;
     if (prize.kind.includes('background')) {
-      artwork = `<div class="skin-gacha-background-swatch avatar-selector-swatch${prize.holographic ? ' holo-artwork' : ''}" style="background-image:url('${av(prize.image)}')"></div>`;
+      artwork = `<div class="skin-gacha-background-swatch avatar-selector-swatch${prize.holographic ? ' holo-artwork' : ''}" ><img loading="lazy" decoding="async" src="${av(prize.image)}" style="width:100%;height:100%;object-fit:cover" alt=""></div>`;
     } else if (prize.kind === 'decoration') {
       artwork = `<span class="christmas-decoration-art"><img loading="lazy" decoding="async" src="${av(prize.image)}" alt=""></span>`;
     } else {

@@ -19,6 +19,11 @@ try{
    if(banner.some(i=>i.src.startsWith('data:')))throw Error('Low resolution substituted image');
    await p.screenshot({path:out+'/christmas-skins.png',timeout:10000});
    await p.locator('#btn-gacha-tab-christmas-items').click();await p.waitForTimeout(1500);await p.screenshot({path:out+'/christmas-equipment.png',timeout:10000});
+   for(const [tab,section] of [['skins','skin-gacha-section'],['items','gacha-item-section']]){
+    await p.locator('#btn-gacha-tab-'+tab).click();await p.waitForTimeout(1500);
+    if(await p.locator('#'+section+' .skin-gacha-theme').count()===0)throw Error('Selected gacha tab did not render: '+tab);
+    await p.screenshot({path:out+'/gacha-'+tab+'.png',timeout:10000});
+   }
    await p.locator('#btn-gacha-back').click();
   }else{await p.locator('#menu-container > button').click();await p.locator('#btn-menu-home').click();}await p.locator('#screen-home').waitFor({state:'visible'});
  }
