@@ -2,10 +2,11 @@
 export const BOOT_MEDIA_CACHE = 'legend-heroes-media-v1';
 // Music and artwork for other screens are fetched on demand by the Service Worker.
 const AUDIO = [];
-const STARTUP_ART = ['assets/characters/hero_female_1.png'];
+const STARTUP_ART = [];
 export function startupAssetMap(assetMap){
  const selected={};
  for(const key of STARTUP_ART){const url=assetMap[key] || assetMap['./'+key];if(url)selected[key]=url;}
+ if(window.GameMedia)selected.previewAtlas=window.GameMedia.atlasUrl;
  return selected;
 }
 
@@ -73,6 +74,7 @@ export async function startAssetBoot({screen,resolve,assetMap,onReady}) {
   async function normalLoad(){
     phase('loading','冒険を準備中','もうすぐ、あなたの冒険がはじまります。');progress(0);text('boot-status-text','NOW LOADING');text('boot-download-detail','保存済みの素材を読み込んでいます。');
     progress(100);text('boot-status-text','準備完了');
+    if(window.GameMedia)await window.GameMedia.init();
     state.phase='ready';clearInterval(rotate);onReady();window.dispatchEvent(new Event('legend-heroes-ready'));
     setTimeout(()=>{if(screen.isConnected && !screen.classList.contains('fade-out')){scenery.src=resolve('assets/boot/forest.webp');void showPortrait();}},100);
   }
@@ -87,7 +89,7 @@ export async function startAssetBoot({screen,resolve,assetMap,onReady}) {
       while(!interrupted && cursor<pending.length){const url=pending[cursor++];try {await download(url);state.done++;}catch(error) {state.failed++;interrupted=true;console.warn('Asset update interrupted:',url,error.message);}report();}
     }));
     if(state.failed){phase('error','ダウンロードが中断しました','通信状況を確認して、もう一度お試しください。受信済みのデータから再開できます。');text('boot-status-text',`残り ${missing().length} ファイル`);el('boot-download-retry').classList.remove('hidden');return;}
-    await normalLoad();
+    try{await normalLoad();}catch(error){const atlas=window.GameMedia?.atlasUrl;if(atlas){const url=new URL(atlas,document.baseURI).href;completed.delete(url);try{const cache=await caches.open(BOOT_MEDIA_CACHE);await cache.delete(url);}catch{}}phase('error','画像データを確認できませんでした','通信状況を確認して、もう一度お試しください。');el('boot-download-retry').classList.remove('hidden');}
   }
   el('boot-download-retry').onclick=e=>{e.stopPropagation();void update();};
   await update();

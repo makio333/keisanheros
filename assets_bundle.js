@@ -1,6 +1,8 @@
+import {installRuntimeMedia} from './runtime_media.js';
 // 実使用アセット（assets, BGM SE, 画像フォルダ内のステージ/スキル/エフェクト/タイトル等）を一括インポート
 const assetModules = import.meta.glob([
   './assets/**/*',
+  '!./assets/runtime/**/*',
   './画像/ステージ/*.jpg',
   './画像/ステージ/戦闘背景/*.png',
   './画像/スキル/**/*',
@@ -51,6 +53,7 @@ for(const [source,optimized] of Object.entries({
  if(url)for(const key of [source,'./'+source,encodeURI(source),encodeURI('./'+source)])assetMap[key]=url;
 }
 window.__ASSET_MAP__ = assetMap;
+installRuntimeMedia(assetMap);
 
 // HTML内の静的画像や背景画像の解決関数
 export function resolveDOMAssets() {

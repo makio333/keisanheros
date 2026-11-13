@@ -824,7 +824,7 @@ body {
   /* Two wide sky tiles keep clouds from stretching on portrait screens. */
   width: max(200%, 355.37vh);
   height: 100%;
-  background: url('./assets/boot/title-sky.webp') repeat-x top left;
+  background: var(--media-title-sky,url('./assets/boot/title-sky.webp')) repeat-x top left;
   background-size: 50% 100%;
   animation: titleSkyMove 90s linear infinite;
   z-index: 1;
@@ -843,7 +843,7 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: url('./assets/boot/title-foreground.webp') center/cover no-repeat;
+  background: var(--media-title-land,url('./assets/boot/title-foreground.webp')) center/cover no-repeat;
   z-index: 2;
   pointer-events: none;
 }
@@ -6623,8 +6623,8 @@ body:has(#screen-status.active) #volume-control-container { visibility:hidden; p
 .hero-stage-portrait-frame img {
   max-width: 95%;
   max-height: 95%;
-  width: auto;
-  height: auto;
+  width: 95%;
+  height: 95%;
   object-fit: contain;
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.65));
   transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease;
@@ -8931,7 +8931,7 @@ body:has(#screen-gacha.active) :is(.volume-control-container,#analog-clock-widge
 #screen-battle.christmas-battle-screen .battle-top{min-width:0}
 
 /* Shared generated facility sprite atlas: four columns, two rows. */
-.town-service-icon { display:inline-block; width:32px; height:32px; flex:0 0 32px; vertical-align:middle; background-image:url('./assets/ui/town-navigation-v1.png'); background-size:400% 200%; background-repeat:no-repeat; image-rendering:pixelated; }
+.town-service-icon { display:inline-block; width:32px; height:32px; flex:0 0 32px; vertical-align:middle; background-image:var(--media-town-icons,url('./assets/ui/town-navigation-v1.png')); background-size:400% 200%; background-repeat:no-repeat; image-rendering:pixelated; }
 .service-training { background-position:0% 0%; }
 .service-synthesis { background-position:33.333333% 0%; }
 .service-gacha { background-position:66.666667% 0%; }
@@ -8947,3 +8947,9 @@ body:has(#screen-gacha.active) :is(.volume-control-container,#analog-clock-widge
 @media(max-width:820px) and (max-height:740px) {
   #town-map > :is(#hotspot-training,#hotspot-synthesis,#hotspot-weapon-shop) .town-service-icon { width:24px; height:24px; flex-basis:24px; }
 }
+
+/* Keep every starter thumbnail readable instead of shrinking the entire row. */
+.hero-thumbs-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(42px,1fr));gap:6px;width:100%}
+.hero-thumb-btn{width:100%;min-width:0;height:52px;padding:3px}
+.hero-thumb-img-wrap{min-width:0;overflow:hidden}
+.hero-thumb-img-wrap img{display:block;width:100%;height:100%;max-width:none;max-height:none;object-fit:contain}

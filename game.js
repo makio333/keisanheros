@@ -165,7 +165,7 @@ const ASSET_V = 1;
 function av(path){
   if (!path) return path;
   if(path.startsWith('assets_audio/'))return bootAudioUrl(path);
-  if (path.startsWith('http') || path.startsWith('data:')) return path; // 外部URL・data URIは そのまま
+  if (path.startsWith('http') || path.startsWith('data:') || path.startsWith('blob:')) return path; // 外部URL・data URIは そのまま
   if (typeof window !== 'undefined' && window.__ASSET_MAP__) {
     const pure = path.split('?')[0];
     const resolved = window.__ASSET_MAP__[pure] ||
@@ -174,9 +174,10 @@ function av(path){
                      window.__ASSET_MAP__['./' + pure] ||
                      window.__ASSET_MAP__['./' + decodeURI(pure)] ||
                      window.__ASSET_MAP__['./' + encodeURI(pure)];
-    if (resolved) return resolved;
+    if (resolved) return window.__resolveRuntimeAsset?.(pure,resolved) || resolved;
   }
-  return path + (path.includes('?') ? '&' : '?') + 'v=' + ASSET_V;
+  const fallback=path + (path.includes('?') ? '&' : '?') + 'v=' + ASSET_V;
+  return window.__resolveRuntimeAsset?.(path,fallback) || fallback;
 }
 function characterFoilMaskStyle(image){
   return `--character-foil-mask:url('${av(image)}')`; // style="..." 内で使うので内側はシングルクォート
@@ -3940,6 +3941,7 @@ function showScreen(id){
   $(id).classList.add('active');
   if(!document.body.classList.contains('boot-pending'))$(id).querySelectorAll('img[loading="lazy"]').forEach(img=>{img.loading='eager';img.fetchPriority='auto';});
   updateHud();
+  window.GameMedia?.onScreen(id);
 
   // セーブデータを読み込んでいない間はメニューを隠す（「きょてんに もどる」がGを前提とするため）
   const menuContainer = $('menu-container');
@@ -7716,6 +7718,7 @@ function showStageSelectNew(areaId){
       console.error('AREA_STAGES not found for:', areaId);
       return;
     }
+    void window.GameMedia?.warmPaths([area.bgImage,...area.stages.map((_,index)=>stageBattleBg(areaId,index,false)),...(AREA_ENEMY_POOLS[areaId] || []).map(entry=>ENEMY_POOLS[entry.zone]?.[entry.key]?.emoji).filter(Boolean)],80);
     const numPrefix = area.displayNum || areaId.replace('area', '');
     showScreen('screen-stage-select-new');
     const bgImg = $('stage-select-area-bg');
@@ -8307,11 +8310,11 @@ function printQuestSheet(q){
 }
 
 const STAT_DEFS = [
-  { key:'maxHp', name:'<img src="assets/ui_icons/ui_icon_4.png" class="stat-inline-icon"> HP', per:6, desc:'1スキルポイントで さいだいHP+6' },
-  { key:'maxMp', name:'<img src="assets/ui_icons/ui_icon_6.png" class="stat-inline-icon"> MP', per:4, desc:'1スキルポイントで さいだいMP+4' },
-  { key:'atk', name:'<img src="assets/ui_icons/ui_icon_2.png" class="stat-inline-icon"> こうげき力', per:1, desc:'1スキルポイントで こうげき力+1' },
-  { key:'def', name:'<img src="assets/ui_icons/ui_icon_3.png" class="stat-inline-icon"> しゅび力', per:1, desc:'1スキルポイントで しゅび力+1' },
-  { key:'spd', name:'<img src="assets/ui_icons/ui_icon_1.png" class="stat-inline-icon"> すばやさ', per:1, desc:'1スキルポイントで すばやさ+1（会心の一撃＆敵の攻撃をかわす確率がUP！）' },
+  { key:'maxHp', name:`<img src="${av('assets/ui_icons/ui_icon_4.png')}" class="stat-inline-icon"> HP`, per:6, desc:'1スキルポイントで さいだいHP+6' },
+  { key:'maxMp', name:`<img src="${av('assets/ui_icons/ui_icon_6.png')}" class="stat-inline-icon"> MP`, per:4, desc:'1スキルポイントで さいだいMP+4' },
+  { key:'atk', name:`<img src="${av('assets/ui_icons/ui_icon_2.png')}" class="stat-inline-icon"> こうげき力`, per:1, desc:'1スキルポイントで こうげき力+1' },
+  { key:'def', name:`<img src="${av('assets/ui_icons/ui_icon_3.png')}" class="stat-inline-icon"> しゅび力`, per:1, desc:'1スキルポイントで しゅび力+1' },
+  { key:'spd', name:`<img src="${av('assets/ui_icons/ui_icon_1.png')}" class="stat-inline-icon"> すばやさ`, per:1, desc:'1スキルポイントで すばやさ+1（会心の一撃＆敵の攻撃をかわす確率がUP！）' },
 ];
 
 /* わりふりちゅうの スキルポイント（まだ G.player に はんえいしていない かりの わりあて）。
@@ -11358,14 +11361,14 @@ function bindEvents(){
 
     const imgEl = $('hero-preview-img');
     if (imgEl) {
-      imgEl.style.transform = 'scale(0.88)';
-      imgEl.style.opacity = '0.5';
+      imgEl.style.transform = 'scale(1)';
+      imgEl.style.opacity = '1';
       setTimeout(() => {
         imgEl.src = av(hero.image);
         imgEl.alt = 'キャラクター';
         imgEl.style.transform = 'scale(1)';
         imgEl.style.opacity = '1';
-      }, 90);
+      }, 0);
     }
 
     // サムネイルのアクティブ状態更新
@@ -12369,6 +12372,8 @@ function renderHomeBackground(){
   town.dataset.mobileBackground=active ? 'christmas' : selected.id;
   town.classList.toggle('christmas-home',active);
 }
+
+window.addEventListener('game-media-ready',()=>{if(G && $('screen-home')?.classList.contains('active'))renderHomeBackground();});
 
 const HALLOWEEN_GACHA_PRIZES = [
   {id:'candy_spark',kind:'decoration',name:'キャンディのきらめき'},
@@ -15424,6 +15429,7 @@ function startBootLoader(){
   let ready = false;
   startAssetBoot({screen, resolve:av, assetMap:startupAssetMap(window.__ASSET_MAP__ || {}), onReady(){
     ready=true;
+    void window.GameMedia?.warmPaths(['assets/boot/home.webp','assets/ui/town-navigation-v1.png','画像/title_sky_v2.png','画像/title_foreground_v2.png','画像/title_logo_transparent.png',...getInitialSelectableAvatars().map(hero=>hero.image),'assets/items/w1.png','assets/items/a1.png']);
     if (barArea) barArea.classList.add('hidden');
     if (startArea) startArea.classList.remove('hidden');
     if (startBtn) { startBtn.onclick=begin; startBtn.ontouchend=begin; }
