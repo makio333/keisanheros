@@ -1,5 +1,5 @@
 import {build} from 'vite';
-import {readFile,writeFile,readdir} from 'node:fs/promises';
+import {readFile,writeFile,readdir,copyFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
@@ -22,11 +22,12 @@ await build({root,resolve:{alias:[{find:/^(?:.*\/)?firebase_product_config\.js$/
   'import.meta.env.VITE_LINE_OIDC_ENABLED':'"0"',
   'import.meta.env.VITE_MIGRATION_IMPORT_ENABLED':'"0"',
 },build:{outDir:'dist-test'}});
+for(const name of ['manifest.json','sw.js'])await copyFile(path.join(root,name),path.join(root,'dist-test',name));
 const assets=path.join(root,'dist-test/assets');
 const sources=await Promise.all((await readdir(assets)).filter(name=>name.endsWith('.js')).map(name=>readFile(path.join(assets,name),'utf8')));
 const source=sources.join('\n');
 if(!source.includes('fetchAllSlots')||['841092455118:web:2fb4919a180f82855d4e9f','255137807181:web:e6c521f0fc5ac2b9001504','treegames-ac5db','https://checkout.stripe.com','identitytoolkit.googleapis.com','firestore.googleapis.com'].some(value=>source.includes(value)))throw Error('Login-free test bundle isolation check failed.');
-await writeFile(path.join(root,'dist-test/release-target.json'),JSON.stringify({target:'test',project:'ailandgames-test',site:'legend-heroes-test',titleRelease:getTitleReleaseManifest(),loginRequired:false,saveMode:'browser-local',cloudSavesEnabled:false,salesEnabled:false,migrationImportEnabled:false,sharedRaidApiEnabled:false,builtAt:new Date().toISOString()},null,2));
+await writeFile(path.join(root,'dist-test/release-target.json'),JSON.stringify({sourceVersion:'d505f61',equipmentBalance:'approved-20261113',target:'test',project:'ailandgames-test',site:'legend-heroes-test',titleRelease:getTitleReleaseManifest(),loginRequired:false,saveMode:'browser-local',cloudSavesEnabled:false,salesEnabled:false,migrationImportEnabled:false,sharedRaidApiEnabled:false,builtAt:new Date().toISOString()},null,2));
 if(args.includes('--deploy')){
   const result=spawnSync('firebase',['deploy','--project','ailandgames-test','--config','firebase.test-hosting.json','--only','hosting','--account',deployAccount],{cwd:root,stdio:'inherit'});
   if(result.error)throw result.error;

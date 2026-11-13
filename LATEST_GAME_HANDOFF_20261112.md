@@ -61,3 +61,13 @@ node scripts/preview-christmas-local.mjs
 ## 続きの作業
 
 このブランチを取得して上記プレビューを起動してください。実セーブ/共有ランキング/公開環境での接続確認やデプロイは、このプレビューの検証とは別に行ってください。
+
+
+## 2026-11-13 テストサイトへの公開完了
+
+- 利用者指定の `https://legend-heroes-test.web.app/`（Firebase project `ailandgames-test` / Hosting site `legend-heroes-test`）へHostingのみ公開。データベースルール・製品サイトは変更していません。
+- ソースはMacの `.local-previews/latest-game/`、採用確定済み `d505f61` / 装備実装 `f18b5ca` 相当。レアリティに応じたコストとSP予算、★6除外を維持。
+- ログイン不要・ブラウザ内保存。開発プレビューの強制プレイヤー/所持金/QA操作は混入なし。
+- `scripts/release-test-web.mjs` を統合版にも追加。PWAアイコンとmanifest/swの配布不足を修正。次回もこの統合版で `node scripts/release-test-web.mjs --deploy` を使用できます。
+- ビルド、装備/古代装備11テスト成功。公開HTMLとビルドの一致、release-target.jsonの採用済み装備識別、公開画面の起動を確認。
+- ビルド日時: 2026-11-13T02:19:52.257Z。タイトル内の既存パッチノート番号26.11.02.3は公開日時を示すものではありません。実配信はrelease-target.jsonのbuiltAt/sourceVersionで確認できます。
