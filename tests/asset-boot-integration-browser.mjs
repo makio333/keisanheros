@@ -9,7 +9,7 @@ if(r.request().resourceType()==='fetch'&& /\.(png|jpg|jpeg|webp|svg|mp3|m4a)(\?|
 return r.continue();});
 await p.goto('http://127.0.0.1:5196/',{waitUntil:'domcontentloaded'});await p.waitForFunction(()=>window.assetBootState?.phase==='ready',{timeout:30000});
 assert.equal(await p.evaluate(()=>!!window.latestQA),false);await p.screenshot({path:'/private/tmp/asset-boot-check/game-ready.png'});
-const first=downloads;assert(first>100);
+const first=downloads;assert(first>0 && first<=12,'only startup assets preload');
 await p.reload({waitUntil:'domcontentloaded'});await p.waitForFunction(()=>window.assetBootState?.phase==='ready');assert.equal(downloads,first);
 await p.locator('#btn-boot-start').click();await p.waitForFunction(()=>!document.getElementById('boot-loader-screen'));assert.equal(await p.locator('#screen-title').isVisible(),true);assert.deepEqual(errors,[]);
 console.log(JSON.stringify({passed:true,initialDownloads:first,warmDownloads:downloads-first,titleVisible:true,errors}));

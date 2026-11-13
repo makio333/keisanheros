@@ -40,6 +40,15 @@ for (const [path, url] of Object.entries(assetMap)) {
   }
 }
 
+// Title-only lightweight copies retain the same artwork and transparency.
+for(const [source,optimized] of Object.entries({
+ '画像/title_sky_v2.png':'assets/boot/title-sky.webp',
+ '画像/title_foreground_v2.png':'assets/boot/title-foreground.webp',
+ '画像/title_logo_transparent.png':'assets/boot/title-logo.webp',
+})){
+ const url=assetMap[optimized];
+ if(url)for(const key of [source,'./'+source,encodeURI(source),encodeURI('./'+source)])assetMap[key]=url;
+}
 window.__ASSET_MAP__ = assetMap;
 
 // HTML内の静的画像や背景画像の解決関数

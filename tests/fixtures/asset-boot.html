@@ -36,7 +36,7 @@
 
 <script type="module">
 import {startAssetBoot} from '/asset_boot.js';
-const keys=['assets/characters/bg_skin_forest.png','assets/characters/hero_female_1_hd.png','assets/characters/hero_male_2_hd.png','assets/characters/skin_forest_scout_f.png'];
+const keys=['assets/boot/forest.webp','assets/boot/adventurer.webp','assets/boot/knight.webp','assets/boot/scout.webp','assets_audio/se_decide.mp3?v=dev'];
 startAssetBoot({screen:document.getElementById('boot-loader-screen'),resolve:path=>'/'+path,assetMap:Object.fromEntries(keys.map(k=>[k,'/'+k])),onReady(){document.getElementById('boot-loading-bar-area').classList.add('hidden');document.getElementById('boot-start-area').classList.remove('hidden');document.getElementById('btn-boot-start').onclick=()=>{document.getElementById('boot-loader-screen').remove();document.body.textContent='冒険をはじめよう';};}});
 window.render_game_to_text=()=>JSON.stringify(window.assetBootState);
 </script></body></html>

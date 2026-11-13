@@ -10,12 +10,13 @@ try {
  p.on('request',r=>{if(r.resourceType()==='fetch')mediaFetches++;});
  await p.route('**/assets_audio/*',async r=>{
    audioFetches++;await new Promise(resolve=>setTimeout(resolve,250));
-   if(fail && r.request().url().includes('bgm_halloween_boss.')){await r.fulfill({status:503,body:'offline'});return;}
+   if(fail && r.request().url().includes('se_decide.')){await r.fulfill({status:503,body:'offline'});return;}
    await r.fulfill({status:200,contentType:'audio/wav',body:Buffer.alloc(128)});
  });
+ await p.route('**/adventurer.webp',async r=>{await new Promise(resolve=>setTimeout(resolve,1200));await r.continue();});
  await p.goto(base+'/tests/fixtures/asset-boot.html',{waitUntil:'domcontentloaded'});
  await p.waitForFunction(()=>window.assetBootState?.phase==='updating');
- await p.waitForTimeout(450);await p.screenshot({path:out+'/update-desktop.png'});
+ await p.waitForTimeout(450);assert(await p.locator('#boot-character').evaluate(img=>img.naturalWidth>0),'small sprite is visible while HD skin loads');await p.screenshot({path:out+'/update-desktop.png'});
  await p.waitForFunction(()=>window.assetBootState?.phase==='error');
  assert.equal(await p.evaluate(()=>assetBootState.failed),1);
  await p.screenshot({path:out+'/interrupted.png'});
@@ -30,12 +31,12 @@ try {
  await p.evaluate(async()=>{
   const {startAssetBoot}=await import('/asset_boot.js');
   document.getElementById('boot-start-area').classList.add('hidden');document.getElementById('boot-loading-bar-area').classList.remove('hidden');
-  const keys=['assets/characters/bg_skin_forest.png','assets/characters/hero_female_1_hd.png','assets/characters/hero_male_2_hd.png','assets/characters/skin_forest_scout_f.png'];
+  const keys=['assets/boot/forest.webp','assets/boot/adventurer.webp','assets/boot/knight.webp','assets/boot/scout.webp','assets_audio/se_decide.mp3?v=dev'];
   await startAssetBoot({screen:document.getElementById('boot-loader-screen'),resolve:s=>'/'+s,assetMap:Object.fromEntries(keys.map((k,i)=>[k,'/'+k+(i===1?'?revision=2':'')])),onReady(){}});
  });
  assert.equal(mediaFetches-beforeChanged,1,'update downloads only the changed asset');
  // A cached HTML fallback must be rejected and downloaded again as real media.
- await p.evaluate(async()=>{const cache=await caches.open('legend-heroes-media-v1');await cache.put(location.origin+'/assets/characters/hero_male_2_hd.png',new Response('<html>missing</html>',{headers:{'Content-Type':'text/html'}}));});
+ await p.evaluate(async()=>{const cache=await caches.open('legend-heroes-media-v1');await cache.put(location.origin+'/assets/boot/knight.webp',new Response('<html>missing</html>',{headers:{'Content-Type':'text/html'}}));});
  const beforeInvalid=mediaFetches;await p.reload({waitUntil:'domcontentloaded'});await p.waitForFunction(()=>window.assetBootState?.phase==='ready');assert.equal(mediaFetches-beforeInvalid,1);
  await p.locator('#btn-boot-start').click();assert.equal(await p.locator('#boot-loader-screen').count(),0);
  const portrait=await browser.newContext({serviceWorkers:'block',viewport:{width:390,height:844}});const phone=await portrait.newPage();

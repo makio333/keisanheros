@@ -1,4 +1,4 @@
-import {startAssetBoot,bootAudioUrl} from './asset_boot.js';
+import {startAssetBoot,bootAudioUrl,startupAssetMap} from './asset_boot.js';
 import {manaEquipmentStats,manaEquipmentAbility,manaEquipmentCost,equipmentManaBudget,ENCHANT_RESOURCE_COST} from './equipment_mana_ratio.js';
 import {equipmentChestMarkup} from './equipment_chest_intro.js';
 import {QUEST_MEDAL_IMAGE} from './quest_medal_art.js';
@@ -15421,7 +15421,7 @@ function startBootLoader(){
   const startBtn  = $('btn-boot-start');
 
   let ready = false;
-  startAssetBoot({screen, resolve:av, assetMap:window.__ASSET_MAP__ || {}, onReady(){
+  startAssetBoot({screen, resolve:av, assetMap:startupAssetMap(window.__ASSET_MAP__ || {}), onReady(){
     ready=true;
     if (barArea) barArea.classList.add('hidden');
     if (startArea) startArea.classList.remove('hidden');
