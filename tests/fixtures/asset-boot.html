@@ -1,0 +1,42 @@
+<!doctype html><html lang="ja"><meta charset="utf-8"><base href="/"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="/icon-192.png"><title>読み込み画面の確認</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/asset_boot.css"><body><div id="boot-loader-screen" class="boot-loader-screen">
+  <div class="boot-loader-content">
+    <div class="boot-loader-logo-area">
+      <div class="boot-loader-title">⚔️ LEGEND HEROES ⚔️</div>
+      <div class="boot-loader-sub">〜知恵を受け継ぎし勇者たち〜</div>
+    </div>
+    
+    <div class="boot-art-scene" aria-hidden="true">
+      <img id="boot-scenery" class="boot-scenery" alt="">
+      <div class="boot-art-shade"></div>
+      <img id="boot-character" class="boot-character" alt="">
+      <div class="boot-character-caption"><span>ADVENTURER’S JOURNAL</span><strong id="boot-character-name">次の冒険へ</strong></div>
+    </div>
+    <div id="boot-loading-bar-area" class="boot-loading-bar-area" role="status" aria-live="polite">
+      <div id="boot-phase-label" class="boot-phase-label">冒険の準備</div>
+      <h1 id="boot-phase-title">アップデートを確認中</h1>
+      <p id="boot-phase-description">冒険に必要なデータを確認しています。</p>
+      <div class="boot-loading-text"><span id="boot-status-text">CHECKING DATA</span><span id="boot-load-percent">0%</span></div>
+      <div id="boot-progress-track" class="boot-progress-track" role="progressbar" aria-label="データの準備" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div id="boot-progress-fill" class="boot-progress-fill" style="width:0%"></div>
+      </div>
+      <p id="boot-download-detail" class="boot-download-detail">保存済みのデータはそのまま使います。</p>
+      <button id="boot-download-retry" type="button" class="btn hidden">もう一度ダウンロード</button>
+      <p id="boot-tip" class="boot-tip">装備を整えて、まだ見ぬ世界へ。</p>
+    </div>
+
+    <!-- ロード完了後に出現するスタートボタン -->
+    <div id="boot-start-area" class="boot-start-area hidden">
+      <button id="btn-boot-start" class="btn btn-primary btn-boot-start">
+        ⚔️ ぼうけんを はじめる
+      </button>
+      <p class="boot-start-hint">※画面をタッチ／クリックしてスタート</p>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import {startAssetBoot} from '/asset_boot.js';
+const keys=['assets/characters/bg_skin_forest.png','assets/characters/hero_female_1_hd.png','assets/characters/hero_male_2_hd.png','assets/characters/skin_forest_scout_f.png'];
+startAssetBoot({screen:document.getElementById('boot-loader-screen'),resolve:path=>'/'+path,assetMap:Object.fromEntries(keys.map(k=>[k,'/'+k])),onReady(){document.getElementById('boot-loading-bar-area').classList.add('hidden');document.getElementById('boot-start-area').classList.remove('hidden');document.getElementById('btn-boot-start').onclick=()=>{document.getElementById('boot-loader-screen').remove();document.body.textContent='冒険をはじめよう';};}});
+window.render_game_to_text=()=>JSON.stringify(window.assetBootState);
+</script></body></html>

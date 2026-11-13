@@ -21,7 +21,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) {
+          if (key.startsWith('legend-heroes-cache-') && key !== CACHE_NAME) {
             console.log('[Service Worker v23] Removing old cache:', key);
             return caches.delete(key);
           }
@@ -68,7 +68,7 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
         const cachedType = cachedResponse.headers.get('Content-Type') || '';
-        if (event.request.destination !== 'image' || cachedType.startsWith('image/')) return cachedResponse;
+        if (event.request.destination !== 'image' || cachedType.startsWith('image/')) return mediaRangeResponse(event.request,cachedResponse);
       }
       return fetch(event.request).then((networkResponse) => {
         if (!networkResponse || networkResponse.status !== 200 || networkResponse.headers.get('Cache-Control')?.includes('no-store') || (networkResponse.type !== 'basic' && networkResponse.type !== 'cors')) {
@@ -85,3 +85,18 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// Safari and HTMLAudioElement may request byte ranges even for cached audio.
+async function mediaRangeResponse(request,response){
+  const range=request.headers.get('Range');
+  if(!range || !/^(audio|video)\//.test(response.headers.get('Content-Type') || ''))return response;
+  const match=/^bytes=(\d*)-(\d*)$/.exec(range);
+  if(!match || (!match[1]&&!match[2]))return response;
+  const blob=await response.blob(),size=blob.size;
+  const start=match[1] ? Number(match[1]) : Math.max(0,size-Number(match[2]));
+  const end=match[1] && match[2] ? Math.min(Number(match[2]),size-1) : size-1;
+  if(start>end || start>=size)return new Response(null,{status:416,headers:{'Content-Range':`bytes */${size}`}});
+  const headers=new Headers(response.headers);
+  headers.set('Accept-Ranges','bytes');headers.set('Content-Range',`bytes ${start}-${end}/${size}`);headers.set('Content-Length',String(end-start+1));
+  return new Response(blob.slice(start,end+1),{status:206,headers});
+}

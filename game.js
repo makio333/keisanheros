@@ -1,3 +1,4 @@
+import {startAssetBoot,bootAudioUrl} from './asset_boot.js';
 import {manaEquipmentStats,manaEquipmentAbility,manaEquipmentCost,equipmentManaBudget,ENCHANT_RESOURCE_COST} from './equipment_mana_ratio.js';
 import {equipmentChestMarkup} from './equipment_chest_intro.js';
 import {QUEST_MEDAL_IMAGE} from './quest_medal_art.js';
@@ -163,6 +164,7 @@ function cancelRaidBossIntro(){raidIntroAbort?.abort();raidBossIntro.cancel();ra
 const ASSET_V = 1;
 function av(path){
   if (!path) return path;
+  if(path.startsWith('assets_audio/'))return bootAudioUrl(path);
   if (path.startsWith('http') || path.startsWith('data:')) return path; // 外部URL・data URIは そのまま
   if (typeof window !== 'undefined' && window.__ASSET_MAP__) {
     const pure = path.split('?')[0];
@@ -15419,119 +15421,14 @@ function startBootLoader(){
   const startBtn  = $('btn-boot-start');
 
   let ready = false;
-
-  const setPct = (p) => {
-    const v = Math.max(0, Math.min(100, Math.round(p)));
-    if (pctEl)  pctEl.textContent = v + '%';
-    if (fillEl) fillEl.style.width = v + '%';
-  };
-  setPct(0);
-
-  /* よみこみ かんりょう → スタートボタンを だす */
-  const showStart = () => {
-    if (ready) return;
-    ready = true;
-    setPct(100);
-    setTimeout(() => {
-      if (barArea)   barArea.classList.add('hidden');
-      if (startArea) startArea.classList.remove('hidden');
-
-      // ロード完了（100%）後に初めてクリック/タップを解禁
-      if (startBtn) {
-        startBtn.onclick = begin;
-        startBtn.ontouchend = begin;
-      }
-      screen.addEventListener('click', begin);
-      screen.addEventListener('touchend', begin);
-    }, 200);
-  };
-
-  // 1. 優先アセット（タイトル画面まわり）
-  const PRIORITY_KEYS = [
-    '画像/title_sky_v2.png',
-    '画像/title_foreground_v2.png',
-    '画像/title_logo_transparent.png',
-    '画像/home_town_v2.png',
-    'assets/bg/my_room.jpg',
-    '画像/bg_training.jpg',
-  ];
-  const priorityUrls = [];
-  PRIORITY_KEYS.forEach(k => {
-    const url = av(k);
-    if (url && !priorityUrls.includes(url)) priorityUrls.push(url);
-  });
-
-  // 2. 音声ファイル（全BGM & SE）
-  const AUDIO_URLS = [
-    'assets_audio/bgm_title.m4a',
-    'assets_audio/bgm_home_kaisei.mp3',
-    'assets_audio/bgm_room.m4a',
-    'assets_audio/bgm_stage1.m4a',
-    'assets_audio/bgm_area_boss.mp3',
-    'assets_audio/bgm_raid_boss.mp3',
-    'assets_audio/bgm_training.m4a',
-    'assets_audio/se_crit.mp3',
-    'assets_audio/se_clear.mp3',
-    'assets_audio/se_type.mp3',
-    'assets_audio/se_slash.mp3',
-    'assets_audio/se_decide.mp3',
-    'assets_audio/se_gameover.m4a',
-    'assets_audio/se_gacha_result.mp3',
-    'assets_audio/se_gacha_result2.mp3',
-  ];
-
-  // 3. バンドルされた全画像アセット
-  const otherUrls = [];
-  if (typeof window !== 'undefined' && window.__ASSET_MAP__) {
-    Object.values(window.__ASSET_MAP__).forEach(url => {
-      if (url && typeof url === 'string' && !url.startsWith('data:') && !url.startsWith('blob:')) {
-        if (!priorityUrls.includes(url) && !otherUrls.includes(url)) {
-          otherUrls.push(url);
-        }
-      }
-    });
-  }
-
-  const allUrls = [...priorityUrls, ...AUDIO_URLS, ...otherUrls];
-  const total = allUrls.length || 1;
-  let done = 0;
-
-  function loadSingleAsset(url) {
-    return new Promise((resolve) => {
-      const isAudio = /\.(m4a|mp3|ogg|wav)$/i.test(url);
-      const timer = setTimeout(() => resolve(), 8000); // 1アセットあたり最大8秒でスキップ
-      if (isAudio) {
-        fetch(url)
-          .then(() => { clearTimeout(timer); resolve(); })
-          .catch(() => { clearTimeout(timer); resolve(); });
-      } else {
-        const img = new Image();
-        img.onload = img.onerror = () => {
-          clearTimeout(timer);
-          resolve();
-        };
-        img.src = url;
-      }
-    });
-  }
-
-  // 並列ダウンロードワーカー（同時6並列でスムーズにロード）
-  const concurrency = 6;
-  let cursor = 0;
-
-  async function downloadWorker() {
-    while (cursor < allUrls.length) {
-      const currentUrl = allUrls[cursor++];
-      await loadSingleAsset(currentUrl);
-      done++;
-      setPct((done / total) * 100);
-    }
-  }
-
-  // 全アセットの読み込みが完全に完了するまで待つ
-  Promise.all(Array.from({ length: concurrency }, downloadWorker)).then(() => {
-    showStart();
-  });
+  startAssetBoot({screen, resolve:av, assetMap:window.__ASSET_MAP__ || {}, onReady(){
+    ready=true;
+    if (barArea) barArea.classList.add('hidden');
+    if (startArea) startArea.classList.remove('hidden');
+    if (startBtn) { startBtn.onclick=begin; startBtn.ontouchend=begin; }
+    screen.addEventListener('click',begin);
+    screen.addEventListener('touchend',begin);
+  }});
 
   /* スタート：全アセット読み込み完了（ready === true）後にのみ実行可能 */
   const begin = (e) => {

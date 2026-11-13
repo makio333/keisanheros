@@ -1,6 +1,7 @@
 import './storage_polyfill.js';
 import './equipment_chest_intro.css';
 import './style.css?v=mana-ratio2';
+import './asset_boot.css';
 import './kanji_input_style.css';
 import './christmas_battle_layout.css?v=presents5';
 import './christmas_event_hub.css?v=mana-ratio2';

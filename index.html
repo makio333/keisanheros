@@ -23,13 +23,7 @@
       console.warn('[PWA] ServiceWorker registration failed: ', err);
     });
 
-    navigator.serviceWorker.addEventListener('controllerchange', function() {
-      if (!window._swReloading) {
-        window._swReloading = true;
-        console.log('[PWA] New version activated, reloading...');
-        window.location.reload();
-      }
-    });
+
   }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -44,12 +38,23 @@
       <div class="boot-loader-sub">〜知恵を受け継ぎし勇者たち〜</div>
     </div>
     
-    <!-- ロード中バー -->
-    <div id="boot-loading-bar-area" class="boot-loading-bar-area">
-      <div class="boot-loading-text">NOW LOADING... <span id="boot-load-percent">0%</span></div>
-      <div class="boot-progress-track">
-        <div id="boot-progress-fill" class="boot-progress-fill" style="width: 0%;"></div>
+    <div class="boot-art-scene" aria-hidden="true">
+      <img id="boot-scenery" class="boot-scenery" alt="">
+      <div class="boot-art-shade"></div>
+      <img id="boot-character" class="boot-character" alt="">
+      <div class="boot-character-caption"><span>ADVENTURER’S JOURNAL</span><strong id="boot-character-name">次の冒険へ</strong></div>
+    </div>
+    <div id="boot-loading-bar-area" class="boot-loading-bar-area" role="status" aria-live="polite">
+      <div id="boot-phase-label" class="boot-phase-label">冒険の準備</div>
+      <h1 id="boot-phase-title">アップデートを確認中</h1>
+      <p id="boot-phase-description">冒険に必要なデータを確認しています。</p>
+      <div class="boot-loading-text"><span id="boot-status-text">CHECKING DATA</span><span id="boot-load-percent">0%</span></div>
+      <div id="boot-progress-track" class="boot-progress-track" role="progressbar" aria-label="データの準備" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div id="boot-progress-fill" class="boot-progress-fill" style="width:0%"></div>
       </div>
+      <p id="boot-download-detail" class="boot-download-detail">保存済みのデータはそのまま使います。</p>
+      <button id="boot-download-retry" type="button" class="btn hidden">もう一度ダウンロード</button>
+      <p id="boot-tip" class="boot-tip">装備を整えて、まだ見ぬ世界へ。</p>
     </div>
 
     <!-- ロード完了後に出現するスタートボタン -->
