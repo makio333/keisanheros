@@ -21,7 +21,7 @@ try {
  assert.equal(await p.evaluate(()=>assetBootState.failed),1);
  await p.screenshot({path:out+'/interrupted.png'});
  fail=false;const beforeRetry=mediaFetches;await p.locator('#boot-download-retry').click();
- await p.waitForFunction(()=>window.assetBootState?.phase==='loading');await p.screenshot({path:out+'/normal-loading.png'});
+ await p.waitForFunction(()=>document.getElementById('boot-loader-screen')?.dataset.phase==='loading');await p.screenshot({path:out+'/normal-loading.png'});
  await p.waitForFunction(()=>window.assetBootState?.phase==='ready');assert.equal(mediaFetches-beforeRetry,1,'retry only failed data');
  assert.equal(await p.locator('#boot-start-area').isVisible(),true);
  const beforeReload=mediaFetches;await p.reload({waitUntil:'domcontentloaded'});await p.waitForFunction(()=>window.assetBootState?.phase==='ready');

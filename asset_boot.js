@@ -2,11 +2,7 @@
 export const BOOT_MEDIA_CACHE = 'legend-heroes-media-v1';
 // Music and artwork for other screens are fetched on demand by the Service Worker.
 const AUDIO = [];
-const STARTUP_ART = [
- '画像/title_sky_v2.png','画像/title_foreground_v2.png','画像/title_logo_transparent.png',
- 'assets/boot/forest.webp','assets/characters/hero_female_1.png',
- 'assets/boot/adventurer.webp','assets/boot/knight.webp','assets/boot/scout.webp',
-];
+const STARTUP_ART = ['assets/characters/hero_female_1.png'];
 export function startupAssetMap(assetMap){
  const selected={};
  for(const key of STARTUP_ART){const url=assetMap[key] || assetMap['./'+key];if(url)selected[key]=url;}
@@ -36,7 +32,7 @@ export async function startAssetBoot({screen,resolve,assetMap,onReady}) {
   window.assetBootState=state;
   function progress(n){const value=Math.min(100,Math.max(0,Math.round(n)));text('boot-load-percent',value+'%');el('boot-progress-fill').style.width=value+'%';el('boot-progress-track').setAttribute('aria-valuenow',value);}
   function phase(name,title,description){state.phase=name;screen.dataset.phase=name;text('boot-phase-label',name==='updating'?'DATA UPDATE':'NOW LOADING');text('boot-phase-title',title);text('boot-phase-description',description);}
-  const scenery=el('boot-scenery');scenery.fetchPriority='high';scenery.src=resolve('assets/boot/forest.webp');
+  const scenery=el('boot-scenery');scenery.fetchPriority='low';
   const character=el('boot-character');character.fetchPriority='high';
   // A small existing sprite appears first, while the large skin illustration loads.
   character.src=resolve('assets/characters/hero_female_1.png');
@@ -45,10 +41,10 @@ export async function startAssetBoot({screen,resolve,assetMap,onReady}) {
     if(changing)return;
     changing=true;
     const [src,name,tip]=PORTRAITS[slide%PORTRAITS.length];
-    const next=new Image();next.fetchPriority='high';next.src=resolve(src);
+    const next=new Image();next.fetchPriority='low';next.src=resolve(src);
     try {await next.decode();if(screen.isConnected){character.src=next.src;text('boot-character-name',name);text('boot-tip',tip);slide++;}}catch {}finally{changing=false;}
   };
-  void showPortrait();
+  // Decoration starts after critical data is ready and never blocks the start button.
   const rotate=setInterval(()=>{if(!screen.isConnected || state.phase==='ready'){clearInterval(rotate);return;}void showPortrait();},9000);
   const urls=bootAssetUrls(assetMap);
   let cache;try {cache=await caches.open(BOOT_MEDIA_CACHE);} catch {state.persistent=false;}
@@ -76,10 +72,9 @@ export async function startAssetBoot({screen,resolve,assetMap,onReady}) {
   }
   async function normalLoad(){
     phase('loading','冒険を準備中','もうすぐ、あなたの冒険がはじまります。');progress(0);text('boot-status-text','NOW LOADING');text('boot-download-detail','保存済みの素材を読み込んでいます。');
-    // Decode only the visible art here. Game artwork is loaded on demand from cache.
-    await Promise.all([el('boot-character'),scenery].map(img=>img.decode().catch(()=>{})));
     progress(100);text('boot-status-text','準備完了');
-    await new Promise(r=>setTimeout(r,450));state.phase='ready';clearInterval(rotate);onReady();
+    state.phase='ready';clearInterval(rotate);onReady();window.dispatchEvent(new Event('legend-heroes-ready'));
+    setTimeout(()=>{if(screen.isConnected && !screen.classList.contains('fade-out')){scenery.src=resolve('assets/boot/forest.webp');void showPortrait();}},100);
   }
   async function update(){
     const pending=missing();state.done=0;state.total=pending.length;state.failed=0;state.downloadedBytes=0;

@@ -42,6 +42,7 @@ for (const [path, url] of Object.entries(assetMap)) {
 
 // Title-only lightweight copies retain the same artwork and transparency.
 for(const [source,optimized] of Object.entries({
+ '画像/home_town_v2.png':'assets/boot/home.webp',
  '画像/title_sky_v2.png':'assets/boot/title-sky.webp',
  '画像/title_foreground_v2.png':'assets/boot/title-foreground.webp',
  '画像/title_logo_transparent.png':'assets/boot/title-logo.webp',

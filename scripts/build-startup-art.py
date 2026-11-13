@@ -3,6 +3,7 @@ from pathlib import Path
 from PIL import Image
 root=Path(__file__).resolve().parents[1]
 items=[
+ ('画像/home_town_v2.png','home.webp',1600),
  ('画像/title_sky_v2.png','title-sky.webp',1600),
  ('画像/title_foreground_v2.png','title-foreground.webp',1600),
  ('画像/title_logo_transparent.png','title-logo.webp',1400),

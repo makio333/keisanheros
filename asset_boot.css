@@ -1,3 +1,5 @@
+/* Hidden game screens must not compete with startup downloads. */
+body.boot-pending:has(#boot-loader-screen:not(.fade-out)) main{display:none!important}
 /* Artwork-led loading screens. These rules intentionally override the legacy loader. */
 #boot-loader-screen{isolation:isolate;background:#101b24;color:#fff5df;overflow:hidden}
 #boot-loader-screen .boot-loader-content{position:relative;width:min(1280px,100%);height:100%;max-width:none;padding:clamp(20px,4vw,64px);box-sizing:border-box;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-end;gap:24px;text-align:left}

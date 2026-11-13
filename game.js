@@ -3938,6 +3938,7 @@ function showScreen(id){
   if (explore?.isEventRaid && id !== 'screen-battle') endEventRaidBattle(false);
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   $(id).classList.add('active');
+  if(!document.body.classList.contains('boot-pending'))$(id).querySelectorAll('img[loading="lazy"]').forEach(img=>{img.loading='eager';img.fetchPriority='auto';});
   updateHud();
 
   // セーブデータを読み込んでいない間はメニューを隠す（「きょてんに もどる」がGを前提とするため）
@@ -15406,7 +15407,7 @@ function init(){
 
 /* ==========================================================
    きどう時の ロード画面（NOW LOADING → スタートボタン）
-   ・ゲームでつかう全アセット（画像・BGM・SE）を初回ロード画面で一括プリロード
+   ・起動に必要な最小素材だけ準備し、その他は表示時に読み込む
    ・Service Worker / ブラウザキャッシュに完全保存されるため、
      ゲーム本編中の画面遷移・戦闘・演出が一切引っかからず即座に表示される
    ・スタートボタンは「音声を初期化するためのユーザー操作」を兼ねている
@@ -15440,6 +15441,7 @@ function startBootLoader(){
     } catch (err) {
       console.warn('SM.init error:', err);
     }
+    document.body.classList.remove('boot-pending');
     screen.classList.add('fade-out');
     const fade = $('title-white-fade');
     if (fade){

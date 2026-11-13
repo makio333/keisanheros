@@ -12,8 +12,9 @@
 <link rel="icon" type="image/png" href="./icon-192.png">
 <title>レジェンドヒーローズ 〜知恵を受け継ぎし勇者たち〜</title>
 <script>
-  // Service Worker登録（完全オフライン対応 ＆ 端末間リアルタイム更新）
+  // Cache-worker installation must not compete with the first game download.
   if ('serviceWorker' in navigator) {
+    window.addEventListener('legend-heroes-ready',function(){
     navigator.serviceWorker.register('./sw.js').then(function(reg) {
       console.log('[PWA] ServiceWorker registered with scope: ', reg.scope);
       if (reg.update) {
@@ -22,12 +23,11 @@
     }).catch(function(err) {
       console.warn('[PWA] ServiceWorker registration failed: ', err);
     });
-
-
+    },{once:true});
   }
 </script>
 </head>
-<body>
+<body class="boot-pending">
 <div id="debug-error-banner" style="display:none; position:fixed; top:0; left:0; width:100%; background:rgba(220,20,20,0.95); color:#fff; z-index:9999999999; padding:12px; font-size:14px; box-sizing:border-box; word-break:break-all;"></div>
 <!-- ゲーム起動時 ロード画面 ＆ スタート画面 -->
 <div id="boot-loader-screen" class="boot-loader-screen">
@@ -138,7 +138,7 @@
 
       <div class="panel title-panel">
         <div class="title-logo-wrapper" id="title-logo-wrapper">
-          <img src="./assets/boot/title-logo.webp" alt="レジェンドヒーローズ 〜知恵を受け継ぎし勇者たち〜" class="title-logo-img">
+          <img src="./assets/boot/title-logo.webp" alt="レジェンドヒーローズ 〜知恵を受け継ぎし勇者たち〜" class="title-logo-img" loading="lazy" fetchpriority="low" decoding="async">
           <div class="title-sparkle sparkle-top-right"></div>
           <div class="title-sparkle sparkle-sword-tip"></div>
           <div class="title-sparkle sparkle-top-left"></div>
@@ -214,7 +214,7 @@
             <div class="hero-stage-center">
               <div class="hero-stage-portrait-frame">
                 <div class="hero-stage-shine"></div>
-                <img id="hero-preview-img" src="assets/characters/hero_female_1.png" alt="キャラクター">
+                <img id="hero-preview-img" src="assets/characters/hero_female_1.png" alt="キャラクター" loading="lazy" fetchpriority="low" decoding="async">
               </div>
             </div>
 
@@ -278,7 +278,7 @@
       <div id="home-rescued" class="rescued-box hidden"></div>
 
       <div class="town-map" id="town-map">
-        <img src="./画像/home_town_v2.png" class="town-map-img" alt="噴水広場と工房が並ぶ拠点の街" loading="eager" fetchpriority="high">
+        <img src="./assets/boot/home.webp" class="town-map-img" alt="噴水広場と工房が並ぶ拠点の街" loading="lazy" fetchpriority="low" decoding="async">
         <div class="town-status-cluster">
           <!-- スキンとHP/MPを縦にまとめるコンテナ -->
           <div class="player-status-group" style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;">
@@ -286,7 +286,7 @@
             <div class="status-window avatar-window" id="home-avatar-window" style="margin-left: 10px; margin-bottom: -10px; z-index: 10; width: 130px; height: 160px;">
               <div class="avatar-bg"></div>
               <div class="avatar-character-stage" id="home-avatar-character-stage">
-                <img id="home-player-avatar" class="avatar-img-layer" src="" alt="" title="クリックでスキンを変更" style="display: none;">
+                <img id="home-player-avatar" class="avatar-img-layer" src="" alt="" title="クリックでスキンを変更" style="display: none;" loading="lazy" fetchpriority="low" decoding="async">
               </div>
             </div>
 
@@ -298,7 +298,7 @@
             </div>
             <div class="gold-badge"><span class="gold-badge-icon">💰</span><span id="home-player-gold" class="gold-badge-num">0</span><span class="gold-badge-unit">G</span></div>
             <div class="stat-bar-wrap home-stat-hp">
-              <span class="stat-label"><img src="assets/ui_icons/ui_icon_4.png" class="stat-inline-icon">HP</span>
+              <span class="stat-label"><img src="assets/ui_icons/ui_icon_4.png" class="stat-inline-icon" loading="lazy" fetchpriority="low" decoding="async">HP</span>
               <div class="stat-bar hp-bar-container">
                 <div id="home-player-hp-ghost" class="stat-bar-fill ghost-fill"></div>
                 <div id="home-player-hp" class="stat-bar-fill hp"></div>
@@ -306,7 +306,7 @@
               </div>
             </div>
             <div class="stat-bar-wrap home-stat-mp">
-              <span class="stat-label"><img src="assets/ui_icons/ui_icon_6.png" class="stat-inline-icon">MP</span>
+              <span class="stat-label"><img src="assets/ui_icons/ui_icon_6.png" class="stat-inline-icon" loading="lazy" fetchpriority="low" decoding="async">MP</span>
               <div class="stat-bar mp-bar-container">
                 <div id="home-player-mp-ghost" class="stat-bar-fill ghost-fill"></div>
                 <div id="home-player-mp" class="stat-bar-fill mp"></div>
@@ -351,13 +351,13 @@
           <span class="hotspot-tag"><span class="town-service-icon service-quest-board" aria-hidden="true"></span><span>サブクエスト</span></span>
         </button>
         <button id="hotspot-raid-boss" class="town-hotspot" style="left:75%; top:15%;">
-          <span class="hotspot-tag"><img class="raid-town-icon" src="assets/raid/raid_boss_halloween_moon_wraith.png" alt="" width="32" height="32"><span>レイドボス</span></span>
+          <span class="hotspot-tag"><img class="raid-town-icon" src="assets/raid/raid_boss_halloween_moon_wraith.png" alt="" width="32" height="32" loading="lazy" fetchpriority="low" decoding="async"><span>レイドボス</span></span>
         </button>
         <button id="hotspot-christmas" class="town-hotspot christmas-home-entry hidden" style="left:50%; top:17%;">
-          <span class="hotspot-tag christmas-home-tag"><img src="assets/christmas/christmas_tree_monster.png" alt="" width="48" height="48"><span>🎄 サンタクロース村へ<br><small>フィンランド・ラップランド</small></span></span>
+          <span class="hotspot-tag christmas-home-tag"><img src="assets/christmas/christmas_tree_monster.png" alt="" width="48" height="48" loading="lazy" fetchpriority="low" decoding="async"><span>🎄 サンタクロース村へ<br><small>フィンランド・ラップランド</small></span></span>
         </button>
         <button id="hotspot-halloween" class="town-hotspot halloween-home-entry hidden" style="left:50%; top:17%;">
-          <span class="hotspot-tag halloween-home-tag"><img src="assets/halloween/pumpkin_imp.png" alt="" width="48" height="48"><span>🎃 ハロウィンの森<br><small>10/31まで・復習チャレンジ</small></span></span>
+          <span class="hotspot-tag halloween-home-tag"><img src="assets/halloween/pumpkin_imp.png" alt="" width="48" height="48" loading="lazy" fetchpriority="low" decoding="async"><span>🎃 ハロウィンの森<br><small>10/31まで・復習チャレンジ</small></span></span>
         </button>
         <button id="hotspot-adventure" class="town-hotspot town-hotspot-adventure" style="left:58%; top:75%;">
           <span class="hotspot-tag hotspot-tag-adventure">⚔ ぼうけんに でる</span>
@@ -480,7 +480,7 @@
     <!-- 新ステージ選択（全画面背景＋うえから したへ ならぶ ステージリスト） -->
     <section id="screen-stage-select-new" class="screen">
       <div class="town-map" id="stage-select-map">
-        <img id="stage-select-area-bg" class="town-map-img" alt="エリア背景">
+        <img id="stage-select-area-bg" class="town-map-img" alt="エリア背景" loading="lazy" fetchpriority="low" decoding="async">
         <button id="btn-stage-select-new-back" class="window-nav-btn window-back-btn" style="position: absolute; top: 16px; left: 16px; z-index: 10;">← エリアせんたく</button>
         <div id="stage-button-container" class="stage-vertical-list"></div>
       </div>
@@ -489,7 +489,7 @@
     <!-- 草原エリア内 ステージ選択 -->
     <section id="screen-grass-substage" class="screen">
       <div class="town-map" id="grass-substage-map">
-        <img src="./画像/ステージ/草原.jpg" class="town-map-img" alt="草原エリア">
+        <img src="./画像/ステージ/草原.jpg" class="town-map-img" alt="草原エリア" loading="lazy" fetchpriority="low" decoding="async">
         <button id="btn-grass-substage-back" class="window-nav-btn window-back-btn" style="position: absolute; top: 16px; left: 16px; z-index: 10;">← エリアせんたく</button>
         <button id="substage-card-tower" class="town-hotspot" style="left:54%; top:52%;">
           <span class="hotspot-tag" id="substage-status-tower-tag">🌿 草原<br><small>10かい</small></span>
@@ -520,16 +520,16 @@
         </div>
         <section id="skin-gacha-section" class="skin-gacha-panel" role="tabpanel" aria-labelledby="btn-gacha-tab-skins">
           <div class="gacha-showcase">
-            <img id="skin-gacha-title" class="gacha-logo" src="assets/ui/background_skin_gacha_logo.png" alt="背景スキンガチャ">
+            <img id="skin-gacha-title" class="gacha-logo" src="assets/ui/background_skin_gacha_logo.png" alt="背景スキンガチャ" loading="lazy" fetchpriority="low" decoding="async">
             <div class="gacha-feature-lineup">
-              <button class="gacha-feature-entry skin-gacha-preview-trigger" type="button" data-preview-kind="character" data-preview-id="skin_fire_lancer_m" aria-label="炎竜の槍士を拡大表示"><img class="gacha-feature-character" src="assets/characters/skin_fire_lancer_m.png" alt="炎竜の槍士"></button>
-              <button class="gacha-feature-entry skin-gacha-preview-trigger" type="button" data-preview-kind="character" data-preview-id="skin_tide_cleric_f" aria-label="潮流の巫女を拡大表示"><img class="gacha-feature-character" src="assets/characters/skin_tide_cleric_f.png" alt="潮流の巫女"></button>
-              <button class="gacha-feature-entry skin-gacha-preview-trigger" type="button" data-preview-kind="character" data-preview-id="ai_hero_spellblade" aria-label="風の魔法剣士を拡大表示"><img class="gacha-feature-character" src="assets/characters/ai_hero_spellblade_transparent.png" alt="風の魔法剣士"></button>
-              <button class="gacha-feature-entry skin-gacha-preview-trigger" type="button" data-preview-kind="character" data-preview-id="skin_forest_scout_f" aria-label="森の弓使いを拡大表示"><img class="gacha-feature-character" src="assets/characters/skin_forest_scout_f.png" alt="森の弓使い"></button>
+              <button class="gacha-feature-entry skin-gacha-preview-trigger" type="button" data-preview-kind="character" data-preview-id="skin_fire_lancer_m" aria-label="炎竜の槍士を拡大表示"><img class="gacha-feature-character" src="assets/characters/skin_fire_lancer_m.png" alt="炎竜の槍士" loading="lazy" fetchpriority="low" decoding="async"></button>
+              <button class="gacha-feature-entry skin-gacha-preview-trigger" type="button" data-preview-kind="character" data-preview-id="skin_tide_cleric_f" aria-label="潮流の巫女を拡大表示"><img class="gacha-feature-character" src="assets/characters/skin_tide_cleric_f.png" alt="潮流の巫女" loading="lazy" fetchpriority="low" decoding="async"></button>
+              <button class="gacha-feature-entry skin-gacha-preview-trigger" type="button" data-preview-kind="character" data-preview-id="ai_hero_spellblade" aria-label="風の魔法剣士を拡大表示"><img class="gacha-feature-character" src="assets/characters/ai_hero_spellblade_transparent.png" alt="風の魔法剣士" loading="lazy" fetchpriority="low" decoding="async"></button>
+              <button class="gacha-feature-entry skin-gacha-preview-trigger" type="button" data-preview-kind="character" data-preview-id="skin_forest_scout_f" aria-label="森の弓使いを拡大表示"><img class="gacha-feature-character" src="assets/characters/skin_forest_scout_f.png" alt="森の弓使い" loading="lazy" fetchpriority="low" decoding="async"></button>
             </div>
           </div>
           <div class="gacha-summon-bar">
-            <div class="skin-gacha-balance"><img class="skin-ticket-icon" src="assets/items/background_skin_ticket.png" alt="背景スキンガチャチケット">所持チケット <b id="skin-gacha-tickets">0</b> 枚</div>
+            <div class="skin-gacha-balance"><img class="skin-ticket-icon" src="assets/items/background_skin_ticket.png" alt="背景スキンガチャチケット" loading="lazy" fetchpriority="low" decoding="async">所持チケット <b id="skin-gacha-tickets">0</b> 枚</div>
           <div class="skin-gacha-draw-actions">
               <button id="btn-skin-gacha-draw" class="btn btn-primary" type="button">2500Gで1回引く</button>
               <button id="btn-skin-gacha-ticket" class="btn" type="button">チケット1枚で1回引く</button>
@@ -542,7 +542,7 @@
         </section>
         <section id="gacha-item-section" class="gacha-item-section hidden" role="tabpanel" aria-labelledby="btn-gacha-tab-items">
           <div class="equipment-gacha-showcase">
-            <img id="equipment-gacha-title" class="equipment-gacha-logo" src="assets/ui/equipment_gacha_logo.png" alt="装備ガチャ">
+            <img id="equipment-gacha-title" class="equipment-gacha-logo" src="assets/ui/equipment_gacha_logo.png" alt="装備ガチャ" loading="lazy" fetchpriority="low" decoding="async">
           <div class="gacha-collection-heading"><h3>ガチャ限定装備</h3><span>★1 60%・★2 30%・★3 9%・★4 0.7%・★5 0.3%</span></div>
             <div id="equipment-gacha-featured" class="equipment-gacha-featured"></div>
           </div>
@@ -561,11 +561,11 @@
         <section id="halloween-gacha-section" class="hidden" role="tabpanel" aria-labelledby="btn-gacha-tab-halloween"></section>
         <section id="christmas-skin-gacha-section" class="hidden" role="tabpanel" aria-labelledby="btn-gacha-tab-christmas-skins">
           <div class="christmas-gacha-showcase christmas-skin-gacha-showcase">
-            <img class="christmas-gacha-logo" src="assets/christmas/skin_gacha_logo.webp" alt="クリスマススキンガチャ">
+            <img class="christmas-gacha-logo" src="assets/christmas/skin_gacha_logo.webp" alt="クリスマススキンガチャ" loading="lazy" fetchpriority="low" decoding="async">
             <p>いつものスキンと、雪の国から届いたクリスマス限定スキンを集めよう！</p>
           </div>
           <div class="christmas-gacha-controls">
-            <div class="skin-gacha-balance"><img class="skin-ticket-icon" src="assets/items/background_skin_ticket.png" alt="背景スキンガチャチケット"> 所持チケット <b id="christmas-skin-gacha-tickets">0</b> 枚</div>
+            <div class="skin-gacha-balance"><img class="skin-ticket-icon" src="assets/items/background_skin_ticket.png" alt="背景スキンガチャチケット" loading="lazy" fetchpriority="low" decoding="async"> 所持チケット <b id="christmas-skin-gacha-tickets">0</b> 枚</div>
             <div class="menu-grid christmas-gacha-draw-actions">
               <button id="btn-christmas-skin-gacha-draw" class="btn btn-primary" type="button">2500Gで1回引く</button>
               <button id="btn-christmas-skin-gacha-ticket" class="btn" type="button">チケット1枚で1回引く</button>
@@ -577,7 +577,7 @@
         </section>
         <section id="christmas-equip-gacha-section" class="hidden" role="tabpanel" aria-labelledby="btn-gacha-tab-christmas-items">
           <div class="christmas-gacha-showcase christmas-equip-gacha-showcase">
-            <img class="christmas-gacha-logo" src="assets/christmas/equipment_gacha_logo.webp" alt="クリスマス装備ガチャ">
+            <img class="christmas-gacha-logo" src="assets/christmas/equipment_gacha_logo.webp" alt="クリスマス装備ガチャ" loading="lazy" fetchpriority="low" decoding="async">
             <p>いつもの装備に、雪の国の限定装備が加わった特別ラインナップ！</p>
           </div>
           <div class="christmas-gacha-controls">
@@ -605,7 +605,7 @@
         <h3 id="skin-gacha-preview-title"></h3>
         <div class="skin-gacha-preview-art">
           <div id="skin-gacha-preview-bg" class="avatar-composite-bg"></div>
-          <img id="skin-gacha-preview-image" src="" alt="">
+          <img id="skin-gacha-preview-image" src="" alt="" loading="lazy" fetchpriority="low" decoding="async">
         </div>
         <div id="equipment-preview-rarities" class="equipment-preview-rarities hidden" role="group" aria-label="表示するレアリティ">
           <button type="button" data-rarity="3" class="rarity-3">★3 激レア</button>
@@ -666,7 +666,7 @@
         </section>
         <section class="raid-boss-overview">
             <div class="raid-boss-portrait">
-              <img src="assets/raid/raid_boss_dark_bahamut_final_form.png" alt="黒い炎をまとった青い体のダークバハムート最終形態">
+              <img src="assets/raid/raid_boss_dark_bahamut_final_form.png" alt="黒い炎をまとった青い体のダークバハムート最終形態" loading="lazy" fetchpriority="low" decoding="async">
             </div>
             <div class="raid-boss-summary">
             <div class="raid-boss-stats">
@@ -685,7 +685,7 @@
             <button id="btn-raid-challenge" class="btn btn-primary">⚔ レイドボスに挑戦する</button>
             </div>
             <div class="raid-participation-reward">
-              <img src="assets/raid/raid_bg_magma_pixel.jpg" alt="参加特典のマグマ背景">
+              <img src="assets/raid/raid_bg_magma_pixel.jpg" alt="参加特典のマグマ背景" loading="lazy" fetchpriority="low" decoding="async">
               <div><b>参加特典：マグマの火山</b><p id="raid-participation-status"></p></div>
             </div>
             <div id="raid-challenge-rewards" class="raid-challenge-rewards"></div>
@@ -754,7 +754,7 @@
                   <div id="status-list" class="status-list" style="display:none;"></div>
                   <button id="btn-status-confirm" class="btn btn-primary" style="margin-top:10px;" disabled>けってい</button>
                   <div class="room-avatar-preview" style="text-align: center; margin-top: 20px;">
-                    <img id="room-player-avatar" src="" alt="スキン" style="width: 96px; height: 96px; object-fit: contain; object-position: center; border-radius: 50%; border: 3px solid var(--accent); cursor: pointer; background: var(--btn-grad-end); display: none; margin: 0 auto;" title="クリックでスキンを変更">
+                    <img id="room-player-avatar" src="" alt="スキン" style="width: 96px; height: 96px; object-fit: contain; object-position: center; border-radius: 50%; border: 3px solid var(--accent); cursor: pointer; background: var(--btn-grad-end); display: none; margin: 0 auto;" title="クリックでスキンを変更" loading="lazy" fetchpriority="low" decoding="async">
                   </div>
                   <button id="btn-change-avatar" class="btn" style="margin-top:15px; width:100%; background:linear-gradient(135deg, #f39c12, #d35400); color:white;">🌟 スキンを変更する</button>
                 </div>
@@ -896,7 +896,7 @@
     <!-- 修行チャレンジ -->
     <section id="screen-training" class="screen">
       <div class="training-dummy-wrap" id="training-dummy-wrap">
-        <img src="./画像/training_dummy_transparent.png" class="training-dummy-img" alt="修行カカシ" style="max-height: 250px; display: block; margin: 0 auto; filter: drop-shadow(0 6px 8px rgba(0,0,0,0.4));">
+        <img src="./画像/training_dummy_transparent.png" class="training-dummy-img" alt="修行カカシ" style="max-height: 250px; display: block; margin: 0 auto; filter: drop-shadow(0 6px 8px rgba(0,0,0,0.4));" loading="lazy" fetchpriority="low" decoding="async">
         <div class="training-hit-burst" id="training-hit-burst">💥</div>
         <canvas id="training-canvas" class="training-canvas"></canvas>
       </div>
@@ -952,10 +952,10 @@
           <div class="status-window" id="battle-player-window">
             <div class="status-header-row">
               <div class="status-line"><span id="battle-player-lv"></span><span id="battle-player-name">ゆうしゃ</span></div>
-              <div class="battle-status-avatar"><img id="battle-player-avatar" alt="ゆうしゃの姿"></div>
+              <div class="battle-status-avatar"><img id="battle-player-avatar" alt="ゆうしゃの姿" loading="lazy" fetchpriority="low" decoding="async"></div>
             </div>
             <div class="stat-bar-wrap battle-stat-hp">
-              <span class="stat-label"><img src="assets/ui_icons/ui_icon_4.png" class="stat-inline-icon">HP</span>
+              <span class="stat-label"><img src="assets/ui_icons/ui_icon_4.png" class="stat-inline-icon" loading="lazy" fetchpriority="low" decoding="async">HP</span>
               <div class="stat-bar hp-bar-container">
                 <div id="battle-player-hp-ghost" class="stat-bar-fill ghost-fill"></div>
                 <div id="battle-player-hp" class="stat-bar-fill hp"></div>
@@ -963,7 +963,7 @@
               </div>
             </div>
             <div class="stat-bar-wrap battle-stat-mp">
-              <span class="stat-label"><img src="assets/ui_icons/ui_icon_6.png" class="stat-inline-icon">MP</span>
+              <span class="stat-label"><img src="assets/ui_icons/ui_icon_6.png" class="stat-inline-icon" loading="lazy" fetchpriority="low" decoding="async">MP</span>
               <div class="stat-bar mp-bar-container">
                 <div id="battle-player-mp-ghost" class="stat-bar-fill ghost-fill"></div>
                 <div id="battle-player-mp" class="stat-bar-fill mp"></div>
@@ -1468,7 +1468,7 @@
           <section class="avatar-selector-preview-column" aria-label="組み合わせプレビュー">
             <div class="avatar-selector-preview">
               <div id="avatar-selector-preview-bg" class="avatar-composite-bg"></div>
-              <img id="avatar-selector-preview-image" src="" alt="選択中のキャラクター">
+              <img id="avatar-selector-preview-image" src="" alt="選択中のキャラクター" loading="lazy" fetchpriority="low" decoding="async">
               <span class="avatar-selector-preview-label">プレビュー</span>
             </div>
             <div class="avatar-selector-caption">
