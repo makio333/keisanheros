@@ -824,7 +824,7 @@ body {
   /* Two wide sky tiles keep clouds from stretching on portrait screens. */
   width: max(200%, 355.37vh);
   height: 100%;
-  background: url('./画像/title_sky_v2.png') repeat-x top left;
+  background: url('./assets/boot/title-sky.webp') repeat-x top left;
   background-size: 50% 100%;
   animation: titleSkyMove 90s linear infinite;
   z-index: 1;
@@ -843,7 +843,7 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: url('./画像/title_foreground_v2.png') center/cover no-repeat;
+  background: url('./assets/boot/title-foreground.webp') center/cover no-repeat;
   z-index: 2;
   pointer-events: none;
 }
