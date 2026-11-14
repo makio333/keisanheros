@@ -8953,3 +8953,9 @@ body:has(#screen-gacha.active) :is(.volume-control-container,#analog-clock-widge
 .hero-thumb-btn{width:100%;min-width:0;height:52px;padding:3px}
 .hero-thumb-img-wrap{min-width:0;overflow:hidden}
 .hero-thumb-img-wrap img{display:block;width:100%;height:100%;max-width:none;max-height:none;object-fit:contain}
+
+.admin-gift-picker{z-index:200000!important}.admin-gift-picker>.modal-panel{width:min(1000px,95vw);max-height:90dvh;overflow:auto}.admin-gift-picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:12px}.admin-gift-picker-option{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0;white-space:normal;font-size:12px}.admin-gift-picker-option img{object-fit:contain}.admin-gift-item-preview{display:inline-flex;align-items:center}.subquest-grade-reward-note{display:block;font-size:11px;color:inherit;max-width:100%}
+
+.subquest-grade-reward-note{flex:0 0 100%;line-height:1.4}.quest-board-progress-summary:has(.subquest-grade-reward-note){flex-wrap:wrap}
+
+.admin-gift-picker>.modal-panel{max-width:min(1000px,95vw)!important}.admin-gift-picker .avatar-selector-swatch{width:72px;height:52px;background-size:cover;background-position:center}.admin-gift-picker .stage-reward-icon{pointer-events:none}.admin-gift-picker-option>span:last-child{pointer-events:none}

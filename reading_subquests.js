@@ -1,3 +1,4 @@
+import {renderMathWordSubquests} from './math_word_subquests.js';
 import {readingConversation,readingVillager} from './reading_villagers.js';
 import {createChallengeLetter} from './challenge_letter.js';
 import {readingAnswerMatches} from './reading_quests.js';
@@ -24,10 +25,10 @@ export function renderReadingSubquests(root,api){
   [...tabs.children].forEach((b,i)=>b.setAttribute('aria-pressed',String(i+1===grade)));
   const cards=[];
   const q=READING_PURSUIT_QUESTS.find(q=>q.grade===grade),solved=state.letters[q.id]||0;
-  const card=questCard({noticeKey:q.id,title:'✉ 怪盗ヒルルの挑戦状',villager:readingVillager(q),total:5,solved,tag:`${grade}年・5問のあとに対決`,gold:1500,exp:100,medals:5,claimed:!!state.defeated[q.id],action:state.defeated[q.id]?'もう一度読む・戦う':solved===5?'怪盗と対決する':solved?'挑戦状のつづき':'挑戦状を読む',open:()=>showDuel(q,0)});
+  const card=questCard({noticeKey:q.id,title:'✉ 怪盗ヒルルの挑戦状',villager:readingVillager(q),total:5,solved,tag:`${grade}年・5問のあとに対決`,gold:3900,exp:1900,medals:10,claimed:!!state.defeated[q.id],action:state.defeated[q.id]?'もう一度読む・戦う':solved===5?'怪盗と対決する':solved?'挑戦状のつづき':'挑戦状を読む',open:()=>showDuel(q,0)});
   card.classList.add('reading-duel-card');
   for(const p of READING_STORY_QUESTS.filter(p=>p.grade===grade)){
-   cards.push(questCard({noticeKey:p.id,title:p.title,villager:readingVillager(p),total:3,solved:readingSolvedCount(game,p.id),tag:`${grade}年・同じ文章で3問`,gold:900,exp:60,medals:3,claimed:!!state.solved[p.id],action:state.solved[p.id]?'もう一度読む':readingSolvedCount(game,p.id)?'依頼のつづき':'依頼を受ける',open:()=>showQuestion(p)}));
+   cards.push(questCard({noticeKey:p.id,title:p.title,villager:readingVillager(p),total:3,solved:readingSolvedCount(game,p.id),tag:`${grade}年・同じ文章で3問`,gold:2400,exp:1800,medals:6,claimed:!!state.solved[p.id],action:state.solved[p.id]?'もう一度読む':readingSolvedCount(game,p.id)?'依頼のつづき':'依頼を受ける',open:()=>showQuestion(p)}));
   }
   renderJapaneseReadingV2Subquests(v2,grade,{
    extraCards:grade>=4?[card,...(hasLegacy?cards:[])]:[],game:()=>game,asset:api.asset,rewardIcon:api.rewardIcon,bindRewards:api.bindRewards,
@@ -88,7 +89,13 @@ export function renderReadingSubquests(root,api){
   input.focus({preventScroll:true});
  }
  function grant(id,duel,partIndex=0){const r=claimReadingReward(game,id,duel,partIndex);if(r){api.exp(r.exp);api.save();api.refresh();}return r?` ${r.gold}G・${r.exp}EXP${r.medals?'・メダル'+r.medals+'枚':''}を獲得！`:' 初回報酬は受け取り済みです。';}
- function showQuestion(q,replayStep=0){
+ function showBatch(q,parts,duel=false){
+  const records=parts.map((part,index)=>({...part,id:`batch-${q.id}-${index}`,subject:'reading',grade:q.grade,topic:part.skill||q.skill||'読解',story:part.passage||part.letter||q.passage||'',question:part.question,title:part.title||q.title,answerDisplay:part.answer,explanation:part.explanation||part.evidence||'',hint:part.hints?.[0]||'ヒント：問いの言葉を本文から探し、その前後を読もう。',input:{fields:[{name:'answer',label:'こたえ'}]},evaluate:values=>({correct:readingAnswerMatches(part,values.answer)})}));
+  const completed=game.mathWordQuestsV2 ||= {completed:{}};completed.completed||={};const count=duel?(state.letters[q.id]||0):readingSolvedCount(game,q.id);records.slice(0,count).forEach(p=>completed.completed[p.id]=true);
+  renderMathWordSubquests(document.createElement('div'),{...api,records,villager:readingVillager(q),onClose:render,onComplete:()=>{if(duel){state.letters[q.id]=5;api.save();showDuel(q,5);}else{state.parts||={};state.parts[q.id]=3;state.solved[q.id]=true;api.save();render();}}});
+ }
+ function showQuestion(q){showBatch(q,q.parts);}
+ function oldShowQuestion(q,replayStep=0){
   const solved=readingSolvedCount(game,q.id),index=solved===3?replayStep:solved;
   const part=q.parts[index],story=readingConversation(part),{p,overlay}=panel(q.title,{answer:true});
   p.append(node('p',`${index+1}／3問め・同じ文章を読んで答えよう`,'reading-story-progress'),dialogue(story.villager,index===0?story.intro:q.grade===1?'おなじ おはなしから、もうひとつ たしかめたいことが あるんだ。':'同じお話から、もう一つ確かめたいことがあるんだ。'),node('small',story.documentLabel));
@@ -102,6 +109,7 @@ export function renderReadingSubquests(root,api){
  }
 
  function showDuel(q,replayStep){
+  if(replayStep!==5)return showBatch(q,q.steps,true);
   const index=state.defeated[q.id]?replayStep:state.letters[q.id]||0;
   const {p,overlay}=panel(q.title,{answer:index>0});
   if(index>=5){

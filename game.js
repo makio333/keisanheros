@@ -1,3 +1,5 @@
+import {rewriteLegacyStory,LEGACY_STORY_VERSION,legacyStoryGrade} from './legacy_story_variants.js';
+import {renderSubquestSummary} from './subquest_results.js';
 import {EQUIPMENT_TEN_PULL_TICKET_ICON} from './equipment_ticket_art.js';
 import printDocumentCss from './print_document.css?inline';
 import wordProblemPrintCss from './word_problem_print_layout_v2.css?inline';
@@ -2296,7 +2298,7 @@ function questTierAllowed(tier){
   return questAllowedTiers().some(e => e.family === family && e.tiers.includes(n));
 }
 
-function generateStoryQuest(){
+function generateStoryQuest(excludeUid=null){
   const allowed = questAllowedTiers();
   const front = allowed.find(e => e.isFront);
   const earlier = allowed.filter(e => !e.isFront);
@@ -2311,7 +2313,7 @@ function generateStoryQuest(){
     const p = generateProblem(tier);
     return { ...p, text: tpl(p.a, p.b), isWordProblem: true };
   });
-  return { uid: G.nextUid++, npc, title: arc.title, tier, parts, partIndex: 0 };
+  const used=new Set((G.questBoard||[]).filter(q=>q&&q.uid!==excludeUid&&String(q.tier).replace(/[0-9]/g,'')===family).map(q=>q.storyVariant));const variant=[0,1,2,3,4,5].find(n=>!used.has(n))??G.nextUid%6;return rewriteLegacyStory({ uid: G.nextUid++, npc, title: arc.title, tier, parts, partIndex: 0 },variant);
 }
 
 /* サブクエストの ごほうび：1問ごとに クエストメダル2まい（1回目・2回目は アイテムも）。
@@ -7857,15 +7859,16 @@ function ensureQuestBoard(){
     const family=String(q.tier).replace(/[0-9]/g,''),arc=STORY_ARCS[family]?.find(arc=>arc.title===q.title);
     if(arc)while(q.parts.length<REVIEW_SETTINGS.legacyMathQuestQuestions){const tpl=arc.parts[q.parts.length%arc.parts.length],p=generateProblem(q.tier);q.parts.push({...p,text:tpl(p.a,p.b),isWordProblem:true});}
   }
+  G.questBoard=G.questBoard.map((q,index)=>q.storyVersion===LEGACY_STORY_VERSION?q:rewriteLegacyStory(q,index));
   // いまの 進み具合に 合わない かんたんすぎる クエスト（まだ 手をつけていないもの）は 入れかえる
-  G.questBoard = G.questBoard.map(q => (q.partIndex > 0 || questTierAllowed(q.tier)) ? q : generateStoryQuest());
+  G.questBoard = G.questBoard.map(q => (q.partIndex > 0 || questTierAllowed(q.tier)) ? q : generateStoryQuest(q.uid));
   while (G.questBoard.length < QUEST_BOARD_SIZE) G.questBoard.push(generateStoryQuest());
 }
 
 /* カードの中に出す、1回目・2回目・3回目の ごほうび（ちいさい版。アイコンはホバーで詳細） */
 function questCardRewardsHtml(q){
   const r=questRewardFor(q.tier),gold=q.parts.reduce((sum,_,i)=>sum+r.golds[Math.min(i,r.golds.length-1)],0);
-  return `<div class="quest-card-rewards"><div class="qc-reward"><span class="qc-icons">${stageRewardIcon('medal','quest-medal',1,20)}<small>最大${q.parts.length}枚</small></span><span class="qc-gold">最大 💰${gold.toLocaleString()}・🎁</span></div></div><div class="reading-quest-card-actions"><span class="btn">依頼を見る</span></div>`;
+  return `<div class="quest-card-rewards"><div class="qc-reward"><span class="qc-icons">${stageRewardIcon('medal','quest-medal',1,20)}<small>最大${q.parts.length*2}枚</small></span><span class="qc-gold">最大 💰2,400・✨1,800EXP</span></div></div><div class="reading-quest-card-actions"><span class="btn">依頼を見る</span></div>`;
 }
 
 /* 1回目・2回目・3回目の ごほうびを、ステージ選択と おなじ バッジで 見せる */
@@ -8165,73 +8168,11 @@ function getNPCImage(npc) {
 }
 
 let isTrainingSubquest = false;
-function startQuestChallenge(q) {
-  const part=q.parts[q.partIndex];
-  const overlay=document.createElement('div');overlay.className='reading-subquest-overlay';
-  const panel=document.createElement('section');panel.className='reading-subquest-panel quest-answer-panel math-word-reading-answer-panel reading-v2-answer-panel';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');
-  const back=document.createElement('button');back.className='btn';back.textContent='← 依頼一覧へ';back.onclick=()=>{destroyChallenge();overlay.remove();showQuestBoard();};
-  const content=document.createElement('div');content.className='quest-answer-content reading-v2-answer-content';
-  const context=document.createElement('div');context.className='quest-question-context reading-v2-question-context';
-  const letter=document.createElement('article');letter.className='reading-v2-letter';
-  letter.innerHTML=`<header class="reading-v2-letter-header"><span class="reading-v2-letter-eyebrow">村人からの算数の手紙</span><h2>${escapeHtml(q.title)}</h2></header><div class="reading-v2-passage">${part.text}</div><footer class="reading-v2-letter-signature"><span>勇者へ</span><b>${escapeHtml(q.npc.name)} より</b></footer>`;
-  context.append(letter);
-  const center=document.createElement('div');center.className='quest-answer-center reading-v2-answer-center';
-  const portrait=document.createElement('img');portrait.className='reading-v2-scene-villager';portrait.src=getNPCImage(q.npc);portrait.alt=q.npc.name;
-  const challengeContainer=document.createElement('section');challengeContainer.className='reading-v2-answer-foreground legacy-math-answer-controls';
-  const header=document.createElement('header');header.className='reading-v2-scene-header';const print=document.createElement('button');print.className='btn';print.textContent='プリント';print.onclick=()=>printQuestSheet(q);header.append(back,print);center.append(portrait,challengeContainer);content.append(context,center);panel.append(header,content);overlay.append(panel);document.body.append(overlay);
-      startChallenge(challengeContainer, {
-        problem: part,
-        timeLimit: problemTimeLimit(q.tier) + 6000
-      }, (res) => {
-        destroyChallenge();
-        if (res.success) {
-          hitTrainingDummy();
-          const reward = questRewardFor(q.tier);
-          const stepIdx = q.partIndex;
-          q.partIndex++;
-          const completed = q.partIndex >= q.parts.length;
-          const totalGold = reward.golds[Math.min(stepIdx, reward.golds.length - 1)];
-          const totalExp = reward.exp + (completed ? Math.round(reward.exp * 0.5) : 0);
-          G.player.gold += totalGold;
-          const questExtras = grantQuestExtras(q.partIndex, completed);
-          const { leveledUp, lvlBefore, pointsGained, maxHpBefore, maxMpBefore } = grantExp(totalExp);
-          if (completed){
-            const idx = G.questBoard.findIndex(x => x.uid === q.uid);
-            if (idx >= 0) G.questBoard[idx] = generateStoryQuest();
-          }
-          save();
-          
-          overlay.remove();
-          
-          const playReward = () => {
-            showQuestRewardToast(totalGold, totalExp, q.npc, completed, questExtras, () => {
-              // 1問おわるごとに サブクエストボードへ もどる（つづきは ボードから えらぶ）
-              const nextStep = () => showQuestBoard();
-              if (leveledUp){
-                const unlockedSkills = SKILL_DB.filter(s => (s.reqLvl || 1) > lvlBefore && (s.reqLvl || 1) <= G.player.lvl);
-                showLevelUpModal({
-                  fromLvl: lvlBefore, toLvl: G.player.lvl,
-                  hpBefore: maxHpBefore, hpAfter: totalMaxHp(),
-                  mpBefore: maxMpBefore, mpAfter: totalMaxMp(),
-                  pointsGained, unlockedSkills,
-                }, nextStep);
-              } else {
-                nextStep();
-              }
-            });
-          };
-
-          playReward();
-          
-        } else {
-          challengeContainer.replaceChildren();
-          const note=document.createElement('p');note.textContent='もう一度、手紙を読んで考えよう。';
-          const retry=document.createElement('button');retry.className='btn btn-primary';retry.textContent='もう一度解く';retry.onclick=()=>{overlay.remove();startQuestChallenge(q);};
-          challengeContainer.append(note,retry);
-        }
-      });
+function startQuestChallenge(q){
+ const records=q.parts.map((part,index)=>({id:`legacy-${q.uid}-${index}`,title:q.title,grade:legacyStoryGrade(q.tier),topic:OP_LABELS[q.tier],story:part.text.replace(/<[^>]*>/g,''),question:'',answerDisplay:String(part.answer),explanation:'計算の数字と答えを確かめよう。',input:{fields:[{name:'answer',label:'こたえ',keyboard:'text'},...(part.remainder!=null?[{name:'remainder',label:'あまり',keyboard:'integer'}]:[])]},evaluate:values=>({correct:String(values.answer).normalize('NFKC').trim()===String(part.answer)&&(part.remainder==null||Number(values.remainder)===Number(part.remainder))})}));
+ const state=G.mathWordQuestsV2 ||= {completed:{}};state.completed||={};records.slice(0,q.partIndex||0).forEach(p=>state.completed[p.id]=true);
+ renderMathWordSubquests(document.createElement('div'),{records,villager:{name:q.npc.name,image:getNPCImage(q.npc)},game:()=>G,save:()=>save(),exp:n=>grantExp(n),refresh:()=>{renderQuestMedalCount();},asset:av,rewardIcon:stageRewardIcon,onClose:showQuestBoard,onComplete:()=>{const index=G.questBoard.findIndex(x=>x.uid===q.uid);if(index>=0)G.questBoard[index]=generateStoryQuest(q.uid);save();showQuestBoard();}});
 }
-
 /* プリントの上部にいれる「なまえ／にちづけ」らん。
    なまえの空らんは 長めにして 書きやすく、にちづけは「＿＿月＿＿日（＿＿ようび）」の
    べつべつの空らんにし、幼い子でも読めるよう 月・日・曜日に ルビをふる */
@@ -12278,7 +12219,7 @@ function renderHalloweenEntry() {
 
 
 function isChristmasActive(now = Date.now()) {
-  return !!G?.isTestMode || (now >= CHRISTMAS_EVENT.startsAt && now < CHRISTMAS_EVENT.endsAt);
+  return import.meta.env.VITE_TEST_CHRISTMAS_PREVIEW==='1' || !!G?.isTestMode || (now >= CHRISTMAS_EVENT.startsAt && now < CHRISTMAS_EVENT.endsAt);
 }
 
 function renderChristmasEntry() {
@@ -13972,6 +13913,8 @@ function renderPlayerStudyStats() {
   }
 
   renderStudySummary('player', G.studyStats);
+  const chart=$('player-study-chart');if(chart){let detail=$('player-subquest-study');if(!detail){detail=document.createElement('section');detail.id='player-subquest-study';chart.parentElement.after(detail);}renderSubquestSummary(G,detail);}
+
 
   drawStudyBarChart('player-study-chart', getStudyGrowthRows(G.studyStats));
 
@@ -17557,12 +17500,16 @@ function getGiftableItemDefs() {
 const GIFT_TICKETS = [
   { id: 'equip-ten-ticket', name: '装備ガチャ10連チケット' },
   { id: 'skin-ticket', name: '背景スキンガチャチケット' },
+  { id: 'raid-ticket', name: 'レイドチケット' },
+  { id: 'halloween-ticket', name: 'ハロウィンチケット' },
 ];
 function giftEntryKind(e) { return e && e.kind ? e.kind : 'item'; }
 function giftEntryName(e) {
   const kind = giftEntryKind(e);
   if (kind === 'equip') { const db = getEquipTemplate(e.id); return `${db?.name || e.id}（${RARITY_NAME[e.rarity] || '★' + e.rarity}）`; }
   if (kind === 'ticket') return GIFT_TICKETS.find(t => t.id === e.id)?.name || e.id;
+  if(kind==='skin')return getHeroAvatar(e.id)?.name||e.id;
+  if(kind==='background')return getAvatarBackground(e.id)?.name||e.id;
   if (kind === 'medal') return 'クエストメダル';
   if (kind === 'decoration') return AVATAR_DECORATIONS.find(item=>item.id===e.id)?.name || e.id;
   return getItemTemplate(e.id)?.name || e.id;
@@ -17573,6 +17520,7 @@ function giftEntryIconHtml(e, size = 32) {
     if (kind === 'equip') return stageRewardIcon('equip', e.id, Number(e.rarity) || 1, size);
     if (kind === 'ticket') return stageRewardIcon('ticket', e.id, 1, size);
     if (kind === 'medal') return stageRewardIcon('medal', 'quest-medal', 1, size);
+    if(kind==='skin'||kind==='background')return stageRewardIcon(kind,e.id,1,size);
     if (kind === 'decoration') return stageRewardIcon('decoration',e.id,1,size);
     return stageRewardIcon('item', e.id, 1, size);
   } catch (_) { return '📦'; }
@@ -17589,19 +17537,30 @@ function applyGiftEntry(game, e) {
     if (e.id === 'equip-ten-ticket') game.equipGachaTenPullTickets = (game.equipGachaTenPullTickets || 0) + n;
     else if (e.id === 'skin-ticket') game.skinGachaTickets = (game.skinGachaTickets || 0) + n;
     else if (e.id === 'raid-ticket') game.raidTickets = (game.raidTickets || 0) + n;
+    else if (e.id === 'halloween-ticket') game.halloweenTickets = (game.halloweenTickets || 0) + n;
+  } else if(['skin','background','decoration'].includes(kind)){const field={skin:'unlockedSkins',background:'unlockedAvatarBackgrounds',decoration:'unlockedDecorations'}[kind];game[field]=[...new Set([...(game[field]||[]),e.id])];
   } else if (kind === 'medal') {
     game.questMedals = (game.questMedals || 0) + n;
   } else {
     addItem(e.id, n);
   }
 }
+function giftEquipmentCatalog(){return [...new Map([...EQUIP_DB,...ANCIENT_EQUIP_DB,...LIMITED_EQUIP_DB,...HALLOWEEN_EQUIP_DB,...CHRISTMAS_EQUIP_DB,...QUEST_MEDAL_EQUIPMENT].map(d=>[d.id,d])).values()];}
+function openAdminGiftPicker(onPick){
+ const overlay=document.createElement('div');overlay.className='modal-overlay active admin-gift-picker';overlay.innerHTML='<section class="modal-panel" role="dialog" aria-label="プレゼントの内容を選ぶ" aria-modal="true"><button type="button" class="btn" data-close>閉じる</button><h3>画像からプレゼントを選ぶ</h3><input type="search" placeholder="名前で検索" aria-label="プレゼントの名前で検索"><select aria-label="プレゼントの種類"><option value="">すべて</option><option value="skin">スキン</option><option value="background">背景</option><option value="decoration">フレーム</option><option value="equip">装備</option><option value="item">どうぐ</option><option value="ticket">チケット</option><option value="medal">メダル</option></select><div class="admin-gift-picker-grid"></div></section>';
+ const catalog=[...HERO_AVATARS.map(d=>({kind:'skin',id:d.id})),...AVATAR_BACKGROUNDS.filter(d=>d.image).map(d=>({kind:'background',id:d.id})),...AVATAR_DECORATIONS.map(d=>({kind:'decoration',id:d.id})),...giftEquipmentCatalog().map(d=>({kind:'equip',id:d.id,rarity:1})),...getGiftableItemDefs().map(d=>({kind:'item',id:d.id})),...GIFT_TICKETS.map(d=>({kind:'ticket',id:d.id})),{kind:'medal',id:'quest-medal'}];
+ const search=overlay.querySelector('input'),filter=overlay.querySelector('select'),grid=overlay.querySelector('.admin-gift-picker-grid');
+ function render(){grid.replaceChildren();for(const e of catalog){if(filter.value&&e.kind!==filter.value)continue;const name=giftEntryName(e);if(search.value&&!name.includes(search.value.trim()))continue;const b=document.createElement('button');b.type='button';b.className='btn admin-gift-picker-option';b.dataset.kind=e.kind;b.dataset.id=e.id;b.innerHTML=giftEntryIconHtml(e,52).replace(/<button/g,'<span').replace(/<\/button>/g,'</span>')+'<span>'+escapeHtml(name)+'</span>';b.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();onPick(e);overlay.remove();},{capture:true});grid.append(b);}bindStageRewardTooltips(grid);}
+ overlay.querySelector('[data-close]').onclick=()=>overlay.remove();search.oninput=filter.onchange=render;document.body.append(overlay);render();search.focus();
+}
 function giftEntryOptionsHtml() {
   const equipGroup = (label, slot) => {
-    const list = [...EQUIP_DB, ...ANCIENT_EQUIP_DB, ...LIMITED_EQUIP_DB].filter(d => d.slot === slot);
+    const list = giftEquipmentCatalog().filter(d => d.slot === slot);
     return list.length ? `<optgroup label="${label}">${list.map(d => `<option value="equip:${d.id}">${escapeHtml(d.name)}</option>`).join('')}</optgroup>` : '';
   };
   return `<option value="">-- えらぶ --</option>
     <optgroup label="🎫 チケット・メダル">${GIFT_TICKETS.map(t => `<option value="ticket:${t.id}">${escapeHtml(t.name)}</option>`).join('')}<option value="medal:quest-medal">クエストメダル</option></optgroup>
+    ${[['skin','スキン',HERO_AVATARS],['background','背景',AVATAR_BACKGROUNDS.filter(d=>d.image)],['decoration','フレーム',AVATAR_DECORATIONS]].map(([kind,label,list])=>`<optgroup label="${label}">${list.map(d=>`<option value="${kind}:${d.id}">${escapeHtml(d.name)}</option>`).join('')}</optgroup>`).join('')}
     <optgroup label="🧪 どうぐ">${getGiftableItemDefs().map(d => `<option value="item:${d.id}">${escapeHtml(d.name)}</option>`).join('')}</optgroup>
     ${equipGroup('⚔ そうび（ぶき）', 'weapon')}${equipGroup('🛡 そうび（よろい）', 'armor')}${equipGroup('💍 そうび（アクセサリ）', 'accessory')}`;
 }
@@ -17660,14 +17619,15 @@ function addAdminGiftItemRow() {
   const row = document.createElement('div');
   row.className = 'admin-gift-item-row';
   row.innerHTML = `
-    <select class="admin-gift-item-select">${giftEntryOptionsHtml()}</select>
+    <button type="button" class="btn admin-gift-pick-button">画像から選ぶ</button><span class="admin-gift-item-preview"></span><select class="admin-gift-item-select">${giftEntryOptionsHtml()}</select>
     <select class="admin-gift-rarity-select" hidden title="そうびの レアリティ">${[1,2,3,4,5,6].map(r => `<option value="${r}"${r === 1 ? ' selected' : ''}>★${r} ${RARITY_NAME[r]}</option>`).join('')}</select>
     <input type="number" class="admin-gift-item-count" min="1" max="999" value="1" inputmode="numeric">
     <button type="button" class="btn admin-gift-small-btn admin-gift-del-btn">×</button>
   `;
   const sel = row.querySelector('.admin-gift-item-select');
   const raritySel = row.querySelector('.admin-gift-rarity-select');
-  sel.onchange = () => { raritySel.hidden = !sel.value.startsWith('equip:'); };
+  function update(){raritySel.hidden=!sel.value.startsWith('equip:');const [kind,...parts]=sel.value.split(':');const cosmetic=['skin','background','decoration'].includes(kind),count=row.querySelector('.admin-gift-item-count');count.disabled=cosmetic;if(cosmetic)count.value=1;row.querySelector('.admin-gift-item-preview').innerHTML=sel.value?giftEntryIconHtml({kind,id:parts.join(':'),rarity:Number(raritySel.value)},42):'';bindStageRewardTooltips(row);}
+  sel.onchange=raritySel.onchange=update;row.querySelector('.admin-gift-pick-button').onclick=()=>openAdminGiftPicker(e=>{sel.value=e.kind+':'+e.id;update();});
   row.querySelector('.admin-gift-del-btn').onclick = () => row.remove();
   container.appendChild(row);
 }
@@ -17713,6 +17673,8 @@ async function sendAdminGiftFromUI() {
   if (!targets.length) { setStatus('宛先が ありません。', 'error'); return; }
   if (!gold && !items.length) { setStatus('ゴールド か アイテムを 1つ以上 えらんでね。', 'error'); return; }
   if (!window.AdminGiftAPI) { setStatus('クラウドに接続できません。', 'error'); return; }
+  const confirmed=await new Promise(resolve=>{showConfirmModal('プレゼントを送る内容',`<p>宛先：${targets.map(t=>escapeHtml(t.playerName)).join('、')}</p>${gold?`<p>💰${gold.toLocaleString()}G</p>`:''}<div class="admin-gift-confirm-items">${items.map(e=>`<p>${giftEntryIconHtml(e,48)} ${escapeHtml(giftEntryName(e))} ×${e.count}</p>`).join('')}</div><p>${escapeHtml(message)}</p>`,()=>resolve(true));$('btn-confirm-no').addEventListener('click',()=>resolve(false));});
+  if(!confirmed)return;
 
   const btn = $('btn-admin-gift-send');
   if (btn) btn.disabled = true;

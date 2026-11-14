@@ -19,6 +19,7 @@ const audioVersions={};
 for(const name of await readdir(path.join(root,'public/assets_audio')))audioVersions[name]=createHash('sha256').update(await readFile(path.join(root,'public/assets_audio',name))).digest('hex').slice(0,12);
 await build({root,resolve:{alias:[{find:/^(?:.*\/)?firebase_product_config\.js$/,replacement:path.join(root,'config/firebase-test.js')}]},define:{
   'import.meta.env.VITE_BOOT_AUDIO_VERSIONS':JSON.stringify(audioVersions),
+  'import.meta.env.VITE_TEST_CHRISTMAS_PREVIEW':'"1"',
   'import.meta.env.VITE_ACCOUNT_BACKEND':'"0"',
   'import.meta.env.VITE_ACCOUNT_MOCK':'"0"',
   'import.meta.env.VITE_FIREBASE_GAME':'"0"',

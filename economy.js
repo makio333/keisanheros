@@ -17,6 +17,8 @@ export function applyGiftPayload(game, gift) {
     if(item.kind==='equip') for(let i=0;i<count;i++)game.ownedEquips.push({uid:game.nextUid++,id:item.id,rarity:Math.min(6,Math.max(1,Number(item.rarity)||1)),ability:item.ability || eventEquipmentAbility(item.id)});
     else if(item.kind==='ticket' && tickets[item.id])game[tickets[item.id]]=(Number(game[tickets[item.id]])||0)+count;
     else if(item.kind==='medal')game.questMedals=(Number(game.questMedals)||0)+count;
+    else if(item.kind==='skin')game.unlockedSkins=[...new Set([...(game.unlockedSkins||[]),item.id])];
+    else if(item.kind==='background')game.unlockedAvatarBackgrounds=[...new Set([...(game.unlockedAvatarBackgrounds||['default']),item.id])];
     else if(item.kind==='decoration')game.unlockedDecorations=[...new Set([...(game.unlockedDecorations||[]),item.id])];
     else {const existing=game.items.find(entry=>entry.id===item.id);if(existing)existing.count+=count;else game.items.push({uid:game.nextUid++,id:item.id,count});}
   }

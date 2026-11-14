@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {getMathWordQuestsV2} from '../math_word_quests_v2.js';
+import {mathRun,storeMathAnswer,finishMathRun,retryMathAnswer,mathRewardProgress} from '../math_word_session.js';
+const group=getMathWordQuestsV2(1).slice(0,5),g={player:{gold:0},questMedals:0};
+for(const p of group)storeMathAnswer(g,group,p,{value:'999'},1200);
+assert.equal(g.studyStats,undefined,'No grading before finishing');assert.equal(mathRewardProgress(g,group).percent,50);
+finishMathRun(g,group);assert.equal(g.studyStats.totalAnswers,5);assert.equal(g.studyStats.totalCorrect,0);const paid=g.player.gold;
+assert.equal(retryMathAnswer(g,group,group[0],{value:'998'},500).correct,false);assert.equal(g.player.gold,paid);
+for(const p of group)assert.equal(retryMathAnswer(g,group,p,{value:p.answer},600).correct,true);
+assert.equal(mathRewardProgress(g,group).percent,100);assert.equal(g.player.gold,2400);assert.equal(g.questMedals,10);assert.equal(g.subquestStats.questions['math:'+group[0].id].firstCorrect,false);assert.equal(g.subquestStats.questions['math:'+group[0].id].retryCount,2);assert.equal(g.subquestStats.quests['math:'+group[0].id].firstTryClears,0);
+const restored=JSON.parse(JSON.stringify(g));retryMathAnswer(restored,group,group[0],{value:group[0].answer},500);assert.equal(restored.player.gold,2400);assert.equal(restored.studyStats.totalAnswers,11);assert.equal(finishMathRun(restored,group),null);
+const fresh={player:{gold:0},questMedals:0};for(const p of group)storeMathAnswer(fresh,group,p,{value:p.answer},300);finishMathRun(fresh,group);assert.equal(fresh.subquestStats.quests['math:'+group[0].id].firstTryClears,1);assert.equal(mathRun(fresh,group).phase,'results');console.log('PASS batch grading, partial rewards, retry cap, restored save, initial results and timers');

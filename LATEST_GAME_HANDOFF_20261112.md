@@ -196,3 +196,15 @@ node scripts/preview-christmas-local.mjs
 ### 2026-11-14 Ticket orientation aligned
 - Rotated equipment ten-pull artwork to slope upper-left to lower-right like background skin ticket; retained readable 10 and equipment emblem. Built-in image edit prompt documented.
 - Lossless runtime art rebuilt; shop screenshot visually checked beside skin ticket; browser flow and release build pass.
+
+
+### 2026-11-14 Subquest batch grading, records, curriculum and test Christmas
+- Math materials and legacy math/reading/pursuit reading now collect all answers before grading. Answer/correct portions use a persistent per-question ledger; wrong retries keep earned amounts and cannot replay payouts. Results retain initial answers. Existing completed flags are credited, not revoked.
+- Math 30 questions per grade = 60 medals; reading 10 passages/50 questions = 100; combined 160. Exclusive thresholds now 160/320/480/640/800/960. Each subject full-clear grants equipment ten-pull x1, skin ticket x2, 3000G/1500EXP; double-clear additionally x2/x3/10000G/3000EXP. Once-only grade flags; legacy supplemental quests excluded from grade totals.
+- Gradebook integrates first graded accuracy, retry counts, active foreground response milliseconds and one-shot completion counts; first answers survive retry. Unconfirmed written responses stay ungraded until human confirmation rather than counting wrong. Added room subquest table.
+- Math letter order is story, question directly below, then illustration. Sequence cues point left and all queue people use a new left-profile icon. No wrapping queues.
+- Old dynamic supplemental quests now use 6 distinct situations per operation and 5 semantic structures within each. Numerical tier generation, UID, progress and answers preserved; storyVersion=2 migrates wording.
+- Prior curriculum research extracted to data/curriculum_reference.json with official MEXT source URLs, grade topics, prerequisite notes and all math/reading problem mappings. Official Japanese two-grade bands are distinguished from game grade assignments.
+- Admin gift picker adds search/filter plus artwork for skins/backgrounds/frames/all event equipment and tickets, selected-item preview and send confirmation. Cosmetic grants use unlocked collections with gift replay protection. No real gifts sent in tests.
+- Christmas code already present (5 enemies per run, rare Black Santa, present recovery/exchange). Previously hidden before Nov25 in ordinary saves. release-test-web now defines VITE_TEST_CHRISTMAS_PREVIEW=1 only for test Hosting, so ordinary test saves see it outside dates; normal builds retain schedule.
+- Validation: 22 pure tests passed (batch ledger, reading rewards, grade once-only rewards, variant structures, gift atomic delivery, Christmas economy/gacha). Browser flows for math, reading, gift art picker, medal shop and test seasonal visibility passed; screenshots inspected. Common print flow still passes page count/bounds/manual print checks. All 593 lossless runtime images pixel-verified.

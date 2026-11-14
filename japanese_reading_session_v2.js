@@ -1,3 +1,4 @@
+import {recordSubquestAttempt,recordSubquestCompletion} from './subquest_results.js';
 import {evaluateJapaneseReadingAnswerV2,normalizeReadingAnswerV2} from './japanese_reading_quests_v2.js';
 
 export const READING_TOTAL_REWARD=Object.freeze({medals:10,gold:2400,exp:1800});
@@ -36,10 +37,10 @@ function pay(game,record){
 export function readingRewardProgress(game,record){
  const l=ledger(game,record),paid={...l.paid};return {paid,percent:Math.min(100,Math.floor(paid.gold/READING_TOTAL_REWARD.gold*100)),remaining:Object.fromEntries(Object.keys(paid).map(k=>[k,Math.max(0,READING_TOTAL_REWARD[k]-paid[k])])),complete:l.answered.every(Boolean)&&l.mastered.every(Boolean)};
 }
-export function storeReadingAnswer(game,record,index,answer){
+export function storeReadingAnswer(game,record,index,answer,timeMs=0){
  const run=readingSession(game,record);if(run.phase!=='answering'||!Number.isInteger(index)||index<0||index>=5||!String(answer??'').trim()||answer==='口頭で答えました')return false;
  const q=record.questions[index];if(q.input.type==='single-choice'&&!q.input.options.some(o=>o.id===answer))return false;
- run.answers[index]=String(answer);return true;
+ run.answerTimes||={};run.answerTimes[index]=(run.answerTimes[index]||0)+Math.max(0,Number(timeMs)||0);run.answers[index]=String(answer);return true;
 }
 export function claimReadingAnswerReward(game,record,index){
  const run=readingSession(game,record);if(run.phase!=='answering'||!Number.isInteger(index)||index<0||index>=5||!run.answers[index])return null;
@@ -54,19 +55,21 @@ export function finishReadingSession(game,record){
  const s=readingState(game),run=readingSession(game,record);
  if(run.phase!=='answering'||run.answers.length!==5||run.answers.some(a=>a==null||!String(a).trim()))return null;
  const l=ledger(game,record);run.phase='results';s.claimed[record.id]=true;
- readingResults(record,run).forEach((r,i)=>{l.answered[i]=true;if(r.status==='correct')l.mastered[i]=true;});
+ readingResults(record,run).forEach((r,i)=>{recordSubquestAttempt(game,{subject:'reading',questId:record.id,questionId:record.id+':'+i,grade:record.grade,skill:r.question.skill,correct:r.status==='needs-review'?null:r.status==='correct',timeMs:run.answerTimes?.[i]||0});l.answered[i]=true;if(r.status==='correct')l.mastered[i]=true;});
  s.progress[record.id]=Math.max(Number(s.progress[record.id])||0,l.mastered.filter(Boolean).length);
+ if(readingResults(record,run).every(r=>r.status==='correct'))recordSubquestCompletion(game,'reading',record.id,true);
  return pay(game,record);
 }
 export function readingReviewTargets(record,run){return readingResults(record,run).flatMap((r,i)=>r.status!=='correct'?[i]:[]);}
-export function confirmReadingReview(game,record,index,answer,humanConfirmed=false){
+export function confirmReadingReview(game,record,index,answer,humanConfirmed=false,timeMs=0){
  const s=readingState(game),run=readingSession(game,record);
  if(run.phase==='answering'||!readingReviewTargets(record,run).includes(index)||!String(answer??'').trim()||answer==='口頭で答えました')return {status:'invalid-input',reward:null};
  const q=record.questions[index],result=evaluateJapaneseReadingAnswerV2(q,answer);
  if(result.status==='needs-review'&&!humanConfirmed)return {status:'needs-review',reward:null};
+ recordSubquestAttempt(game,{subject:'reading',questId:record.id,questionId:record.id+':'+index,grade:record.grade,skill:q.skill,correct:result.status==='correct'||(result.status==='needs-review'&&humanConfirmed),timeMs,retry:true});
  if(!['correct','needs-review'].includes(result.status))return {...result,reward:null};
  run.reviewAnswers[index]=String(answer);run.reviewed.push(index);ledger(game,record).mastered[index]=true;s.progress[record.id]=Math.max(Number(s.progress[record.id])||0,ledger(game,record).mastered.filter(Boolean).length);
- if(!readingReviewTargets(record,run).length){run.phase='reviewed';s.reviewClaimed[record.id]=true;}
+ if(!readingReviewTargets(record,run).length){run.phase='reviewed';s.reviewClaimed[record.id]=true;recordSubquestCompletion(game,'reading',record.id,readingResults(record,run).every(r=>['correct','needs-review'].includes(r.originalStatus)&&(!r.reviewAnswer||r.reviewAnswer===r.answer)));}
  return {status:'correct',reward:pay(game,record)};
 }
 export function readingAnswerText(question,answer){return question.input.type==='single-choice'?question.input.options.find(o=>o.id===answer)?.text||'未回答':answer||'未回答';}

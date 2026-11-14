@@ -1,3 +1,5 @@
+import {claimGradeClearRewards,gradeRewardSummary} from './subquest_grade_rewards.js';
+import {startSubquestTimer} from './subquest_results.js';
 import {questMedalImage} from './quest_medal_art.js';
 import './quest_board_notice.css';
 import {getJapaneseReadingQuestsV2} from './japanese_reading_quests_v2.js';
@@ -53,7 +55,7 @@ export function renderJapaneseReadingV2Subquests(root,grade,api){
  const suggested=passages.find(r=>state.sessions[r.id]&&state.sessions[r.id].phase!=='answering'&&readingReviewTargets(r,state.sessions[r.id]).length>0&&!readingRewardProgress(game,r).complete);
  const suggestion=node('section',null,'reading-v2-reward-card reading-v2-suggestion');suggestion.hidden=!suggested;
  if(suggested){suggestion.append(node('b','🎁 今のおすすめ：'+suggested.title+' の解き直し'),rewardLine(readingRewardProgress(game,suggested).remaining),node('span','まだ受け取っていない報酬です。解き直して正解すると100％まで受け取れます。'));const go=node('button','✎ ヒント付き再挑戦を再開','btn btn-primary');go.type='button';go.onclick=()=>showReview(suggested,READING_VILLAGERS[passages.indexOf(suggested)%READING_VILLAGERS.length]);suggestion.append(go);}
- root.replaceChildren(heading,progressSummary,suggestion,grid,pager);
+ progressSummary.append(node('small',gradeRewardSummary(grade),'subquest-grade-reward-note'));root.replaceChildren(heading,progressSummary,suggestion,grid,pager);
  mountFittedQuestPages(grid,pager,[...cards,...(api.extraCards||[])],{page:api.pageForGrade?.(grade)||0,onPage:page=>api.setPageForGrade?.(grade,page),bind:api.bindRewards});
 
  function createScene(record,villager,hint=null){
@@ -108,14 +110,14 @@ export function renderJapaneseReadingV2Subquests(root,grade,api){
   }
   update();return {element,update};
  }
- function saveReward(reward){if(reward)api.exp(reward.exp);api.save();api.refresh?.();}
+ function saveReward(reward){if(reward)api.exp(reward.exp);const bonus=claimGradeClearRewards(game);if(bonus.exp)api.exp(bonus.exp);if(bonus.messages.length){game.lastSubquestGradeReward=bonus.messages;}api.save();api.refresh?.();}
  function rewardLine(reward){
   const row=node('div',null,'reading-v2-reward-icons');const medal=node('span');medal.innerHTML=api.rewardIcon('medal','quest-medal',reward.medals,24);medal.append(node('b',`${reward.medals}枚`));
   row.append(medal,node('span',`💰 ${reward.gold.toLocaleString()} G`),node('span',`✨ ${reward.exp.toLocaleString()} EXP`));return row;
  }
  function showQuestion(record,villager,index,review=false){
   const run=readingSession(game,record),question=record.questions[index],hint=review?readingRetryHint(record,question):null,{body,dialogue,hud}=createScene(record,villager,hint);
-  const progress=node('p',`${index+1}／5問め　${question.skill}`,'reading-story-progress');
+  let stopTime=startSubquestTimer(body);const progress=node('p',`${index+1}／5問め　${question.skill}`,'reading-story-progress');
   const prompt=node('div',question.prompt,'challenge-problem challenge-problem-word quest-reading-question reading-v2-prompt');
   const area=node('div',null,'reading-v2-answer-area'),feedback=node('p',null,'reading-v2-feedback');feedback.setAttribute('role','status');
   const next=node('button',review?'この答えを確認する':index===4?'5問まとめて答え合わせ':'回答を保存して次へ','btn btn-primary quest-answer-next');next.type='button';
@@ -125,11 +127,11 @@ export function renderJapaneseReadingV2Subquests(root,grade,api){
   function choose(value){answer=value;update();feedback.textContent='';}
   next.onclick=()=>{
    if(review){
-    const result=confirmReadingReview(game,record,index,answer,humanConfirmed);
-    if(result.status!=='correct'){feedback.textContent=result.status==='needs-review'?'大人と確認してから進もう。':'もう一度、本文の手がかりを確かめよう。';return;}
+    const result=confirmReadingReview(game,record,index,answer,humanConfirmed,stopTime());
+    if(result.status!=='correct'){api.save();stopTime=startSubquestTimer(body);feedback.textContent=result.status==='needs-review'?'大人と確認してから進もう。':'もう一度、本文の手がかりを確かめよう。';return;}
     saveReward(result.reward);showReview(record,villager);return;
    }
-   if(!storeReadingAnswer(game,record,index,answer)){feedback.textContent='答えを入れてね。';return;}
+   if(!storeReadingAnswer(game,record,index,answer,stopTime())){feedback.textContent='答えを入れてね。';return;}
    saveReward(claimReadingAnswerReward(game,record,index));
    if(index<4)showQuestion(record,villager,index+1);
    else{saveReward(finishReadingSession(game,record));showResults(record,villager);}
@@ -156,14 +158,14 @@ export function renderJapaneseReadingV2Subquests(root,grade,api){
    criteria.onchange=()=>{humanConfirmed=criteria.querySelectorAll('input:checked').length===question.scoring.criteria.length;update();};area.append(criteria);
   }
   body.append(next);
-  if(!review&&index>0){const previous=node('button','前の問題に戻る','btn');previous.type='button';previous.onclick=()=>{if(answer.trim()&&storeReadingAnswer(game,record,index,answer))saveReward(claimReadingAnswerReward(game,record,index));showQuestion(record,villager,index-1);};body.append(previous);}
+  if(!review&&index>0){const previous=node('button','前の問題に戻る','btn');previous.type='button';previous.onclick=()=>{if(answer.trim()&&storeReadingAnswer(game,record,index,answer,stopTime()))saveReward(claimReadingAnswerReward(game,record,index));showQuestion(record,villager,index-1);};body.append(previous);}
   if(review){const cancel=node('button','答え合わせに戻る','btn');cancel.type='button';cancel.onclick=()=>showResults(record,villager);body.append(cancel);}
   body.append(dialogue);
  }
  function showResults(record,villager){
   const run=readingSession(game,record),{body}=createScene(record,villager);body.classList.add('reading-v2-results');
   const results=readingResults(record,run),correct=results.filter(r=>r.status==='correct').length;
-  body.append(node('h3','📖 5問の答え合わせ'),node('p',`5問中 ${correct}問 正解・確認済み。考えを書く問題は、大人と確認できたら正解として記録します。`));
+  if(game.lastSubquestGradeReward){for(const text of game.lastSubquestGradeReward)body.append(node('p',text,'reading-v2-reward-card'));delete game.lastSubquestGradeReward;api.save();}body.append(node('h3','📖 5問の答え合わせ'),node('p',`5問中 ${correct}問 正解・確認済み。考えを書く問題は、大人と確認できたら正解として記録します。`));
   results.forEach((r,i)=>{
    const row=node('details',null,'reading-v2-result-row');row.dataset.status=r.status;
    row.append(node('summary',`${r.status==='correct'?'✅':r.status==='needs-review'?'💬':'🔍'} ${i+1}問め　${r.status==='correct'?(r.originalStatus==='correct'?'正解':'解き直して正解'):r.status==='needs-review'?'人と確認':'再挑戦しよう'}　${r.question.skill}`));
