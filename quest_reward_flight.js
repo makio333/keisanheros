@@ -1,6 +1,8 @@
 export async function questRewardFlight(source){
  const target=document.querySelector('.reading-subquest-overlay .reading-v2-hud-meter');
- if(!source||!target||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ if(!source||!target)return;
+ window.SM?.play?.('se_decide',.7);
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches){window.SM?.play?.('se_heal',.65);return;}
  const a=source.getBoundingClientRect(),b=target.getBoundingClientRect();
  const dots=[];
  for(let i=0;i<16;i++){
@@ -9,6 +11,7 @@ export async function questRewardFlight(source){
   dots.push(animation.finished.catch(()=>{}).finally(()=>dot.remove()));
  }
  await Promise.all(dots);
+ if(target.isConnected)window.SM?.play?.('se_heal',.65);
  target.animate([{filter:'brightness(1)'},{filter:'brightness(2.5)'},{filter:'brightness(1)'}],{duration:300});
 }
 
