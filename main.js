@@ -28,4 +28,5 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('art-preview
 } else {
   await import('./local_game_client.js');
 }
+try{const {archiveLocalSaveHistory}=await import('./local_backup_archive.js');await archiveLocalSaveHistory();}catch(error){console.warn('Local history archive unavailable',error);}
 await import('./game.js');

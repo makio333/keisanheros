@@ -3698,7 +3698,7 @@ function applyCloudSlots(cloudSlots) {
     if (window.AccountSession) {
       if (!window.AccountSession.owns(cs.slotKey) || !cs.gameState) continue;
       const previous=storageGet(cs.slotKey),next=JSON.stringify(cs.gameState);
-      if (previous && previous!==next) storageSet(`legend-account-backup::${window.AccountSession.accountId}::${cs.slotKey}::${Date.now()}`,previous);
+      if (previous && previous!==next) storageSet(`legend-account-backup::${window.AccountSession.accountId}::${cs.slotKey}::latest`,previous);
       storageSet(cs.slotKey,next);
       if (currentSlotKey===cs.slotKey && G) loadSlot(cs.slotKey);
       cloudMap[cs.slotKey]=cs;hasChanges=true;
@@ -10427,7 +10427,8 @@ function showItems(){
 let gachaView = 'christmas-skins';
 
 function setGachaView(view) {
-  gachaView = ['skins','items','halloween','christmas-skins','christmas-items'].includes(view) ? view : 'skins';
+  gachaView = view==='christmas-items' ? view : 'christmas-skins';
+  for(const id of ['btn-gacha-tab-skins','btn-gacha-tab-items','btn-gacha-tab-halloween'])$(id)?.classList.add('hidden');
   $('skin-gacha-section').classList.toggle('hidden', gachaView !== 'skins');
   $('gacha-item-section').classList.toggle('hidden', gachaView !== 'items');
   $('btn-gacha-tab-skins').setAttribute('aria-selected', String(gachaView === 'skins'));
@@ -12235,8 +12236,7 @@ function renderHomeBackground(){
   if(!town)return;
   const active=isChristmasActive();
   const selected=getAvatarBackground(G.avatarBackground);
-  const background=active ? CHRISTMAS_EVENT.homeBackground
-    : selected.image || (selected.id==='default' ? '画像/home_town_v2.png' : null);
+  const background=active ? CHRISTMAS_EVENT.homeBackground : '画像/home_town_v2.png';
   const image=town.querySelector(':scope > .town-map-img');
   if(image){
     const src=av(background || '画像/home_town_v2.png');
@@ -16730,7 +16730,7 @@ function getRaidData() {
 }
 
 function saveRaidData(data) {
-  localStorage.setItem(RAID_STORAGE_KEY, JSON.stringify(data));
+  storageSet(RAID_STORAGE_KEY, JSON.stringify(data));
 }
 
 // 自分のダメージを記録し、総ダメージも更新する
