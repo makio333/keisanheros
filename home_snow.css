@@ -1,0 +1,6 @@
+#screen-home{isolation:isolate}
+.home-snow{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:2;contain:strict}
+.home-snow[hidden]{display:none}
+.home-snow i{position:absolute;top:-8px;left:var(--x);width:var(--size);height:var(--size);border-radius:50%;background:#fff;opacity:.65;animation:homeSnowFall var(--duration) linear var(--delay) infinite}
+@keyframes homeSnowFall{from{transform:translate3d(0,-8px,0)}to{transform:translate3d(var(--drift),100vh,0)}}
+@media(prefers-reduced-motion:reduce){.home-snow{display:none}}

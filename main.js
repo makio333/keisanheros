@@ -1,3 +1,4 @@
+import './home_snow.js';
 import './storage_polyfill.js';
 import './equipment_chest_intro.css';
 import './style.css?v=mana-ratio2';
