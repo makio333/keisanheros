@@ -1,3 +1,5 @@
+import wordProblemPrintCss from './word_problem_print_layout_v2.css?inline';
+import {paginateWordProblemPrintV2} from './word_problem_print_layout_v2.js';
 import {beginStageAttempt,finishStageAttempt,clearStageAttemptFlag} from './stage_attempts.js';
 import {startAssetBoot,bootAudioUrl,startupAssetMap} from './asset_boot.js';
 import {manaEquipmentStats,manaEquipmentAbility,manaEquipmentCost,equipmentManaBudget,ENCHANT_RESOURCE_COST} from './equipment_mana_ratio.js';
@@ -4925,6 +4927,7 @@ let battle = null;
 function prepareChristmasBattleLayout(){
   let stack=$('christmas-answer-stack');
   const status=$('battle-player-window'), problem=$('kanji-problem-center'), sub=$('battle-sub-menu');
+  if(stack?.hasAttribute('data-generic-fit'))return;
   if(explore?.isChristmas){
     if(!stack){stack=document.createElement('div');stack.id='christmas-answer-stack';$('battle-field').after(stack);}
     stack.append(status,problem,sub);
@@ -8008,8 +8011,8 @@ function showQuestBoard(){
       <div class="quest-card-title">${renderReadingHints(q.title)}</div>
       <div class="quest-card-tag">🧮 ${OP_LABELS[q.tier]}</div>
       ${questCardRewardsHtml(q)}`;
-    card.onclick = () => showQuestDetail(q);
-    card.onkeydown = e => { if (e.target === card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); showQuestDetail(q); } };
+    card.onclick = () => startQuestChallenge(q);
+    card.onkeydown = e => { if (e.target === card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); startQuestChallenge(q); } };
     cards.push(card);
   }
   renderMathWordSubquests(mathWordRoot,{extraCards:cards,game:()=>G,save:()=>save(),exp:amount=>grantExp(amount),refresh:()=>{renderQuestMedalShop();renderQuestMedalCount();},answerFeedback:success=>{if(success)SM.playCorrectAnswer();else SM.playBeep('error');window.showResultOverlay?.(success);},asset:av,rewardIcon:stageRewardIcon,bindRewards:bindStageRewardTooltips,print:record=>openMaterialPrintChoices('math',record)});
@@ -8161,49 +8164,19 @@ function getNPCImage(npc) {
 
 let isTrainingSubquest = false;
 function startQuestChallenge(q) {
-  $('screen-quest-board').classList.add('hidden');
-  const part = q.parts[q.partIndex];
-  
-  const events = [];
-  if (q.partIndex === 0) {
-    events.push({
-      id: Math.random().toString(),
-      name: q.npc.name,
-      text: `おや、ぼうけんしゃさん！\nちょっと おねがい しても いいかな？`,
-      image: getNPCImage(q.npc),
-      position: 'right',
-      animation: 'fade',
-      emotion: 'jump'
-    });
-  }
-  
-  events.push({
-    id: Math.random().toString(),
-    name: q.npc.name,
-    text: part.text, 
-    image: getNPCImage(q.npc),
-    position: 'right',
-    animation: q.partIndex === 0 ? 'none' : 'pop',
-    emotion: q.partIndex === 0 ? 'nod' : 'bounce'
-  });
-
-  const eventData = {
-    title: `サブクエスト：${q.title}（${q.partIndex + 1}／${q.parts.length}問め）`,
-    events: events,
-    preventClose: true,
-    onLastEvent: (overlay) => {
-      const dialogBox = overlay.querySelector('.event-player-dialog');
-      
-      const challengeWindow = document.createElement('section');
-      challengeWindow.className = 'quest-answer-window quest-answer-window-math';
-      challengeWindow.setAttribute('aria-label','算数クエストの問題と答え');
-      const closeChallenge = document.createElement('button');
-      closeChallenge.type='button';closeChallenge.className='btn quest-answer-close';closeChallenge.textContent='✕ とじる';
-      closeChallenge.onclick=()=>{destroyChallenge();overlay.remove();showQuestBoard();};
-      const challengeContainer = document.createElement('div');challengeContainer.className='quest-answer-challenge';
-      challengeWindow.append(closeChallenge,challengeContainer);
-      overlay.appendChild(challengeWindow);
-      
+  const part=q.parts[q.partIndex];
+  const overlay=document.createElement('div');overlay.className='reading-subquest-overlay';
+  const panel=document.createElement('section');panel.className='reading-subquest-panel quest-answer-panel math-word-reading-answer-panel reading-v2-answer-panel';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');
+  const back=document.createElement('button');back.className='btn';back.textContent='← 依頼一覧へ';back.onclick=()=>{destroyChallenge();overlay.remove();showQuestBoard();};
+  const content=document.createElement('div');content.className='quest-answer-content reading-v2-answer-content';
+  const context=document.createElement('div');context.className='quest-question-context reading-v2-question-context';
+  const letter=document.createElement('article');letter.className='reading-v2-letter';
+  letter.innerHTML=`<header class="reading-v2-letter-header"><span class="reading-v2-letter-eyebrow">村人からの算数の手紙</span><h2>${escapeHtml(q.title)}</h2></header><div class="reading-v2-passage">${part.text}</div><footer class="reading-v2-letter-signature"><span>勇者へ</span><b>${escapeHtml(q.npc.name)} より</b></footer>`;
+  context.append(letter);
+  const center=document.createElement('div');center.className='quest-answer-center reading-v2-answer-center';
+  const portrait=document.createElement('img');portrait.className='reading-v2-scene-villager';portrait.src=getNPCImage(q.npc);portrait.alt=q.npc.name;
+  const challengeContainer=document.createElement('section');challengeContainer.className='reading-v2-answer-foreground legacy-math-answer-controls';
+  const header=document.createElement('header');header.className='reading-v2-scene-header';const print=document.createElement('button');print.className='btn';print.textContent='プリント';print.onclick=()=>printQuestSheet(q);header.append(back,print);center.append(portrait,challengeContainer);content.append(context,center);panel.append(header,content);overlay.append(panel);document.body.append(overlay);
       startChallenge(challengeContainer, {
         problem: part,
         timeLimit: problemTimeLimit(q.tier) + 6000
@@ -8249,32 +8222,12 @@ function startQuestChallenge(q) {
           playReward();
           
         } else {
-          challengeContainer.innerHTML = '';
-          challengeContainer.style.display = 'none';
-          if (dialogBox) {
-            dialogBox.style.display = 'block';
-            const tEl = dialogBox.querySelector('.event-player-text');
-            if (tEl) {
-              tEl.style.display = 'block';
-              tEl.innerHTML = `ざんねん…こたえが ちがったみたい（せいかいは ${part.answer}）。<br>もういちど ちょうせんしてね。`;
-            }
-          }
-          const skipBtn = overlay.querySelector('#event-skip-btn');
-          if (skipBtn) skipBtn.style.display = 'block';
-          
-          overlay.querySelector('#event-screen').addEventListener('click', () => {
-             overlay.remove();
-             showQuestBoard();
-          }, { once: true });
+          challengeContainer.replaceChildren();
+          const note=document.createElement('p');note.textContent='もう一度、手紙を読んで考えよう。';
+          const retry=document.createElement('button');retry.className='btn btn-primary';retry.textContent='もう一度解く';retry.onclick=()=>{overlay.remove();startQuestChallenge(q);};
+          challengeContainer.append(note,retry);
         }
       });
-      
-    }
-  };
-  
-  if (window.playEventScene) {
-    window.playEventScene(eventData, showQuestBoard);
-  }
 }
 
 /* プリントの上部にいれる「なまえ／にちづけ」らん。
@@ -9681,7 +9634,7 @@ function showSkills(){
    ========================================================== */
 
 /* 別ウィンドウを開いてプリント内容だけを印刷する（超高速）*/
-function openPrintWindow(htmlContent, bgUrl, isLandscape) {
+function openPrintWindow(htmlContent, bgUrl, isLandscape, options = {}) {
   // 国語系プリントは htmlContent 内に <style> を持つため、
   // isLandscape=true の場合は最小限のリセットのみ行う
   let printCSS;
@@ -9720,31 +9673,36 @@ function openPrintWindow(htmlContent, bgUrl, isLandscape) {
     `;
   }
   if(!isLandscape)printCSS+=regularMathPrintCss;
+  printCSS+=options.css || '';
+  printCSS+=' .game-print-controls{position:sticky;top:0;z-index:10;display:flex;justify-content:center;gap:10px;padding:10px;background:#fff;border-bottom:1px solid #aaa;font:16px sans-serif}.game-print-controls button{padding:8px 16px;font:inherit}@media print{.game-print-controls{display:none!important}}';
   const pw = window.open('', '_blank', 'width=800,height=900');
   if (!pw) { alert('ポップアップがブロックされました。許可してください。'); return false; }
   pw.document.open();
-  pw.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>プリント</title><style>${printCSS}</style></head><body>${htmlContent}</body></html>`);
+  pw.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>プリント</title><base href="${document.baseURI}"><style>${printCSS}</style></head><body>${options.controls?'<nav class="game-print-controls"><button id="game-print-now" type="button" disabled>準備中…</button><button id="game-print-close" type="button">とじる</button></nav>':''}${htmlContent}</body></html>`);
   pw.document.close();
   pw.focus();
   let printRequested=false;
-  const requestPrint=()=>{if(printRequested||pw.closed)return;printRequested=true;pw.print();};
-  pw.onload = requestPrint;
-  setTimeout(requestPrint, 500);
-  return true;
+  let prepared;const prepare=()=>prepared ||= Promise.resolve().then(async()=>{
+    await pw.document.fonts?.ready;
+    await options.prepare?.(pw);
+    await Promise.all([...pw.document.images || []].map(image=>image.decode?.().catch(()=>{})));
+    const button=pw.document.getElementById?.('game-print-now');if(button){button.disabled=false;button.textContent='印刷する';}
+  });
+  const requestPrint=async(force=false)=>{if(pw.closed || (printRequested&&!force))return;try{await prepare();if(pw.closed || (printRequested&&!force))return;printRequested=true;pw.print();}catch(error){const button=pw.document.getElementById?.('game-print-now');if(button){button.disabled=false;button.textContent='再試行する';button.onclick=()=>{prepared=null;requestPrint(true);};}console.error('Print preparation failed',error);}};
+  const printButton=pw.document.getElementById?.('game-print-now'),closeButton=pw.document.getElementById?.('game-print-close');
+  if(printButton)printButton.onclick=()=>requestPrint(true);if(closeButton)closeButton.onclick=()=>pw.close();
+  pw.onload=()=>requestPrint();setTimeout(()=>requestPrint(),500);
+  return options.returnWindow?pw:true;
 }
 
 function openLayoutPrintWindow(htmlContent,{ancient=false,alreadyPaginated=false,onOpened=null}={}){
-  const pw=window.open('','_blank','width=900,height=1000');
+  const content=ancient?`<main id="wpp2-print-root">${htmlContent}</main>`:htmlContent;
+  const pw=openPrintWindow(content,null,false,{
+    controls:true,returnWindow:true,
+    css:wordProblemPrintCss+' body{margin:0;padding:16px;background:#ececec;color:#111}@media print{body{padding:0;background:#fff}}',
+    prepare:async win=>{if(ancient)await paginateAncientAutomaticV2(win.document.getElementById('wpp2-print-root'));else if(!alreadyPaginated)await Promise.all([...win.document.querySelectorAll('.wpp2-root')].map(root=>paginateWordProblemPrintV2(root)));},
+  });
   if(!pw)return null;
-  const cssUrl=new URL('./word_problem_print_layout_v2.css?v=20261109-paragraph-indent',document.baseURI).href;
-  const layoutUrl=new URL('./word_problem_print_layout_v2.js',document.baseURI).href;
-  const ancientUrl=new URL('./ancient_word_problem_print_adapter_v2.js',document.baseURI).href;
-  const source=ancient
-    ? `import {paginateAncientAutomaticV2} from ${JSON.stringify(ancientUrl)}; const root=document.getElementById('wpp2-print-root'); await paginateAncientAutomaticV2(root);`
-    : alreadyPaginated ? '' : `import {paginateWordProblemPrintV2} from ${JSON.stringify(layoutUrl)}; await Promise.all([...document.querySelectorAll('.wpp2-root')].map(root=>paginateWordProblemPrintV2(root)));`;
-  pw.document.open();
-  pw.document.write(`<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>文章問題プリント</title><link rel="stylesheet" href="${escapeHtml(cssUrl)}"><style>body{margin:0;padding:16px;background:#ececec;color:#111}.wpp2-controls{position:sticky;top:0;z-index:10;display:flex;justify-content:center;gap:10px;padding:10px;background:#fff;border-bottom:1px solid #aaa;font:16px sans-serif}.wpp2-controls button{padding:8px 16px;font:inherit}@media print{body{padding:0;background:#fff}.wpp2-controls{display:none!important}}</style></head><body><nav class="wpp2-controls"><button type="button" id="wpp2-print-now">印刷する</button><button type="button" onclick="window.close()">とじる</button></nav>${ancient?`<main id="wpp2-print-root">${htmlContent}</main>`:htmlContent}<script type="module">${source} document.getElementById('wpp2-print-now').onclick=()=>window.print(); await document.fonts.ready; setTimeout(()=>window.print(),120);</script></body></html>`);
-  pw.document.close();pw.focus();
   try{onOpened?.(pw);}catch(error){pw.close();throw error;}
   return pw;
 }
@@ -9753,9 +9711,8 @@ async function paginateAncientHtmlForReview(html){
   const frame=document.createElement('iframe');
   frame.setAttribute('aria-hidden','true');
   frame.style.cssText='position:fixed;left:-12000px;top:0;width:1000px;height:1200px;border:0;visibility:hidden';
-  const cssUrl=new URL('./word_problem_print_layout_v2.css?v=20261109-paragraph-indent',document.baseURI).href;
   const loaded=new Promise((resolve,reject)=>{frame.onload=resolve;frame.onerror=reject;});
-  frame.srcdoc=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><link rel="stylesheet" href="${escapeHtml(cssUrl)}"></head><body><main id="ancient-review-root"></main></body></html>`;
+  frame.srcdoc=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><base href="${document.baseURI}"><style>${wordProblemPrintCss}</style></head><body><main id="ancient-review-root"></main></body></html>`;
   document.body.append(frame);
   try{
     await loaded;

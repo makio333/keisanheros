@@ -1,13 +1,27 @@
-// Fit the active Christmas adventure into the visible viewport, including browser side panels.
+// Fit the active kana adventure into the visible viewport, including browser side panels.
 let pendingFrame=0;
 let preferredBoardScale=null;
 let preferredBoardPosition=null;
+const originalPositions=new Map();
 function fitAdventure(){
   pendingFrame=0;
-  const screen=document.querySelector('#screen-battle.active.christmas-battle-screen');
+  const screen=document.querySelector('#screen-battle.active');
   if(!screen)return;
-  const stack=screen.querySelector('#christmas-answer-stack'),board=screen.querySelector('#kanji-challenge');
-  if(!stack || !board)return;
+  const board=screen.querySelector('#kanji-challenge'),problem=screen.querySelector('#kanji-problem-center');
+  const christmas=screen.classList.contains('christmas-battle-screen');
+  if(!christmas && (!board || board.classList.contains('hidden') || problem?.classList.contains('hidden'))){
+    delete screen.dataset.adventureFit;screen.classList.remove('fitted-kana-battle');
+    const previous=screen.querySelector('#christmas-answer-stack[data-generic-fit]');
+    if(previous){for(const [node,anchor] of originalPositions){if(anchor.isConnected)anchor.replaceWith(node);}originalPositions.clear();previous.remove();}
+    return;
+  }
+  screen.classList.toggle('fitted-kana-battle',!christmas);
+  let stack=screen.querySelector('#christmas-answer-stack');
+  if(!stack){stack=document.createElement('div');stack.id='christmas-answer-stack';stack.dataset.genericFit='1';
+    for(const node of [screen.querySelector('#battle-player-window'),problem,screen.querySelector('#battle-sub-menu')]){const anchor=document.createComment('adventure-panel-position');node.before(anchor);originalPositions.set(node,anchor);stack.append(node);}
+    screen.querySelector('.battle-wrap').append(stack);
+  }
+  if(!board)return;
   const viewport=window.visualViewport;
   const width=Math.floor(viewport?.width || innerWidth),height=Math.floor(viewport?.height || innerHeight);
   const wide=width>=700 && width>height*1.12;
@@ -60,7 +74,7 @@ function observeAdventure(){
    if(!handle || event.button!==0)return;
    const board=screen.querySelector('#kanji-challenge'),rect=board.getBoundingClientRect();
    drag={id:event.pointerId,handle,mode:resize?'resize':'move',left:rect.left,top:rect.top,x:event.clientX,y:event.clientY,w:rect.width,h:rect.height,scale:rect.width/board.offsetWidth,sx:handle.dataset.corner?.endsWith('e')?1:-1,sy:handle.dataset.corner?.startsWith('s')?1:-1};
-   handle.setPointerCapture(event.pointerId);screen.classList.add('kana-resizing');event.preventDefault();
+   screen.setPointerCapture(event.pointerId);screen.classList.add('kana-resizing');event.preventDefault();
  });
  screen.addEventListener('pointermove',event=>{
    if(!drag || drag.id!==event.pointerId)return;
@@ -68,7 +82,7 @@ function observeAdventure(){
    const delta=((event.clientX-drag.x)*drag.sx*drag.w+(event.clientY-drag.y)*drag.sy*drag.h)/(drag.w**2+drag.h**2);
    preferredBoardScale=Math.max(.2,drag.scale*(1+delta));scheduleFit();event.preventDefault();
  });
- const endDrag=event=>{if(drag?.id!==event.pointerId)return;if(drag.mode==='resize')preferredBoardScale=parseFloat(screen.style.getPropertyValue('--fit-board-scale'));else preferredBoardPosition={x:parseFloat(screen.style.getPropertyValue('--fit-board-left')),y:parseFloat(screen.style.getPropertyValue('--fit-board-top'))};drag=null;screen.classList.remove('kana-resizing');};
+ const endDrag=event=>{if(drag?.id!==event.pointerId)return;drag=null;screen.classList.remove('kana-resizing');scheduleFit();};
  screen.addEventListener('pointerup',endDrag);screen.addEventListener('pointercancel',endDrag);screen.addEventListener('lostpointercapture',endDrag);
  screen.addEventListener('dblclick',event=>{if(event.target.closest('.kana-board-header')&&!event.target.closest('button')){preferredBoardPosition=null;scheduleFit();}if(event.target.closest('.kana-resize-handle')){preferredBoardScale=null;scheduleFit();}});
  screen.addEventListener('keydown',event=>{

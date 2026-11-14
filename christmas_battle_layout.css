@@ -1,11 +1,11 @@
 /* Christmas uses the current compact status + question layout. Kana keys never stretch. */
-#screen-battle.christmas-battle-screen .battle-wrap{display:grid!important;grid-template-columns:minmax(0,1fr) 522px;grid-template-rows:minmax(120px,1fr) auto;align-items:end;gap:12px;width:100%;max-width:100%;min-width:0;height:100dvh;min-height:0;padding:76px 16px 38px;box-sizing:border-box;overflow:auto}
-#screen-battle.christmas-battle-screen .battle-top{position:absolute;top:12px;left:16px;display:block;width:min(360px,calc(100% - 130px));padding:0}
-#screen-battle.christmas-battle-screen .battle-top>.floor-window{width:100%;box-sizing:border-box;margin:0;font-size:12px}
-#screen-battle.christmas-battle-screen .battle-field{grid-column:1;grid-row:1;align-self:stretch;display:flex;align-items:center;justify-content:center;flex:none!important;min-height:0!important;height:auto!important;padding:0!important;width:100%;min-width:0}
-#screen-battle.christmas-battle-screen .enemy-sprite img{max-height:220px;max-width:230px;object-fit:contain}
-#screen-battle.christmas-battle-screen #christmas-answer-stack{grid-column:1;grid-row:2;display:flex;flex-direction:column;gap:6px;width:min(560px,100%);min-width:0;justify-self:center}
-#screen-battle.christmas-battle-screen #battle-player-window.status-window{position:static;inset:auto;transform:none;display:grid;grid-template-columns:120px 1fr 1fr;grid-template-areas:'identity hp mp' 'identity exp exp';grid-template-rows:24px 20px;align-items:center;gap:4px 8px;width:100%;min-width:0;max-width:none;margin:0;padding:8px 12px;box-sizing:border-box;border:3px solid var(--panel-border);border-radius:14px;background:#161222e6}
+#screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) .battle-wrap{display:grid!important;grid-template-columns:minmax(0,1fr) 522px;grid-template-rows:minmax(120px,1fr) auto;align-items:end;gap:12px;width:100%;max-width:100%;min-width:0;height:100dvh;min-height:0;padding:76px 16px 38px;box-sizing:border-box;overflow:auto}
+#screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) .battle-top{position:absolute;top:12px;left:16px;display:block;width:min(360px,calc(100% - 130px));padding:0}
+#screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) .battle-top>.floor-window{width:100%;box-sizing:border-box;margin:0;font-size:12px}
+#screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) .battle-field{grid-column:1;grid-row:1;align-self:stretch;display:flex;align-items:center;justify-content:center;flex:none!important;min-height:0!important;height:auto!important;padding:0!important;width:100%;min-width:0}
+#screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) .enemy-sprite img{max-height:220px;max-width:230px;object-fit:contain}
+#screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) #christmas-answer-stack{grid-column:1;grid-row:2;display:flex;flex-direction:column;gap:6px;width:min(560px,100%);min-width:0;justify-self:center}
+#screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) #battle-player-window.status-window{position:static;inset:auto;transform:none;display:grid;grid-template-columns:120px 1fr 1fr;grid-template-areas:'identity hp mp' 'identity exp exp';grid-template-rows:24px 20px;align-items:center;gap:4px 8px;width:100%;min-width:0;max-width:none;margin:0;padding:8px 12px;box-sizing:border-box;border:3px solid var(--panel-border);border-radius:14px;background:#161222e6}
 #christmas-answer-stack .status-header-row{grid-area:identity;min-width:0}
 #christmas-answer-stack .status-line{display:flex;flex-wrap:wrap;font-size:11px;gap:4px;margin:0}
 #christmas-answer-stack #battle-player-window>.stat-bar-wrap{display:flex;align-items:center;gap:4px;min-width:0;margin:0}
@@ -16,7 +16,7 @@
 #christmas-answer-stack .stat-label img{display:none}
 #christmas-answer-stack .stat-bar{flex:1;min-width:0;height:18px}
 #christmas-answer-stack .stat-bar-label{font-size:10px}
-#screen-battle.christmas-battle-screen #kanji-problem-center{position:static!important;inset:auto!important;transform:none!important;align-self:auto;width:100%!important;min-width:0;box-sizing:border-box;margin:0!important;padding:10px 12px!important;border:3px solid var(--panel-border);border-radius:14px;background:#161222e6}
+#screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) #kanji-problem-center{position:static!important;inset:auto!important;transform:none!important;align-self:auto;width:100%!important;min-width:0;box-sizing:border-box;margin:0!important;padding:10px 12px!important;border:3px solid var(--panel-border);border-radius:14px;background:#161222e6}
 #christmas-answer-stack .kanji-prompt{font-size:12px;margin:0 0 3px}
 #christmas-answer-stack #challenge-problem-text{font-size:30px;line-height:1.2}
 #christmas-answer-stack .input-display{display:flex;gap:6px;margin-top:6px}
@@ -25,8 +25,8 @@
 #christmas-answer-stack #kanji-battle-commands{margin-top:6px!important;gap:6px!important}
 #christmas-answer-stack #kanji-battle-commands .btn{height:32px;padding:4px 12px;min-height:0;font-size:12px}
 #christmas-answer-stack .input-mode-toggle{margin-top:4px}
-#screen-battle.christmas-battle-screen #kanji-challenge{position:static!important;inset:auto!important;transform:none!important;grid-column:2;grid-row:2;width:max-content!important;max-width:100%;height:auto!important;min-height:0;max-height:none!important;flex:none;align-self:end;justify-self:center;margin:0!important;padding:10px!important;box-sizing:border-box;background:#161222ed;border:3px solid var(--panel-border);border-radius:14px;overflow:visible}
-#screen-battle.christmas-battle-screen #battle-log{position:absolute;bottom:8px;left:16px;right:16px;width:auto;max-height:24px;box-sizing:border-box;padding:3px 8px;font-size:11px}
+#screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) #kanji-challenge{position:static!important;inset:auto!important;transform:none!important;grid-column:2;grid-row:2;width:max-content!important;max-width:100%;height:auto!important;min-height:0;max-height:none!important;flex:none;align-self:end;justify-self:center;margin:0!important;padding:10px!important;box-sizing:border-box;background:#161222ed;border:3px solid var(--panel-border);border-radius:14px;overflow:visible}
+#screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) #battle-log{position:absolute;bottom:8px;left:16px;right:16px;width:auto;max-height:24px;box-sizing:border-box;padding:3px 8px;font-size:11px}
 /* Fixed 40 x 40 px kana keys at every viewport height. */
 #software-keyboard{flex:none;height:auto;min-height:0;gap:6px}
 #software-keyboard .kana-board-section{flex:none;overflow:visible}
@@ -39,13 +39,13 @@
 .kana-page-tabs button{flex:1;min-height:28px;color:#fff;background:#2c3c57;border:1px solid #8a9db8;border-radius:5px;font:inherit;font-size:12px}
 .kana-page-tabs button[aria-pressed=true]{background:#f0d386;color:#201a22}
 @media(max-width:1100px){
- #screen-battle.christmas-battle-screen .battle-wrap{grid-template-columns:minmax(0,1fr);grid-template-rows:120px auto auto;justify-items:center;height:auto;min-height:100dvh;padding:72px 8px 38px;gap:8px;overflow:visible}
- #screen-battle.christmas-battle-screen .battle-field{grid-row:1;height:120px!important}
- #screen-battle.christmas-battle-screen .enemy-sprite img{max-height:105px;max-width:130px}
- #screen-battle.christmas-battle-screen .enemy-name{font-size:13px;margin:2px 0}
- #screen-battle.christmas-battle-screen #christmas-answer-stack{grid-row:2}
- #screen-battle.christmas-battle-screen #kanji-challenge{grid-column:1;grid-row:3;align-self:start}
- #screen-battle.christmas-battle-screen #battle-player-window.status-window{grid-template-columns:88px 1fr 1fr;padding:6px 8px;gap:4px 6px}
+ #screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) .battle-wrap{grid-template-columns:minmax(0,1fr);grid-template-rows:120px auto auto;justify-items:center;height:auto;min-height:100dvh;padding:72px 8px 38px;gap:8px;overflow:visible}
+ #screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) .battle-field{grid-row:1;height:120px!important}
+ #screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) .enemy-sprite img{max-height:105px;max-width:130px}
+ #screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) .enemy-name{font-size:13px;margin:2px 0}
+ #screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) #christmas-answer-stack{grid-row:2}
+ #screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) #kanji-challenge{grid-column:1;grid-row:3;align-self:start}
+ #screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) #battle-player-window.status-window{grid-template-columns:88px 1fr 1fr;padding:6px 8px;gap:4px 6px}
  #software-keyboard .kana-page-tabs{display:flex}
  #software-keyboard .kana-board-grid{grid-template-columns:20px repeat(5,40px)!important}
  #software-keyboard[data-kana-page='0'] [data-kana-half='1'],#software-keyboard[data-kana-page='1'] [data-kana-half='0']{display:none!important}
@@ -68,12 +68,12 @@ body:has(#screen-battle.active.christmas-battle-screen) #menu-dropdown{top:52px;
 #software-keyboard .kana-board-modifiers .key-btn:last-child{font-size:10px;letter-spacing:-.5px;white-space:nowrap}
 /* Wide screens: enemy and problem stay centered in the entire screen. Only the board is at the right. */
 @media(min-width:900px) and (orientation:landscape){
- #screen-battle.christmas-battle-screen .battle-wrap{display:flex!important;flex-direction:column;align-items:center;justify-content:flex-start;height:100dvh;min-height:0;padding:76px 16px 38px;gap:12px;overflow:auto}
- #screen-battle.christmas-battle-screen .battle-top{top:12px;left:16px;width:min(360px,calc(100% - 130px))}
- #screen-battle.christmas-battle-screen .battle-field{flex:1 1 auto!important;height:auto!important;min-height:120px!important;width:100%;align-self:center}
- #screen-battle.christmas-battle-screen .enemy-sprite img{max-height:220px;max-width:230px}
- #screen-battle.christmas-battle-screen #christmas-answer-stack{flex:none;width:min(560px,calc(100vw - 600px));align-self:center}
- #screen-battle.christmas-battle-screen #kanji-challenge{position:absolute!important;right:16px!important;left:auto!important;top:50%!important;bottom:auto!important;transform:translateY(-50%)!important;width:264px!important;align-self:auto}
+ #screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) .battle-wrap{display:flex!important;flex-direction:column;align-items:center;justify-content:flex-start;height:100dvh;min-height:0;padding:76px 16px 38px;gap:12px;overflow:auto}
+ #screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) .battle-top{top:12px;left:16px;width:min(360px,calc(100% - 130px))}
+ #screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) .battle-field{flex:1 1 auto!important;height:auto!important;min-height:120px!important;width:100%;align-self:center}
+ #screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) .enemy-sprite img{max-height:220px;max-width:230px}
+ #screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) #christmas-answer-stack{flex:none;width:min(560px,calc(100vw - 600px));align-self:center}
+ #screen-battle:is(.christmas-battle-screen,.fitted-kana-battle) #kanji-challenge{position:absolute!important;right:16px!important;left:auto!important;top:50%!important;bottom:auto!important;transform:translateY(-50%)!important;width:264px!important;align-self:auto}
  #software-keyboard .kana-page-tabs{display:none!important}
  #software-keyboard .kana-board-grid{grid-template-columns:20px repeat(5,40px)!important;grid-template-rows:repeat(10,40px)!important}
  #software-keyboard [data-kana-half]{grid-row:var(--kana-full-row)!important;grid-column:var(--kana-compact-column)!important}

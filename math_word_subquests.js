@@ -1,6 +1,7 @@
-import {getMathWordQuestionVisualV2} from './math_word_visuals_v2.js';
+import {getMathWordQuestionVisualV2,mathWordGroupRenderPlanV2,mathWordSetsRenderPlanV2} from './math_word_visuals_v2.js';
 import itemAtlas from './assets/items/math-word-icons/manifest.json';
 import './math_word_subquests.css';
+import './reading_quest_letter.css';
 const ITEM_ATLAS_URL=new URL('./assets/items/math-word-icons/atlas.png',import.meta.url).href;
 const ITEM_SPRITES=Object.fromEntries(itemAtlas.sprites.map(s=>[s.key,s]));
 import {groupQuestProblems} from './gameplay_review_settings.js';
@@ -55,7 +56,7 @@ export function renderMathWordSubquests(root,api){
  function showProblem(problem,villager,group){
   document.querySelector('.reading-subquest-overlay')?.remove();
   const overlay=node('div',null,'reading-subquest-overlay');
-  const panel=node('section',null,'reading-subquest-panel quest-answer-panel math-word-answer-panel');panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-label',problem.title);
+  const panel=node('section',null,'reading-subquest-panel quest-answer-panel math-word-reading-answer-panel reading-v2-answer-panel');panel.dataset.grade=String(problem.grade);panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-label',problem.title);
   const back=node('button','← 依頼一覧へ','btn');back.type='button';back.onclick=()=>{overlay.remove();render();};
   const title=node('h2',`${group.indexOf(problem)+1}／${group.length}問　${problem.title}`),conversation=node('section',null,'reading-villager-dialogue');
   const portrait=node('img');portrait.src=api.asset(villager.image);portrait.alt=villager.name;portrait.className='reading-villager-portrait';
@@ -63,7 +64,11 @@ export function renderMathWordSubquests(root,api){
   const content=node('div',null,'quest-answer-content math-word-answer-content');
   const context=node('div',null,'quest-question-context math-word-question-context');
   const answerCenter=node('div',null,'quest-answer-center math-word-answer-center');
-  const story=node('div',problem.story,'math-word-story'),question=node('div',problem.question,'challenge-problem challenge-problem-word math-word-question');context.append(story);const visual=renderMathWordVisual(problem);if(visual)context.append(visual);
+  const story=node('div',problem.story,'math-word-story'),question=node('div',problem.question,'challenge-problem challenge-problem-word math-word-question');const letter=node('article',null,'reading-v2-letter');
+  const letterHeader=node('header',null,'reading-v2-letter-header');letterHeader.append(node('span','村人からの算数の手紙','reading-v2-letter-eyebrow'),node('h2',problem.title));
+  story.classList.add('reading-v2-passage','math-word-letter-story');
+  letter.append(letterHeader,story);const visual=renderMathWordVisual(problem);if(visual&&problem.grade<=2)letter.append(visual);
+  const signature=node('footer',null,'reading-v2-letter-signature');signature.append(node('span','勇者へ'),node('b',villager.name+' より'));question.classList.add('math-word-letter-question');letter.append(question,signature);context.append(letter);
   const form=node('form',null,'math-word-answer-fields');form.autocomplete='off';const inputs={};
   for(const field of problem.input.fields){
    const label=node('label',null,'math-word-answer-field');label.append(node('span',field.label));
@@ -85,12 +90,14 @@ export function renderMathWordSubquests(root,api){
    }
    const done=node('p',firstCompletion?'★ 文章問題クリア！　初回報酬：300G・20EXP・クエストメダル1枚':'★ もう一度クリア！　初回報酬は受け取り済みです','reading-story-complete');
    const next=node('button','一覧へもどる','btn btn-primary');next.type='button';next.onclick=()=>{overlay.remove();render();};const nextProblem=group[group.indexOf(problem)+1];
-   if(nextProblem){const advance=node('button','次の問題','btn btn-primary');advance.type='button';advance.onclick=()=>{overlay.remove();showProblem(nextProblem,villager,group);};answerCenter.append(advance);}
-   answerCenter.append(done,next);
+   if(nextProblem){const advance=node('button','次の問題','btn btn-primary');advance.type='button';advance.onclick=()=>{overlay.remove();showProblem(nextProblem,villager,group);};foreground.append(advance);}
+   foreground.append(done,next);
    render();
   };
-  answerCenter.append(question,form,feedback);content.append(context,answerCenter);
-  panel.append(back,title,content,conversation);overlay.append(panel);document.body.append(overlay);installQuestAnswerPanelWheelScroll(panel);inputs[problem.input.fields[0].name]?.focus({preventScroll:true});
+  const scenePortrait=node('img',null,'reading-v2-scene-villager');scenePortrait.src=api.asset(villager.image);scenePortrait.alt=villager.name;
+  const foreground=node('section',null,'reading-v2-answer-foreground');foreground.append(node('h3',`${group.indexOf(problem)+1}／${group.length}問め`,'reading-story-progress'),form,feedback);
+  answerCenter.append(scenePortrait,foreground);content.classList.add('reading-v2-answer-content');context.classList.add('reading-v2-question-context');answerCenter.classList.add('reading-v2-answer-center');
+  const header=node('header',null,'reading-v2-scene-header');const rewardSummary=node('div',`クリア報酬　最大 ${group.length}枚・${300*group.length}G・${20*group.length}EXP`,'math-word-scene-step');header.append(back,rewardSummary);content.append(context,answerCenter);panel.append(header,content);overlay.append(panel);document.body.append(overlay);installQuestAnswerPanelWheelScroll(panel);inputs[problem.input.fields[0].name]?.focus({preventScroll:true});
  }
  render();
 }
@@ -119,7 +126,7 @@ function renderMathWordVisual(problem) {
   const visual = getMathWordQuestionVisualV2(problem.id);
   if (!visual) return null;
   const compact = window.matchMedia?.('(max-width: 600px)').matches;
-  const regularSize = compact ? 15 : (problem.grade === 1 ? 30 : 26);
+  const regularSize = compact ? (problem.grade === 1 ? 30 : 27) : (problem.grade === 1 ? 44 : 38);
   const figure = el('figure', null, 'math-word-item-visual');
   figure.setAttribute('role', 'img');
   figure.setAttribute('aria-label', visual.alt || '問題文に出てくるもの');
@@ -130,17 +137,40 @@ function renderMathWordVisual(problem) {
       if (index && group.operator) groups.append(visualOperator(group.operator));
       const groupNode = el('div', null, 'math-word-visual-group');
       if (group.tone) groupNode.dataset.tone = group.tone;
-      const shown = Math.min(Number(group.count) || 1, 14);
-      const iconSize = Number(group.count) > 20 ? (compact ? 13 : 20) : regularSize;
-      for (let i = 0; i < shown; i++) {
-        const icon = itemSprite(group.icon, iconSize);
-        if (!icon) continue;
-        if (Number(group.count) <= 20 && i < (Number(group.marked) || 0)) icon.classList.add('is-removed');
-        if (Number(group.count) <= 20 && i < (Number(group.highlighted) || 0)) icon.classList.add('is-highlighted');
-        groupNode.append(icon);
+      const renderPlan = mathWordGroupRenderPlanV2(group);
+      if (renderPlan.mode === 'bundles') {
+        const bundleRows = el('div', null, 'math-word-visual-bundles');
+        for (const bundle of renderPlan.bundles) {
+          const row = el('div', null, 'math-word-visual-bundle-row');
+          row.append(el('span', bundle.label, 'math-word-visual-bundle-label'));
+          const icons = el('span', null, 'math-word-visual-bundle-icons');
+          for (let i = 0; i < bundle.count; i++) icons.append(itemSprite(group.icon, compact ? 26 : 32));
+          row.append(icons);
+          bundleRows.append(row);
+        }
+        groupNode.append(bundleRows);
+      } else {
+        for (let i = 0; i < renderPlan.count; i++) {
+          const icon = itemSprite(group.icon, regularSize);
+          if (!icon) continue;
+          const removal = renderPlan.removalGroups.find(item => i >= item.start && i < item.end);
+          if (removal) icon.classList.add('is-removed', `is-removed-${removal.kind}`);
+          else if (!renderPlan.removalGroups.length && i < renderPlan.removedCount) icon.classList.add('is-removed');
+          if (i < renderPlan.highlightedCount) icon.classList.add('is-highlighted');
+          groupNode.append(icon);
+        }
+      }
+      if (renderPlan.removalGroups.length) {
+        const removalKey = el('span', null, 'math-word-visual-removal-key');
+        for (const removal of renderPlan.removalGroups) {
+          const note = el('span', `${removal.label} ${removal.count}${group.unit || ''}`, 'math-word-visual-removal-note');
+          note.dataset.kind = removal.kind;
+          removalKey.append(note);
+        }
+        groupNode.append(removalKey);
       }
       if (group.label) groupNode.append(el('span', group.label, 'math-word-visual-note'));
-      groupNode.append(el('span', `${group.count}${group.unit || ''}`, 'math-word-visual-count'));
+      groupNode.append(el('span', renderPlan.countLabel, 'math-word-visual-count'));
       groups.append(groupNode);
     });
     figure.append(groups);
@@ -161,17 +191,20 @@ function renderMathWordVisual(problem) {
 
   if (visual.sets) {
     const sets = el('div', null, 'math-word-visual-sets');
-    for (let index = 0; index < visual.sets.count; index++) {
+    const renderPlan = mathWordSetsRenderPlanV2(visual.sets);
+    for (const group of renderPlan.groups) {
       const set = el('div', null, 'math-word-visual-set');
-      set.append(itemSprite(visual.sets.contextIcon, compact ? 15 : 23), visualOperator('×'));
-      set.append(itemSprite(visual.sets.itemIcon, compact ? 13 : 21));
-      set.append(el('small', `${visual.sets.each}`, 'math-word-visual-set-count'));
+      set.append(itemSprite(group.contextIcon, compact ? 32 : 38));
+      const itemIcons = el('span', null, 'math-word-visual-set-items');
+      for (let index = 0; index < group.itemCount; index++) itemIcons.append(itemSprite(group.itemIcon, compact ? 20 : 25));
+      set.append(itemIcons, el('small', group.label, 'math-word-visual-set-count'));
       sets.append(set);
     }
-    if (visual.sets.extra) {
+    if (renderPlan.extra) {
       const extra = el('div', null, 'math-word-visual-group');
-      for (let i = 0; i < visual.sets.extra; i++) extra.append(itemSprite(visual.sets.extraIcon || visual.sets.itemIcon, 20));
-      extra.append(el('span', `${visual.sets.extra}${visual.sets.unit || ''}`, 'math-word-visual-count'));
+      const extraSize = compact ? 26 : 32;
+      for (let i = 0; i < renderPlan.extra.itemCount; i++) extra.append(itemSprite(renderPlan.extra.icon, extraSize));
+      extra.append(el('span', renderPlan.extra.countLabel, 'math-word-visual-count'));
       sets.append(extra);
     }
     figure.append(sets);
@@ -179,8 +212,9 @@ function renderMathWordVisual(problem) {
 
   if (visual.grid) {
     const grid = el('div', null, 'math-word-visual-grid');
-    grid.style.gridTemplateColumns = `repeat(${visual.grid.columns}, 14px)`;
-    for (let index = 0; index < visual.grid.rows * visual.grid.columns; index++) grid.append(itemSprite(visual.grid.icon, 14));
+    const gridIconSize = compact ? 23 : 30;
+    grid.style.gridTemplateColumns = `repeat(${visual.grid.columns}, ${gridIconSize}px)`;
+    for (let index = 0; index < visual.grid.rows * visual.grid.columns; index++) grid.append(itemSprite(visual.grid.icon, gridIconSize));
     figure.append(grid);
   }
 
