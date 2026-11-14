@@ -1,3 +1,4 @@
+import {questRewardFlight} from './quest_reward_flight.js';
 import {claimGradeClearRewards,gradeRewardSummary} from './subquest_grade_rewards.js';
 import {startSubquestTimer} from './subquest_results.js';
 import {questMedalImage} from './quest_medal_art.js';
@@ -125,7 +126,8 @@ export function renderJapaneseReadingV2Subquests(root,grade,api){
   function update(){next.disabled=!answer.trim()||(review&&question.input.type==='open-response'&&!humanConfirmed);}
   update();
   function choose(value){answer=value;update();feedback.textContent='';}
-  next.onclick=()=>{
+  next.onclick=async()=>{
+   next.disabled=true;await questRewardFlight(next);
    if(review){
     const result=confirmReadingReview(game,record,index,answer,humanConfirmed,stopTime());
     if(result.status!=='correct'){api.save();stopTime=startSubquestTimer(body);feedback.textContent=result.status==='needs-review'?'大人と確認してから進もう。':'もう一度、本文の手がかりを確かめよう。';return;}
@@ -141,7 +143,7 @@ export function renderJapaneseReadingV2Subquests(root,grade,api){
   if(question.input.type==='single-choice'){
    const options=node('div',null,'reading-v2-options');question.input.options.forEach((option,i)=>{
     const choice=node('button',`${question.print.optionLabels[i]}　${option.text}`,'btn reading-v2-choice');choice.type='button';choice.setAttribute('aria-pressed',String(answer===option.id));
-    choice.onclick=()=>{choose(option.id);options.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===choice)));if(!review&&storeReadingAnswer(game,record,index,option.id)){saveReward(claimReadingAnswerReward(game,record,index));hud.update();}};options.append(choice);
+    choice.onclick=async()=>{choose(option.id);options.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===choice)));if(!review&&storeReadingAnswer(game,record,index,option.id)){saveReward(claimReadingAnswerReward(game,record,index));await questRewardFlight(choice);hud.update();}};options.append(choice);
    });area.append(options);
   }else if(question.input.type==='extraction'){
    const form=node('form',null,'quest-answer-form reading-v2-extraction-form');form.autocomplete='off';

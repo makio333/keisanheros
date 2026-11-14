@@ -1,3 +1,4 @@
+import {questRewardFlight} from './quest_reward_flight.js';
 import {claimGradeClearRewards,gradeRewardSummary} from './subquest_grade_rewards.js';
 import {mathRun,mathRewardProgress,storeMathAnswer,finishMathRun,mathResults,retryMathAnswer} from './math_word_session.js';
 import {startSubquestTimer} from './subquest_results.js';
@@ -94,10 +95,11 @@ export function renderMathWordSubquests(root,api){
   }
   const submit=node('button',review?'この答えを確認する':group.indexOf(problem)===group.length-1?'全問まとめて答え合わせ':'回答を保存して次へ','btn btn-primary');submit.type='submit';form.append(submit);
   const feedback=node('p',null,'math-word-feedback');feedback.setAttribute('role','status');
-  form.onsubmit=event=>{
+  form.onsubmit=async event=>{
    event.preventDefault();if(event.isComposing||submit.disabled)return;
    const values=Object.fromEntries(Object.entries(inputs).map(([key,input])=>[key,input.value]));
    if(Object.values(values).some(value=>!value.trim())){feedback.textContent='すべての答えを入れてね。';return;}
+   submit.disabled=true;await questRewardFlight(submit);
    const ms=stopTime();
    if(review){const result=retryMathAnswer(game,group,problem,values,ms);if(result.reward)api.exp(result.reward.exp);api.save();api.refresh?.();if(result.correct){showResults(group,villager);return;}feedback.textContent='もう一度、本文の数字と問いを確かめよう。';submit.disabled=true;const again=node('button','もう一度考える','btn');again.onclick=()=>showProblem(problem,villager,group,true);foreground.append(again);return;}
    const reward=storeMathAnswer(game,group,problem,values,ms);api.exp(reward.exp);api.save();api.refresh?.();const next=group[group.indexOf(problem)+1];if(next)showProblem(next,villager,group);else{const completion=finishMathRun(game,group);if(completion)api.exp(completion.exp);api.save();showResults(group,villager);}
@@ -117,6 +119,7 @@ function itemSprite(key, size = 22) {
   if (!sprite) return null;
   const node = el('span', null, 'math-word-item-icon');
   node.setAttribute('aria-hidden', 'true');
+  node.style.cssText=`display:inline-block;flex:0 0 ${size}px;min-width:0;min-height:0;padding:0;border:0;box-sizing:content-box;line-height:0;background-repeat:no-repeat;overflow:hidden;max-height:${size}px`;
   node.style.width = `${size}px`;
   node.style.height = `${size}px`;
   node.style.backgroundImage = `url("${ITEM_ATLAS_URL}")`;
