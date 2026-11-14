@@ -1,4 +1,4 @@
-import {questRewardFlight} from './quest_reward_flight.js';
+import {questRewardFlight,revealQuestResults} from './quest_reward_flight.js';
 import {claimGradeClearRewards,gradeRewardSummary} from './subquest_grade_rewards.js';
 import {startSubquestTimer} from './subquest_results.js';
 import {questMedalImage} from './quest_medal_art.js';
@@ -186,7 +186,7 @@ export function renderJapaneseReadingV2Subquests(root,grade,api){
    const review=node('button','✎ ヒント付きで再挑戦','btn btn-primary');review.type='button';review.onclick=()=>showReview(record,villager);bonus.append(review,node('small','やめた場合は受取済みの分だけ残ります。あとで再開しても100％まで受け取れます。'));
   }body.append(bonus);
   const close=node('button',earned.complete?'依頼一覧へ':'ここで終わる（残りの報酬は未受取）','btn');close.type='button';close.onclick=()=>{document.querySelector('.reading-subquest-overlay')?.remove();renderJapaneseReadingV2Subquests(root,grade,api);};
-  const again=node('button','もう一度5問に挑戦','btn');again.type='button';again.onclick=()=>{readingSession(game,record,true);api.save();showQuestion(record,villager,0);};body.append(close,again);
+  const again=node('button','もう一度5問に挑戦','btn');again.type='button';again.onclick=()=>{readingSession(game,record,true);api.save();showQuestion(record,villager,0);};body.append(close,again);revealQuestResults(body);
  }
  function showReview(record,villager){
   const run=readingSession(game,record),index=readingReviewTargets(record,run)[0];

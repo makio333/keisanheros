@@ -1,4 +1,4 @@
-import {questRewardFlight} from './quest_reward_flight.js';
+import {questRewardFlight,revealQuestResults} from './quest_reward_flight.js';
 import {claimGradeClearRewards,gradeRewardSummary} from './subquest_grade_rewards.js';
 import {mathRun,mathRewardProgress,storeMathAnswer,finishMathRun,mathResults,retryMathAnswer} from './math_word_session.js';
 import {startSubquestTimer} from './subquest_results.js';
@@ -69,7 +69,7 @@ export function renderMathWordSubquests(root,api){
   const bonus=claimGradeClearRewards(game);if(bonus.exp)api.exp(bonus.exp);
   document.querySelector('.reading-subquest-overlay')?.remove();const overlay=node('div',null,'reading-subquest-overlay'),panel=node('section',null,'reading-subquest-panel math-word-results');panel.setAttribute('role','dialog');panel.setAttribute('aria-label','サブクエストの答え合わせ');const back=node('button','← 依頼一覧へ','btn');back.onclick=()=>{overlay.remove();render();api.onClose?.();};panel.append(back,rewardHud(group));for(const text of bonus.messages)panel.append(node('p',text,'reading-v2-reward-card'));panel.append(node('h2',`${group.length}問の答え合わせ`));
   for(const [i,r] of mathResults(game,group).entries()){const row=node('section',null,'math-word-result-row'+(r.correct?'':' is-wrong'));row.append(node('b',`${i+1}問め　${r.correct?'正解':'ヒント付きで再挑戦'}`),node('p',r.problem.story+'\n'+r.problem.question),node('p','あなたの答え：'+Object.values(r.answer||{}).join(' ・ ')));if(r.correct){if(JSON.stringify(r.answer)!==JSON.stringify(r.reviewAnswer))row.append(node('p','解き直しの答え：'+Object.values(r.reviewAnswer||{}).join(' ・ ')));row.append(node('p',r.problem.explanation));}else{const retry=node('button','✎ ヒント付きで解き直す','btn btn-primary');retry.onclick=()=>showProblem(r.problem,villager,group,true);row.append(retry);}panel.append(row);}
-  const remaining=100-mathRewardProgress(game,group).percent;if(!remaining&&api.onComplete){const done=node('button','依頼を完了する','btn btn-primary');done.onclick=()=>{overlay.remove();api.onComplete();};panel.append(done);}panel.append(node('p',remaining?`積み上げた報酬はそのまま。解き直すと残り${remaining}％を受け取れます。`:'報酬100％！ 全問クリア！'));overlay.append(panel);document.body.append(overlay);api.save();render();
+  const remaining=100-mathRewardProgress(game,group).percent;if(!remaining&&api.onComplete){const done=node('button','依頼を完了する','btn btn-primary');done.onclick=()=>{overlay.remove();api.onComplete();};panel.append(done);}panel.append(node('p',remaining?`積み上げた報酬はそのまま。解き直すと残り${remaining}％を受け取れます。`:'報酬100％！ 全問クリア！'));overlay.append(panel);document.body.append(overlay);revealQuestResults(panel);api.save();render();
  }
  function showProblem(problem,villager,group,review=false){
   document.querySelector('.reading-subquest-overlay')?.remove();
