@@ -10,7 +10,7 @@ const CHRISTMAS_EXCHANGE_EQUIPMENT=[
 export const CHRISTMAS_EXCHANGE_PRIZES=Object.freeze([
  ...[2,3,4].flatMap(rarity=>CHRISTMAS_EXCHANGE_EQUIPMENT.map(e=>({id:rarity===4?e.id:`${e.id}_r${rarity}`,equipId:e.id,kind:'equip',name:e.name,cost:e.costs[rarity-2],rarity,ability:e.ability}))),
  {id:'christmas_santa_helper',kind:'skin',name:'サンタの護衛',cost:80},
- {id:'christmas_star_cartographer',kind:'skin',name:'星読みの地図師',cost:100},
+ {id:'christmas_star_cartographer',kind:'skin',name:'氷星の女王',cost:100},
  {id:'christmas_santa_workshop',kind:'background',name:'サンタの工房',cost:60},
  {id:'christmas_frozen_lake',kind:'background',name:'月明かりの凍った湖',cost:60},
  {id:'christmas_holly_star',kind:'decoration',name:'聖夜のヒイラギ飾り',cost:50},
