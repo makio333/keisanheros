@@ -212,7 +212,8 @@ class SoundManager {
       bgm_stage1: 'assets_audio/bgm_stage1.m4a',
       bgm_area_boss: 'assets_audio/bgm_area_boss.mp3', // 空中散歩：各エリアのボス戦
       bgm_raid_boss: 'assets_audio/bgm_raid_boss.mp3',
-      bgm_christmas_normal: 'assets_audio/bgm_christmas_normal.mp3', // メンタルヘルス：クリスマス通常戦
+      bgm_christmas_normal: 'assets_audio/bgm_christmas_normal.m4a', // Snowfall festival
+      bgm_christmas_boss: 'assets_audio/bgm_christmas_boss.m4a', // Crimson Snowfall
       bgm_halloween_normal: 'assets_audio/bgm_halloween_normal.mp3',
       bgm_halloween_boss: 'assets_audio/bgm_halloween_boss.mp3',
       bgm_training: 'assets_audio/bgm_training.m4a',
@@ -3972,7 +3973,7 @@ function showScreen(id){
 }
 
 function bgmKeyForScreen(id){
-  if(id==='screen-battle' && explore?.isChristmas && !battle?.enemy?.isBoss)return 'bgm_christmas_normal';
+  if(id==='screen-battle' && explore?.isChristmas)return battle?.enemy?.isBoss ? 'bgm_christmas_boss' : 'bgm_christmas_normal';
   if (id === 'screen-battle' && explore?.isHalloween) return explore.halloweenBossSpawned || battle?.enemy?.isBoss ? 'bgm_halloween_boss' : 'bgm_halloween_normal';
   if (id === 'screen-raid-boss' && raidIntroBgm.active) return 'bgm_raid_boss';
   /* タイトルと、そこから ひらく「あたらしく はじめる」「セーブデータ せんたく」は タイトル専用BGM
