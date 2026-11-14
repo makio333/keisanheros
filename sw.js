@@ -1,4 +1,6 @@
+importScripts('./media_store.js');
 const CACHE_NAME = 'legend-heroes-cache-v25';
+const MEDIA_CACHE_NAME = 'legend-heroes-media-v1';
 const ASSETS_TO_CACHE = [
   './manifest.json',
   './icon-192.png',
@@ -65,7 +67,7 @@ self.addEventListener('fetch', (event) => {
 
   // 静的画像・音声などは「キャッシュ優先（Cache-First）」
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
+    (async()=>{const entry=await GameMediaStore.get(event.request.url) || await GameMediaStore.get(url.origin+url.pathname);return GameMediaStore.response(entry) || await caches.match(event.request);})().then(async (cachedResponse) => {
       if (cachedResponse) {
         const cachedType = cachedResponse.headers.get('Content-Type') || '';
         if (event.request.destination !== 'image' || cachedType.startsWith('image/')) return mediaRangeResponse(event.request,cachedResponse);
@@ -76,10 +78,12 @@ self.addEventListener('fetch', (event) => {
         }
         // A missing image can receive an HTML fallback; never retain it as artwork.
         if (event.request.destination === 'image' && !(networkResponse.headers.get('Content-Type') || '').startsWith('image/')) return networkResponse;
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
+        const type=networkResponse.headers.get('Content-Type') || '';
+        // The boot loader validates public media before committing it to durable storage.
+        if(!/^(image|audio|video)\//.test(type)){
+          const responseToCache=networkResponse.clone();
+          event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.put(event.request,responseToCache)));
+        }
         return networkResponse;
       });
     })
@@ -100,3 +104,8 @@ async function mediaRangeResponse(request,response){
   headers.set('Accept-Ranges','bytes');headers.set('Content-Range',`bytes ${start}-${end}/${size}`);headers.set('Content-Length',String(end-start+1));
   return new Response(blob.slice(start,end+1),{status:206,headers});
 }
+
+self.addEventListener('message',event=>{
+ if(event.data?.type!=='GAME_MEDIA_CHECK' || !event.ports?.[0])return;
+ event.waitUntil(GameMediaStore.keys().then(keys=>{const available=new Set(keys),urls=event.data.urls || [];event.ports[0].postMessage({ready:urls.every(url=>available.has(url)),stored:keys.length});},()=>event.ports[0].postMessage({ready:false,stored:0})));
+});

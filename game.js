@@ -1,3 +1,4 @@
+import {beginStageAttempt,finishStageAttempt,clearStageAttemptFlag} from './stage_attempts.js';
 import {startAssetBoot,bootAudioUrl,startupAssetMap} from './asset_boot.js';
 import {manaEquipmentStats,manaEquipmentAbility,manaEquipmentCost,equipmentManaBudget,ENCHANT_RESOURCE_COST} from './equipment_mana_ratio.js';
 import {equipmentChestMarkup} from './equipment_chest_intro.js';
@@ -3517,6 +3518,7 @@ function loadSlot(key, options = {}){
     if (!G.studyStats.stageHistory) G.studyStats.stageHistory = {};
     if (G.player.costPlus === undefined) G.player.costPlus = 0;
     currentSlotKey = key;
+    if(finishStageAttempt(G,'abandoned','closed'))save(true);
     return true;
   } catch(e){ return false; }
 }
@@ -4932,6 +4934,7 @@ function prepareChristmasBattleLayout(){
   }
 }
 function startBattle(animateFloor){
+  if(explore?.stageMode && !explore.isBoss && !explore.isRaid && !explore.readingQuest && !explore.isHalloween && !explore.isChristmas && AREA_STAGES[explore.areaId]?.stages[explore.stageIndex]){if(beginStageAttempt(G,explore.areaId,explore.stageIndex))save(true);}
   prepareChristmasBattleLayout();
   const isStageMode = !!explore.stageMode;
   const enemy = isStageMode
@@ -6643,6 +6646,7 @@ function showLevelUpModal(data, onClose){
 }
 
 function loseBattle(){
+  if(finishStageAttempt(G,'failed','defeat'))save(true);
   if(explore?.readingQuest){finishReadingQuestBattle(false);return;}
   endBattleLoop();
   document.querySelector('.player-down-overlay')?.remove();
@@ -7382,6 +7386,7 @@ function renderHomeTickets(){
 }
 
 function showHome(){
+  if(finishStageAttempt(G,'abandoned','return-home'))save(true);
   ensureEventEquipmentAbilities(G);
   setTimeout(()=>{checkAdminGifts(true);checkEventRaidFinalReward();},0);
   showScreen('screen-home');
@@ -7694,6 +7699,7 @@ function pushMilestoneRewardCards(rewards, entry){
 /* ステージを1回クリアしたときの 共通処理（戦闘クリアでも プリントでも これを通す）。
    ★（上限3）と ほんとうの累計クリア回数を 数え、初回／3回クリアの報酬を わたす */
 function recordStageClear(areaId, stageIndex){
+  if(typeof finishStageAttempt==='function'){finishStageAttempt(G,'cleared','clear',Date.now(),{areaId,stageIndex});clearStageAttemptFlag(G,areaId,stageIndex);}
   const counts = getStageClearCounts(areaId);
   const previousStars = counts[stageIndex] || 0;
   counts[stageIndex] = Math.min(STAGE_STARS_TO_UNLOCK_NEXT, previousStars + 1);
@@ -8659,7 +8665,7 @@ function renderStatusPentagonUI(bonusMap, remaining){
 
     nodeEl.innerHTML = `
       <div class="stat-node-header">
-        <span class="stat-node-name"><img src="${item.iconImg}" class="stat-inline-icon"> ${item.name}</span>
+        <span class="stat-node-name"><img src="${av(item.iconImg)}" class="stat-inline-icon"> ${item.name}</span>
         <span class="stat-node-val">${valDisplay}</span>
       </div>
       <div class="stat-node-controls">
@@ -15394,7 +15400,7 @@ function init(){
     }
   };
 
-  $('btn-menu-save-title').onclick = () => suggestChallengePrintBeforeSave(() => {
+  $('btn-menu-save-title').onclick = () => { if(finishStageAttempt(G,'abandoned','save-title'))save(true);return suggestChallengePrintBeforeSave(() => {
     menuDropdown.classList.add('hidden');
     if (battle && !battle.over) endBattleLoop();
     if (trainingSkill) { destroyChallenge(); trainingSkill = null; }
@@ -15411,7 +15417,7 @@ function init(){
     save(true);
     if (listSaveSlots().length > 0) $('btn-continue').classList.remove('hidden');
     showScreen('screen-title');
-  });
+  });};
 }
 
 /* ==========================================================
@@ -15431,7 +15437,7 @@ function startBootLoader(){
   const startBtn  = $('btn-boot-start');
 
   let ready = false;
-  startAssetBoot({screen, resolve:av, assetMap:startupAssetMap(window.__ASSET_MAP__ || {}), onReady(){
+  startAssetBoot({screen, resolve:av, assetMap:startupAssetMap(window.__ASSET_MAP__ || {}), criticalPaths:getInitialSelectableAvatars().map(hero=>hero.image), onReady(){
     ready=true;
     void window.GameMedia?.warmPaths(['画像/home_town_v2.png','assets/ui/town-navigation-v1.png','画像/title_sky_v2.png','画像/title_foreground_v2.png','画像/title_logo_transparent.png',...getInitialSelectableAvatars().map(hero=>hero.image),'assets/items/w1.png','assets/items/a1.png']);
     void window.GameMedia?.warmPaths(['assets/christmas/skin_gacha_logo.webp','assets/christmas/equipment_gacha_logo.webp','assets/characters/bg_skin_starlight.png','assets/ui/background_skin_gacha_logo.png','assets/ui/equipment_gacha_logo.png'],5);
@@ -16169,7 +16175,9 @@ function challengePrintDecisionForGame(game) {
   const source=challengePrintSource(game),area=AREA_STAGES[source.areaId],stage=area?.stages?.[source.stageIndex];
   if(!stage)return {label:'判定できません',reason:'ステージ情報なし'};
   let reason='';
-  if(source.reason==='accuracy')reason=`挑戦済み・直近正答率が40%以上100%未満（${Math.round(source.accuracy*100)}%）`;
+  if(source.reason==='abandoned')reason='挑戦を途中で終了したため、未達成のステージとして復習';
+  else if(source.reason==='failed')reason='挑戦をクリアできなかったステージとして復習';
+  else if(source.reason==='accuracy')reason=`挑戦済み・直近正答率が40%以上100%未満（${Math.round(source.accuracy*100)}%）`;
   else if(source.reason==='slow')reason=`挑戦済み・直近正答率が40%以上100%未満で、遅い回答が${source.slowStreak}回連続`;
   else if(source.learningKey)reason=`レイドの誤答記録を復習（${source.reason}）`;
   else if(source.reason==='hardest-played')reason='苦手候補なし → 取り組み済みの最難関';
@@ -16183,6 +16191,12 @@ function recentWeakStudyStageSource(now = Date.now(), game = G) {
   for(const [key,stat] of Object.entries(game?.studyStats?.stageHistory || {})) {
     const match=key.match(/^(area\d+)_(\d+)$/);
     if(!match || !AREA_STAGES[match[1]]?.stages[Number(match[2])])continue;
+    const outcomes=(Array.isArray(stat.outcomes)?stat.outcomes:[]).filter(entry=>Number(entry.t)>=cutoff && Number(entry.t)<=now);
+    const latest=outcomes.at(-1);
+    if(latest && ['abandoned','failed'].includes(latest.outcome)){
+      candidates.push({areaId:match[1],stageIndex:Number(match[2]),accuracy:0,slowStreak:0,lastAttempt:Number(latest.t),reason:latest.outcome,abandoned:latest.outcome==='abandoned'});
+      continue;
+    }
     const history=(Array.isArray(stat.history)?stat.history:[])
       .filter(entry=>Number(entry?.t)>=cutoff && Number(entry?.t)<=now)
       .slice(-10);
@@ -17915,3 +17929,5 @@ if (LOCAL_ART_PREVIEW) {
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',beginLocalArtPreview,{once:true});
   else beginLocalArtPreview();
 }
+
+window.addEventListener('pagehide',event=>{if(!event.persisted && finishStageAttempt(G,'abandoned','closed'))save(true);});

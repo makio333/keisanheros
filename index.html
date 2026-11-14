@@ -12,18 +12,10 @@
 <link rel="icon" type="image/png" href="./icon-192.png">
 <title>レジェンドヒーローズ 〜知恵を受け継ぎし勇者たち〜</title>
 <script>
-  // Cache-worker installation must not compete with the first game download.
+  // Establish cache routing before allowing the first game session to start.
   if ('serviceWorker' in navigator) {
-    window.addEventListener('legend-heroes-ready',function(){
-    navigator.serviceWorker.register('./sw.js').then(function(reg) {
-      console.log('[PWA] ServiceWorker registered with scope: ', reg.scope);
-      if (reg.update) {
-        reg.update().catch(function() {}); // リロード時の一時的な中断エラーを安全に無視
-      }
-    }).catch(function(err) {
-      console.warn('[PWA] ServiceWorker registration failed: ', err);
-    });
-    },{once:true});
+    window.gameWorkerRegistration = navigator.serviceWorker.register('./sw.js');
+    window.gameWorkerRegistration.catch(function(err) { console.warn('[PWA] Worker unavailable:', err); });
   }
 </script>
 </head>

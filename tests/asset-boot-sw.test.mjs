@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import {readFile} from 'node:fs/promises';
 const source=await readFile(new URL('../sw.js',import.meta.url),'utf8');
 const listeners={};const deleted=[];
-const context={caches:{async keys(){return ['legend-heroes-cache-v24','legend-heroes-cache-v25','legend-heroes-media-v1','another-app'];},async delete(k){deleted.push(k);}},self:{clients:{async claim(){}},addEventListener(name,handler){listeners[name]=handler;},location:{origin:'https://fixture.test'}},Response,Headers,Blob};vm.createContext(context);vm.runInContext(source,context);
+const context={importScripts(){},caches:{async keys(){return ['legend-heroes-cache-v24','legend-heroes-cache-v25','legend-heroes-media-v1','another-app'];},async delete(k){deleted.push(k);}},self:{clients:{async claim(){}},addEventListener(name,handler){listeners[name]=handler;},location:{origin:'https://fixture.test'}},Response,Headers,Blob};vm.createContext(context);vm.runInContext(source,context);
 const response=()=>new Response('0123456789',{headers:{'Content-Type':'audio/mp4'}});
 const request=range=>new Request('https://fixture.test/audio.m4a',{headers:range?{Range:range}:{}});
 test('cached audio supports the byte ranges requested by Safari',async()=>{
