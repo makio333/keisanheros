@@ -2876,9 +2876,10 @@ const HERO_AVATARS = [
   { id:'christmas_snowman_guardian', name:'雪だるまの守り手', gender:'male', job:'守護者', desc:'雪だるまの盾で仲間を守る、雪原のガーディアン。', image:'assets/christmas/skin_snowman_guardian.webp', gachaOnly:true, rewardSource:'christmas' },
   { id:'christmas_nutcracker_soldier', name:'くるみ割り人形の兵士', gender:'male', job:'兵士', desc:'星の勲章を胸に、サンタの工房を守る兵士。', image:'assets/christmas/skin_nutcracker_soldier.webp', gachaOnly:true, rewardSource:'christmas' },
   { id:'christmas_aurora_sprite', name:'オーロラの精霊', gender:'female', job:'精霊', desc:'雪の結晶の羽で、冬の夜空を舞う精霊。', image:'assets/christmas/skin_aurora_sprite.webp', gachaOnly:true, rewardSource:'christmas' },
-  { id:'christmas_snowboard_courier', name:'聖夜の黒騎士', gender:'male', job:'黒騎士', desc:'氷の大剣と聖夜の黒鎧で、盗まれたプレゼントを取り戻す騎士。', image:'assets/christmas/skin_holy_night_knight.png', gachaOnly:true, rewardSource:'christmas' },
-  { id:'christmas_star_cartographer', name:'氷星の女王', gender:'female', job:'女王', desc:'オーロラの衣と氷星の王笏をまとう、雪の国の女王。', image:'assets/christmas/skin_ice_star_queen.png', gachaOnly:true, rewardSource:'christmas' },
-  { id:'christmas_toy_inventor', name:'雪うさぎの魔法姫', gender:'female', job:'魔法姫', desc:'星と鈴の魔法で聖夜を守る、雪うさぎと仲良しの魔法姫。', image:'assets/christmas/skin_snow_rabbit_princess.png', gachaOnly:true, rewardSource:'christmas' },
+  { id:'christmas_snowboard_courier', name:'聖夜の黒騎士', gender:'male', job:'黒騎士', desc:'氷の大剣と聖夜の黒鎧で、盗まれたプレゼントを取り戻す騎士。', image:'assets/christmas/skin_holy_night_knight_v2.png', gachaOnly:true, rewardSource:'christmas' },
+  { id:'christmas_star_cartographer', name:'氷星の女王', gender:'female', job:'女王', desc:'オーロラの衣と氷星の王笏をまとう、雪の国の女王。', image:'assets/christmas/skin_ice_star_queen_v2.png', gachaOnly:true, rewardSource:'christmas' },
+  { id:'christmas_toy_inventor', name:'雪うさぎの魔法姫', gender:'female', job:'魔法姫', desc:'星と鈴の魔法で聖夜を守る、雪うさぎと仲良しの魔法姫。', image:'assets/christmas/skin_snow_rabbit_princess_v2.png', gachaOnly:true, rewardSource:'christmas' },
+  {id:'christmas_winter_ranger',name:'聖夜の遊撃士',gender:'male',job:'遊撃士',desc:'雪道を駆け、銀のクロスボウでプレゼントを守る遊撃士。',image:'assets/christmas/skin_winter_ranger_v2.png',gachaOnly:true,rewardSource:'christmas'},
   QUEST_MEDAL_SKIN,
 ];
 
