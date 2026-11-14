@@ -209,3 +209,5 @@
 .math-word-visual-sequence{width:min(100%,calc(var(--queue-count)*62px))}.math-word-queue-person{max-width:64px;max-height:96px}.math-word-reading-answer-panel .reading-v2-letter>.math-word-letter-question{text-align:left!important}
 
 .math-word-reading-answer-panel .reading-v2-letter>.math-word-letter-question{width:100%!important;align-self:stretch;box-sizing:border-box}
+
+.math-word-reading-answer-panel .reading-v2-letter>.math-word-letter-question{display:block!important;justify-content:initial!important}
