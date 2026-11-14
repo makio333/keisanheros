@@ -7880,7 +7880,7 @@ function questRewardStripHtml(q){
 function questMedalTrackHtml(){
   const medals = G.questMedals || 0;
   const done = G.questMedalExchanged || {};
-  return `<div class="quest-medal-rewards">${[...QUEST_MEDAL_MILESTONES].sort((a,b)=>Number(!!b.exclusive)-Number(!!a.exclusive)||a.medals-b.medals).map(m => {
+  return `<div class="quest-medal-rewards">${[...QUEST_MEDAL_MILESTONES].sort((a,b)=>a.medals-b.medals).map(m => {
     const got = !!done[m.key];
     const can = !got && medals >= m.medals;
     return `<div class="quest-medal-reward${got ? ' is-claimed' : ''}">${questMedalMilestoneIcon(m, 64)}<b class="quest-medal-prize-name">${escapeHtml(m.label)}</b>${m.exclusive?'<span class="quest-medal-exclusive-badge">交換所限定</span>':''}${m.rarity===5?'<span class="quest-medal-legend-label">★★★★★ レジェンド</span>':''}<small>🏅 ${m.medals}まい</small>${got

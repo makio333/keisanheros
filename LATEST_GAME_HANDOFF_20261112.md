@@ -180,3 +180,8 @@ node scripts/preview-christmas-local.mjs
 - Restored the 18mm title stack: title above month/day and vertical name entry. Kept reward and passage columns in their prior positions.
 - Constrained reward column height to the sheet header to prevent overflow into the passage.
 - Verified Chrome PDF visually and shared print regression in Chrome and WebKit, including reward bounds and title/name order. Test build fingerprint: 9015ba866270b219.
+
+
+### 2026-11-14 Medal exclusive rewards moved later
+- Exclusive frame/background/skin/three equipment thresholds are now 600/800/1000/1200/1400/1600 medals. Shop uses ascending medal order rather than exclusive-first. Existing claim keys and claimed items stay unchanged.
+- Updated fixture balances and preview gallery for late thresholds; threshold, retained balance, claim replay and restore checks pass.

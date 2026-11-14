@@ -8,10 +8,10 @@ export const QUEST_MEDAL_EQUIPMENT=[
   {id:'quest_wisdom_bookmark',name:'知恵のしおり',slot:'accessory',opTier:'add3',stat:{mp:8,spd:2},cost:4,fixedCost:true,emoji:folder+'accessory.png',ability:'mp_save'},
 ];
 export const QUEST_MEDAL_EXCLUSIVE_PRIZES=[
-  {key:'exclusive_book_frame',medals:40,kind:'decoration',id:QUEST_MEDAL_FRAME.id,label:QUEST_MEDAL_FRAME.name,image:QUEST_MEDAL_FRAME.image},
-  {key:'exclusive_star_library',medals:80,kind:'background',id:QUEST_MEDAL_BACKGROUND.id,label:QUEST_MEDAL_BACKGROUND.name,image:QUEST_MEDAL_BACKGROUND.image},
-  {key:'exclusive_library_keeper',medals:120,kind:'skin',id:QUEST_MEDAL_SKIN.id,label:QUEST_MEDAL_SKIN.name,image:QUEST_MEDAL_SKIN.image},
-  ...QUEST_MEDAL_EQUIPMENT.map((e,i)=>({key:'exclusive_'+e.id,medals:[180,240,300][i],kind:'equip',id:e.id,label:e.name,image:e.emoji,rarity:5,ability:e.ability})),
+  {key:'exclusive_book_frame',medals:600,kind:'decoration',id:QUEST_MEDAL_FRAME.id,label:QUEST_MEDAL_FRAME.name,image:QUEST_MEDAL_FRAME.image},
+  {key:'exclusive_star_library',medals:800,kind:'background',id:QUEST_MEDAL_BACKGROUND.id,label:QUEST_MEDAL_BACKGROUND.name,image:QUEST_MEDAL_BACKGROUND.image},
+  {key:'exclusive_library_keeper',medals:1000,kind:'skin',id:QUEST_MEDAL_SKIN.id,label:QUEST_MEDAL_SKIN.name,image:QUEST_MEDAL_SKIN.image},
+  ...QUEST_MEDAL_EQUIPMENT.map((e,i)=>({key:'exclusive_'+e.id,medals:[1200,1400,1600][i],kind:'equip',id:e.id,label:e.name,image:e.emoji,rarity:5,ability:e.ability})),
 ].map(p=>Object.freeze({...p,exclusive:true}));
 
 // Milestone exchange: medals are retained, and each reward can be received once.
