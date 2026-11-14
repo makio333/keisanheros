@@ -191,3 +191,8 @@ node scripts/preview-christmas-local.mjs
 - Added transparent emerald/gold pixel ticket with sword/shield and 10, matching raid and Halloween ticket references. Built-in image_gen prompt recorded in assets/ui/EQUIPMENT_TICKET_ART.md.
 - Shared equipment_ticket_art.js used by reward, inventory, medal shop, notifications and challenge print. Replaced both equipment gacha header emoji.
 - Pixel-exact lossless runtime manifest updated (592 images); browser shop image decode, claim flow and mobile/gallery checks pass; production build passes.
+
+
+### 2026-11-14 Ticket orientation aligned
+- Rotated equipment ten-pull artwork to slope upper-left to lower-right like background skin ticket; retained readable 10 and equipment emblem. Built-in image edit prompt documented.
+- Lossless runtime art rebuilt; shop screenshot visually checked beside skin ticket; browser flow and release build pass.
