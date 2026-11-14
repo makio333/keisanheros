@@ -1,0 +1,22 @@
+/* Every print window uses explicit sheets inside the printable A4 area.
+   Body remains a block: a page-sized flex body fragments incorrectly in Safari. */
+.game-print-document{margin:0;padding:16px;background:#ececec;color:#222;font-family:sans-serif}
+.game-print-page{box-sizing:border-box;width:210mm;min-height:296mm;margin:8mm auto;padding:14mm;background:white;box-shadow:0 1px 8px #aaa}
+.game-print-page:has(>.p-cols){height:296mm;display:flex;flex-direction:column}
+.game-print-page>.p-cols{flex:1;min-height:0;grid-template-rows:minmax(0,1fr)}
+.game-print-page>.p-cols>.p-col{display:flex;flex-direction:column;min-height:0}
+.game-print-page>.p-cols>.p-col>.p-row{flex:1;min-height:min-content;box-sizing:border-box;border-bottom:0}
+@media print{
+ @page{size:A4 portrait;margin:8mm}
+ html,body.game-print-document{margin:0!important;padding:0!important;height:auto!important;min-height:0!important;display:block!important;background:white!important}
+ .game-print-controls{display:none!important}
+ .game-print-page{width:194mm;min-height:280mm;padding:6mm;margin:0;box-shadow:none;break-after:auto;break-inside:avoid}
+ .game-print-page:has(>.p-cols){height:280mm}
+ .game-print-page+.game-print-page{break-before:page}
+}
+/* Arithmetic headers share the adventure sheet typography, regardless of source. */
+.game-print-page>.p-title,.game-print-page>h1,
+.game-print-math .wpp2-root[data-writing-mode="horizontal-tb"] header h1,
+.game-print-document .sp-portrait header h1{font:bold 22px/1.4 sans-serif;margin:0 0 2mm;color:#222}
+.game-print-math .wpp2-root[data-writing-mode="horizontal-tb"] header>p,
+.game-print-document .sp-portrait header>p{font:16px/1.6 sans-serif;margin:0}

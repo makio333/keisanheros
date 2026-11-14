@@ -1,3 +1,4 @@
+import printDocumentCss from './print_document.css?inline';
 import wordProblemPrintCss from './word_problem_print_layout_v2.css?inline';
 import {paginateWordProblemPrintV2} from './word_problem_print_layout_v2.js';
 import {beginStageAttempt,finishStageAttempt,clearStageAttemptFlag} from './stage_attempts.js';
@@ -8249,23 +8250,12 @@ function printMetaHtml(){
 /* サブクエストは 3問セットぶん まとめて 1まいの A4に おさまるよう、
    1問ずつを コンパクトな もんだい行＋こたえ欄で ならべる */
 function printQuestSheet(q){
-  const rows = q.parts.map((part, i) => `
-    <div class="quest-print-block">
-      <div class="p-row quest-print-question">
-        <span class="p-num quest-print-num">${i + 1}</span>
-        <span class="p-expr" style="white-space:normal;">${part.text}</span>
-      </div>
-      <div class="p-row quest-print-answer"><span class="p-num">こたえ</span><span class="p-blank"></span></div>
-    </div>
-  `).join('');
-  openPrintWindow(`
-    ${renderPrintRewardIcons([{icon:"💰",label:"クエストのゴールド報酬"},{icon:"✨",label:"経験値"},{icon:"🏅",label:"1問メダル1枚（ゲーム内でクリア）"}])}
-    <h1 style="font-size:34px;">サブクエスト：${q.npc.name}の たのみごと</h1>
-    <div class="p-sub" style="font-size:19px; margin-bottom:26px;">＊${q.title}＊／えんざん：${OP_LABELS[q.tier]}</div>
-    <div class="p-sheet" style="grid-template-columns:1fr; margin-top:12px;">
-      ${rows}
-    </div>
-  `, av('画像/ステージ/かけ算の森.jpg'));
+  const records=q.parts.map((part,index)=>({
+    id:`legacy-${q.uid}-${index}`,title:q.title,grade:1,showGrade:false,topic:OP_LABELS[q.tier],
+    story:part.text,question:'',answerDisplay:String(part.answer)+(part.remainder!=null?` あまり ${part.remainder}`:''),explanation:'',
+    input:{fields:[{name:'answer',label:'こたえ',unit:''},...(part.remainder!=null?[{name:'remainder',label:'あまり',unit:''}]:[])]},
+  }));
+  openMaterialPrintChoices('math',records);
 }
 
 const STAT_DEFS = [
@@ -9674,36 +9664,39 @@ function openPrintWindow(htmlContent, bgUrl, isLandscape, options = {}) {
   }
   if(!isLandscape)printCSS+=regularMathPrintCss;
   printCSS+=options.css || '';
+  printCSS+=printDocumentCss;
   printCSS+=' .game-print-controls{position:sticky;top:0;z-index:10;display:flex;justify-content:center;gap:10px;padding:10px;background:#fff;border-bottom:1px solid #aaa;font:16px sans-serif}.game-print-controls button{padding:8px 16px;font:inherit}@media print{.game-print-controls{display:none!important}}';
   const pw = window.open('', '_blank', 'width=800,height=900');
   if (!pw) { alert('ポップアップがブロックされました。許可してください。'); return false; }
+  const structured=!!options.prepare || htmlContent.includes('wpp2-page') || htmlContent.includes('wpp2-root');
+  const dedicatedJapanese=isLandscape || /kc-sheet|jp-print|p-cols-area/.test(htmlContent);
+  const bodyHtml=structured||dedicatedJapanese?htmlContent:`<main class="game-print-page">${htmlContent}</main>`;
   pw.document.open();
-  pw.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>プリント</title><base href="${document.baseURI}"><style>${printCSS}</style></head><body>${options.controls?'<nav class="game-print-controls"><button id="game-print-now" type="button" disabled>準備中…</button><button id="game-print-close" type="button">とじる</button></nav>':''}${htmlContent}</body></html>`);
+  pw.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>プリント</title><base href="${document.baseURI}"><style>${printCSS}</style></head><body class="game-print-document ${dedicatedJapanese?'game-print-japanese':'game-print-math'}">${'<nav class="game-print-controls"><button id="game-print-now" type="button" disabled>準備中…</button><button id="game-print-close" type="button">とじる</button></nav>'}${bodyHtml}</body></html>`);
   pw.document.close();
   pw.focus();
-  let printRequested=false;
+  let printRequested=false,printCommitted=false;
   let prepared;const prepare=()=>prepared ||= Promise.resolve().then(async()=>{
     await pw.document.fonts?.ready;
     await options.prepare?.(pw);
     await Promise.all([...pw.document.images || []].map(image=>image.decode?.().catch(()=>{})));
     const button=pw.document.getElementById?.('game-print-now');if(button){button.disabled=false;button.textContent='印刷する';}
   });
-  const requestPrint=async(force=false)=>{if(pw.closed || (printRequested&&!force))return;try{await prepare();if(pw.closed || (printRequested&&!force))return;printRequested=true;pw.print();}catch(error){const button=pw.document.getElementById?.('game-print-now');if(button){button.disabled=false;button.textContent='再試行する';button.onclick=()=>{prepared=null;requestPrint(true);};}console.error('Print preparation failed',error);}};
+  const requestPrint=async(force=false)=>{if(pw.closed || (printRequested&&!force))return;try{await prepare();if(pw.closed || (printRequested&&!force))return;if(!printCommitted){await options.beforePrint?.();printCommitted=true;}printRequested=true;pw.print();}catch(error){const button=pw.document.getElementById?.('game-print-now');if(button){button.disabled=false;button.textContent='再試行する';button.onclick=()=>{prepared=null;requestPrint(true);};}console.error('Print preparation failed',error);}};
   const printButton=pw.document.getElementById?.('game-print-now'),closeButton=pw.document.getElementById?.('game-print-close');
   if(printButton)printButton.onclick=()=>requestPrint(true);if(closeButton)closeButton.onclick=()=>pw.close();
-  pw.onload=()=>requestPrint();setTimeout(()=>requestPrint(),500);
+  const preparePreview=()=>{void prepare().catch(error=>{const button=pw.document.getElementById?.('game-print-now');if(button){button.disabled=false;button.textContent='再試行する';button.onclick=()=>{prepared=null;preparePreview();};}console.error('Print preparation failed',error);});};pw.onload=preparePreview;preparePreview();
   return options.returnWindow?pw:true;
 }
 
 function openLayoutPrintWindow(htmlContent,{ancient=false,alreadyPaginated=false,onOpened=null}={}){
   const content=ancient?`<main id="wpp2-print-root">${htmlContent}</main>`:htmlContent;
   const pw=openPrintWindow(content,null,false,{
-    controls:true,returnWindow:true,
+    controls:true,returnWindow:true,beforePrint:onOpened,
     css:wordProblemPrintCss+' body{margin:0;padding:16px;background:#ececec;color:#111}@media print{body{padding:0;background:#fff}}',
     prepare:async win=>{if(ancient)await paginateAncientAutomaticV2(win.document.getElementById('wpp2-print-root'));else if(!alreadyPaginated)await Promise.all([...win.document.querySelectorAll('.wpp2-root')].map(root=>paginateWordProblemPrintV2(root)));},
   });
   if(!pw)return null;
-  try{onOpened?.(pw);}catch(error){pw.close();throw error;}
   return pw;
 }
 
@@ -9726,51 +9719,24 @@ async function paginateAncientHtmlForReview(html){
 }
 
 function openAncientPrintReview(prepared,{onFirstOpen=null,reprint=false}={}){
-  const overlay=document.createElement('div');overlay.className='quest-detail-overlay ancient-print-review-overlay';
-  const panel=document.createElement('section');panel.className='quest-detail-panel ancient-print-review';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-labelledby','ancient-print-review-title');
-  panel.innerHTML=`<header><div><h2 id="ancient-print-review-title">古代からの挑戦状を確認</h2><p>全33問・27問以上正解で古代装備を獲得できます。プレビューを閉じる/印刷画面が開かない場合は消費しません。印刷画面が開くと設計図を1枚消費し、その後ダイアログをキャンセルしても戻りません。プリント番号一覧から同じ内容を再印刷できます。</p></div><button type="button" class="btn" data-review-close aria-label="閉じる">とじる</button></header><nav class="ancient-print-review-tabs" aria-label="印刷内容"><button type="button" class="btn active" data-review-mode="student">児童用</button><button type="button" class="btn" data-review-mode="teacher">先生用・解答</button></nav><iframe class="ancient-print-review-frame" title="古代からの挑戦状のプレビュー"></iframe><p class="ancient-print-review-status" role="status"></p><footer><button type="button" class="btn btn-primary" data-review-print>児童用を印刷${reprint?'（再印刷）':''}</button><button type="button" class="btn" data-review-close>プレビューを閉じる</button></footer>`;
-  overlay.append(panel);document.body.append(overlay);
-  let mode='student',closed=false;
-  const frame=panel.querySelector('.ancient-print-review-frame'),status=panel.querySelector('.ancient-print-review-status'),printButton=panel.querySelector('[data-review-print]');
-  const previews={student:prepared.student,teacher:prepared.teacher};
-  const showPreview=()=>{
-    const cssUrl=new URL('./word_problem_print_layout_v2.css?v=20261109-paragraph-indent',document.baseURI).href;
-    frame.srcdoc=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="${escapeHtml(cssUrl)}"><style>body{margin:0;padding:10px;background:#eee}.wpp2-page{margin:6px auto!important;box-shadow:0 1px 5px #aaa}</style></head><body>${previews[mode].html}</body></html>`;
-    printButton.textContent=`${mode==='student'?'児童用':'先生用・解答'}を印刷${reprint?'（再印刷）':''}`;
-  };
-  const close=()=>{if(closed)return;closed=true;overlay.remove();};
-  panel.querySelectorAll('[data-review-close]').forEach(button=>button.addEventListener('click',close));
-  overlay.addEventListener('click',event=>{if(event.target===overlay)close();});
-  panel.querySelectorAll('[data-review-mode]').forEach(button=>button.addEventListener('click',()=>{
-    mode=button.dataset.reviewMode;
-    panel.querySelectorAll('[data-review-mode]').forEach(tab=>tab.classList.toggle('active',tab===button));
-    showPreview();
-  }));
-  printButton.addEventListener('click',()=>{
-    if(closed||printButton.disabled)return;
-    printButton.disabled=true;
-    try{
-      const html=previews[mode].html;
-      const opened=openLayoutPrintWindow(html,{alreadyPaginated:true,onOpened:()=>onFirstOpen?.()});
-      if(!opened){status.textContent='印刷画面を開けませんでした。ポップアップ設定を確認してください。';printButton.disabled=false;return;}
-      close();
-    }catch(error){console.error('Ancient print popup failed',error);status.textContent='印刷画面を開けませんでした。挑戦状は消費していません。';printButton.disabled=false;}
-  });
-  showPreview();printButton.focus();
-  return {close};
+  showPrintChoiceModal(['student','teacher'].map(mode=>({
+    choiceLabel:mode==='student'?'児童用・問題':'先生用・解答と解説',opLabel:'古代からの挑戦状・33問',
+    problems:Array.from({length:33},()=>({text:''})),
+    previewHtml:`<p>全33問・27問以上正解で古代装備を獲得できます。</p><p>${reprint?'保存済みの問題を再印刷します。':'プレビューを開くだけでは挑戦状を消費しません。プレビューの「印刷する」を押すと1枚消費します。印刷ダイアログをキャンセルしても戻りません。'}</p>`,
+    onSelect:()=>openLayoutPrintWindow(prepared[mode].html,{alreadyPaginated:true,onOpened:()=>onFirstOpen?.()}),
+  })));
+  return {close:()=>$('modal-print-choice').classList.add('hidden')};
 }
 
 function openMaterialPrintChoices(subject,record){
-  const overlay=document.createElement('div');overlay.className='quest-detail-overlay';
-  const panel=document.createElement('section');panel.className='quest-detail-panel material-print-dialog';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-labelledby','material-print-title');
-  panel.innerHTML=`<h2 id="material-print-title">プリントの種類を選ぶ</h2><p>問題プリントには答えを載せません。先生用には解答と解説を載せます。</p><div class="quest-detail-actions"><button type="button" class="btn btn-primary" data-print-mode="student">児童用を印刷</button><button type="button" class="btn" data-print-mode="teacher">先生用・解答を印刷</button><button type="button" class="btn" data-print-close>もどる</button></div><p class="material-print-status" role="status"></p>`;
-  overlay.append(panel);document.body.append(overlay);
-  const close=()=>overlay.remove();panel.querySelector('[data-print-close]').onclick=close;overlay.onclick=event=>{if(event.target===overlay)close();};
-  panel.querySelectorAll('[data-print-mode]').forEach(button=>button.onclick=()=>{
-    const mode=button.dataset.printMode,html=subject==='math'?(Array.isArray(record)?renderMathWordSetPrintV2(record,{mode}):renderMathWordPrintV2(record,{mode})):renderJapaneseReadingPrintV2(record,{mode});
-    const opened=openLayoutPrintWindow(html);if(opened)close();else panel.querySelector('.material-print-status').textContent='印刷画面を開けませんでした。ブラウザのポップアップ設定を確認してください。';
-  });
-  panel.querySelector('[data-print-mode="student"]').focus();
+  const records=Array.isArray(record)?record:[record];
+  showPrintChoiceModal(['student','teacher'].map(mode=>({
+    choiceLabel:mode==='student'?'児童用・問題':'先生用・解答と解説',
+    opLabel:subject==='math'?'算数・文章問題':'国語・読解',
+    problems:subject==='math'?records:record.questions,
+    previewHtml:subject==='math'?records.map((p,i)=>`<p>${i+1}. ${escapeHtml(p.story)}<br>${escapeHtml(p.question)}</p>`).join(''):`<p>${escapeHtml(record.title)}</p><p>${escapeHtml(record.passage)}</p>`,
+    onSelect:()=>openLayoutPrintWindow(subject==='math'?(Array.isArray(record)?renderMathWordSetPrintV2(record,{mode}):renderMathWordPrintV2(record,{mode})):renderJapaneseReadingPrintV2(record,{mode})),
+  })));
 }
 /* プリント選択モーダルを表示する（3バリアント選択→印刷・保存） 
    variants: [{ title, problems, buildHtml, onSelect }] */
@@ -9796,7 +9762,7 @@ function showPrintChoiceModal(variants) {
       <div style="font-size:18px; font-weight:bold; margin-bottom:10px; color:#f9ca24;">${escapeHtml(v.choiceLabel || labels[i])}</div>
       <div style="font-size:13px; color:#aaa; margin-bottom:10px;">${v.problems.length}問 (${v.opLabel || ''})</div>
       <div class="print-choice-problems">${previewHtml}</div>
-      <button class="btn btn-primary" style="width:100%; font-size:16px;">🖨️ これを印刷する</button>
+      <button class="btn btn-primary" style="width:100%; font-size:16px;">プレビューへ</button>
     `;
     card.querySelector('button').onclick = () => {
       modal.classList.add('hidden');

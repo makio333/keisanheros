@@ -29,6 +29,6 @@ export function renderConfirmedReadingPrintV2(source,project){
 /** Five source records, with their own story and response fields preserved. */
 export function renderMathWordSetPrintV2(records,{mode='student',calculationSpace='standard'}={}){
  if(!Array.isArray(records)||!records.length)throw new TypeError('Math quest set required');
- return renderWordProblemPrintV2({villager:mathPrintVillager(records[0]),title:`村人からの文章問題（${records.length}問）`,subject:'math',grade:records[0].grade,mode,pageLayout:calculationSpace==='double'?'auto':records.length===5?REVIEW_SETTINGS.wordPrintLayout:'auto',rewardText:'1問ごとのクエスト初回報酬（ゲーム内でクリア）',rewardEntries:questPrintRewards({gold:300,exp:20,medals:1,medalPerQuestion:true}),
+ return renderWordProblemPrintV2({villager:mathPrintVillager(records[0]),title:`村人からの文章問題（${records.length}問）`,subject:'math',grade:records[0].grade,showGrade:records[0].showGrade!==false,mode,pageLayout:calculationSpace==='double'?'auto':records.length===5?REVIEW_SETTINGS.wordPrintLayout:'auto',rewardText:'1問ごとのクエスト初回報酬（ゲーム内でクリア）',rewardEntries:questPrintRewards({gold:300,exp:20,medals:1,medalPerQuestion:true}),
   questions:records.map(p=>({sourceId:p.id,question:`${p.story}\n${p.question}`,answer:p.answerDisplay,explanation:p.explanation,workMm:52,answerFields:p.input.fields.map(f=>({label:f.label,unit:f.unit??''}))}))}).replace('wpp2-root ', 'wpp2-root wpp2-math-set ');
 }
