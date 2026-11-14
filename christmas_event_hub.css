@@ -45,3 +45,9 @@ body:has(.christmas-menu,.christmas-exchange-confirm) :is(#analog-clock-widget,#
 .skin-gacha-theme>.equipment-card-icon{display:block;position:relative;width:88px;height:88px;margin:0 auto;flex:none}
 .skin-gacha-background-swatch.avatar-selector-swatch{width:56px;height:56px;min-height:56px;margin:12px auto;background-position:center;background-size:cover}
 .stage-reward-icon>.avatar-selector-swatch{display:block;flex:none}
+
+/* One protruding character; text remains inside the event entry. */
+#town-map #hotspot-christmas .christmas-home-tag{position:relative;display:flex;box-sizing:border-box;width:250px;max-width:72vw;min-height:82px;padding:12px 12px 12px 56px;white-space:normal;overflow:visible}
+#town-map #hotspot-christmas .christmas-home-tag>img{position:absolute;left:-24px;bottom:8px;width:80px;height:94px;object-fit:contain}
+#town-map #hotspot-christmas .christmas-home-tag>span{display:block;min-width:0;width:100%;font-size:18px;line-height:1.4;overflow-wrap:anywhere;white-space:normal}
+#town-map #hotspot-christmas .christmas-home-tag small{display:block;font-size:11px;line-height:1.4;white-space:normal}
