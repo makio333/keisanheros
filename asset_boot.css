@@ -2,18 +2,18 @@
 body.boot-pending:has(#boot-loader-screen:not(.fade-out)) main{display:none!important}
 /* Artwork-led loading screens. These rules intentionally override the legacy loader. */
 #boot-loader-screen{isolation:isolate;background:#101b24;color:#fff5df;overflow:hidden}
-#boot-loader-screen .boot-loader-content{position:relative;width:min(1280px,100%);height:100%;max-width:none;padding:clamp(20px,4vw,64px);box-sizing:border-box;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-end;gap:24px;text-align:left}
+#boot-loader-screen .boot-loader-content{position:relative;width:100%;height:100%;max-width:none;padding:clamp(20px,4vw,64px);box-sizing:border-box;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-end;gap:24px;text-align:left}
 .boot-art-scene{position:fixed;inset:0;z-index:-1;overflow:hidden;background:radial-gradient(ellipse at 30% 40%,#486f65,#162d32 60%,#121321)}
-.boot-scenery{width:100%;height:100%;object-fit:cover;opacity:.65;filter:saturate(.75)}
-.boot-art-shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,19,24,.05) 20%,rgba(10,16,26,.85) 72%),linear-gradient(0deg,#101622 0%,transparent 65%)}
-.boot-character{position:absolute;left:3%;bottom:9%;width:52%;height:76%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 18px 24px #061317a0);animation:bootArtIn .8s ease both}
-.boot-character-caption{position:absolute;left:6%;bottom:6%;display:grid;gap:7px;border-left:2px solid #e1bb77;padding-left:16px;text-shadow:0 2px 4px #000}
+.boot-scenery{width:100%;height:100%;object-fit:cover;object-position:38% center;opacity:1}
+.boot-art-shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,19,24,.05) 20%,rgba(10,16,26,.35) 80%),linear-gradient(0deg,#101622a0 0%,transparent 45%)}
+.boot-character{display:none;position:absolute;left:3%;bottom:9%;width:52%;height:76%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 18px 24px #061317a0);animation:bootArtIn .8s ease both}
+.boot-character-caption{display:none;position:absolute;left:6%;bottom:6%;display:grid;gap:7px;border-left:2px solid #e1bb77;padding-left:16px;text-shadow:0 2px 4px #000}
 .boot-character-caption span{font:11px/1.5 sans-serif;letter-spacing:3px;color:#e8cf9c}
 .boot-character-caption strong{font-size:clamp(18px,2vw,28px);font-weight:600;letter-spacing:3px}
-#boot-loader-screen .boot-loader-logo-area{position:absolute;top:clamp(22px,5vh,54px);left:clamp(20px,4vw,64px);margin:0;z-index:1}
+#boot-loader-screen .boot-loader-logo-area{position:absolute;top:clamp(22px,5vh,54px);right:clamp(20px,4vw,64px);left:auto;text-align:right;margin:0;z-index:1}
 #boot-loader-screen .boot-loader-title{font-size:clamp(17px,2.3vw,29px);letter-spacing:3px;color:#f7dc9c;text-shadow:0 2px 8px #000}
 #boot-loader-screen .boot-loader-sub{font-size:clamp(10px,1.2vw,13px);letter-spacing:2px;color:#e9e1cf}
-#boot-loader-screen .boot-loading-bar-area,#boot-loader-screen .boot-start-area{position:relative;width:46%;max-width:none;align-self:flex-end;margin:0 0 5vh;padding:clamp(18px,2.8vw,36px);box-sizing:border-box;border:1px solid #e0c18c70;border-radius:8px;background:linear-gradient(145deg,#142331ed,#141a2ce8);box-shadow:0 18px 60px #020b1840;backdrop-filter:blur(8px)}
+#boot-loader-screen .boot-loading-bar-area,#boot-loader-screen .boot-start-area{position:relative;width:34%;max-width:none;align-self:flex-end;margin:0 0 5vh;padding:clamp(18px,2.8vw,36px);box-sizing:border-box;border:1px solid #e0c18c70;border-radius:8px;background:linear-gradient(145deg,#142331ed,#141a2ce8);box-shadow:0 18px 60px #020b1840;backdrop-filter:blur(8px)}
 .boot-phase-label{font:600 11px/1.6 sans-serif;letter-spacing:4px;color:#e3bb78}
 #boot-phase-title{margin:12px 0 14px;font-size:clamp(22px,3vw,36px);font-weight:700;letter-spacing:.05em;line-height:1.35;color:#fff5df}
 #boot-phase-description{font-size:clamp(12px,1.3vw,15px);line-height:1.9;color:#c5d2df;margin:0 0 30px}
@@ -31,6 +31,7 @@ body.boot-pending:has(#boot-loader-screen:not(.fade-out)) main{display:none!impo
  #boot-loader-screen .boot-loader-content{padding:20px;gap:12px}
  #boot-loader-screen .boot-loader-logo-area{top:26px;left:20px;right:20px;text-align:center}
  .boot-art-shade{background:linear-gradient(0deg,#101622 5%,#101622cc 38%,transparent 78%)}
+ .boot-scenery{position:absolute;top:9%;left:0;width:145%;height:52%;object-fit:contain;object-position:left center}
  .boot-character{left:12%;bottom:36%;width:76%;height:50%}
  .boot-character-caption{left:7%;bottom:48%;z-index:-1;opacity:0}
  #boot-loader-screen .boot-loading-bar-area,#boot-loader-screen .boot-start-area{width:100%;margin:0 0 max(12px,env(safe-area-inset-bottom));padding:22px}

@@ -40,7 +40,7 @@ export async function startAssetBoot({screen,resolve,assetMap,criticalPaths=[],o
  function progress(n){const v=Math.max(0,Math.min(100,Math.round(n)));text('boot-load-percent',v+'%');el('boot-progress-fill').style.width=v+'%';el('boot-progress-track').setAttribute('aria-valuenow',v);}
  function phase(name,title,description){state.phase=name;screen.dataset.phase=name;text('boot-phase-label',name==='updating'?'DATA UPDATE':'NOW LOADING');text('boot-phase-title',title);text('boot-phase-description',description);}
  const urls=bootAssetUrls(assetMap);state.assetCount=urls.length;
- const hero=assetMap['assets/characters/hero_female_1_hd.png'];if(hero && el('boot-character'))el('boot-character').src=resolve('assets/characters/hero_female_1_hd.png');
+ if(el('boot-scenery'))el('boot-scenery').src=resolve('assets/ui/loading-skin-party.png');
  const completed=new Set();let cache,running=false;
  const knownBytes=url=>window.GameMedia?.bytesForUrl?.(url) || 0;
  let pendingBytes=0;

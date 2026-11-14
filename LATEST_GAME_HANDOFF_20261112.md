@@ -208,3 +208,9 @@ node scripts/preview-christmas-local.mjs
 - Admin gift picker adds search/filter plus artwork for skins/backgrounds/frames/all event equipment and tickets, selected-item preview and send confirmation. Cosmetic grants use unlocked collections with gift replay protection. No real gifts sent in tests.
 - Christmas code already present (5 enemies per run, rare Black Santa, present recovery/exchange). Previously hidden before Nov25 in ordinary saves. release-test-web now defines VITE_TEST_CHRISTMAS_PREVIEW=1 only for test Hosting, so ordinary test saves see it outside dates; normal builds retain schedule.
 - Validation: 22 pure tests passed (batch ledger, reading rewards, grade once-only rewards, variant structures, gift atomic delivery, Christmas economy/gacha). Browser flows for math, reading, gift art picker, medal shop and test seasonal visibility passed; screenshots inspected. Common print flow still passes page count/bounds/manual print checks. All 593 lossless runtime images pixel-verified.
+
+
+## 2026-11-14 ダウンロード背景と本番公開
+
+- 既存5スキン参照の集合背景 `assets/ui/loading-skin-party.png` を追加。画像の原解像度を維持し、可逆配信画像も画素一致検査済み。PC・縦画面・横画面で進捗欄の収まりを確認。
+- 本番公開先はユーザーが `https://legend-heroes2.web.app/` を明示承認。現行公開の release-target.json を読み取り、internal / ailandgames / Firebase owner saves / no sales の構成を維持。`scripts/release-live-web.mjs` に同構成の公開ビルド手順を保存。テスト限定クリスマス強制表示・ログイン省略は本番では無効。Hostingのみ更新し、Firestoreルールは変更しない。
