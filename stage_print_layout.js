@@ -1,4 +1,4 @@
-import {japanesePrintHeader,japanesePrintHeaderCss} from './japanese_print_header.js';
+import {japanesePrintHeader,japanesePrintHeaderCss,japanesePrintMetadata} from './japanese_print_header.js';
 import {renderPrintRewardIcons,standardPrintRewards} from './print_reward_icons.js';
 import {kanjiPrintContext} from './kanji_print_context.js';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -21,7 +21,7 @@ const css=japanesePrintHeaderCss+`
 @media print{html,body{margin:0!important;padding:0!important;background:white!important;height:auto!important;min-height:0!important}.sp-page{margin:0;box-shadow:none}.sp-portrait{width:194mm;height:280mm;padding:4mm 7mm}.sp-landscape{width:281mm;height:193mm;padding:2mm 4mm}.sp-page footer{left:7mm;bottom:1mm}}
 `;
 function header({title,name='',printId='',grade,mode,rewardsHtml,landscape=false,caption=''}){
- const meta=landscape?`<p>${esc(grade)}年 国語</p><p>なまえ<span class="sp-name-line">${esc(name)}</span></p><p>日付<span class="sp-name-line sp-date-line"></span></p>`:`<p>${grade}年 算数　なまえ：${esc(name)}＿＿＿＿＿＿　日付：＿＿＿＿＿＿</p>`;
+ const meta=landscape?japanesePrintMetadata({grade,name}):`<p>${grade}年 算数　なまえ：${esc(name)}＿＿＿＿＿＿　日付：＿＿＿＿＿＿</p>`;
  const reward=rewardsHtml?`<div class="sp-rewards"><span class="sp-reward-caption">${esc(caption||'1問正解につきメダル1枚')}</span>${rewardsHtml}</div>`:'';
  if(landscape)return japanesePrintHeader(esc(title)+(mode==='teacher'?'【解答】':''),meta,reward);
  return `<header><h1>${esc(title)}${mode==='teacher'?'【解答】':''}</h1>${meta}${rewardsHtml?`<div class="sp-rewards"><span class="sp-reward-caption">${esc(caption||'1問正解につきメダル1枚')}</span>${rewardsHtml}</div>`:''}</header>`;

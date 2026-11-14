@@ -169,3 +169,8 @@ node scripts/preview-christmas-local.mjs
 - User removed the intermediate print-choice modal for subquests. Math, reading and legacy math now open the student print preview directly from the print icon. Adventure set selection and ancient review remain available.
 - Student/teacher selection lives in the preview toolbar; switching reuses the same popup, reruns pagination and preserves manual printing. Print-preview readiness gates the selector. Common print geometry and blank-page regressions unchanged.
 - Focused Chrome/WebKit tests cover no intermediate modal and same-window teacher answers, plus prior6 print types. Test build56a4317e7a7c2196.
+
+## 2026-11-14 Japanese date/name strip
+- User supplied a vertical name-strip sketch. Shared Japanese header now places month/day horizontally at the top, a horizontal separator, a centered 名前 label, then a long vertical-writing name space with a bottom rule. Normal kanji, reading quests and ancient reading use japanesePrintMetadata; the vertical title stands beside the full-height strip. Existing player name is preserved for stage/ancient sheets. Rules print in black.
+- Chrome and WebKit common print regressions pass without additional pages; rendered landscape PDF visually checked. Added metadata ordering /vertical-rl /long-space geometry assertions.
+- Release fingerprint now also hashes built JS/CSS asset filenames, so a header-only or stylesheet-only change is recognized as a new build. Test fingerprint1f5e40d2c8ad7b64.
