@@ -185,3 +185,9 @@ node scripts/preview-christmas-local.mjs
 ### 2026-11-14 Medal exclusive rewards moved later
 - Exclusive frame/background/skin/three equipment thresholds are now 600/800/1000/1200/1400/1600 medals. Shop uses ascending medal order rather than exclusive-first. Existing claim keys and claimed items stay unchanged.
 - Updated fixture balances and preview gallery for late thresholds; threshold, retained balance, claim replay and restore checks pass.
+
+
+### 2026-11-14 Equipment ten-pull ticket artwork
+- Added transparent emerald/gold pixel ticket with sword/shield and 10, matching raid and Halloween ticket references. Built-in image_gen prompt recorded in assets/ui/EQUIPMENT_TICKET_ART.md.
+- Shared equipment_ticket_art.js used by reward, inventory, medal shop, notifications and challenge print. Replaced both equipment gacha header emoji.
+- Pixel-exact lossless runtime manifest updated (592 images); browser shop image decode, claim flow and mobile/gallery checks pass; production build passes.

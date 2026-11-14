@@ -1,3 +1,4 @@
+import {EQUIPMENT_TEN_PULL_TICKET_ICON} from './equipment_ticket_art.js';
 import printDocumentCss from './print_document.css?inline';
 import wordProblemPrintCss from './word_problem_print_layout_v2.css?inline';
 import {paginateWordProblemPrintV2} from './word_problem_print_layout_v2.js';
@@ -7056,7 +7057,7 @@ function grantBossClearState(areaId){
     G.equipGachaTenPullTickets = (G.equipGachaTenPullTickets || 0) + n;
     claims.rewardThird = true;
     claims.star3 = true;
-    if (n > 0) entries.push({ title:'3回クリア報酬', gold:0, drops:[{ kind:'equip-ticket', name:`装備ガチャ10連チケット ×${n}`, icon:'🎫', count:n }] });
+    if (n > 0) entries.push({ title:'3回クリア報酬', gold:0, drops:[{ kind:'equip-ticket', name:`装備ガチャ10連チケット ×${n}`, icon:EQUIPMENT_TEN_PULL_TICKET_ICON, count:n }] });
   }
   /* たおすたびに ボスが 強くなる */
   const up = Math.max(0, Math.round(rewardSettings.bossLevelUp));
@@ -7571,7 +7572,7 @@ function rewardIconInfo(kind, id){
   if (kind === 'item') { const db = getItemTemplate(id); return { name: db.name, icon: db.emoji }; }
   if (kind === 'medal') return { name: 'クエストメダル', icon: QUEST_MEDAL_IMAGE };
   if (kind === 'background') { const bg = getAvatarBackground(id); return { name: `背景「${bg.name}」`, icon: bg.image }; }
-  if (id === 'equip-ten-ticket') return { name: '装備ガチャ10連チケット', icon: '🎫' };
+  if (id === 'equip-ten-ticket') return { name: '装備ガチャ10連チケット', icon: EQUIPMENT_TEN_PULL_TICKET_ICON };
   if (id === 'raid-ticket') return { name: 'レイドチケット', icon: 'assets/raid/raid_ticket_pixel.png' };
   return { name: '背景スキンガチャチケット', icon: SKIN_GACHA_TICKET_ICON };
 }
@@ -13399,7 +13400,7 @@ function grantPickupBonusIfAny(areaId, stageIndex){
   const b = pickupBonusAmounts();
   pk.status = 'claimed';
   const drops = [];
-  if (b.equip > 0) { G.equipGachaTenPullTickets = (G.equipGachaTenPullTickets || 0) + b.equip; drops.push({ kind:'equip-ticket', name:`装備ガチャ10連チケット ×${b.equip}`, icon:'🎫', count:b.equip }); }
+  if (b.equip > 0) { G.equipGachaTenPullTickets = (G.equipGachaTenPullTickets || 0) + b.equip; drops.push({ kind:'equip-ticket', name:`装備ガチャ10連チケット ×${b.equip}`, icon:EQUIPMENT_TEN_PULL_TICKET_ICON, count:b.equip }); }
   if (b.raid > 0) { G.raidTickets = (G.raidTickets || 0) + b.raid; drops.push({ kind:'raid-ticket', name:`レイドチケット ×${b.raid}`, icon:'🎟️', count:b.raid }); }
   if (b.gold > 0) G.player.gold += b.gold;
   if (!drops.length && b.gold <= 0) return null;
@@ -15655,7 +15656,7 @@ function grantPrintRewards(cur, correct, total, rate) {
     rewards.push({ kind:'item', name:`全問正解ボーナス ${500*rewardMult} G`, icon:'💰' });
   }
   
-  if(meta.challengePrint && rate>=0.8){G.equipGachaTenPullTickets=(G.equipGachaTenPullTickets || 0)+1;rewards.push({kind:'equip-ticket',name:'チャレンジ達成！ 装備ガチャ10連チケット',icon:'🎫',count:1});}
+  if(meta.challengePrint && rate>=0.8){G.equipGachaTenPullTickets=(G.equipGachaTenPullTickets || 0)+1;rewards.push({kind:'equip-ticket',name:'チャレンジ達成！ 装備ガチャ10連チケット',icon:EQUIPMENT_TEN_PULL_TICKET_ICON,count:1});}
   // Target rewards
   let title = '修行の成果！';
   if (meta.targetId === 'demon_castle' && rate >= 0.5) {
@@ -16032,7 +16033,7 @@ function printRewardStripHtml({challengePrint = false, blueprint = false, questi
     {image:'assets/items/cost_seed_pixel.png',name:'コストプラスのたね',amount:`×${mult}`,condition:perfect},
     {icon:'💰',name:'全問正解ボーナス',amount:`${500*mult} G`,condition:perfect},
   ];
-  if (challengePrint) entries.push({icon:'🎫',name:'装備ガチャ10連チケット',amount:'×1',condition:pass});
+  if (challengePrint) entries.push({icon:EQUIPMENT_TEN_PULL_TICKET_ICON,name:'装備ガチャ10連チケット',amount:'×1',condition:pass});
   if (blueprint) entries.push({image:'assets/items/ancient_dual_swords_v1.png',name:'エンシェント装備',amount:'×1',condition:`${pass}：ランダムで1つ`});
   return `<style>
     .print-rewards { margin:2mm 0 3mm; padding:2mm 0; border-top:1px solid #777; border-bottom:1px solid #777; color:#111; font:8pt/1.4 sans-serif; break-inside:avoid; }

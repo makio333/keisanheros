@@ -1,3 +1,4 @@
+import {EQUIPMENT_TEN_PULL_TICKET_ICON} from './equipment_ticket_art.js';
 import {japanesePrintHeader,japanesePrintHeaderCss,japanesePrintMetadata} from './japanese_print_header.js';
 import {renderPrintRewardIcons,standardPrintRewards} from './print_reward_icons.js';
 import {kanjiPrintContext} from './kanji_print_context.js';
@@ -29,7 +30,7 @@ function header({title,name='',printId='',grade,mode,rewardsHtml,landscape=false
 export function renderKanjiStagePrint(problems,variant,title,name,printId,options={}){
  const mode=options.mode??'student',offset=options.numberOffset??0,grade=options.grade??3;
  const entries=standardPrintRewards({count:problems.length,ancientReward:!!options.blueprint});
- if(options.challengePrint){for(const [i,label] of [[1,'1問60EXP'],[2,'1問30G'],[3,`傷薬×3（${Math.ceil(problems.length*.5)}問以上）`],[4,`秘薬×9 または エーテル×3（${Math.ceil(problems.length*.8)}問以上）`],[5,'たね×3（全問正解）'],[6,'1500G（全問正解）']])entries[i].label=label;entries.push({icon:'🎫',label:`装備10連券×1（${Math.ceil(problems.length*.8)}問以上）`});}
+ if(options.challengePrint){for(const [i,label] of [[1,'1問60EXP'],[2,'1問30G'],[3,`傷薬×3（${Math.ceil(problems.length*.5)}問以上）`],[4,`秘薬×9 または エーテル×3（${Math.ceil(problems.length*.8)}問以上）`],[5,'たね×3（全問正解）'],[6,'1500G（全問正解）']])entries[i].label=label;entries.push({icon:EQUIPMENT_TEN_PULL_TICKET_ICON,label:`装備10連券×1（${Math.ceil(problems.length*.8)}問以上）`});}
  const rewardsHtml=options.rewardsHtml??renderPrintRewardIcons(entries);
  const pages=[];
  for(let start=0;start<problems.length;start+=20){
