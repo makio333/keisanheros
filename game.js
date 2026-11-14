@@ -13228,9 +13228,8 @@ function startChristmasChallenge(source = christmasChallengeSource(),random=Math
   startBattle(false);
 }
 
-function christmasBattleBackground(index) {
-  const stageIndex = Number(index) || 0;
-  return CHRISTMAS_EVENT.battleBackgrounds[stageIndex < 2 ? 0 : stageIndex < 4 ? 1 : 2];
+function christmasBattleBackground() {
+  return CHRISTMAS_EVENT.battleBackgrounds[0];
 }
 
 function christmasBattleLocation(index) {
