@@ -174,3 +174,9 @@ node scripts/preview-christmas-local.mjs
 - User supplied a vertical name-strip sketch. Shared Japanese header now places month/day horizontally at the top, a horizontal separator, a centered 名前 label, then a long vertical-writing name space with a bottom rule. Normal kanji, reading quests and ancient reading use japanesePrintMetadata; the vertical title stands beside the full-height strip. Existing player name is preserved for stage/ancient sheets. Rules print in black.
 - Chrome and WebKit common print regressions pass without additional pages; rendered landscape PDF visually checked. Added metadata ordering /vertical-rl /long-space geometry assertions.
 - Release fingerprint now also hashes built JS/CSS asset filenames, so a header-only or stylesheet-only change is recognized as a new build. Test fingerprint1f5e40d2c8ad7b64.
+
+
+### 2026-11-14 Japanese print header reward overlap
+- Restored the 18mm title stack: title above month/day and vertical name entry. Kept reward and passage columns in their prior positions.
+- Constrained reward column height to the sheet header to prevent overflow into the passage.
+- Verified Chrome PDF visually and shared print regression in Chrome and WebKit, including reward bounds and title/name order. Test build fingerprint: 9015ba866270b219.
