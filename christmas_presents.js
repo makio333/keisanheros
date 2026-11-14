@@ -8,6 +8,7 @@ const CHRISTMAS_EXCHANGE_EQUIPMENT=[
  {id:'christmas_exchange_winter_charm',name:'工房の冬星チャーム',costs:[25,40,60],ability:'mp_save'},
 ];
 export const CHRISTMAS_EXCHANGE_PRIZES=Object.freeze([
+ {id:'christmas_skin_ticket',kind:'ticket',rewardId:'skin-ticket',name:'スキンガチャチケット',cost:30,limit:3},
  ...[2,3,4].flatMap(rarity=>CHRISTMAS_EXCHANGE_EQUIPMENT.map(e=>({id:rarity===4?e.id:`${e.id}_r${rarity}`,equipId:e.id,kind:'equip',name:e.name,cost:e.costs[rarity-2],rarity,ability:e.ability}))),
  {id:'christmas_snowboard_courier',kind:'skin',name:'聖夜の黒騎士',cost:120},
  {id:'christmas_star_cartographer',kind:'skin',name:'氷星の女王',cost:150},
@@ -37,6 +38,7 @@ export function recoverChristmasPresents(game,run,enemy,encounter,random=Math.ra
 }
 export function christmasPrizeOwned(game,prize){
  if(!game || !prize)return false;
+ if(prize.limit)return integer(game.christmasEvent?.[CHRISTMAS_EVENT_ID]?.exchangeCounts?.[prize.id])>=prize.limit;
  if(prize.kind==='equip')return (game.ownedEquips || []).some(e=>e.id===(prize.equipId||prize.id)&&e.rarity===prize.rarity);
  const field={skin:'unlockedSkins',background:'unlockedAvatarBackgrounds',decoration:'unlockedDecorations'}[prize.kind];
  return (game[field] || []).includes(prize.id) || (prize.kind==='skin'&&game.avatar===prize.id) || (prize.kind==='background'&&game.avatarBackground===prize.id) || (game.christmasEvent?.[CHRISTMAS_EVENT_ID]?.collectedPrizes || []).includes(prize.id);
@@ -46,7 +48,10 @@ export function exchangeChristmasPrize(game,id){
  if(!game || !prize)return {ok:false,message:'この景品は交換できません。'};
  if(prize.kind!=='equip'&&christmasPrizeOwned(game,prize))return {ok:false,message:'この限定品は獲得済みです。'};
  if(christmasPresentBalance(game)<prize.cost)return {ok:false,message:'プレゼントボックスが足りません。'};
- if(prize.kind==='equip'){
+ if(prize.kind==='ticket'){
+  game.skinGachaTickets=integer(game.skinGachaTickets)+1;
+  const state=christmasEventState(game);state.exchangeCounts ||= {};state.exchangeCounts[prize.id]=integer(state.exchangeCounts[prize.id])+1;
+ }else if(prize.kind==='equip'){
   game.ownedEquips ||= [];
   game.nextUid=Math.max(integer(game.nextUid),...game.ownedEquips.map(e=>integer(e.uid)+1),1);
   game.ownedEquips.push({uid:game.nextUid++,id:prize.equipId||prize.id,rarity:prize.rarity,ability:prize.ability});

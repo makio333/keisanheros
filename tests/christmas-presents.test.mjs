@@ -30,3 +30,5 @@ test('replay gives one third of presents while normal rewards and once-only gran
   assert.equal(recoverChristmasPresents(game,run,{isBoss},encounter,()=>roll),null);
  }
 });
+
+test('skin ticket is limited to three exchanges across save reloads',()=>{let g=fresh();g.christmasPresents=200;const p=CHRISTMAS_EXCHANGE_PRIZES.find(p=>p.kind==='ticket');for(let i=0;i<3;i++){assert.equal(exchangeChristmasPrize(g,p.id).ok,true);g=JSON.parse(JSON.stringify(g));}assert.equal(g.skinGachaTickets,3);assert.equal(g.christmasPresents,200-3*p.cost);const before=JSON.stringify(g);assert.equal(exchangeChristmasPrize(g,p.id).ok,false);assert.equal(JSON.stringify(g),before);});
