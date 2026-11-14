@@ -164,3 +164,8 @@ node scripts/preview-christmas-local.mjs
 - Published test fingerprint: ad32ba14ffb582ca. Project ailandgames-test /site legend-heroes-test only.
 
 - Legacy quest print records carry showGrade:false: their data has no school grade, so do not invent a displayed first-grade label. Renderer still validates its numerical font-size grade. Legacy five-question print joins the same2-page math template and common flow; regression verifies2PDF pages.
+
+## 2026-11-14 Subquest print shortcut
+- User removed the intermediate print-choice modal for subquests. Math, reading and legacy math now open the student print preview directly from the print icon. Adventure set selection and ancient review remain available.
+- Student/teacher selection lives in the preview toolbar; switching reuses the same popup, reruns pagination and preserves manual printing. Print-preview readiness gates the selector. Common print geometry and blank-page regressions unchanged.
+- Focused Chrome/WebKit tests cover no intermediate modal and same-window teacher answers, plus prior6 print types. Test build56a4317e7a7c2196.

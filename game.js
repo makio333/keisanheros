@@ -9666,7 +9666,7 @@ function openPrintWindow(htmlContent, bgUrl, isLandscape, options = {}) {
   printCSS+=options.css || '';
   printCSS+=printDocumentCss;
   printCSS+=' .game-print-controls{position:sticky;top:0;z-index:10;display:flex;justify-content:center;gap:10px;padding:10px;background:#fff;border-bottom:1px solid #aaa;font:16px sans-serif}.game-print-controls button{padding:8px 16px;font:inherit}@media print{.game-print-controls{display:none!important}}';
-  const pw = window.open('', '_blank', 'width=800,height=900');
+  const pw = options.targetWindow || window.open('', '_blank', 'width=800,height=900');
   if (!pw) { alert('ポップアップがブロックされました。許可してください。'); return false; }
   const structured=!!options.prepare || htmlContent.includes('wpp2-page') || htmlContent.includes('wpp2-root');
   const dedicatedJapanese=isLandscape || /kc-sheet|jp-print|p-cols-area/.test(htmlContent);
@@ -9685,14 +9685,14 @@ function openPrintWindow(htmlContent, bgUrl, isLandscape, options = {}) {
   const requestPrint=async(force=false)=>{if(pw.closed || (printRequested&&!force))return;try{await prepare();if(pw.closed || (printRequested&&!force))return;if(!printCommitted){await options.beforePrint?.();printCommitted=true;}printRequested=true;pw.print();}catch(error){const button=pw.document.getElementById?.('game-print-now');if(button){button.disabled=false;button.textContent='再試行する';button.onclick=()=>{prepared=null;requestPrint(true);};}console.error('Print preparation failed',error);}};
   const printButton=pw.document.getElementById?.('game-print-now'),closeButton=pw.document.getElementById?.('game-print-close');
   if(printButton)printButton.onclick=()=>requestPrint(true);if(closeButton)closeButton.onclick=()=>pw.close();
-  const preparePreview=()=>{void prepare().catch(error=>{const button=pw.document.getElementById?.('game-print-now');if(button){button.disabled=false;button.textContent='再試行する';button.onclick=()=>{prepared=null;preparePreview();};}console.error('Print preparation failed',error);});};pw.onload=preparePreview;preparePreview();
+  const preparePreview=()=>{void prepare().catch(error=>{const button=pw.document.getElementById?.('game-print-now');if(button){button.disabled=false;button.textContent='再試行する';button.onclick=()=>{prepared=null;preparePreview();};}console.error('Print preparation failed',error);});};pw.onload=preparePreview;preparePreview();pw.printPreviewReady=prepare();
   return options.returnWindow?pw:true;
 }
 
-function openLayoutPrintWindow(htmlContent,{ancient=false,alreadyPaginated=false,onOpened=null}={}){
+function openLayoutPrintWindow(htmlContent,{ancient=false,alreadyPaginated=false,onOpened=null,previewWindow=null}={}){
   const content=ancient?`<main id="wpp2-print-root">${htmlContent}</main>`:htmlContent;
   const pw=openPrintWindow(content,null,false,{
-    controls:true,returnWindow:true,beforePrint:onOpened,
+    controls:true,returnWindow:true,beforePrint:onOpened,targetWindow:previewWindow,
     css:wordProblemPrintCss+' body{margin:0;padding:16px;background:#ececec;color:#111}@media print{body{padding:0;background:#fff}}',
     prepare:async win=>{if(ancient)await paginateAncientAutomaticV2(win.document.getElementById('wpp2-print-root'));else if(!alreadyPaginated)await Promise.all([...win.document.querySelectorAll('.wpp2-root')].map(root=>paginateWordProblemPrintV2(root)));},
   });
@@ -9728,15 +9728,16 @@ function openAncientPrintReview(prepared,{onFirstOpen=null,reprint=false}={}){
   return {close:()=>$('modal-print-choice').classList.add('hidden')};
 }
 
-function openMaterialPrintChoices(subject,record){
-  const records=Array.isArray(record)?record:[record];
-  showPrintChoiceModal(['student','teacher'].map(mode=>({
-    choiceLabel:mode==='student'?'児童用・問題':'先生用・解答と解説',
-    opLabel:subject==='math'?'算数・文章問題':'国語・読解',
-    problems:subject==='math'?records:record.questions,
-    previewHtml:subject==='math'?records.map((p,i)=>`<p>${i+1}. ${escapeHtml(p.story)}<br>${escapeHtml(p.question)}</p>`).join(''):`<p>${escapeHtml(record.title)}</p><p>${escapeHtml(record.passage)}</p>`,
-    onSelect:()=>openLayoutPrintWindow(subject==='math'?(Array.isArray(record)?renderMathWordSetPrintV2(record,{mode}):renderMathWordPrintV2(record,{mode})):renderJapaneseReadingPrintV2(record,{mode})),
-  })));
+function openMaterialPrintChoices(subject,record,mode='student',previewWindow=null){
+  const html=subject==='math'?(Array.isArray(record)?renderMathWordSetPrintV2(record,{mode}):renderMathWordPrintV2(record,{mode})):renderJapaneseReadingPrintV2(record,{mode});
+  const pw=openLayoutPrintWindow(html,{previewWindow});if(!pw)return null;
+  const label=pw.document.createElement('label');label.textContent='プリントの種類：';
+  const select=pw.document.createElement('select');select.setAttribute('aria-label','プリントの種類');select.disabled=true;
+  for(const [value,text] of [['student','児童用・問題'],['teacher','先生用・解答と解説']]){const option=pw.document.createElement('option');option.value=value;option.textContent=text;select.append(option);}
+  select.value=mode;label.append(select);pw.document.querySelector('.game-print-controls').prepend(label);
+  pw.printPreviewReady.then(()=>{select.disabled=false;}).catch(()=>{});
+  select.onchange=()=>openMaterialPrintChoices(subject,record,select.value,pw);
+  return pw;
 }
 /* プリント選択モーダルを表示する（3バリアント選択→印刷・保存） 
    variants: [{ title, problems, buildHtml, onSelect }] */
