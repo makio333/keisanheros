@@ -9,7 +9,7 @@ const CHRISTMAS_EXCHANGE_EQUIPMENT=[
 ];
 export const CHRISTMAS_EXCHANGE_PRIZES=Object.freeze([
  ...[2,3,4].flatMap(rarity=>CHRISTMAS_EXCHANGE_EQUIPMENT.map(e=>({id:rarity===4?e.id:`${e.id}_r${rarity}`,equipId:e.id,kind:'equip',name:e.name,cost:e.costs[rarity-2],rarity,ability:e.ability}))),
- {id:'christmas_santa_helper',kind:'skin',name:'サンタの護衛',cost:80},
+ {id:'christmas_snowboard_courier',kind:'skin',name:'聖夜の黒騎士',cost:80},
  {id:'christmas_star_cartographer',kind:'skin',name:'氷星の女王',cost:100},
  {id:'christmas_santa_workshop',kind:'background',name:'サンタの工房',cost:60},
  {id:'christmas_frozen_lake',kind:'background',name:'月明かりの凍った湖',cost:60},
@@ -17,7 +17,7 @@ export const CHRISTMAS_EXCHANGE_PRIZES=Object.freeze([
 ]);
 const integer=value=>Number.isFinite(Number(value))?Math.max(0,Math.floor(Number(value))):0;
 export const christmasPresentBalance=game=>integer(game?.christmasPresents);
-export const christmasExchangeOnly=id=>CHRISTMAS_EXCHANGE_PRIZES.some(p=>p.id===id||p.equipId===id);
+export const christmasExchangeOnly=id=>id==='christmas_santa_helper'||CHRISTMAS_EXCHANGE_PRIZES.some(p=>p.id===id||p.equipId===id);
 export function christmasEventState(game){
  game.christmasEvent ||= {};
  return game.christmasEvent[CHRISTMAS_EVENT_ID] ||= {recoveredTotal:0,clears:0,collectedPrizes:[]};
