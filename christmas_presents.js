@@ -3,17 +3,17 @@ export const CHRISTMAS_EVENT_ID='christmas_2026';
 export const CHRISTMAS_PRESENT_ICON='assets/christmas/present_box_token_v1.png';
 export const CHRISTMAS_STORY_BANNER='assets/christmas/present_rescue_banner_v2.png';
 const CHRISTMAS_EXCHANGE_EQUIPMENT=[
- {id:'christmas_exchange_candy_sword',name:'サンタのキャンディソード',costs:[10,20,30],ability:'crit_up'},
- {id:'christmas_exchange_aurora_mantle',name:'聖夜のオーロラマント',costs:[15,25,40],ability:'guard'},
- {id:'christmas_exchange_winter_charm',name:'工房の冬星チャーム',costs:[15,25,40],ability:'mp_save'},
+ {id:'christmas_exchange_candy_sword',name:'サンタのキャンディソード',costs:[15,30,45],ability:'crit_up'},
+ {id:'christmas_exchange_aurora_mantle',name:'聖夜のオーロラマント',costs:[25,40,60],ability:'guard'},
+ {id:'christmas_exchange_winter_charm',name:'工房の冬星チャーム',costs:[25,40,60],ability:'mp_save'},
 ];
 export const CHRISTMAS_EXCHANGE_PRIZES=Object.freeze([
  ...[2,3,4].flatMap(rarity=>CHRISTMAS_EXCHANGE_EQUIPMENT.map(e=>({id:rarity===4?e.id:`${e.id}_r${rarity}`,equipId:e.id,kind:'equip',name:e.name,cost:e.costs[rarity-2],rarity,ability:e.ability}))),
- {id:'christmas_snowboard_courier',kind:'skin',name:'聖夜の黒騎士',cost:80},
- {id:'christmas_star_cartographer',kind:'skin',name:'氷星の女王',cost:100},
- {id:'christmas_santa_workshop',kind:'background',name:'サンタの工房',cost:60},
- {id:'christmas_frozen_lake',kind:'background',name:'月明かりの凍った湖',cost:60},
- {id:'christmas_holly_star',kind:'decoration',name:'聖夜のヒイラギ飾り',cost:50},
+ {id:'christmas_snowboard_courier',kind:'skin',name:'聖夜の黒騎士',cost:120},
+ {id:'christmas_star_cartographer',kind:'skin',name:'氷星の女王',cost:150},
+ {id:'christmas_santa_workshop',kind:'background',name:'サンタの工房',cost:90},
+ {id:'christmas_frozen_lake',kind:'background',name:'月明かりの凍った湖',cost:90},
+ {id:'christmas_holly_star',kind:'decoration',name:'聖夜のヒイラギ飾り',cost:75},
 ]);
 const integer=value=>Number.isFinite(Number(value))?Math.max(0,Math.floor(Number(value))):0;
 export const christmasPresentBalance=game=>integer(game?.christmasPresents);
