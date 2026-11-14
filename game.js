@@ -13096,9 +13096,11 @@ function proceedHalloweenBattle() {
     save(true);
     const overlay = document.createElement('div');
     overlay.className = 'confirm-overlay halloween-menu';
-    overlay.innerHTML = `<div class="panel halloween-event-card"><h2>🎃 ハロウィンの森 クリア！</h2><p>${run.halloweenSeason === 2 ? `${total}問クリア！ ボスを倒した！` : `${total}たいの おばけを たおした！`}${run.halloweenSeason === 2 ? ' シーズン2クリア！' : ''}</p>${stageClearRewardsHtml(rewards)}<p class="flavor">${run.halloweenSeason === 2 ? 'シーズン2の別ステージにも挑戦してみよう！' : 'ふくしゅう がんばったね！'}</p><button type="button" class="btn btn-primary" data-action="return-home">きょてんに もどる</button></div>`;
+    overlay.innerHTML = `<div class="panel halloween-event-card"><h2>🎃 ハロウィンの森 クリア！</h2><p>${run.halloweenSeason === 2 ? `${total}問クリア！ ボスを倒した！` : `${total}たいの おばけを たおした！`}${run.halloweenSeason === 2 ? ' シーズン2クリア！' : ''}</p><button type="button" class="btn" data-action="repeat">同じレベルに再挑戦（プレゼント3分の1）</button><button type="button" class="btn btn-primary" data-action="next">次のステージへ（通常報酬）</button>${stageClearRewardsHtml(rewards)}<p class="flavor">${run.halloweenSeason === 2 ? 'シーズン2の別ステージにも挑戦してみよう！' : 'ふくしゅう がんばったね！'}</p><button type="button" class="btn btn-primary" data-action="return-home">きょてんに もどる</button></div>`;
     document.body.appendChild(overlay);
     bindDropItemTooltips(overlay);
+    overlay.querySelector('[data-action="repeat"]').onclick=()=>{hideTooltip();overlay.remove();startChristmasChallenge(christmasChallengeSource(run.christmasLevel));};
+    overlay.querySelector('[data-action="next"]').onclick=()=>{hideTooltip();overlay.remove();startChristmasChallenge();};
     overlay.querySelector('[data-action="return-home"]').onclick = () => { hideTooltip(); overlay.remove(); showHome(); showHalloweenMenu('stage'); };
   });
 }
@@ -13139,8 +13141,8 @@ function christmasInitialChallengeSource() {
 }
 
 function christmasStageList(){return ['area5','area6','area7','area8','area9','area10'].flatMap(areaId=>(AREA_STAGES[areaId]?.stages || []).map((_,stageIndex)=>({areaId,stageIndex})));}
-function christmasChallengeSource(){
-  const state=christmasEventState(G),base=state.baseSource || christmasInitialChallengeSource(),level=Math.max(0,Math.floor(Number(state.clears)||0));
+function christmasChallengeSource(requestedLevel){
+  const state=christmasEventState(G),base=state.baseSource || christmasInitialChallengeSource(),level=Math.max(0,Math.floor(Number(requestedLevel ?? state.clears)||0));
   return {...christmasStageAt(christmasStageList(),base,level),level};
 }
 function christmasQuestionSource(run,isSanta=false){return christmasStageAt(christmasStageList(),{areaId:run.areaId,stageIndex:run.stageIndex},0,isSanta?1:0);}
@@ -13171,7 +13173,7 @@ function showChristmasMenu(tab='stage',message='') {
     return `<article class="christmas-exchange-card${owned?' is-owned':''}"><small>${p.kind==='equip'?`★${p.rarity} ${RARITY_NAME[p.rarity]}・限定装備`:typeLabels[p.kind]}</small><div class="christmas-prize-art">${christmasPrizeArt(p)}</div><b>${escapeHtml(p.name)}</b><p class="christmas-price"><img src="${av(CHRISTMAS_PRESENT_ICON)}" alt="プレゼントボックス">${p.cost}個</p><button type="button" class="btn" data-christmas-exchange="${p.id}" ${owned||missing?'disabled':''}>${owned?'✓ 獲得済み':missing?`あと${missing}個`:'交換する'}</button>${p.kind==='equip'?'<small>何度でも交換できます</small>':''}</article>`;
   }).join('');
   const panel=tab==='exchange'?`<div class="christmas-exchange-intro"><h3>サンタの お礼の交換所</h3><p>取り返したプレゼントボックスを届けると、好きな限定品を選べます。交換した数だけボックスを使います。</p></div><div class="christmas-exchange-grid">${exchangeCards}</div>`:
-    `<figure class="christmas-rescue-hero"><img src="${av(CHRISTMAS_STORY_BANNER)}" alt="盗んだプレゼントを抱えて逃げるブラックサンタたちを、冒険者たちが雪道で追いかける"></figure><section class="christmas-mission"><div><h3>盗まれたプレゼントを とりかえそう！</h3><p>ブラックサンタの手下が、村のみんなのプレゼントを持ち去ってしまった！<br>1回の挑戦は5体。漢字の問題に答えて、プレゼントを取り返そう。</p><p class="christmas-drop-rule">敵は 🎁 2〜4個 ／ まれに現れるブラックサンタは10〜15個</p></div><button class="btn btn-primary" type="button" data-action="start">⚔ チャレンジ${source.level+1}へ<small>漢字${escapeHtml(area.displayNum)}・${escapeHtml(stage.name)}</small></button></section><div class="christmas-route"><span>❄ 森の道</span><i>→</i><span>🎄 サンタクロース村</span><i>→</i><span>🔔 サンタの工房</span></div><div class="christmas-monster-grid">${portraits}</div><p class="christmas-collection-note">挑戦中は同じステージから出題。クリアするたびに次のステージへ！ ブラックサンタだけ、ひとつ先の問題が出ます。集めたボックスは途中で戻っても残ります。</p>`;
+    `<figure class="christmas-rescue-hero"><img src="${av(CHRISTMAS_STORY_BANNER)}" alt="盗んだプレゼントを抱えて逃げるブラックサンタたちを、冒険者たちが雪道で追いかける"></figure><section class="christmas-mission"><div><h3>盗まれたプレゼントを とりかえそう！</h3><p>ブラックサンタの手下が、村のみんなのプレゼントを持ち去ってしまった！<br>1回の挑戦は5体。漢字の問題に答えて、プレゼントを取り返そう。</p><p class="christmas-drop-rule">敵は 🎁 2〜4個 ／ まれに現れるブラックサンタは10〜15個</p></div><button class="btn btn-primary" type="button" data-action="start">⚔ チャレンジ${source.level+1}へ<small>漢字${escapeHtml(area.displayNum)}・${escapeHtml(stage.name)}</small></button></section><div class="christmas-run-choices"><button type="button" class="btn" data-action="repeat" ${state.clears?'':'disabled'}>同じレベルに再挑戦<small>プレゼントは通常の3分の1（最低1個）</small></button><button type="button" class="btn" data-action="exchange">交換所へ</button></div><div class="christmas-route"><span>❄ 森の道</span><i>→</i><span>🎄 サンタクロース村</span><i>→</i><span>🔔 サンタの工房</span></div><div class="christmas-monster-grid">${portraits}</div><p class="christmas-collection-note">挑戦中は同じステージから出題。クリアするたびに次のステージへ！ ブラックサンタだけ、ひとつ先の問題が出ます。集めたボックスは途中で戻っても残ります。</p>`;
   const overlay=document.createElement('div');overlay.className='confirm-overlay christmas-menu';
   overlay.innerHTML=`<section class="panel christmas-event-card christmas-hub" role="dialog" aria-modal="true" aria-labelledby="christmas-event-title"><header class="christmas-hub-header"><div><small>11/14〜1/7 冬のイベント</small><h2 id="christmas-event-title">🎄 プレゼントを とりかえせ！</h2></div><div class="christmas-hub-balance" aria-live="polite"><img src="${av(CHRISTMAS_PRESENT_ICON)}" alt="プレゼントボックス"><span>もっている数 <b>${balance}</b>個<small>合計${state.recoveredTotal || 0}個 とりかえした！</small></span></div><button type="button" class="christmas-close" data-action="close" aria-label="イベントをとじる">×</button></header><nav class="christmas-hub-tabs" role="tablist" aria-label="クリスマスイベント"><button type="button" role="tab" data-tab="stage" aria-selected="${tab==='stage'}" aria-controls="christmas-hub-body">⚔ イベントの冒険</button><button type="button" role="tab" data-tab="exchange" aria-selected="${tab==='exchange'}" aria-controls="christmas-hub-body">🎁 お礼の交換所</button></nav>${message?`<p class="christmas-action-message" role="status">${escapeHtml(message)}</p>`:''}<div id="christmas-hub-body" class="christmas-hub-body" role="tabpanel">${panel}</div><footer class="christmas-hub-footer"><span>1回5体・クリアで次の問題ステージへ</span><button type="button" class="btn" data-action="home">拠点にもどる</button></footer></section>`;
   document.body.append(overlay);bindStageRewardTooltips(overlay);
@@ -13180,6 +13182,8 @@ function showChristmasMenu(tab='stage',message='') {
   overlay.querySelector('[data-action="home"]').onclick=close;
   overlay.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{hideTooltip();showChristmasMenu(b.dataset.tab);});
   overlay.querySelector('[data-action="start"]')?.addEventListener('click',()=>{close();startChristmasChallenge(source);});
+  overlay.querySelector('[data-action="repeat"]')?.addEventListener('click',()=>{close();startChristmasChallenge(christmasChallengeSource(state.lastClearedLevel ?? Math.max(0,state.clears-1)));});
+  overlay.querySelector('[data-action="exchange"]')?.addEventListener('click',()=>showChristmasMenu('exchange'));
   overlay.querySelectorAll('[data-christmas-exchange]').forEach(b=>b.onclick=()=>confirmChristmasExchange(b.dataset.christmasExchange,b));
   overlay.onkeydown=event=>{
     if(event.key==='Escape'){event.preventDefault();close();}
@@ -13220,7 +13224,7 @@ function startChristmasChallenge(source = christmasChallengeSource(),random=Math
   state.baseSource ||= {areaId:source.areaId,stageIndex:source.stageIndex};
   explore = {
     christmasMonsters:createChristmasEncounters(CHRISTMAS_MONSTERS,random),christmasLevel:source.level || 0,
-    stageMode:true, isChristmas:true, christmasIndex:0, christmasRecovered:0,
+    stageMode:true, isChristmas:true, christmasIndex:0, christmasRecovered:0, christmasReplay:source.level < (state.clears || 0),
     areaId:source.areaId, stageIndex:source.stageIndex,
     isBoss:false, sessionDrops:[], sessionGold:0, stageDrops:[], stageGold:0, stageExp:0,
     usedProblems:new Set()
@@ -13264,7 +13268,9 @@ function proceedChristmasBattle() {
       startBattle(false);
       return;
     }
-    christmasEventState(G).clears=(christmasEventState(G).clears || 0)+1;
+    const state=christmasEventState(G);
+    state.lastClearedLevel=run.christmasLevel;
+    state.clears=Math.max(state.clears || 0,run.christmasLevel+1);
     const rewards = {gold:run.sessionGold, exp:run.stageExp, drops:run.sessionDrops, milestoneRewards:[]};
     G.player.hp = totalMaxHp(); G.player.mp = totalMaxMp();
     explore = null;

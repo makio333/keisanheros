@@ -21,3 +21,12 @@ test('clears advance one reference stage; Santa uses one extra without moving th
  const {christmasStageAt}=await import('../christmas_presents.js');const stages=[{areaId:'area5',stageIndex:0},{areaId:'area5',stageIndex:1},{areaId:'area6',stageIndex:0}],base=stages[0];
  assert.deepEqual(christmasStageAt(stages,base,0),stages[0]);assert.deepEqual(christmasStageAt(stages,base,1),stages[1]);assert.deepEqual(christmasStageAt(stages,base,1,1),stages[2]);assert.deepEqual(christmasStageAt(stages,base,999),stages[2]);assert.deepEqual(base,stages[0]);
 });
+test('replay gives one third of presents while normal rewards and once-only grants remain',()=>{
+ for(const isBoss of [false,true])for(const roll of [0,.5,.99]){
+  const normal=recoverChristmasPresents(fresh(),{isChristmas:true},{isBoss},{},()=>roll);
+  const game=fresh(),run={isChristmas:true,christmasReplay:true},encounter={};
+  const reduced=recoverChristmasPresents(game,run,{isBoss},encounter,()=>roll);
+  assert.equal(reduced.count,Math.max(1,Math.floor(normal.count/3)));
+  assert.equal(recoverChristmasPresents(game,run,{isBoss},encounter,()=>roll),null);
+ }
+});
