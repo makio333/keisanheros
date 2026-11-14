@@ -1,3 +1,4 @@
+import {confirmQuestLeave} from './quest_leave_confirm.js';
 import {questRewardFlight,revealQuestResults} from './quest_reward_flight.js';
 import {claimGradeClearRewards,gradeRewardSummary} from './subquest_grade_rewards.js';
 import {mathRun,mathRewardProgress,storeMathAnswer,finishMathRun,mathResults,retryMathAnswer} from './math_word_session.js';
@@ -7,7 +8,7 @@ import itemAtlas from './assets/items/math-word-icons/manifest.json';
 import './math_word_subquests.css';
 import './reading_quest_letter.css';
 const QUEUE_PERSON_URL=new URL('./assets/items/math-word-icons/adventurer_left.png',import.meta.url).href;
-const ITEM_ATLAS_URL=new URL('./assets/items/math-word-icons/atlas.png',import.meta.url).href;
+const ITEM_IMAGE_URLS=import.meta.glob('./assets/items/math-word-icons/*.png',{eager:true,query:'?url',import:'default'});
 const ITEM_SPRITES=Object.fromEntries(itemAtlas.sprites.map(s=>[s.key,s]));
 import {groupQuestProblems} from './gameplay_review_settings.js';
 import {getMathWordQuestsV2,scoreMathWordAnswerV2} from './math_word_quests_v2.js';
@@ -67,7 +68,7 @@ export function renderMathWordSubquests(root,api){
  function openGroup(group,villager){const run=mathRun(game,group);if(run.phase==='results')return showResults(group,villager);showProblem(group.find(p=>!run.answers[p.id])||group[0],villager,group);}
  function showResults(group,villager){
   const bonus=claimGradeClearRewards(game);if(bonus.exp)api.exp(bonus.exp);
-  document.querySelector('.reading-subquest-overlay')?.remove();const overlay=node('div',null,'reading-subquest-overlay'),panel=node('section',null,'reading-subquest-panel math-word-results');panel.setAttribute('role','dialog');panel.setAttribute('aria-label','サブクエストの答え合わせ');const back=node('button','← 依頼一覧へ','btn');back.onclick=()=>{overlay.remove();render();api.onClose?.();};panel.append(back,rewardHud(group));for(const text of bonus.messages)panel.append(node('p',text,'reading-v2-reward-card'));panel.append(node('h2',`${group.length}問の答え合わせ`));
+  document.querySelector('.reading-subquest-overlay')?.remove();const overlay=node('div',null,'reading-subquest-overlay'),panel=node('section',null,'reading-subquest-panel math-word-results');panel.setAttribute('role','dialog');panel.setAttribute('aria-label','サブクエストの答え合わせ');const back=node('button','← 依頼一覧へ','btn');back.onclick=()=>confirmQuestLeave({image:api.asset(villager.image),remaining:100-mathRewardProgress(game,group).percent,onLeave:()=>{overlay.remove();render();api.onClose?.();}});panel.append(back,rewardHud(group));for(const text of bonus.messages)panel.append(node('p',text,'reading-v2-reward-card'));panel.append(node('h2',`${group.length}問の答え合わせ`));
   for(const [i,r] of mathResults(game,group).entries()){const row=node('section',null,'math-word-result-row'+(r.correct?'':' is-wrong'));row.append(node('b',`${i+1}問め　${r.correct?'正解':'ヒント付きで再挑戦'}`),node('p',r.problem.story+'\n'+r.problem.question),node('p','あなたの答え：'+Object.values(r.answer||{}).join(' ・ ')));if(r.correct){if(JSON.stringify(r.answer)!==JSON.stringify(r.reviewAnswer))row.append(node('p','解き直しの答え：'+Object.values(r.reviewAnswer||{}).join(' ・ ')));row.append(node('p',r.problem.explanation));}else{const retry=node('button','✎ ヒント付きで解き直す','btn btn-primary');retry.onclick=()=>showProblem(r.problem,villager,group,true);row.append(retry);}panel.append(row);}
   const remaining=100-mathRewardProgress(game,group).percent;if(!remaining&&api.onComplete){const done=node('button','依頼を完了する','btn btn-primary');done.onclick=()=>{overlay.remove();api.onComplete();};panel.append(done);}panel.append(node('p',remaining?`積み上げた報酬はそのまま。解き直すと残り${remaining}％を受け取れます。`:'報酬100％！ 全問クリア！'));overlay.append(panel);document.body.append(overlay);revealQuestResults(panel);api.save();render();
  }
@@ -75,7 +76,7 @@ export function renderMathWordSubquests(root,api){
   document.querySelector('.reading-subquest-overlay')?.remove();
   const overlay=node('div',null,'reading-subquest-overlay');
   const panel=node('section',null,'reading-subquest-panel quest-answer-panel math-word-reading-answer-panel reading-v2-answer-panel');panel.dataset.grade=String(problem.grade);panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-label',problem.title);
-  const stopTime=startSubquestTimer(panel);const back=node('button','← 依頼一覧へ','btn');back.type='button';back.onclick=()=>{stopTime();overlay.remove();render();api.onClose?.();};
+  const stopTime=startSubquestTimer(panel);const back=node('button','← 依頼一覧へ','btn');back.type='button';back.onclick=()=>confirmQuestLeave({image:api.asset(villager.image),remaining:100-mathRewardProgress(game,group).percent,onLeave:()=>{stopTime();overlay.remove();render();api.onClose?.();}});
   const title=node('h2',`${group.indexOf(problem)+1}／${group.length}問　${problem.title}`),conversation=node('section',null,'reading-villager-dialogue');
   const portrait=node('img');portrait.src=api.asset(villager.image);portrait.alt=villager.name;portrait.className='reading-villager-portrait';
   const speech=node('div'),speaker=node('b',villager.name),quote=node('p',`${problem.grade===1?'この ぶんしょうもんだい':'この文章問題'}を一緒に読んで、答えを確かめてくれる？`);speech.append(speaker,quote);conversation.append(portrait,speech);
@@ -86,7 +87,7 @@ export function renderMathWordSubquests(root,api){
   const letterHeader=node('header',null,'reading-v2-letter-header');letterHeader.append(node('span',problem.subject==='reading'?'村人からの読書便り':'村人からの算数の手紙','reading-v2-letter-eyebrow'),node('h2',problem.title));
   story.classList.add('reading-v2-passage','math-word-letter-story');if(review){story.replaceChildren();for(const text of problem.story.split(/([0-9０-９]+)/)){const part=node(/^[0-9０-９]+$/.test(text)?'mark':'span',text);if(part.tagName==='MARK')part.className='reading-v2-pencil-hint';story.append(part);}}
   letter.append(letterHeader,story);const visual=renderMathWordVisual(problem);
-  const signature=node('footer',null,'reading-v2-letter-signature');signature.append(node('span','勇者へ'),node('b',villager.name+' より'));question.classList.add('math-word-letter-question');letter.append(question);if(visual&&problem.grade<=2)letter.append(visual);letter.append(signature);context.append(letter);
+  const signature=node('footer',null,'reading-v2-letter-signature');signature.append(node('span','勇者へ'),node('b',villager.name+' より'));question.classList.add('math-word-letter-question');letter.append(question);if(review){const expression=problem.equation||problem.check?.expression;if(expression&&!/^\d+(?:\.\d+)?$/.test(expression.trim())){const hint=node('p','式のヒント： '+expression.replace(/\*/g,' × ').replace(/\//g,' ÷ ').replace(/\+/g,' ＋ ').replace(/-/g,' − ')+' ＝ □','math-word-hint');letter.append(hint);}}if(visual&&problem.grade<=2)letter.append(visual);letter.append(signature);context.append(letter);
   const form=node('form',null,'math-word-answer-fields');form.autocomplete='off';const inputs={};
   for(const field of problem.input.fields){
    const label=node('label',null,'math-word-answer-field');label.append(node('span',field.label));
@@ -122,9 +123,9 @@ function itemSprite(key, size = 22) {
   node.style.cssText=`display:inline-block;flex:0 0 ${size}px;min-width:0;min-height:0;padding:0;border:0;box-sizing:content-box;line-height:0;background-repeat:no-repeat;overflow:hidden;max-height:${size}px`;
   node.style.width = `${size}px`;
   node.style.height = `${size}px`;
-  node.style.backgroundImage = `url("${ITEM_ATLAS_URL}")`;
-  node.style.backgroundSize = `${size * itemAtlas.columns}px ${size * itemAtlas.rows}px`;
-  node.style.backgroundPosition = `${-size * (sprite.column - 1)}px ${-size * (sprite.row - 1)}px`;
+  node.style.backgroundImage = `url("${ITEM_IMAGE_URLS['./assets/items/math-word-icons/'+sprite.file]}")`;
+  node.style.backgroundSize = 'contain';
+  node.style.backgroundPosition = 'center';
   return node;
 }
 

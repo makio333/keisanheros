@@ -1,3 +1,4 @@
+import {confirmQuestLeave} from './quest_leave_confirm.js';
 import {questRewardFlight,revealQuestResults} from './quest_reward_flight.js';
 import {claimGradeClearRewards,gradeRewardSummary} from './subquest_grade_rewards.js';
 import {startSubquestTimer} from './subquest_results.js';
@@ -64,7 +65,7 @@ export function renderJapaneseReadingV2Subquests(root,grade,api){
   const overlay=node('div',null,'reading-subquest-overlay'),panel=node('section',null,'reading-subquest-panel quest-answer-panel reading-v2-answer-panel');
   panel.dataset.grade=String(grade);
   panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-labelledby','reading-v2-title');
-  const back=node('button','← 依頼一覧へ','btn');back.type='button';back.onclick=()=>{overlay.remove();renderJapaneseReadingV2Subquests(root,grade,api);};
+  const back=node('button','← 依頼一覧へ','btn');back.type='button';back.onclick=()=>confirmQuestLeave({image:api.asset(villager.image),remaining:100-readingRewardProgress(game,record).percent,onLeave:()=>{overlay.remove();renderJapaneseReadingV2Subquests(root,grade,api);}});
   const title=node('h2',record.title);title.id='reading-v2-title';
   const dialogue=node('section',null,'reading-villager-dialogue'),portrait=node('img');portrait.src=api.asset(villager.image);portrait.alt=villager.name;portrait.className='reading-v2-scene-villager';portrait.draggable=false;
   const speech=node('div');speech.append(node('b',villager.name),node('p',grade===1?'この おはなしを いっしょに よんで、五つのことを たしかめよう。':'村に届いた記録を一緒に読んで、五つの問いを確かめてくれる？'));dialogue.append(speech);
@@ -185,7 +186,7 @@ export function renderJapaneseReadingV2Subquests(root,grade,api){
    bonus.append(node('b','🎁 100％まで、あとこれだけ！'),rewardLine(earned.remaining),node('p',`あと${remaining}問をヒント付きで解き直そう。正解すると残りの報酬を受け取れます。`));
    const review=node('button','✎ ヒント付きで再挑戦','btn btn-primary');review.type='button';review.onclick=()=>showReview(record,villager);bonus.append(review,node('small','やめた場合は受取済みの分だけ残ります。あとで再開しても100％まで受け取れます。'));
   }body.append(bonus);
-  const close=node('button',earned.complete?'依頼一覧へ':'ここで終わる（残りの報酬は未受取）','btn');close.type='button';close.onclick=()=>{document.querySelector('.reading-subquest-overlay')?.remove();renderJapaneseReadingV2Subquests(root,grade,api);};
+  const close=node('button',earned.complete?'依頼一覧へ':'ここで終わる（残りの報酬は未受取）','btn');close.type='button';close.onclick=()=>confirmQuestLeave({image:api.asset(villager.image),remaining:100-earned.percent,onLeave:()=>{document.querySelector('.reading-subquest-overlay')?.remove();renderJapaneseReadingV2Subquests(root,grade,api);}});
   const again=node('button','もう一度5問に挑戦','btn');again.type='button';again.onclick=()=>{readingSession(game,record,true);api.save();showQuestion(record,villager,0);};body.append(close,again);revealQuestResults(body);
  }
  function showReview(record,villager){

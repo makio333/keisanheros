@@ -14,12 +14,38 @@ export async function questRewardFlight(source){
 
 export function revealQuestResults(root){
  const rows=[...root.querySelectorAll('.math-word-result-row,.reading-v2-result-row')];
+ if(!rows.length)return;
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
- const allCorrect=rows.length>0&&rows.every(row=>!row.classList.contains('is-wrong')&&(!row.dataset.status||row.dataset.status==='correct'));
+ const correct=row=>!row.classList.contains('is-wrong')&&(!row.dataset.status||row.dataset.status==='correct');
+ const board=document.createElement('section');board.className='quest-result-scoreboard';board.setAttribute('aria-label','各問題の採点結果');
+ board.style.cssText=`display:grid;grid-template-columns:repeat(${rows.length},minmax(0,1fr));gap:8px;margin:16px 0 24px`;
  rows.forEach((row,i)=>{
-  const correct=!row.classList.contains('is-wrong')&&(!row.dataset.status||row.dataset.status==='correct');
-  if(!reduced)row.animate([{opacity:.25,transform:'translateY(12px)',backgroundColor:'transparent'},{opacity:1,transform:'translateY(0)',backgroundColor:correct?'#ffe5a680':'#ffb7ad40'},{opacity:1,backgroundColor:'transparent'}],{duration:650,delay:i*220,fill:'backwards'});
-  if(correct){const mark=document.createElement('span');mark.textContent='○';mark.setAttribute('aria-hidden','true');mark.style.cssText='display:inline-block;color:#dc4141;font-size:28px;font-weight:bold;margin-right:8px';(row.querySelector('summary,b')||row).prepend(mark);if(!reduced)mark.animate([{transform:'scale(2)',opacity:0},{transform:'scale(.85)',opacity:1},{transform:'scale(1)',opacity:1}],{duration:420,delay:i*220,fill:'backwards'});}
+  const cell=document.createElement('div');cell.style.cssText='text-align:center;border:2px solid #bba06b;border-radius:12px;padding:10px 0;background:#fff8e5';
+  const label=document.createElement('div');label.textContent=(i+1)+'問め';label.style.cssText='font-weight:bold;font-size:clamp(12px,2vw,18px)';
+  const mark=document.createElement('div');mark.textContent=correct(row)?'○':row.dataset.status==='needs-review'?'？':'×';mark.style.cssText='font:bold clamp(32px,5vw,54px)/1.2 sans-serif;color:'+(correct(row)?'#dc4141':'#376fb4');
+  cell.append(label,mark);board.append(cell);
+  if(!reduced)mark.animate([{opacity:0,transform:'scale(2)'},{opacity:1,transform:'scale(.85)'},{opacity:1,transform:'scale(1)'}],{duration:400,delay:250+i*450,fill:'backwards'});
+  if(!reduced)row.animate([{opacity:0},{opacity:1}],{duration:300,delay:250+rows.length*450,fill:'backwards'});
  });
- if(allCorrect){const title=document.createElement('h2');title.textContent='全問正解！ おめでとう！';title.style.cssText='text-align:center;color:#ffd865;text-shadow:0 2px 6px #513400;font-size:clamp(24px,4vw,40px)';root.prepend(title);if(!reduced)title.animate([{transform:'scale(.7)',opacity:0},{transform:'scale(1.12)',opacity:1},{transform:'scale(1)',opacity:1}],{duration:600,delay:rows.length*220,fill:'backwards'});}
+ root.prepend(board);
+ if(rows.every(correct)){
+  const showClear=()=>{if(root.isConnected)showQuestClear(root);};
+  if(reduced)showClear();else setTimeout(showClear,250+rows.length*450+500);
+  const title=document.createElement('h2');title.textContent='全問正解！ おめでとう！';title.style.cssText='text-align:center;color:#a46613;font-size:clamp(24px,4vw,40px)';board.after(title);
+  if(!reduced)title.animate([{opacity:0,transform:'scale(.7)'},{opacity:1,transform:'scale(1)'}],{duration:500,delay:250+rows.length*450,fill:'backwards'});
+ }
+}
+
+function showQuestClear(root){
+ if(document.querySelector('.quest-clear-reward-overlay'))return;
+ const layer=document.createElement('div');layer.className='quest-clear-reward-overlay';layer.style.cssText='position:fixed;inset:0;z-index:2147483646;display:grid;place-items:center;padding:16px;background:radial-gradient(ellipse,#87651e99,#080714ed)';
+ const card=document.createElement('section');card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label','クエストクリア報酬');card.style.cssText='width:min(620px,100%);box-sizing:border-box;text-align:center;color:#fff1bd;border:3px solid #ffd667;border-radius:24px;padding:32px 24px;background:linear-gradient(145deg,#302144,#141225);box-shadow:0 0 60px #ffc85566';
+ const title=document.createElement('h2');title.textContent='クエストクリア！';title.style.cssText='font-size:clamp(28px,6vw,48px);color:#ffdc70;margin:0 0 12px;text-shadow:0 3px #6f4217';
+ const message=document.createElement('p');message.textContent='全問正解！ 報酬100％を受け取りました！';
+ const rewards=root.closest('.reading-subquest-overlay')?.querySelector('.reading-v2-hud-counters')?.cloneNode(true);
+ if(rewards){rewards.style.cssText='display:flex;flex-wrap:wrap;justify-content:center;gap:18px;padding:24px 8px;background:#fff1c9;color:#503716;border-radius:16px;margin:24px 0';}
+ const close=document.createElement('button');close.className='btn btn-primary';close.textContent='答え合わせを見る';close.style.cssText='width:100%;margin-top:20px';close.onclick=()=>{layer.remove();root.querySelector('button')?.focus();};
+ card.append(title,message);if(rewards)card.append(rewards);card.append(close);layer.append(card);document.body.append(layer);close.focus();
+ if(!matchMedia('(prefers-reduced-motion: reduce)').matches)card.animate([{transform:'scale(.5)',opacity:0},{transform:'scale(1.05)',opacity:1},{transform:'scale(1)',opacity:1}],{duration:600});
+ layer.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();close.click();}if(e.key==='Tab'){e.preventDefault();close.focus();}};
 }
