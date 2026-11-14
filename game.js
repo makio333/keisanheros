@@ -2874,7 +2874,7 @@ const HERO_AVATARS = [
   { id:'halloween_festival_queen', name:'ハロウィンの女王', gender:'female', job:'女王', desc:'町を守るハロウィンの女王。お菓子交換限定。', image:'assets/halloween/exchange_skin_queen.png', gachaOnly:true, rewardSource:'halloween' },
   { id:'christmas_santa_helper', name:'サンタの護衛', gender:'male', job:'剣士', desc:'おもちゃの国を守る、サンタの頼れる護衛。', image:'assets/christmas/skin_santa_helper.webp', gachaOnly:true, rewardSource:'christmas' },
   { id:'christmas_snowman_guardian', name:'雪だるまの守り手', gender:'male', job:'守護者', desc:'雪だるまの盾で仲間を守る、雪原のガーディアン。', image:'assets/christmas/skin_snowman_guardian.webp', gachaOnly:true, rewardSource:'christmas' },
-  { id:'christmas_nutcracker_soldier', name:'くるみ割り人形の兵士', gender:'male', job:'兵士', desc:'星の勲章を胸に、サンタの工房を守る兵士。', image:'assets/christmas/skin_nutcracker_soldier.webp', gachaOnly:true, rewardSource:'christmas' },
+  { id:'christmas_nutcracker_soldier', retired:true, name:'くるみ割り人形の兵士', gender:'male', job:'兵士', desc:'星の勲章を胸に、サンタの工房を守る兵士。', image:'assets/christmas/skin_nutcracker_soldier.webp', gachaOnly:true, rewardSource:'christmas' },
   { id:'christmas_aurora_sprite', name:'オーロラの精霊', gender:'female', job:'精霊', desc:'雪の結晶の羽で、冬の夜空を舞う精霊。', image:'assets/christmas/skin_aurora_sprite.webp', gachaOnly:true, rewardSource:'christmas' },
   { id:'christmas_snowboard_courier', name:'聖夜の黒騎士', gender:'male', job:'黒騎士', desc:'氷の大剣と聖夜の黒鎧で、盗まれたプレゼントを取り戻す騎士。', image:'assets/christmas/skin_holy_night_knight_v2.png', gachaOnly:true, rewardSource:'christmas' },
   { id:'christmas_star_cartographer', name:'氷星の女王', gender:'female', job:'女王', desc:'オーロラの衣と氷星の王笏をまとう、雪の国の女王。', image:'assets/christmas/skin_ice_star_queen_v2.png', gachaOnly:true, rewardSource:'christmas' },
@@ -3018,7 +3018,7 @@ try {
    ========================================================== */
 const EQUIP_DB = [
   {id:'shop_light_sword',name:'旅人の軽い剣',slot:'weapon',opTier:'add2',stat:{atk:5},price:45,cost:3,emoji:'assets/event-pixel/traveler_sword.png'},
-  {id:'shop_guard_vest',name:'旅人のベスト',slot:'armor',opTier:'add2',stat:{def:4,hp:6},price:65,cost:3,emoji:'assets/items/a2.png'},
+  {id:'shop_guard_vest',name:'旅人のベスト',slot:'armor',opTier:'add2',stat:{def:4,hp:6},price:65,cost:3,emoji:'assets/items/traveler_cloth_vest.png'},
   {id:'shop_mana_charm',name:'小さな魔力のお守り',slot:'accessory',opTier:'add1',stat:{mp:8,spd:1},price:75,cost:4,emoji:'assets/halloween/equip_moon_charm.png'},
   // 武器
   { id:'w1', name:'木の剣', slot:'weapon', opTier:'add1', stat:{atk:2}, price:20, cost:1, emoji:'assets/event-pixel/wood_sword.png' },
@@ -10581,7 +10581,7 @@ function getSkinGachaPrizes() {
 }
 
 function getChristmasSkinGachaPrizes() {
-  const characters = HERO_AVATARS.filter(hero => hero.rewardSource === 'christmas' && !christmasExchangeOnly(hero.id)).map(hero => ({ ...hero, kind:'character', owned:hero.id === G.avatar || (G.unlockedSkins || []).includes(hero.id) }));
+  const characters = HERO_AVATARS.filter(hero => hero.rewardSource === 'christmas' && !hero.retired && !christmasExchangeOnly(hero.id)).map(hero => ({ ...hero, kind:'character', owned:hero.id === G.avatar || (G.unlockedSkins || []).includes(hero.id) }));
   const backgrounds = AVATAR_BACKGROUNDS.filter(background => background.image && background.rewardSource === 'christmas' && !christmasExchangeOnly(background.id)).map(background => ({ ...background, kind:'background', owned:background.id === G.avatarBackground || (G.unlockedAvatarBackgrounds || []).includes(background.id) }));
   const decorations = AVATAR_DECORATIONS.filter(decoration => decoration.source === 'christmas' && !christmasExchangeOnly(decoration.id)).map(decoration => ({
     ...decoration, kind:'decoration', owned:(G.unlockedDecorations || []).includes(decoration.id),

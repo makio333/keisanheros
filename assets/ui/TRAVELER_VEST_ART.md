@@ -1,0 +1,1 @@
+Built-in image generation, 2026-11-15. Reference: assets/items/a2.png. Prompt: distinct early-game traveler vest, moss-green sleeveless cloth with tan trim, cream collar, two pockets, wooden toggle; crisp pixel art, transparent background, no armor plates or pauldrons, no person/text/frame. Saved: assets/items/traveler_cloth_vest.png. Leather armor unchanged.
