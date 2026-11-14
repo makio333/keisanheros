@@ -7391,8 +7391,7 @@ function renderHomeTickets(){
     cell(stageRewardIcon('ticket', 'skin-ticket', 1, 26), G.skinGachaTickets || 0) +
     `<span class="home-ticket-cell">${stageRewardIcon('medal', 'quest-medal', 1, 26)}<b>×${G.questMedals || 0}</b></span>` +
     (isChristmasActive() || christmasPresentBalance(G)>0 ? `<span class="home-ticket-cell">${stageRewardIcon('christmas-present','christmas-present',1,26)}<b>×${christmasPresentBalance(G)}</b></span>` : '') +
-    (isHalloweenActive() || halloweenCandyBalance() > 0 ? `<span class="home-ticket-cell">${stageRewardIcon('halloween-candy', 'halloween-candy', 1, 26)}<b>×${halloweenCandyBalance()}</b></span>` : '') +
-    (isHalloweenActive() || halloweenTicketBalance() > 0 ? `<span class="home-ticket-cell">${stageRewardIcon('ticket', 'halloween-ticket', 1, 26)}<b>×${halloweenTicketBalance()}</b></span>` : '');
+    '';
   bindStageRewardTooltips(el);
 }
 
