@@ -81,3 +81,13 @@ export function christmasStageAt(stages,base,clears=0,extra=0){
  const found=stages.findIndex(s=>s.areaId===base?.areaId&&s.stageIndex===base?.stageIndex);
  return stages[Math.min(stages.length-1,Math.max(0,found)+integer(clears)+integer(extra))];
 }
+
+export const CHRISTMAS_SANTA_SKIN_TICKET_CHANCE=.1;
+export function rollChristmasSantaSkinTicket(game,run,enemy,encounter,random=Math.random){
+ if(!game||!run?.isChristmas||!enemy?.isBoss||!encounter||encounter.christmasSkinTicketRolled)return false;
+ encounter.christmasSkinTicketRolled=true;
+ const roll=Number(random());
+ if(!Number.isFinite(roll)||roll<0||roll>=CHRISTMAS_SANTA_SKIN_TICKET_CHANCE)return false;
+ game.skinGachaTickets=integer(game.skinGachaTickets)+1;
+ return true;
+}

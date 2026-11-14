@@ -32,3 +32,13 @@ test('replay gives one third of presents while normal rewards and once-only gran
 });
 
 test('skin ticket is limited to three exchanges across save reloads',()=>{let g=fresh();g.christmasPresents=200;const p=CHRISTMAS_EXCHANGE_PRIZES.find(p=>p.kind==='ticket');for(let i=0;i<3;i++){assert.equal(exchangeChristmasPrize(g,p.id).ok,true);g=JSON.parse(JSON.stringify(g));}assert.equal(g.skinGachaTickets,3);assert.equal(g.christmasPresents,200-3*p.cost);const before=JSON.stringify(g);assert.equal(exchangeChristmasPrize(g,p.id).ok,false);assert.equal(JSON.stringify(g),before);});
+
+test('Santa ticket is an independent 10% roll, once per victory, including replays',async()=>{
+ const {rollChristmasSantaSkinTicket:drop}=await import('../christmas_presents.js');
+ const g=fresh(),run={isChristmas:true,christmasReplay:true},enemy={isBoss:true};
+ for(let i=0;i<100;i++)drop(g,run,enemy,{},()=>i/100);
+ assert.equal(g.skinGachaTickets,10);
+ const encounter={};assert.equal(drop(g,run,enemy,encounter,()=>.1),false);assert.equal(drop(g,run,enemy,encounter,()=>0),false);
+ const success={};assert.equal(drop(g,run,enemy,success,()=>0),true);assert.equal(drop(g,run,enemy,success,()=>0),false);
+ assert.equal(drop(g,{},enemy,{},()=>0),false);assert.equal(drop(g,run,{}, {},()=>0),false);assert.equal(g.skinGachaTickets,11);
+});
