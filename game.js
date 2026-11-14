@@ -7316,18 +7316,14 @@ function renderLoadSaveSlots(onSelectCb){
         </div>
       </div>
 
-      <!-- 4段目: つづけるボタン -->
-      <div class="save-slot-action-row">
-        <button class="btn btn-primary btn-save-select">
-          ${typeof onSelectCb === 'function' ? 'これでちょうせん！' : 'つづける ⚔️'}
-        </button>
-      </div>
     `;
 
     applyAvatarComposition(card.querySelector('.save-slot-avatar-frame'),card.querySelector('.save-slot-avatar-img'),slot);
-    const btn = card.querySelector('.btn-save-select');
-    if (btn) {
-      btn.onclick = () => {
+    card.setAttribute('role','button');
+    card.tabIndex=0;
+    card.setAttribute('aria-label',`${slot.name} レベル${slot.lvl}のセーブを選ぶ`);
+    card.classList.add('save-slot-selectable');
+    card.onclick = () => {
         if (loadSlot(slot.key)) {
           G.lastPlayedAt = Date.now();
           save(true);
@@ -7339,7 +7335,7 @@ function renderLoadSaveSlots(onSelectCb){
           }
         }
       };
-    }
+    card.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();card.click();}};
 
     list.appendChild(card);
   }

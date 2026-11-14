@@ -8959,3 +8959,8 @@ body:has(#screen-gacha.active) :is(.volume-control-container,#analog-clock-widge
 .subquest-grade-reward-note{flex:0 0 100%;line-height:1.4}.quest-board-progress-summary:has(.subquest-grade-reward-note){flex-wrap:wrap}
 
 .admin-gift-picker>.modal-panel{max-width:min(1000px,95vw)!important}.admin-gift-picker .avatar-selector-swatch{width:72px;height:52px;background-size:cover;background-position:center}.admin-gift-picker .stage-reward-icon{pointer-events:none}.admin-gift-picker-option>span:last-child{pointer-events:none}
+
+/* Save selection: the entire compact card is the action. */
+.save-slot-card.save-slot-selectable{cursor:pointer;justify-content:flex-start;gap:6px;padding:8px;min-height:0}
+.save-slot-selectable:focus-visible{outline:3px solid #ffe387;outline-offset:3px}
+.save-slot-selectable .save-slot-avatar-frame{height:clamp(130px,22vh,200px);min-height:0}

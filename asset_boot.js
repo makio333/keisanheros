@@ -86,7 +86,6 @@ export async function startAssetBoot({screen,resolve,assetMap,criticalPaths=[],o
   }
   // Native CSS images and later scenes must be able to read the stored files on this first visit.
   if(window.GameMedia)await ensureMediaWorker(urls);
-  if(el('boot-scenery') && assetMap['画像/home_town_v2.png'])el('boot-scenery').src=resolve('画像/home_town_v2.png');
   progress(100);text('boot-status-text','準備完了');state.phase='ready';screen.dataset.phase='ready';onReady();window.dispatchEvent(new Event('legend-heroes-ready'));
  }
  function showError(error){
