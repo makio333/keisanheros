@@ -7416,6 +7416,17 @@ function openDailyChallenge(id){
  const japanese=id.startsWith('japanese-');
  if(id.endsWith('-subquest')){questSubject=japanese?'reading':'math';showQuestBoard();return;}
  const print=id.endsWith('-print'),challenge=id.endsWith('-challenge');
+ if(!print&&!challenge){
+  const matches=areaId=>!!AREA_STAGES[areaId]?.bossKey?.startsWith('kanji')===japanese&&isAreaUnlocked(areaId);
+  const pickup=getActivePickup();
+  if(pickup&&matches(pickup.areaId)&&AREA_STAGES[pickup.areaId].stages[pickup.stageIndex]){enterAreaStage(pickup.areaId,pickup.stageIndex);return;}
+  const played=Object.entries(G.studyStats?.stageHistory||{}).map(([key,history])=>{const m=key.match(/^(area\d+)_(\d+)$/);return m?{areaId:m[1],stageIndex:Number(m[2]),time:Math.max(0,...(history.history||[]).map(h=>Number(h.t)||0))}:null;}).filter(row=>row&&matches(row.areaId)&&AREA_STAGES[row.areaId].stages[row.stageIndex]).sort((a,b)=>b.time-a.time);
+  const areaId=played[0]?.areaId||([japanese?'area5':'area1',...Object.keys(AREA_STAGES)].find(matches));
+  if(!areaId)return;
+  const counts=getStageClearCounts(areaId),index=counts.findIndex(n=>n<STAGE_STARS_TO_UNLOCK_NEXT);
+  enterAreaStage(areaId,index<0?0:index);return;
+ }
+
  const {panel,close}=createRewardDialog(`${japanese?'国語':'算数'}の${print?'ステージを印刷':challenge?'チャレンジ問題':'ステージに挑戦'}`);
  const note=document.createElement('p');note.textContent=challenge?'プリントに挑戦し、答え合わせで80％以上正解すると達成です。':'エリアとステージを選んで進もう。';panel.append(note);
  const areaSelect=document.createElement('select'),stageSelect=document.createElement('select');areaSelect.setAttribute('aria-label','エリア');stageSelect.setAttribute('aria-label','ステージ');
