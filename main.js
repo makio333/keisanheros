@@ -29,6 +29,6 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).get('art-preview
 } else {
   await import('./local_game_client.js');
 }
-if(import.meta.env.VITE_TEST_CHRISTMAS_PREVIEW==='1'){const {installTestAnnouncements}=await import('./test_announcements_client.js');installTestAnnouncements();}
+if(import.meta.env.VITE_TEST_CHRISTMAS_PREVIEW==='1'){const {installTestAnnouncements}=await import('./test_announcements_client.js');installTestAnnouncements();const {installTestRaid}=await import('./test_raid_client.js');installTestRaid();}
 try{const {archiveLocalSaveHistory}=await import('./local_backup_archive.js');await archiveLocalSaveHistory();}catch(error){console.warn('Local history archive unavailable',error);}
 await import('./game.js');

@@ -16751,7 +16751,7 @@ async function syncRaidState() {
 
 function renderRaidSyncStatus() {
   const label = $('raid-sync-status');
-  if (label) label.textContent = raidSyncStatus === 'ready' ? 'クラウド共有' : raidSyncStatus === 'denied' ? '共有へのアクセスが許可されていません。記録はこの端末に保存済み' : raidSyncStatus === 'offline' ? '通信できません。記録は保存済み・再接続時に同期' : 'ランキングを同期中…';
+  if (label) label.textContent = raidSyncStatus === 'ready' ? (window.RaidBossAPI?.mode==='browser-test'?'テスト用レイド：記録・ランキングはこのブラウザ内のみ':'クラウド共有') : raidSyncStatus === 'denied' ? '共有へのアクセスが許可されていません。記録はこの端末に保存済み' : raidSyncStatus === 'offline' ? '通信できません。記録は保存済み・再接続時に同期' : 'ランキングを同期中…';
 }
 
 window.addEventListener('online', () => { if (raidFeatureOpen() && G) syncRaidState(); });
