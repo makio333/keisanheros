@@ -2,7 +2,7 @@ import {applyGiftPayload} from './economy.js';
 export const DAILY_CHALLENGES=Object.freeze([
  ['math-stage','算数のステージをクリア'],['japanese-stage','国語のステージをクリア'],
  ['math-challenge','算数のチャレンジ問題をクリア'],['japanese-challenge','国語のチャレンジ問題をクリア'],
- ['math-print','算数のステージを印刷する'],['japanese-print','国語のステージを印刷する'],
+ ['math-print','算数のチャレンジ問題を印刷する'],['japanese-print','国語のチャレンジ問題を印刷する'],
  ['math-subquest','算数のサブクエストをクリア'],['japanese-subquest','国語のサブクエストをクリア']
 ].map(([id,name])=>({id,name,gold:500})));
 let serverOffset=0;

@@ -2028,8 +2028,8 @@ const ENEMIES_PER_STAGE = 5;
 /* いま えらんでいる エリア／ステージの じょうたい。
    { stageMode:true, areaId, stageIndex(0〜6・ボスはnull), isBoss, bossPhase(ボスのみ),
      stageKillCount(いまの ステージで たおした 数、0〜ENEMIES_PER_STAGE-1) } */
-function enterAreaStage(areaId, stageIndex){
-  explore = { stageMode:true, areaId, stageIndex, isBoss:false, stageKillCount:0, sessionDrops: [], sessionGold: 0, stageDrops: [], stageGold: 0, stageExp: 0, usedProblems: new Set() };
+function enterAreaStage(areaId, stageIndex, dailyChallenge = null){
+  explore = { stageMode:true, areaId, stageIndex, dailyChallenge, isBoss:false, stageKillCount:0, sessionDrops: [], sessionGold: 0, stageDrops: [], stageGold: 0, stageExp: 0, usedProblems: new Set() };
   startBattle(false);
 }
 function enterAreaBoss(areaId){
@@ -6448,7 +6448,8 @@ function winBattle(){
       const stageIndex = explore.stageIndex;
       showKillProgressPopup(fromCount, toCount, ENEMIES_PER_STAGE, () => {
         if (stageCleared){
-          const { milestoneRewards } = recordStageClear(areaId, stageIndex);
+          const { milestoneRewards } = recordStageClear(areaId, stageIndex, true, explore.dailyChallenge);
+          delete explore.dailyChallenge;
           const stageRewards = { drops: explore.stageDrops || [], gold: explore.stageGold || 0, exp: explore.stageExp || 0, milestoneRewards };
           
           // ステージクリア時にHP/MPを全回復させる
@@ -7416,7 +7417,7 @@ function openDailyChallenge(id){
  const japanese=id.startsWith('japanese-');
  if(id.endsWith('-subquest')){questSubject=japanese?'reading':'math';showQuestBoard();return;}
  const print=id.endsWith('-print'),challenge=id.endsWith('-challenge');
- if(challenge){const source=challengePrintSource(G,japanese?'japanese':'math');printAreaStage(source.areaId,source.stageIndex,true,null,null,true);return;}
+ if(challenge||print){const source=challengePrintSource(G,japanese?'japanese':'math');if(print)printAreaStage(source.areaId,source.stageIndex,true,null,null,true);else enterAreaStage(source.areaId,source.stageIndex,id);return;}
 
  if(!print&&!challenge){
   if(japanese){showStageSelect();setSubjectTab('kanji');return;}
@@ -7430,13 +7431,7 @@ function openDailyChallenge(id){
   enterAreaStage(areaId,index<0?0:index);return;
  }
 
- const {panel,close}=createRewardDialog(`${japanese?'国語':'算数'}の${print?'ステージを印刷':challenge?'チャレンジ問題':'ステージに挑戦'}`);
- const note=document.createElement('p');note.textContent=challenge?'プリントに挑戦し、答え合わせで80％以上正解すると達成です。':'エリアとステージを選んで進もう。';panel.append(note);
- const areaSelect=document.createElement('select'),stageSelect=document.createElement('select');areaSelect.setAttribute('aria-label','エリア');stageSelect.setAttribute('aria-label','ステージ');
- for(const [areaId,area] of Object.entries(AREA_STAGES)){if(!!area.bossKey?.startsWith('kanji')!==japanese||!isAreaUnlocked(areaId))continue;areaSelect.append(new Option(area.name,areaId));}
- const update=()=>{stageSelect.replaceChildren();AREA_STAGES[areaSelect.value]?.stages.forEach((stage,i)=>stageSelect.append(new Option(`${i+1}：${stage.name}`,i)));};areaSelect.onchange=update;update();
- const go=document.createElement('button');go.className='btn btn-primary';go.type='button';go.textContent=print||challenge?'プリントを作る':'このステージに挑戦する';go.disabled=!stageSelect.options.length;go.onclick=()=>{const area=areaSelect.value,index=Number(stageSelect.value);close.click();if(print||challenge)printAreaStage(area,index,challenge);else enterAreaStage(area,index);};
- panel.append(areaSelect,stageSelect,go);
+
 }
 
 function loginBonusUI(){
@@ -7777,7 +7772,8 @@ function pushMilestoneRewardCards(rewards, entry){
 
 /* ステージを1回クリアしたときの 共通処理（戦闘クリアでも プリントでも これを通す）。
    ★（上限3）と ほんとうの累計クリア回数を 数え、初回／3回クリアの報酬を わたす */
-function recordStageClear(areaId, stageIndex, dailyStage = true){
+function recordStageClear(areaId, stageIndex, dailyStage = true, dailyChallenge = null){
+  if(dailyChallenge)recordChallengeClear(G,dailyChallenge);
   if(dailyStage)recordChallengeClear(G, (AREA_STAGES[areaId]?.bossKey?.startsWith('kanji')?'japanese':'math')+'-stage');
   if(typeof finishStageAttempt==='function'){finishStageAttempt(G,'cleared','clear',Date.now(),{areaId,stageIndex});clearStageAttemptFlag(G,areaId,stageIndex);}
   const counts = getStageClearCounts(areaId);
@@ -16012,6 +16008,8 @@ window.submitAdminGrade = submitAdminGrade;
 
 
 function showKanaChoicePrintVariants({generateProblem,printName,targetId,meta,onPrinted,autoSelect=false}){
+ const openStagePrint=(html,bg=null,landscape=false)=>openDailyStagePrint(meta.areaId,html,bg,landscape,!!meta.challengePrint);
+
  const variants=['Aセット','Bセット','Cセット'].map(label=>{
   const problems=[];
   const seen=new Set();
@@ -16025,12 +16023,14 @@ function showKanaChoicePrintVariants({generateProblem,printName,targetId,meta,on
   return {problems,opLabel:label,choiceLabel:label,previewHtml:problems.map((p,i)=>`<div class="print-choice-row">${i+1}. ${p.printChoices.map(escapeHtml).join(' ／ ')}</div>`).join(''),onSelect(){
    const code=Array.from({length:6},()=>Math.floor(Math.random()*10)).join('');
    const printId=addPrintCode(targetId,code,{...meta,kanjiMode:'choice',problems,name:printName});save();
-   openDailyStagePrint(meta.areaId,kanaChoicePrintHtml({problems,title:printName,playerName:G?.playerName||'',printId,rewardsHtml:printRewardStripHtml({challengePrint:meta.challengePrint,questionCount:problems.length})}),null,true);onPrinted?.();
+   openStagePrint(kanaChoicePrintHtml({problems,title:printName,playerName:G?.playerName||'',printId,rewardsHtml:printRewardStripHtml({challengePrint:meta.challengePrint,questionCount:problems.length})}),null,true);onPrinted?.();
   }};
  });if(autoSelect)variants[0]?.onSelect();else showPrintChoiceModal(variants);
 }
 
 function showKanjiPrintVariants({generateProblem, printName, sheetTitle = printName, targetId, meta, onPrinted, autoSelect=false}) {
+ const openStagePrint=(html,bg=null,landscape=false)=>openDailyStagePrint(meta.areaId,html,bg,landscape,!!meta.challengePrint);
+
   const variants = [
     {label:'A 漢字の読み', type:'yomi'},
     {label:'B 書き取り', type:'kaki'},
@@ -16049,7 +16049,7 @@ function showKanjiPrintVariants({generateProblem, printName, sheetTitle = printN
       const area = AREA_STAGES[meta.areaId];
       const areaNumber = area?.displayNum || meta.areaId.replace('area','');
       const stageLabel = `エリア${areaNumber}${Number.isInteger(meta.stageIndex) ? '-'+(meta.stageIndex+1) : ' ボス戦'}`;
-      openDailyStagePrint(meta.areaId,kanjiPrintSheetHtml(problems, variant.type, sheetTitle, G?.playerName || '', printId,
+      openStagePrint(kanjiPrintSheetHtml(problems, variant.type, sheetTitle, G?.playerName || '', printId,
         {stageLabel, challengePrint:meta.challengePrint, blueprint:meta.type === 'blueprint'}), null, true);
       onPrinted?.();
     }};
@@ -16191,16 +16191,18 @@ function playedStageChallengeSource(game = G, accept = () => true) {
   return played[0]?{...played[0],reason:'hardest-played'}:null;
 }
 
-function openDailyStagePrint(areaId, html, bg, landscape){
+function openDailyStagePrint(areaId, html, bg, landscape, challengePrint = false){
  const game=G,key=currentSlotKey;
  const pw=openPrintWindow(html,bg,landscape,{returnWindow:true});
  if(!pw)return false;
  let confirmed=false;
- pw.addEventListener('afterprint',()=>{if(confirmed||G!==game||currentSlotKey!==key)return;if(!pw.confirm('印刷できましたか？ 印刷できた場合は「OK」を押すと、今日の印刷課題を達成します。'))return;confirmed=true;recordChallengeClear(game,(AREA_STAGES[areaId]?.bossKey?.startsWith('kanji')?'japanese':'math')+'-print');save(true);});
+ pw.addEventListener('afterprint',()=>{if(!challengePrint||confirmed||G!==game||currentSlotKey!==key)return;if(!pw.confirm('印刷できましたか？ 印刷できた場合は「OK」を押すと、今日の印刷課題を達成します。'))return;confirmed=true;recordChallengeClear(game,(AREA_STAGES[areaId]?.bossKey?.startsWith('kanji')?'japanese':'math')+'-print');save(true);});
  return true;
 }
 
 function printAreaStage(areaId, idx, challengePrint = false, blueprint = null, onPrinted = null, autoSelect = false) {
+ const openStagePrint=(html,bg=null,landscape=false)=>openDailyStagePrint(areaId,html,bg,landscape,challengePrint);
+
   const area = AREA_STAGES[areaId];
   const stage = area.stages[idx];
   const count = REVIEW_SETTINGS.regularPrintQuestions;
@@ -16208,7 +16210,7 @@ function printAreaStage(areaId, idx, challengePrint = false, blueprint = null, o
   const printName = `${blueprint ? '古代からの挑戦状 · ' : ''}${challengePrint ? 'チャレンジプリント（経験値・G・消耗品3倍／80%以上で装備10連券） ' : ''}${area.name} ${stage.name}`;
 
   const sampleP = stage.generateProblem();
-  const isKanji = isKanjiProblem(sampleP) || ['area5','area6','area7','area8','area9','area10','area14','area15'].includes(areaId);
+  const isKanji = /^(kanji|kana)/.test(String(sampleP.tier||'')) || ['area5','area6','area7','area8','area9','area10','area14','area15'].includes(areaId);
 
   if (String(sampleP.tier||'').startsWith('kana')&&createKanaChoiceProblem(sampleP)){
     showKanaChoicePrintVariants({generateProblem:()=>stage.generateProblem(),printName,targetId:blueprint?blueprint.bp.id:areaId+'_'+idx,
@@ -16266,7 +16268,7 @@ function printAreaStage(areaId, idx, challengePrint = false, blueprint = null, o
           const printId = addPrintCode(blueprint ? blueprint.bp.id : areaId + '_' + idx, pCode, { type: blueprint ? 'blueprint' : 'stage', ...(blueprint ? {uid:blueprint.uid} : {}), challengePrint, problems, name: printName, areaId, stageIndex: idx, kanjiMode: variant.type });
           save();
           const instrText = variant.type === 'yomi' ? 'つぎのことばをひらがなで　かきましょう' : variant.type === 'kaki' ? 'つぎのことばを　かんじで　かきましょう' : 'つぎのことば　よみ・かきに　こたえましょう';
-          openDailyStagePrint(areaId,`<style>
+          openStagePrint(`<style>
               body { margin: 0; padding: 0; font-family: "Yu Mincho","MS Mincho","Hiragino Mincho ProN",serif; display: flex; flex-direction: row; width: 297mm; height: 210mm; box-sizing: border-box; }
               .p-sidebar { width: 55px; border-left: 2px solid #333; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 8px 4px; writing-mode: vertical-rl; }
               .p-sidebar-title { font-size: 14px; font-weight: bold; }
@@ -16332,7 +16334,7 @@ function printAreaStage(areaId, idx, challengePrint = false, blueprint = null, o
           const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
           const printId = addPrintCode(blueprint ? blueprint.bp.id : areaId + '_' + idx, pCode, { type: blueprint ? 'blueprint' : 'stage', ...(blueprint ? {uid:blueprint.uid} : {}), challengePrint, problems, name: printName, areaId, stageIndex: idx });
           save();
-          openDailyStagePrint(areaId,`
+          openStagePrint(`
             <div class="p-title">【エリア${numPrefix}-${idx+1}】 ${area.name} ${stage.name} ${label}</div>
             ${printRewardStripHtml({challengePrint,blueprint:!!blueprint,questionCount:problems.length})}
             <div class="p-name-box">なまえ：<span class="p-name-line" style="position:relative;"><span style="position:absolute; bottom:2px; left:4px; font-size:18px;">${(typeof G !== "undefined" && G) ? (G.playerName || "") : ""}</span></span></div>
@@ -16356,7 +16358,7 @@ function printAreaBoss(areaId) {
   const printName = `${area.name} ボス戦`;
 
   const sampleP = area.bossPhase1Problem();
-  const isKanji = isKanjiProblem(sampleP) || ['area5','area6','area7','area8','area9','area10','area14','area15'].includes(areaId);
+  const isKanji = /^(kanji|kana)/.test(String(sampleP.tier||'')) || ['area5','area6','area7','area8','area9','area10','area14','area15'].includes(areaId);
 
   if(String(sampleP.tier||'').startsWith('kana')&&createKanaChoiceProblem(sampleP)){
     const pool=Array.from({length:count},(_,i)=>i<count/2?area.bossPhase1Problem():area.bossPhase2Problem());
