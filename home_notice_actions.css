@@ -1,0 +1,7 @@
+#screen-home .home-side-action{position:absolute;left:1.5%;top:25%;z-index:6;width:112px;max-width:18vw;min-width:68px;margin:0;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;border:2px solid #ffe39a;border-radius:16px;background:linear-gradient(#3a3155,#211d36);color:#fff0c3;box-shadow:0 4px 0 #111a;cursor:pointer;font:800 13px/1.2 sans-serif;text-align:center;transform:none;}
+#screen-home .home-side-action svg{display:block;width:54px;height:54px;max-width:90%;}
+#screen-home .home-side-action:focus-visible{outline:3px solid white;outline-offset:4px;}
+#screen-home #btn-home-announcements{top:calc(25% + 118px);width:150px;max-width:20vw;min-width:80px;padding:0;border:0;border-radius:10px;background:none;box-shadow:none;}
+#screen-home #btn-home-announcements img{display:block;width:100%;height:auto;max-height:110px;object-fit:contain;border-radius:8px;filter:drop-shadow(0 3px 3px #0009);}
+#screen-home .home-side-action[hidden]{display:none;}
+@media(max-width:600px){#screen-home .home-side-action{top:17%;left:8px;font-size:10px;width:76px;border-radius:12px;padding:5px 2px;}#screen-home .home-side-action svg{width:40px;height:40px;}#screen-home #btn-home-announcements{top:calc(17% + 90px);max-width:22vw;min-width:70px;}}
