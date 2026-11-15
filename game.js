@@ -7416,7 +7416,10 @@ function openDailyChallenge(id){
  const japanese=id.startsWith('japanese-');
  if(id.endsWith('-subquest')){questSubject=japanese?'reading':'math';showQuestBoard();return;}
  const print=id.endsWith('-print'),challenge=id.endsWith('-challenge');
+ if(challenge){const source=challengePrintSource(G,japanese?'japanese':'math');printAreaStage(source.areaId,source.stageIndex,true,null,null,true);return;}
+
  if(!print&&!challenge){
+  if(japanese){showStageSelect();setSubjectTab('kanji');return;}
   const matches=areaId=>!!AREA_STAGES[areaId]?.bossKey?.startsWith('kanji')===japanese&&isAreaUnlocked(areaId);
   const pickup=getActivePickup();
   if(pickup&&matches(pickup.areaId)&&AREA_STAGES[pickup.areaId].stages[pickup.stageIndex]){enterAreaStage(pickup.areaId,pickup.stageIndex);return;}
@@ -13399,8 +13402,8 @@ function leastClearedStage(areaId, allowed, game = G){
   return idxs.reduce((best, i) => ((counts[i] || 0) < (counts[best] || 0) ? i : best), idxs[0]);
 }
 
-function choosePickupStage(game = G){
-  const rec = raidReviewCandidates(game)[0];
+function choosePickupStage(game = G, accept = () => true){
+  const rec = raidReviewCandidates(game).find(rec=>accept(rec.areaId));
   if (!rec) return null;
   return { areaId: rec.areaId, stageIndex: rec.stageIndex, learningKey: rec.key, reason: `れいどで まちがえた「${rec.stat.label}」の ふくしゅう！` };
 }
@@ -16008,7 +16011,7 @@ window.submitAdminGrade = submitAdminGrade;
 
 
 
-function showKanaChoicePrintVariants({generateProblem,printName,targetId,meta,onPrinted}){
+function showKanaChoicePrintVariants({generateProblem,printName,targetId,meta,onPrinted,autoSelect=false}){
  const variants=['Aセット','Bセット','Cセット'].map(label=>{
   const problems=[];
   const seen=new Set();
@@ -16024,10 +16027,10 @@ function showKanaChoicePrintVariants({generateProblem,printName,targetId,meta,on
    const printId=addPrintCode(targetId,code,{...meta,kanjiMode:'choice',problems,name:printName});save();
    openDailyStagePrint(meta.areaId,kanaChoicePrintHtml({problems,title:printName,playerName:G?.playerName||'',printId,rewardsHtml:printRewardStripHtml({challengePrint:meta.challengePrint,questionCount:problems.length})}),null,true);onPrinted?.();
   }};
- });showPrintChoiceModal(variants);
+ });if(autoSelect)variants[0]?.onSelect();else showPrintChoiceModal(variants);
 }
 
-function showKanjiPrintVariants({generateProblem, printName, sheetTitle = printName, targetId, meta, onPrinted}) {
+function showKanjiPrintVariants({generateProblem, printName, sheetTitle = printName, targetId, meta, onPrinted, autoSelect=false}) {
   const variants = [
     {label:'A 漢字の読み', type:'yomi'},
     {label:'B 書き取り', type:'kaki'},
@@ -16051,7 +16054,7 @@ function showKanjiPrintVariants({generateProblem, printName, sheetTitle = printN
       onPrinted?.();
     }};
   });
-  showPrintChoiceModal(variants);
+  if(autoSelect)variants[0]?.onSelect();else showPrintChoiceModal(variants);
 }
 
 function printRewardStripHtml({challengePrint = false, blueprint = false, questionCount = 10} = {}) {
@@ -16127,8 +16130,9 @@ function kanjiPrintSheetHtml(problems, variant, title, playerName, printId, opti
   return renderKanjiStagePrint(problems,variant,options.stageLabel?`【${options.stageLabel}】${title}`:title,playerName,printId,{...options,grade});
 }
 
-function challengePrintSource(game = G) {
-  return recentWeakStudyStageSource(Date.now(),game) || choosePickupStage(game) || playedStageChallengeSource(game) || {areaId:'area1',stageIndex:0,reason:'first-stage'};
+function challengePrintSource(game = G, subject = null) {
+  const accept=areaId=>!subject || !!AREA_STAGES[areaId]?.bossKey?.startsWith('kanji')===(subject==='japanese');
+  return recentWeakStudyStageSource(Date.now(),game,accept) || choosePickupStage(game,accept) || playedStageChallengeSource(game,accept) || {areaId:subject==='japanese'?'area5':'area1',stageIndex:0,reason:'first-stage'};
 }
 
 function challengePrintDecisionForGame(game) {
@@ -16146,11 +16150,11 @@ function challengePrintDecisionForGame(game) {
 }
 
 /* 直近90日・直近10回答を見て、正答率40%以上100%未満の挑戦済みステージを候補にする。 */
-function recentWeakStudyStageSource(now = Date.now(), game = G) {
+function recentWeakStudyStageSource(now = Date.now(), game = G, accept = () => true) {
   const cutoff=now-90*24*60*60*1000, candidates=[];
   for(const [key,stat] of Object.entries(game?.studyStats?.stageHistory || {})) {
     const match=key.match(/^(area\d+)_(\d+)$/);
-    if(!match || !AREA_STAGES[match[1]]?.stages[Number(match[2])])continue;
+    if(!match || !accept(match[1]) || !AREA_STAGES[match[1]]?.stages[Number(match[2])])continue;
     const outcomes=(Array.isArray(stat.outcomes)?stat.outcomes:[]).filter(entry=>Number(entry.t)>=cutoff && Number(entry.t)<=now);
     const latest=outcomes.at(-1);
     if(latest && ['abandoned','failed'].includes(latest.outcome)){
@@ -16175,9 +16179,10 @@ function recentWeakStudyStageSource(now = Date.now(), game = G) {
 }
 
 /* 苦手が見つからない場合は、実際に回答またはクリアしたステージから最難関を選ぶ。 */
-function playedStageChallengeSource(game = G) {
+function playedStageChallengeSource(game = G, accept = () => true) {
   const played=[];
   for(const [areaId,area] of Object.entries(AREA_STAGES))for(let stageIndex=0;stageIndex<area.stages.length;stageIndex++) {
+    if(!accept(areaId))continue;
     const history=game?.studyStats?.stageHistory?.[`${areaId}_${stageIndex}`];
     const attempts=Number(history?.total)||history?.history?.length||0;
     if(attempts>0||stageTotalClearCount(areaId,stageIndex,game)>0)played.push({areaId,stageIndex,lastAttempt:Math.max(0,...(history?.history||[]).map(entry=>Number(entry.t)||0))});
@@ -16195,7 +16200,7 @@ function openDailyStagePrint(areaId, html, bg, landscape){
  return true;
 }
 
-function printAreaStage(areaId, idx, challengePrint = false, blueprint = null, onPrinted = null) {
+function printAreaStage(areaId, idx, challengePrint = false, blueprint = null, onPrinted = null, autoSelect = false) {
   const area = AREA_STAGES[areaId];
   const stage = area.stages[idx];
   const count = REVIEW_SETTINGS.regularPrintQuestions;
@@ -16207,13 +16212,13 @@ function printAreaStage(areaId, idx, challengePrint = false, blueprint = null, o
 
   if (String(sampleP.tier||'').startsWith('kana')&&createKanaChoiceProblem(sampleP)){
     showKanaChoicePrintVariants({generateProblem:()=>stage.generateProblem(),printName,targetId:blueprint?blueprint.bp.id:areaId+'_'+idx,
-      meta:{type:blueprint?'blueprint':'stage',...(blueprint?{uid:blueprint.uid}:{}),challengePrint,areaId,stageIndex:idx},onPrinted});return;
+      meta:{type:blueprint?'blueprint':'stage',...(blueprint?{uid:blueprint.uid}:{}),challengePrint,areaId,stageIndex:idx},onPrinted,autoSelect});return;
   }
 
   if (isKanji && !String(sampleP.tier || '').startsWith('kana')) {
     showKanjiPrintVariants({generateProblem:() => stage.generateProblem(), printName, sheetTitle:`${area.name} ${stage.name}`,
       targetId:blueprint ? blueprint.bp.id : areaId+'_'+idx,
-      meta:{type:blueprint ? 'blueprint' : 'stage', ...(blueprint ? {uid:blueprint.uid} : {}), challengePrint, areaId, stageIndex:idx}, onPrinted});
+      meta:{type:blueprint ? 'blueprint' : 'stage', ...(blueprint ? {uid:blueprint.uid} : {}), challengePrint, areaId, stageIndex:idx}, onPrinted,autoSelect});
     return;
   }
 
@@ -16300,7 +16305,7 @@ function printAreaStage(areaId, idx, challengePrint = false, blueprint = null, o
         }
       };
     });
-    showPrintChoiceModal(variants);
+    if(autoSelect)variants[0]?.onSelect();else showPrintChoiceModal(variants);
   } else {
     // 算数の場合
     const variants = ['Aセット', 'Bセット', 'Cセット'].map((label, vi) => {
@@ -16340,7 +16345,7 @@ function printAreaStage(areaId, idx, challengePrint = false, blueprint = null, o
         }
       };
     });
-    showPrintChoiceModal(variants);
+    if(autoSelect)variants[0]?.onSelect();else showPrintChoiceModal(variants);
   }
 }
 
@@ -17857,7 +17862,7 @@ if (import.meta.env && import.meta.env.DEV) {
   window.__dbg = {
     get G(){ return G; }, get explore(){ return explore; }, set explore(v){ explore = v; },
     get rewardSettings(){ return rewardSettings; },
-    recordStageClear, loginBonusUI, openDailyStagePrint, grantBossClearState, generateStageEnemy, rollBattleDrops, grantPrintRewards,
+    recordStageClear, challengePrintSource, loginBonusUI, openDailyStagePrint, grantBossClearState, generateStageEnemy, rollBattleDrops, grantPrintRewards,
     stageTotalClearCount, stageRepeatDropMult, AREA_STAGES, stageAreaCleared, showBossClearOverlay, grantQuestExtras, QUEST_MEDAL_MILESTONES, showQuestRewardToast, generateStoryQuest, questRewardFor, questAllowedTiers, QUEST_STEP_ITEMS, getActivePickup, choosePickupStage, openAdventure, showStageClearOverlay, recordStageClear2:recordStageClear, startChallenge, enterAreaStage, enterAreaBoss, applyGiftEntry, giftEntryName, giftEntryOptionsHtml, showAdminGiftNotice,
   };
 }
