@@ -1,3 +1,4 @@
+import {showAnnouncements,showAnnouncementAdmin} from './announcements.js';
 import {rewriteLegacyStory,LEGACY_STORY_VERSION,legacyStoryGrade} from './legacy_story_variants.js';
 import {renderSubquestSummary} from './subquest_results.js';
 import {EQUIPMENT_TEN_PULL_TICKET_ICON} from './equipment_ticket_art.js';
@@ -7395,7 +7396,32 @@ function renderHomeTickets(){
   bindStageRewardTooltips(el);
 }
 
+function announcementUI(){
+ return {remote:()=>{if(!window.AnnouncementAPI)throw Error('announcement_unavailable');return window.AnnouncementAPI;},game:()=>G,asset:av,rewardOptions:giftEntryOptionsHtml,rewardIcon:giftEntryIconHtml,rewardName:giftEntryName,
+ artCatalog:()=>[...HERO_AVATARS,...AVATAR_BACKGROUNDS].filter(row=>row.image).map(row=>({name:row.name,image:row.image})),
+ markRead:id=>{if(!G)return;G.readAnnouncementIds=[...new Set([...(G.readAnnouncementIds||[]),id])];save(true);},
+ async claim(notice){
+  const game=G,key=currentSlotKey;if(!game||!key||!window.CloudSave?.saveSlot)throw Error('save_unavailable');
+  const fresh=(await window.AnnouncementAPI.list()).find(row=>row.id===notice.id);if(!fresh||G!==game||currentSlotKey!==key)throw Error('announcement_unavailable');
+  const next=JSON.parse(JSON.stringify(game));const gift={id:'announcement:'+fresh.id,gold:fresh.gold,items:fresh.items};
+  if(!applyGiftPayload(next,gift))return;next.updatedAt=Date.now();
+  await window.CloudSave.saveSlot(key,next,true);await window.CloudSave.flush?.();
+  if(G===game&&currentSlotKey===key){Object.assign(game,next);storageSet(key,JSON.stringify(game));updateHud();}
+ }};
+}
+function ensureAnnouncementButtons(){
+ const home=$('screen-home');if(home&&!$('btn-home-announcements')){const button=document.createElement('button');button.id='btn-home-announcements';button.className='btn';button.type='button';button.innerHTML=`<img src="${av('assets/items/math-word-icons/bell.png')}" alt="" style="width:28px;height:28px;object-fit:contain"> お知らせ`;button.style.cssText='position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:8px';button.onclick=()=>showAnnouncements(announcementUI());home.append(button);}
+ const nav=document.querySelector('#screen-admin .admin-nav');if(nav&&!$('btn-admin-announcements')){const button=document.createElement('button');button.id='btn-admin-announcements';button.className='btn';button.type='button';button.textContent='全員へのお知らせ';button.onclick=()=>showAnnouncementAdmin(announcementUI());nav.append(button);}
+}
+let announcementCheckKey='';
+async function checkAnnouncementNews(){
+ if(!window.AnnouncementAPI||!G||!currentSlotKey||announcementCheckKey===currentSlotKey)return;
+ const game=G,key=currentSlotKey;announcementCheckKey=key;
+ try{const notices=await window.AnnouncementAPI.list();if(G!==game||currentSlotKey!==key)return;const unread=notices.filter(row=>!game.readAnnouncementIds?.includes(row.id)).length;const button=$('btn-home-announcements');if(button&&unread){const badge=document.createElement('b');badge.textContent=String(unread);button.append(badge);if(!document.querySelector('.admin-gift-notice-overlay'))showAnnouncements(announcementUI());}}catch{announcementCheckKey='';}
+}
+
 function showHome(){
+  ensureAnnouncementButtons();setTimeout(checkAnnouncementNews,800);
   if(finishStageAttempt(G,'abandoned','return-home'))save(true);
   ensureEventEquipmentAbilities(G);
   setTimeout(()=>{checkAdminGifts(true);checkEventRaidFinalReward();},0);
@@ -14263,6 +14289,7 @@ function setAdminTab(tabKey){
 }
 
 function showAdmin() {
+  ensureAnnouncementButtons();
   showScreen('screen-admin');
   setAdminTab(currentAdminTab || 'report');
 }

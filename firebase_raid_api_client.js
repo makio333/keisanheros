@@ -27,5 +27,6 @@ export function installFirebaseRaidAPI({getIdToken,target=window,fetchImpl=fetch
       schedule();poll();return()=>{stopped=true;if(timer!==null)clearInterval(timer);target.document?.removeEventListener('visibilitychange',onVisibility);};
     },
   };
+  target.AnnouncementAPI={permissions:()=>call('noticePermissions'),list:(admin=false)=>call('noticeList',[admin]),publish:value=>call('noticePublish',[value]),archive:id=>call('noticeArchive',[id])};
   target.RaidBossAPI=raid;return raid;
 }

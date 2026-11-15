@@ -1,3 +1,4 @@
+import {handleAnnouncements} from './game-announcements.mjs';
 import {createServer} from 'node:http';
 import {createHash} from 'node:crypto';
 import {applicationDefault,initializeApp} from 'firebase-admin/app';
@@ -18,7 +19,8 @@ const db=getFirestore(raidApp),auth=getAuth(authApp);
 const isUidBlocked=createInternalRaidDeletionGuard({db:getFirestore(authApp),projectId:authProjectId});
 const authenticateRaidToken=createInternalRaidTokenAuthenticator({auth,projectId:authProjectId});
 const assertRaidAccountAllowed=createInternalRaidAccountGuard({isUidBlocked});
-const methods=new Set(['syncPlayer','settleReward','getRankings','getMonthlyRankings','getHistory','getGlobalBoss','receiveCheers','sendCheer']);
+const noticeMethods=new Set(['noticePermissions','noticeList','noticePublish','noticeArchive']);
+const methods=new Set([...noticeMethods,'syncPlayer','settleReward','getRankings','getMonthlyRankings','getHistory','getGlobalBoss','receiveCheers','sendCheer']);
 const fail=code=>{throw Error(code);};
 const hash=value=>'r_'+createHash('sha256').update(value).digest('hex');
 const safeState=value=>{
@@ -121,6 +123,7 @@ async function handle(req,res){
     let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>1_500_000)fail('body_too_large');}
     let body;try{body=JSON.parse(raw);}catch{fail('invalid_json');}
     if(!body||typeof body!=='object'||Array.isArray(body)||!methods.has(body.method)||!Array.isArray(body.args)||body.args.length>3)fail('invalid_game_request');
+    if(noticeMethods.has(body.method)){const result=await handleAnnouncements({db,claims,method:body.method,args:body.args});reply(res,200,{result});return;}
     const args=[...body.args],saveMap=new Map();let ownKey='',ownPublicKey='';
     if(['syncPlayer','settleReward','receiveCheers'].includes(body.method)){
       const owned=resolveOwnedSaveIdentity(claims.uid,args[0]);args[0]=owned.publicKey;saveMap.set(owned.publicKey,{...owned,uid:claims.uid,revision:0});ownKey=owned.key;ownPublicKey=owned.publicKey;
