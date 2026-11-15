@@ -1,7 +1,7 @@
 import {showLoginBonus} from './login_bonus_ui.js';
 import {claimChallengeBonus,recordChallengeClear,syncChallengeClock} from './login_bonus.js';
 import './home_notice_actions.css';
-import {showAnnouncements,showAnnouncement,showAnnouncementAdmin} from './announcements.js';
+import {showAnnouncements,showAnnouncement,showAnnouncementAdmin,createRewardDialog} from './announcements.js';
 import {rewriteLegacyStory,LEGACY_STORY_VERSION,legacyStoryGrade} from './legacy_story_variants.js';
 import {renderSubquestSummary} from './subquest_results.js';
 import {EQUIPMENT_TEN_PULL_TICKET_ICON} from './equipment_ticket_art.js';
@@ -7412,8 +7412,21 @@ function announcementUI(){
   if(G===game&&currentSlotKey===key){Object.assign(game,next);storageSet(key,JSON.stringify(game));updateHud();}
  }};
 }
+function openDailyChallenge(id){
+ const japanese=id.startsWith('japanese-');
+ if(id.endsWith('-subquest')){questSubject=japanese?'reading':'math';showQuestBoard();return;}
+ const print=id.endsWith('-print'),challenge=id.endsWith('-challenge');
+ const {panel,close}=createRewardDialog(`${japanese?'国語':'算数'}の${print?'ステージを印刷':challenge?'チャレンジ問題':'ステージに挑戦'}`);
+ const note=document.createElement('p');note.textContent=challenge?'プリントに挑戦し、答え合わせで80％以上正解すると達成です。':'エリアとステージを選んで進もう。';panel.append(note);
+ const areaSelect=document.createElement('select'),stageSelect=document.createElement('select');areaSelect.setAttribute('aria-label','エリア');stageSelect.setAttribute('aria-label','ステージ');
+ for(const [areaId,area] of Object.entries(AREA_STAGES)){if(!!area.bossKey?.startsWith('kanji')!==japanese||!isAreaUnlocked(areaId))continue;areaSelect.append(new Option(area.name,areaId));}
+ const update=()=>{stageSelect.replaceChildren();AREA_STAGES[areaSelect.value]?.stages.forEach((stage,i)=>stageSelect.append(new Option(`${i+1}：${stage.name}`,i)));};areaSelect.onchange=update;update();
+ const go=document.createElement('button');go.className='btn btn-primary';go.type='button';go.textContent=print||challenge?'プリントを作る':'このステージに挑戦する';go.disabled=!stageSelect.options.length;go.onclick=()=>{const area=areaSelect.value,index=Number(stageSelect.value);close.click();if(print||challenge)printAreaStage(area,index,challenge);else enterAreaStage(area,index);};
+ panel.append(areaSelect,stageSelect,go);
+}
+
 function loginBonusUI(){
- const api=announcementUI();return {...api,goldIcon:size=>`<span style="font-size:${size}px" aria-label="ゴールド">💰</span>`,day:async()=>{const result=await api.remote().loginDay();syncChallengeClock(result.now);return result.day;},
+ const api=announcementUI();return {...api,navigate:openDailyChallenge,goldIcon:size=>`<span style="font-size:${size}px" aria-label="ゴールド">💰</span>`,day:async()=>{const result=await api.remote().loginDay();syncChallengeClock(result.now);return result.day;},
  async claim(id,expectedDay){const game=G,key=currentSlotKey;if(!game||!key||!window.CloudSave?.saveSlot)throw Error('save_unavailable');const day=(await api.remote().loginDay()).day;if(G!==game||currentSlotKey!==key)throw Error('save_changed');const next=JSON.parse(JSON.stringify(game));if(day!==expectedDay||!claimChallengeBonus(next,id,day))throw Error('bonus_unavailable');next.updatedAt=Date.now();await window.CloudSave.saveSlot(key,next,true);await window.CloudSave.flush?.();if(G===game&&currentSlotKey===key){Object.assign(game,next);storageSet(key,JSON.stringify(game));updateHud();}}
  };
 }
@@ -17833,7 +17846,7 @@ if (import.meta.env && import.meta.env.DEV) {
   window.__dbg = {
     get G(){ return G; }, get explore(){ return explore; }, set explore(v){ explore = v; },
     get rewardSettings(){ return rewardSettings; },
-    recordStageClear, openDailyStagePrint, grantBossClearState, generateStageEnemy, rollBattleDrops, grantPrintRewards,
+    recordStageClear, loginBonusUI, openDailyStagePrint, grantBossClearState, generateStageEnemy, rollBattleDrops, grantPrintRewards,
     stageTotalClearCount, stageRepeatDropMult, AREA_STAGES, stageAreaCleared, showBossClearOverlay, grantQuestExtras, QUEST_MEDAL_MILESTONES, showQuestRewardToast, generateStoryQuest, questRewardFor, questAllowedTiers, QUEST_STEP_ITEMS, getActivePickup, choosePickupStage, openAdventure, showStageClearOverlay, recordStageClear2:recordStageClear, startChallenge, enterAreaStage, enterAreaBoss, applyGiftEntry, giftEntryName, giftEntryOptionsHtml, showAdminGiftNotice,
   };
 }
