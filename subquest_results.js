@@ -1,3 +1,4 @@
+import {recordChallengeClear} from './login_bonus.js';
 // Subquest attempts feed the ordinary gradebook without rewriting first attempts.
 export function recordSubquestAttempt(game,{subject,questId,questionId,grade,skill,correct,timeMs=0,retry=false}){
  const all=game.subquestStats ||= {questions:{},quests:{}};all.questions||={};all.quests||={};
@@ -9,7 +10,7 @@ export function recordSubquestAttempt(game,{subject,questId,questionId,grade,ski
  const u=stats.units['subquest_'+subject+'_'+grade+'_'+skill] ||= {label:`${subject==='math'?'算数':'国語'} 小${grade}・${skill}`,total:0,correct:0,initialTotal:0,initialCorrect:0,totalTimeMs:0,timedAnswers:0,timeCount:0,assistUsed:0,retryCount:0,history:[]};
  u.total++;u.correct+=correct?1:0;u.totalTimeMs+=ms;u.timedAnswers++;u.timeCount++;if(!retry){u.initialTotal++;u.initialCorrect+=correct?1:0;}else{u.retryCount++;u.assistUsed++;}u.history.push({t:entry.at,ok:correct?1:0,ms,assist:retry?1:0});if(u.history.length>50)u.history.shift();
 }
-export function recordSubquestCompletion(game,subject,questId,firstTry){const all=game.subquestStats ||= {questions:{},quests:{}};all.quests||={};const q=all.quests[subject+':'+questId] ||= {completions:0,firstTryClears:0};q.completions++;if(firstTry)q.firstTryClears++;q.lastCompletedAt=Date.now();}
+export function recordSubquestCompletion(game,subject,questId,firstTry){recordChallengeClear(game,subject==='math'?'math-subquest':'japanese-subquest');const all=game.subquestStats ||= {questions:{},quests:{}};all.quests||={};const q=all.quests[subject+':'+questId] ||= {completions:0,firstTryClears:0};q.completions++;if(firstTry)q.firstTryClears++;q.lastCompletedAt=Date.now();}
 // Count active foreground time; tab-hidden time is excluded, including after returning.
 export function startSubquestTimer(element){let total=0,last=performance.now(),hidden=document.hidden,stopped=false;const update=()=>{if(stopped)return;const now=performance.now();if(!hidden)total+=now-last;last=now;hidden=document.hidden;};const observer=element?new MutationObserver(()=>{if(!element.isConnected)stop();}):null;function stop(){update();stopped=true;document.removeEventListener('visibilitychange',update);observer?.disconnect();return Math.round(total);}document.addEventListener('visibilitychange',update);observer?.observe(document.body,{childList:true,subtree:true});return stop;}
 

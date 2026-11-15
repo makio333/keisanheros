@@ -1,5 +1,5 @@
 import {showLoginBonus} from './login_bonus_ui.js';
-import {claimLoginBonus,loginBonusStatus} from './login_bonus.js';
+import {claimChallengeBonus,recordChallengeClear,syncChallengeClock} from './login_bonus.js';
 import {showAnnouncements,showAnnouncementAdmin} from './announcements.js';
 import {rewriteLegacyStory,LEGACY_STORY_VERSION,legacyStoryGrade} from './legacy_story_variants.js';
 import {renderSubquestSummary} from './subquest_results.js';
@@ -7412,18 +7412,18 @@ function announcementUI(){
  }};
 }
 function loginBonusUI(){
- const api=announcementUI();return {...api,goldIcon:size=>`<span style="font-size:${size}px" aria-label="ゴールド">💰</span>`,day:async()=>(await api.remote().loginDay()).day,
- async claim(){const game=G,key=currentSlotKey;if(!game||!key||!window.CloudSave?.saveSlot)throw Error('save_unavailable');const day=(await api.remote().loginDay()).day;if(G!==game||currentSlotKey!==key)throw Error('save_changed');const next=JSON.parse(JSON.stringify(game));if(!claimLoginBonus(next,day))return;next.updatedAt=Date.now();await window.CloudSave.saveSlot(key,next,true);await window.CloudSave.flush?.();if(G===game&&currentSlotKey===key){Object.assign(game,next);storageSet(key,JSON.stringify(game));updateHud();}}
+ const api=announcementUI();return {...api,goldIcon:size=>`<span style="font-size:${size}px" aria-label="ゴールド">💰</span>`,day:async()=>{const result=await api.remote().loginDay();syncChallengeClock(result.now);return result.day;},
+ async claim(id,expectedDay){const game=G,key=currentSlotKey;if(!game||!key||!window.CloudSave?.saveSlot)throw Error('save_unavailable');const day=(await api.remote().loginDay()).day;if(G!==game||currentSlotKey!==key)throw Error('save_changed');const next=JSON.parse(JSON.stringify(game));if(day!==expectedDay||!claimChallengeBonus(next,id,day))throw Error('bonus_unavailable');next.updatedAt=Date.now();await window.CloudSave.saveSlot(key,next,true);await window.CloudSave.flush?.();if(G===game&&currentSlotKey===key){Object.assign(game,next);storageSet(key,JSON.stringify(game));updateHud();}}
  };
 }
 let loginBonusCheckKey='';
 async function checkLoginBonus(){
  if(!G||!window.AnnouncementAPI||!currentSlotKey)return;
  if(document.querySelector('.announcements-overlay,.admin-gift-notice-overlay'))return;
- const game=G,key=currentSlotKey;try{const day=(await window.AnnouncementAPI.loginDay()).day;if(G!==game||key!==currentSlotKey||loginBonusCheckKey===key+day)return;loginBonusCheckKey=key+day;if(loginBonusStatus(game,day).available)showLoginBonus(loginBonusUI());}catch{}
+ const game=G,key=currentSlotKey;try{const result=await window.AnnouncementAPI.loginDay(),day=result.day;if(G!==game||key!==currentSlotKey||loginBonusCheckKey===key+day)return;loginBonusCheckKey=key+day;syncChallengeClock(result.now);}catch{}
 }
 function ensureAnnouncementButtons(){
- const home=$('screen-home');if(home&&!$('btn-home-login-bonus')){const button=document.createElement('button');button.id='btn-home-login-bonus';button.className='btn';button.textContent='ログインボーナス';button.style.cssText='position:absolute;top:64px;left:50%;transform:translateX(-50%);z-index:5';button.onclick=()=>showLoginBonus(loginBonusUI());home.append(button);}
+ const home=$('screen-home');if(home&&!$('btn-home-login-bonus')){const button=document.createElement('button');button.id='btn-home-login-bonus';button.className='btn';button.textContent='チャレンジボーナス';button.style.cssText='position:absolute;top:64px;left:50%;transform:translateX(-50%);z-index:5';button.onclick=()=>showLoginBonus(loginBonusUI());home.append(button);}
  if(home&&!$('btn-home-announcements')){const button=document.createElement('button');button.id='btn-home-announcements';button.className='btn';button.type='button';button.innerHTML=`<img src="${av('assets/items/math-word-icons/bell.png')}" alt="" style="width:28px;height:28px;object-fit:contain"> お知らせ`;button.style.cssText='position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:8px';button.onclick=()=>showAnnouncements(announcementUI());home.append(button);}
  const nav=document.querySelector('#screen-admin .admin-nav');if(nav&&!$('btn-admin-announcements')){const button=document.createElement('button');button.id='btn-admin-announcements';button.className='btn';button.type='button';button.textContent='全員へのお知らせ';button.onclick=()=>showAnnouncementAdmin(announcementUI());nav.append(button);}
 }
@@ -7748,7 +7748,8 @@ function pushMilestoneRewardCards(rewards, entry){
 
 /* ステージを1回クリアしたときの 共通処理（戦闘クリアでも プリントでも これを通す）。
    ★（上限3）と ほんとうの累計クリア回数を 数え、初回／3回クリアの報酬を わたす */
-function recordStageClear(areaId, stageIndex){
+function recordStageClear(areaId, stageIndex, dailyStage = true){
+  if(dailyStage)recordChallengeClear(G, (AREA_STAGES[areaId]?.bossKey?.startsWith('kanji')?'japanese':'math')+'-stage');
   if(typeof finishStageAttempt==='function'){finishStageAttempt(G,'cleared','clear',Date.now(),{areaId,stageIndex});clearStageAttemptFlag(G,areaId,stageIndex);}
   const counts = getStageClearCounts(areaId);
   const previousStars = counts[stageIndex] || 0;
@@ -15333,7 +15334,7 @@ function init(){
     }
   };
 
-  $('btn-menu-save-title').onclick = () => { if(finishStageAttempt(G,'abandoned','save-title'))save(true);return suggestChallengePrintBeforeSave(() => {
+  $('btn-menu-save-title').onclick = () => { if(finishStageAttempt(G,'abandoned','save-title'))save(true);
     menuDropdown.classList.add('hidden');
     if (battle && !battle.over) endBattleLoop();
     if (trainingSkill) { destroyChallenge(); trainingSkill = null; }
@@ -15350,7 +15351,7 @@ function init(){
     save(true);
     if (listSaveSlots().length > 0) $('btn-continue').classList.remove('hidden');
     showScreen('screen-title');
-  });};
+  };
 }
 
 /* ==========================================================
@@ -15664,7 +15665,7 @@ function grantPrintRewards(cur, correct, total, rate) {
     rewards.push({ kind:'item', name:`全問正解ボーナス ${500*rewardMult} G`, icon:'💰' });
   }
   
-  if(meta.challengePrint && rate>=0.8){G.equipGachaTenPullTickets=(G.equipGachaTenPullTickets || 0)+1;rewards.push({kind:'equip-ticket',name:'チャレンジ達成！ 装備ガチャ10連チケット',icon:EQUIPMENT_TEN_PULL_TICKET_ICON,count:1});}
+  if(meta.challengePrint && rate>=0.8){recordChallengeClear(G,(AREA_STAGES[meta.areaId]?.bossKey?.startsWith('kanji')?'japanese':'math')+'-challenge');G.equipGachaTenPullTickets=(G.equipGachaTenPullTickets || 0)+1;rewards.push({kind:'equip-ticket',name:'チャレンジ達成！ 装備ガチャ10連チケット',icon:EQUIPMENT_TEN_PULL_TICKET_ICON,count:1});}
   // Target rewards
   let title = '修行の成果！';
   if (meta.targetId === 'demon_castle' && rate >= 0.5) {
@@ -15699,7 +15700,7 @@ function grantPrintRewards(cur, correct, total, rate) {
       rewards.push({ kind:'equip', id:equipDb.id, name:equipDb.name, icon:equipDb.emoji, rarity:6, ability });
       title = `${equipDb.name}を手に入れた！`;
   } else if (meta.type === 'stage' && rate >= 0.8) {
-      const r = recordStageClear(meta.areaId, meta.stageIndex);
+      const r = recordStageClear(meta.areaId, meta.stageIndex, !meta.challengePrint);
       title = 'ステージ クリア！';
       rewards.push({ kind:'item', name:`${meta.name} をクリア！（★${r.currentStars}／${STAGE_STARS_TO_UNLOCK_NEXT}）`, icon:'🚩' });
       for (const entry of r.milestoneRewards) pushMilestoneRewardCards(rewards, entry);
@@ -15995,7 +15996,7 @@ function showKanaChoicePrintVariants({generateProblem,printName,targetId,meta,on
   return {problems,opLabel:label,choiceLabel:label,previewHtml:problems.map((p,i)=>`<div class="print-choice-row">${i+1}. ${p.printChoices.map(escapeHtml).join(' ／ ')}</div>`).join(''),onSelect(){
    const code=Array.from({length:6},()=>Math.floor(Math.random()*10)).join('');
    const printId=addPrintCode(targetId,code,{...meta,kanjiMode:'choice',problems,name:printName});save();
-   openPrintWindow(kanaChoicePrintHtml({problems,title:printName,playerName:G?.playerName||'',printId,rewardsHtml:printRewardStripHtml({challengePrint:meta.challengePrint,questionCount:problems.length})}),null,true);onPrinted?.();
+   openDailyStagePrint(meta.areaId,kanaChoicePrintHtml({problems,title:printName,playerName:G?.playerName||'',printId,rewardsHtml:printRewardStripHtml({challengePrint:meta.challengePrint,questionCount:problems.length})}),null,true);onPrinted?.();
   }};
  });showPrintChoiceModal(variants);
 }
@@ -16019,7 +16020,7 @@ function showKanjiPrintVariants({generateProblem, printName, sheetTitle = printN
       const area = AREA_STAGES[meta.areaId];
       const areaNumber = area?.displayNum || meta.areaId.replace('area','');
       const stageLabel = `エリア${areaNumber}${Number.isInteger(meta.stageIndex) ? '-'+(meta.stageIndex+1) : ' ボス戦'}`;
-      openPrintWindow(kanjiPrintSheetHtml(problems, variant.type, sheetTitle, G?.playerName || '', printId,
+      openDailyStagePrint(meta.areaId,kanjiPrintSheetHtml(problems, variant.type, sheetTitle, G?.playerName || '', printId,
         {stageLabel, challengePrint:meta.challengePrint, blueprint:meta.type === 'blueprint'}), null, true);
       onPrinted?.();
     }};
@@ -16159,21 +16160,13 @@ function playedStageChallengeSource(game = G) {
   return played[0]?{...played[0],reason:'hardest-played'}:null;
 }
 
-function suggestChallengePrintBeforeSave(onSave) {
-  if(!G || G.isTestMode){onSave();return;}
-  const source=challengePrintSource();
-  const stage=AREA_STAGES[source.areaId]?.stages[source.stageIndex];
-  if(!stage){onSave();return;}
-  const overlay=document.createElement('div');overlay.className='confirm-overlay';
-  overlay.innerHTML=`<section class="panel challenge-print-suggestion" role="dialog" aria-modal="true" aria-label="おすすめチャレンジプリント"><h2>🖨 おすすめプリント</h2><p>${escapeHtml(AREA_STAGES[source.areaId].name)} · ${escapeHtml(stage.name)}</p><div class="challenge-print-rewards" aria-label="チャレンジプリントの報酬">
-    <div class="challenge-print-reward"><span class="challenge-print-reward-art" aria-hidden="true">${iconHtml('✨',40)}</span><span>経験値</span><b>3倍</b></div>
-    <div class="challenge-print-reward"><span class="challenge-print-reward-art" aria-hidden="true">${iconHtml('💰',40)}</span><span>ゴールド</span><b>3倍</b></div>
-    <div class="challenge-print-reward"><span class="challenge-print-reward-art" aria-hidden="true">${iconHtml(getItemTemplate('potion').emoji,40)}</span><span>消耗品</span><b>3倍</b></div>
-    <div class="challenge-print-reward challenge-print-ticket"><span class="challenge-print-reward-art">${stageRewardIcon('ticket','equip-ten-ticket',1,48)}</span><span>装備ガチャ10連チケット</span><b>×1枚</b><small>80%以上の正解で確定！</small></div>
-    </div><p class="challenge-print-reward-note">経験値・ゴールド・消耗品は通常の3倍。正解数・正答率に応じて獲得できます。</p><button type="button" class="btn btn-primary" data-print>印刷してセーブする</button><button type="button" class="btn" data-save>印刷せずセーブする</button><button type="button" class="btn" data-cancel>もどる</button></section>`;
-  overlay.querySelector('[data-print]').onclick=()=>{overlay.remove();printAreaStage(source.areaId,source.stageIndex,true,null,onSave);};
-  overlay.querySelector('[data-save]').onclick=()=>{overlay.remove();onSave();};
-  overlay.querySelector('[data-cancel]').onclick=()=>overlay.remove();document.body.appendChild(overlay);bindStageRewardTooltips(overlay);overlay.querySelector('[data-print]').focus();
+function openDailyStagePrint(areaId, html, bg, landscape){
+ const game=G,key=currentSlotKey;
+ const pw=openPrintWindow(html,bg,landscape,{returnWindow:true});
+ if(!pw)return false;
+ let confirmed=false;
+ pw.addEventListener('afterprint',()=>{if(confirmed||G!==game||currentSlotKey!==key)return;if(!pw.confirm('印刷できましたか？ 印刷できた場合は「OK」を押すと、今日の印刷課題を達成します。'))return;confirmed=true;recordChallengeClear(game,(AREA_STAGES[areaId]?.bossKey?.startsWith('kanji')?'japanese':'math')+'-print');save(true);});
+ return true;
 }
 
 function printAreaStage(areaId, idx, challengePrint = false, blueprint = null, onPrinted = null) {
@@ -16242,7 +16235,7 @@ function printAreaStage(areaId, idx, challengePrint = false, blueprint = null, o
           const printId = addPrintCode(blueprint ? blueprint.bp.id : areaId + '_' + idx, pCode, { type: blueprint ? 'blueprint' : 'stage', ...(blueprint ? {uid:blueprint.uid} : {}), challengePrint, problems, name: printName, areaId, stageIndex: idx, kanjiMode: variant.type });
           save();
           const instrText = variant.type === 'yomi' ? 'つぎのことばをひらがなで　かきましょう' : variant.type === 'kaki' ? 'つぎのことばを　かんじで　かきましょう' : 'つぎのことば　よみ・かきに　こたえましょう';
-          openPrintWindow(`<style>
+          openDailyStagePrint(areaId,`<style>
               body { margin: 0; padding: 0; font-family: "Yu Mincho","MS Mincho","Hiragino Mincho ProN",serif; display: flex; flex-direction: row; width: 297mm; height: 210mm; box-sizing: border-box; }
               .p-sidebar { width: 55px; border-left: 2px solid #333; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 8px 4px; writing-mode: vertical-rl; }
               .p-sidebar-title { font-size: 14px; font-weight: bold; }
@@ -16308,7 +16301,7 @@ function printAreaStage(areaId, idx, challengePrint = false, blueprint = null, o
           const pCode = Array.from({length:6}, () => Math.floor(Math.random()*10)).join('');
           const printId = addPrintCode(blueprint ? blueprint.bp.id : areaId + '_' + idx, pCode, { type: blueprint ? 'blueprint' : 'stage', ...(blueprint ? {uid:blueprint.uid} : {}), challengePrint, problems, name: printName, areaId, stageIndex: idx });
           save();
-          openPrintWindow(`
+          openDailyStagePrint(areaId,`
             <div class="p-title">【エリア${numPrefix}-${idx+1}】 ${area.name} ${stage.name} ${label}</div>
             ${printRewardStripHtml({challengePrint,blueprint:!!blueprint,questionCount:problems.length})}
             <div class="p-name-box">なまえ：<span class="p-name-line" style="position:relative;"><span style="position:absolute; bottom:2px; left:4px; font-size:18px;">${(typeof G !== "undefined" && G) ? (G.playerName || "") : ""}</span></span></div>
@@ -17838,7 +17831,7 @@ if (import.meta.env && import.meta.env.DEV) {
   window.__dbg = {
     get G(){ return G; }, get explore(){ return explore; }, set explore(v){ explore = v; },
     get rewardSettings(){ return rewardSettings; },
-    recordStageClear, grantBossClearState, generateStageEnemy, rollBattleDrops, grantPrintRewards,
+    recordStageClear, openDailyStagePrint, grantBossClearState, generateStageEnemy, rollBattleDrops, grantPrintRewards,
     stageTotalClearCount, stageRepeatDropMult, AREA_STAGES, stageAreaCleared, showBossClearOverlay, grantQuestExtras, QUEST_MEDAL_MILESTONES, showQuestRewardToast, generateStoryQuest, questRewardFor, questAllowedTiers, QUEST_STEP_ITEMS, getActivePickup, choosePickupStage, openAdventure, showStageClearOverlay, recordStageClear2:recordStageClear, startChallenge, enterAreaStage, enterAreaBoss, applyGiftEntry, giftEntryName, giftEntryOptionsHtml, showAdminGiftNotice,
   };
 }

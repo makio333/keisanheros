@@ -1,15 +1,12 @@
-import {LOGIN_BONUS_REWARDS,loginBonusStatus} from './login_bonus.js';
+import {DAILY_CHALLENGES,challengeBonusStatus} from './login_bonus.js';
 import {createRewardDialog} from './announcements.js';
 import './login_bonus.css';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n;};
 export async function showLoginBonus(api){
- const {panel,overlay,close}=createRewardDialog('ログインボーナス'),message=el('p','今日の報酬を確認中…');panel.append(message);
- try{
-  const day=await api.day();if(!panel.isConnected)return;const status=loginBonusStatus(api.game(),day);
-  message.textContent='1日1回、日本時間の0時に切り替わります。お休みしても続きから。7日分を受け取ると、また1日目から始まります。';
-  const grid=el('div',null,'login-bonus-grid');
-  LOGIN_BONUS_REWARDS.forEach((reward,i)=>{const tile=el('section',null,'login-bonus-tile');tile.classList.toggle('is-current',i===status.index);const received=i<status.index||(!status.available&&i===status.index);tile.classList.toggle('is-received',received);tile.append(el('b',`${i+1}日目`));const icon=el('span');if(reward.gold)icon.innerHTML=api.goldIcon?.(64)||'';else icon.innerHTML=api.rewardIcon(reward.items[0],64);tile.append(icon,el('span',reward.gold?`${reward.gold.toLocaleString()} G`:api.rewardName(reward.items[0])+' ×1'),el('small',received?'受取済み':i===status.index?'今日の報酬':'お楽しみに'));grid.append(tile);});
-  const button=el('button',status.available?`${status.index+1}日目の報酬を受け取る`:'今日は受け取り済み','btn btn-primary');button.disabled=!status.available;const feedback=el('p');feedback.setAttribute('role','status');button.onclick=async()=>{button.disabled=true;close.disabled=true;overlay.dataset.busy='1';try{await api.claim(day);button.textContent='受け取りました！';feedback.textContent='次の日も冒険に来てね。';grid.children[status.index].classList.add('is-received');grid.children[status.index].querySelector('small').textContent='受取済み';window.SM?.play?.('se_clear');}catch{feedback.textContent='保存できませんでした。通信を確認してもう一度押してください。';button.disabled=false;}finally{close.disabled=false;delete overlay.dataset.busy;}};
-  panel.append(grid,button,feedback);
- }catch{message.textContent='ログインボーナスを確認できませんでした。通信を確認してもう一度開いてください。';}
+ const {panel,overlay,close}=createRewardDialog('チャレンジボーナス'),message=el('p','今日の課題を確認中…');panel.append(message);
+ try{const day=await api.day();if(!panel.isConnected)return;const status=challengeBonusStatus(api.game(),day);
+ message.textContent=`${day} の課題　${status.completed.length}/${DAILY_CHALLENGES.length}達成。日本時間0時に切り替わります。通常ステージは1ステージ、チャレンジ問題はクリア基準達成、サブクエストは5問すべて正解で達成！印刷は印刷後の確認で達成です。`;
+ const grid=el('div',null,'login-bonus-grid');panel.append(grid);const feedback=el('p');feedback.setAttribute('role','status');
+ for(const q of [...DAILY_CHALLENGES,{id:'all',name:'8種類すべて達成',gold:0}]){const done=q.id==='all'?status.allComplete:status.completed.includes(q.id),claimed=status.claimed.includes(q.id),tile=el('section',null,'login-bonus-tile');tile.classList.toggle('is-current',done&&!claimed);tile.classList.toggle('is-received',claimed);const icon=el('span');icon.innerHTML=q.gold?api.goldIcon(48):api.rewardIcon({kind:'ticket',id:'skin-ticket'},48);const button=el('button',claimed?'受取済み':done?'受け取る':'未達成','btn');button.disabled=!done||claimed;button.setAttribute('aria-label',q.name+'：'+button.textContent);button.onclick=async()=>{const pending=[...grid.querySelectorAll('button:not(:disabled)')];pending.forEach(b=>b.disabled=true);close.disabled=true;overlay.dataset.busy='1';try{await api.claim(q.id,day);button.textContent='受取済み';tile.classList.add('is-received');feedback.textContent=q.name+'の報酬を受け取りました！';window.SM?.play?.('se_clear');}catch{feedback.textContent='受け取れませんでした。日付と通信を確認して開き直してください。';}finally{pending.filter(b=>b!==button).forEach(b=>b.disabled=false);close.disabled=false;delete overlay.dataset.busy;}};tile.append(el('b',q.name),icon,el('span',q.gold?'500 G':'スキンガチャチケット ×1'),el('small',done?'クリア！':'クリアすると達成'),button);grid.append(tile);}panel.append(feedback);
+ }catch{message.textContent='課題を確認できませんでした。通信を確認してもう一度開いてください。';}
 }

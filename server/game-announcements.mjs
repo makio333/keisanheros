@@ -18,7 +18,7 @@ export function sanitizeAnnouncement(input){
 // Only an authenticated Google operator or a server-issued admin claim may publish.
 export function announcementAdmin(claims){return claims?.admin===true || (claims?.firebase?.sign_in_provider==='google.com'&&claims.email_verified===true&&claims.email==='ailandgames.jp@gmail.com');}
 export async function handleAnnouncements({db,claims,method,args,now=Date.now}){
- if(method==='noticeLoginDay')return {day:new Date(now()+9*60*60*1000).toISOString().slice(0,10)};
+ if(method==='noticeLoginDay')return {now:now(),day:new Date(now()+9*60*60*1000).toISOString().slice(0,10)};
  const admin=announcementAdmin(claims);
  if(method==='noticePermissions')return {admin};
  const notices=db.collection('gameAnnouncements');
