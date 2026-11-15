@@ -4,7 +4,8 @@ export const DAILY_CHALLENGES=Object.freeze([
  ['math-challenge','算数のチャレンジ問題をクリア'],['japanese-challenge','国語のチャレンジ問題をクリア'],
  ['math-print','算数のチャレンジ問題を印刷する'],['japanese-print','国語のチャレンジ問題を印刷する'],
  ['math-subquest','算数のサブクエストをクリア'],['japanese-subquest','国語のサブクエストをクリア']
-].map(([id,name])=>({id,name,gold:500})));
+].map(([id,name])=>({id,name})));
+export const DAILY_MILESTONES=Object.freeze([{id:'milestone-2',count:2,gold:500,items:[]},{id:'milestone-4',count:4,gold:1000,items:[]},{id:'milestone-6',count:6,gold:1500,items:[]},{id:'all',count:8,gold:0,items:[{kind:'ticket',id:'skin-ticket',count:1}]}]);
 let serverOffset=0;
 export function syncChallengeClock(now){if(Number.isFinite(now))serverOffset=now-Date.now();}
 export function loginBonusDay(now=Date.now()+serverOffset){return new Date(now+9*3600000).toISOString().slice(0,10);}
@@ -20,9 +21,9 @@ export function recordChallengeClear(game,id,day=loginBonusDay()){
  game.challengeBonus={day,completed:[...s.completed,id],claimed:s.claimed};return true;
 }
 export function claimChallengeBonus(game,id,day=loginBonusDay()){
- const s=challengeBonusStatus(game,day),q=DAILY_CHALLENGES.find(q=>q.id===id);
- if(s.claimed.includes(id)||!(id==='all'?s.allComplete:q&&s.completed.includes(id)))return null;
- const gift={id:`challenge-bonus:${day}:${id}`,gold:q?.gold||0,items:id==='all'?[{kind:'ticket',id:'skin-ticket',count:1}]:[]};
+ const s=challengeBonusStatus(game,day),q=DAILY_MILESTONES.find(q=>q.id===id);
+ if(!q||s.claimed.includes(id)||s.completed.length<q.count)return null;
+ const gift={id:`challenge-bonus:${day}:${id}`,gold:q.gold,items:structuredClone(q.items)};
  if(!applyGiftPayload(game,gift))return null;
  game.challengeBonus={day,completed:s.completed,claimed:[...s.claimed,id]};return gift;
 }
