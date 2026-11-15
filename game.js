@@ -1,3 +1,5 @@
+import {showLoginBonus} from './login_bonus_ui.js';
+import {claimLoginBonus,loginBonusStatus} from './login_bonus.js';
 import {showAnnouncements,showAnnouncementAdmin} from './announcements.js';
 import {rewriteLegacyStory,LEGACY_STORY_VERSION,legacyStoryGrade} from './legacy_story_variants.js';
 import {renderSubquestSummary} from './subquest_results.js';
@@ -7409,8 +7411,20 @@ function announcementUI(){
   if(G===game&&currentSlotKey===key){Object.assign(game,next);storageSet(key,JSON.stringify(game));updateHud();}
  }};
 }
+function loginBonusUI(){
+ const api=announcementUI();return {...api,goldIcon:size=>`<span style="font-size:${size}px" aria-label="ゴールド">💰</span>`,day:async()=>(await api.remote().loginDay()).day,
+ async claim(){const game=G,key=currentSlotKey;if(!game||!key||!window.CloudSave?.saveSlot)throw Error('save_unavailable');const day=(await api.remote().loginDay()).day;if(G!==game||currentSlotKey!==key)throw Error('save_changed');const next=JSON.parse(JSON.stringify(game));if(!claimLoginBonus(next,day))return;next.updatedAt=Date.now();await window.CloudSave.saveSlot(key,next,true);await window.CloudSave.flush?.();if(G===game&&currentSlotKey===key){Object.assign(game,next);storageSet(key,JSON.stringify(game));updateHud();}}
+ };
+}
+let loginBonusCheckKey='';
+async function checkLoginBonus(){
+ if(!G||!window.AnnouncementAPI||!currentSlotKey)return;
+ if(document.querySelector('.announcements-overlay,.admin-gift-notice-overlay'))return;
+ const game=G,key=currentSlotKey;try{const day=(await window.AnnouncementAPI.loginDay()).day;if(G!==game||key!==currentSlotKey||loginBonusCheckKey===key+day)return;loginBonusCheckKey=key+day;if(loginBonusStatus(game,day).available)showLoginBonus(loginBonusUI());}catch{}
+}
 function ensureAnnouncementButtons(){
- const home=$('screen-home');if(home&&!$('btn-home-announcements')){const button=document.createElement('button');button.id='btn-home-announcements';button.className='btn';button.type='button';button.innerHTML=`<img src="${av('assets/items/math-word-icons/bell.png')}" alt="" style="width:28px;height:28px;object-fit:contain"> お知らせ`;button.style.cssText='position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:8px';button.onclick=()=>showAnnouncements(announcementUI());home.append(button);}
+ const home=$('screen-home');if(home&&!$('btn-home-login-bonus')){const button=document.createElement('button');button.id='btn-home-login-bonus';button.className='btn';button.textContent='ログインボーナス';button.style.cssText='position:absolute;top:64px;left:50%;transform:translateX(-50%);z-index:5';button.onclick=()=>showLoginBonus(loginBonusUI());home.append(button);}
+ if(home&&!$('btn-home-announcements')){const button=document.createElement('button');button.id='btn-home-announcements';button.className='btn';button.type='button';button.innerHTML=`<img src="${av('assets/items/math-word-icons/bell.png')}" alt="" style="width:28px;height:28px;object-fit:contain"> お知らせ`;button.style.cssText='position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:8px';button.onclick=()=>showAnnouncements(announcementUI());home.append(button);}
  const nav=document.querySelector('#screen-admin .admin-nav');if(nav&&!$('btn-admin-announcements')){const button=document.createElement('button');button.id='btn-admin-announcements';button.className='btn';button.type='button';button.textContent='全員へのお知らせ';button.onclick=()=>showAnnouncementAdmin(announcementUI());nav.append(button);}
 }
 let announcementCheckKey='';
@@ -7421,7 +7435,7 @@ async function checkAnnouncementNews(){
 }
 
 function showHome(){
-  ensureAnnouncementButtons();setTimeout(checkAnnouncementNews,800);
+  ensureAnnouncementButtons();setTimeout(checkAnnouncementNews,800);setTimeout(checkLoginBonus,1600);
   if(finishStageAttempt(G,'abandoned','return-home'))save(true);
   ensureEventEquipmentAbilities(G);
   setTimeout(()=>{checkAdminGifts(true);checkEventRaidFinalReward();},0);

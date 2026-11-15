@@ -1,0 +1,6 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {claimLoginBonus,loginBonusDay,loginBonusStatus} from '../login_bonus.js';
+test('JST midnight determines claim day',()=>{assert.equal(loginBonusDay(Date.parse('2026-11-14T14:59:59Z')),'2026-11-14');assert.equal(loginBonusDay(Date.parse('2026-11-14T15:00:00Z')),'2026-11-15');});
+test('once a day, persisted, missed days do not reset, clock rollback blocked',()=>{let g={player:{gold:0}};assert.ok(claimLoginBonus(g,'2026-11-15'));g=JSON.parse(JSON.stringify(g));assert.equal(claimLoginBonus(g,'2026-11-15'),null);assert.equal(claimLoginBonus(g,'2026-11-14'),null);assert.equal(g.player.gold,500);assert.ok(claimLoginBonus(g,'2026-11-20'));assert.equal(g.skinGachaTickets,1);});
+test('seven rewards loop and ticket balances match',()=>{const g={player:{gold:0}};for(let i=15;i<22;i++)assert.ok(claimLoginBonus(g,`2026-11-${i}`));assert.equal(g.skinGachaTickets,3);assert.equal(g.equipGachaTenPullTickets,1);assert.equal(g.player.gold,3000);assert.equal(loginBonusStatus(g,'2026-11-22').index,0);assert.ok(claimLoginBonus(g,'2026-11-22'));assert.equal(g.player.gold,3500);assert.throws(()=>loginBonusStatus(g,'2026-02-30'));});

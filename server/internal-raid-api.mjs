@@ -19,7 +19,7 @@ const db=getFirestore(raidApp),auth=getAuth(authApp);
 const isUidBlocked=createInternalRaidDeletionGuard({db:getFirestore(authApp),projectId:authProjectId});
 const authenticateRaidToken=createInternalRaidTokenAuthenticator({auth,projectId:authProjectId});
 const assertRaidAccountAllowed=createInternalRaidAccountGuard({isUidBlocked});
-const noticeMethods=new Set(['noticePermissions','noticeList','noticePublish','noticeArchive']);
+const noticeMethods=new Set(['noticeLoginDay','noticePermissions','noticeList','noticePublish','noticeArchive']);
 const methods=new Set([...noticeMethods,'syncPlayer','settleReward','getRankings','getMonthlyRankings','getHistory','getGlobalBoss','receiveCheers','sendCheer']);
 const fail=code=>{throw Error(code);};
 const hash=value=>'r_'+createHash('sha256').update(value).digest('hex');
