@@ -15272,9 +15272,23 @@ function init(){
   const menuBtn = $('btn-menu');
   const menuDropdown = $('menu-dropdown');
   if (menuBtn && menuDropdown) {
+    const placeMenu = () => {
+      if(menuDropdown.classList.contains('hidden'))return;
+      const width=Math.min(innerWidth,window.visualViewport?.width||innerWidth),height=Math.min(innerHeight,window.visualViewport?.height||innerHeight);
+      const button=menuBtn.getBoundingClientRect();
+      Object.assign(menuDropdown.style,{position:'fixed',width:Math.min(270,width-24)+'px',minWidth:'0',maxHeight:Math.max(40,height-24)+'px',overflowY:'auto',boxSizing:'border-box',right:'auto',bottom:'auto'});
+      const menu=menuDropdown.getBoundingClientRect();
+      const left=Math.max(12,Math.min(button.right-menu.width,width-menu.width-12));
+      const top=button.bottom+8+menu.height<=height-12?button.bottom+8:Math.max(12,Math.min(button.top-menu.height-8,height-menu.height-12));
+      menuDropdown.style.left=left+'px';menuDropdown.style.top=top+'px';
+    };
+    menuBtn.setAttribute('aria-controls','menu-dropdown');menuBtn.setAttribute('aria-expanded','false');
+    window.addEventListener('resize',placeMenu);window.visualViewport?.addEventListener('resize',placeMenu);
     menuBtn.onclick = (e) => {
       e.stopPropagation();
       menuDropdown.classList.toggle('hidden');
+      menuBtn.setAttribute('aria-expanded',String(!menuDropdown.classList.contains('hidden')));
+      placeMenu();
       const saveTitleBtn = $('btn-menu-save-title');
       if (saveTitleBtn) {
         if (G && G.isTestMode) {

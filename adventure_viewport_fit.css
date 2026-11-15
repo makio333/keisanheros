@@ -92,3 +92,6 @@ body:has(#screen-battle.active[data-adventure-fit=stacked]) #volume-control-cont
 #screen-battle[data-adventure-fit] #kanji-challenge:not(.hidden){display:flex!important}
 #screen-battle[data-adventure-fit] #battle-player-window .status-header-row{display:flex!important;flex-direction:row!important;align-items:center;gap:5px;height:44px;overflow:hidden}
 #screen-battle[data-adventure-fit] #battle-player-window .battle-status-avatar{order:-1;flex:none;width:28px!important;height:32px!important;min-height:0!important;max-height:32px!important;margin:0!important;overflow:hidden}
+/* Fitted battles move the menu button to the top; open its contents below it. */
+body:has(#screen-battle.active[data-adventure-fit]) #menu-dropdown{top:44px;bottom:auto;right:0;left:auto;width:min(270px,calc(100vw - 86px));min-width:0;max-height:calc(100dvh - 64px);overflow:auto;box-sizing:border-box;white-space:normal}
+body:has(#screen-battle.active[data-adventure-fit=stacked]) #menu-dropdown{left:0;right:auto}

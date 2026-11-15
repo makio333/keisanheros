@@ -401,8 +401,8 @@
   .key-btn { font-size: clamp(10px, 2.4vw, 15px); }
   /* うかんでいる ☰／🔊 は 五十音の キーに かぶって おせなく なるので、
      もんだいを といて いる あいだは しまっておく */
-  body:has(#kanji-challenge:not(.hidden)) .menu-button,
-  body:has(#kanji-challenge:not(.hidden)) .mute-button { display: none; }
+  body:has(#screen-battle.active:not([data-adventure-fit]) #kanji-challenge:not(.hidden)) .menu-button,
+  body:has(#screen-battle.active:not([data-adventure-fit]) #kanji-challenge:not(.hidden)) .mute-button { display: none; }
 
   /* もんだいは よこはば いっぱい。ATBゲージは ひだりの ステータスまどを よけて みぎへ */
   #screen-battle.kanji-battle { --kanji-gutter: auto; }
@@ -465,8 +465,8 @@
   .key-btn { font-size: clamp(9px, 2.4vh, 14px); }
   .problem-text { font-size: clamp(20px, 6vh, 34px); }
   /* うかんでいる ☰／🔊 は 五十音の キーに かぶるので しまう */
-  body:has(#kanji-challenge:not(.hidden)) .menu-button,
-  body:has(#kanji-challenge:not(.hidden)) .mute-button { display: none; }
+  body:has(#screen-battle.active:not([data-adventure-fit]) #kanji-challenge:not(.hidden)) .menu-button,
+  body:has(#screen-battle.active:not([data-adventure-fit]) #kanji-challenge:not(.hidden)) .mute-button { display: none; }
   #screen-battle.kanji-battle {
     --kanji-gutter: calc(min(300px, 34vw) + 116px);
   }
@@ -509,8 +509,8 @@
 }
 
 @media screen and (orientation: portrait) {
-  body:has(#kanji-challenge:not(.hidden)) .menu-button,
-  body:has(#kanji-challenge:not(.hidden)) .mute-button { display: flex; }
+  body:has(#screen-battle.active:not([data-adventure-fit]) #kanji-challenge:not(.hidden)) .menu-button,
+  body:has(#screen-battle.active:not([data-adventure-fit]) #kanji-challenge:not(.hidden)) .mute-button { display: flex; }
   #screen-battle #kanji-challenge,
   #screen-battle:has(#kanji-prompt:not(.hidden)) #kanji-challenge {
     position: static;
