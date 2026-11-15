@@ -2323,10 +2323,10 @@ function generateStoryQuest(excludeUid=null){
 }
 
 /* サブクエストの ごほうび：1問ごとに クエストメダル2まい（1回目・2回目は アイテムも）。
-   メダルは ためると クエストでしか もらえない ごほうびに かわる（コストプラスのたね・背景スキン など） */
+   メダルは ためると クエストでしか もらえない ごほうびに かわる（コストのたね・背景スキン など） */
 const QUEST_STEP_ITEMS = [ { id:'potion', count:1 }, { id:'herb', count:1 } ];
 const QUEST_MEDAL_MILESTONES = [
-  { key:'cost_seed',   medals:3,  kind:'item', id:'cost_seed', count:3, label:'コストプラスのたね×3' },
+  { key:'cost_seed',   medals:3,  kind:'item', id:'cost_seed', count:3, label:'コストのたね×3' },
   { key:'legend_w4',   medals:6,  kind:'equip', id:'w4', rarity:5, label:'レジェンド武器「ほのおの斧」' },
   { key:'bg_village',  medals:10, kind:'background', id:'quest_village', label:'背景「むらの ひろば」' },
   { key:'equip_ten',   medals:15, kind:'equip-ticket', count:1, label:'装備ガチャ10連チケット' },
@@ -3112,7 +3112,7 @@ const ITEM_DB = [
   { id:'hipotion', name:'秘薬', opTier:'sub', effect:'heal', value:60, price:50, desc:'HPを大きく回復', emoji:'assets/items/hipotion.png', tags:['戦闘用'] },
   { id:'herb', name:'魔力の草', opTier:'add', effect:'mana', value:10, price:12, desc:'MPを回復', emoji:'assets/items/herb.png', tags:['戦闘用'] },
   { id:'ether', name:'エーテル', opTier:'addCarry', effect:'mana', value:30, price:40, desc:'MPを大きく回復', emoji:'assets/items/ether.png', tags:['戦闘用'] },
-  { id:'cost_seed', name:'コストプラスのたね', opTier:'mul1', effect:'cost', value:1, price:1000, shopAvailable:false, desc:'使うとそうびコストの上限が 1 あがる 不思議なたね。', emoji:'assets/items/cost_seed_pixel.png', tags:['部屋用'] },
+  { id:'cost_seed', name:'コストのたね', opTier:'mul1', effect:'cost', value:1, price:1000, shopAvailable:false, desc:'使うとそうびコストの上限が 1 あがる 不思議なたね。', emoji:'assets/items/cost_seed_pixel.png', tags:['部屋用'] },
   { id:'respec_seed', name:'ふりなおしのたね', opTier:'mul1', effect:'respec', value:0, price:500, desc:'使うと わりふったスキルポイントを 全てリセットして 振り直せる 不思議なたね。', emoji:'assets/items/respec_seed_pixel.png', tags:['部屋用'] }
 ];
 
@@ -12786,7 +12786,7 @@ async function showEventRaidMenu(message = '', mode = eventRaidMenuMode) {
     ? '🍬 1ステージ前から挑戦・お菓子2倍'
     : '🍬 現在のステージから挑戦・お菓子2倍';
   modal.querySelector('.raid-ranking-section h3').textContent='🏆 漢字・累計討伐数ランキング';
-  $('event-raid-rules').innerHTML=`<h3 id="event-raid-how-to-play-title">討伐数チャレンジのルール</h3><ol><li><b>町を守ろう</b><span>2分経過か自分のHPが0で終了。実際に倒したおばけの数を記録。種類はランダムで補充され、ボスは出ません。</span></li><li><b>正解すると攻撃</b><span>正解1回につき、ランダムな4体を攻撃します。回答の速さで一回の攻撃数は変わりません。</span></li><li><b>自動でとくぎ発動</b><span>5問正解でチャージ完了！ 次の正解でランダムな7体へ「かぼちゃの波」。まちがえてもチャージは残り、おばけ1体が反撃します。</span></li><li><b>最高記録に挑戦</b><span>1回の最高討伐数を記録。同数は同順位。敵の初期HPは10。ダメージは攻撃力・装備・会心で決まります。参加費はありません。</span></li><li><b>お菓子を集めよう</b><span>1日1回の参加報酬2個。最高討伐数5・10・20・30・50体で突破ボーナス。お菓子5・10・20・30・50個に、ガチャチケットやコストプラスのたねを各1回もらえます。倒すたびにお菓子を2個獲得します。次回は前回の2ステージ前から再開します。</span></li></ol>`;
+  $('event-raid-rules').innerHTML=`<h3 id="event-raid-how-to-play-title">討伐数チャレンジのルール</h3><ol><li><b>町を守ろう</b><span>2分経過か自分のHPが0で終了。実際に倒したおばけの数を記録。種類はランダムで補充され、ボスは出ません。</span></li><li><b>正解すると攻撃</b><span>正解1回につき、ランダムな4体を攻撃します。回答の速さで一回の攻撃数は変わりません。</span></li><li><b>自動でとくぎ発動</b><span>5問正解でチャージ完了！ 次の正解でランダムな7体へ「かぼちゃの波」。まちがえてもチャージは残り、おばけ1体が反撃します。</span></li><li><b>最高記録に挑戦</b><span>1回の最高討伐数を記録。同数は同順位。敵の初期HPは10。ダメージは攻撃力・装備・会心で決まります。参加費はありません。</span></li><li><b>お菓子を集めよう</b><span>1日1回の参加報酬2個。最高討伐数5・10・20・30・50体で突破ボーナス。お菓子5・10・20・30・50個に、ガチャチケットやコストのたねを各1回もらえます。倒すたびにお菓子を2個獲得します。次回は前回の2ステージ前から再開します。</span></li></ol>`;
   $('event-raid-boss-damage').textContent=`${state.bestKills || 0}体`;
   const sourceArea=AREA_STAGES[modal._eventRaidSource.areaId];
   $('event-raid-ticket-count').textContent='参加費なし';
@@ -16068,7 +16068,7 @@ function printRewardStripHtml({challengePrint = false, blueprint = false, questi
     {icon:'💰',name:'ゴールド',amount:`1問 ${10*mult} G`,condition:'正解した分'},
     {image:'assets/items/potion.png',name:'傷薬',amount:`×${mult}`,condition:half},
     {image:'assets/items/hipotion.png',name:'秘薬',amount:`×${3*mult}`,condition:`${pass}：またはエーテル×${mult}`},
-    {image:'assets/items/cost_seed_pixel.png',name:'コストプラスのたね',amount:`×${mult}`,condition:perfect},
+    {image:'assets/items/cost_seed_pixel.png',name:'コストのたね',amount:`×${mult}`,condition:perfect},
     {icon:'💰',name:'全問正解ボーナス',amount:`${500*mult} G`,condition:perfect},
   ];
   if (challengePrint) entries.push({icon:EQUIPMENT_TEN_PULL_TICKET_ICON,name:'装備ガチャ10連チケット',amount:'×1',condition:pass});
@@ -16727,7 +16727,7 @@ async function syncRaidState() {
       const raidMenuOpen = G === game && !$('screen-raid-boss').classList.contains('hidden');
       if (raidMenuOpen) {
         renderRaidBossMenu();
-        if (payoutNotice) showConfirmModal('レイド報酬を獲得！', `${payoutNotice.rank}位の報酬<br>🪙 ${payoutNotice.coins || 0}レイドコイン<br>💰 ${payoutNotice.gold.toLocaleString()}G<br>🌱 コストプラスのたね ×${payoutNotice.seeds}${payoutNotice.tickets ? `<br>🎟 背景スキンガチャチケット ×${payoutNotice.tickets}${payoutNotice.finisherBonus ? '（撃破ボーナスを含む）' : ''}` : ''}${payoutNotice.bonusDecoration === GHOST_RAID_DEFEAT_DECORATION.id ? `<br>✨ 討伐記念：${GHOST_RAID_DEFEAT_DECORATION.name}` : ''}`, () => { save(true); showRaidBossMenu(); });
+        if (payoutNotice) showConfirmModal('レイド報酬を獲得！', `${payoutNotice.rank}位の報酬<br>🪙 ${payoutNotice.coins || 0}レイドコイン<br>💰 ${payoutNotice.gold.toLocaleString()}G<br>🌱 コストのたね ×${payoutNotice.seeds}${payoutNotice.tickets ? `<br>🎟 背景スキンガチャチケット ×${payoutNotice.tickets}${payoutNotice.finisherBonus ? '（撃破ボーナスを含む）' : ''}` : ''}${payoutNotice.bonusDecoration === GHOST_RAID_DEFEAT_DECORATION.id ? `<br>✨ 討伐記念：${GHOST_RAID_DEFEAT_DECORATION.name}` : ''}`, () => { save(true); showRaidBossMenu(); });
       }
       if (refreshAgain && raidMenuOpen) setTimeout(() => syncRaidState(), 0);
     }
