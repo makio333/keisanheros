@@ -19,7 +19,7 @@ function renderPrintResponseV2(r){
  if(r.kind==='lines')return `<p>字数は${esc(r.guideline)}字程度までの目安。口頭での説明も可。</p><div class="wpp2-response-lines">${Array.from({length:r.lines},()=>'<div></div>').join('')}</div>`;
  throw new TypeError('Response kind');
 }
-export function renderWordProblemPrintV2({title='文章問題', subject='math', grade=1, showGrade=true, story='', storyAnnotations=null, questions=[], mode='student', scale=1, color=false, writingMode='horizontal-tb', table=null, diagram=null, pageLayout='auto', rewardText='', rewardEntries=[], villager=null}={}) {
+export function renderWordProblemPrintV2({title='文章問題', subject='math', grade=1, showGrade=true, story='', storyAnnotations=null, questions=[], mode='student', scale=1, color=false, writingMode='horizontal-tb', table=null, diagram=null, pageLayout='auto', rewardText='', rewardEntries=[], villager=null, playerName='', printNumber=''}={}) {
  if(!['auto','duplex-2-3'].includes(pageLayout))throw new TypeError('pageLayout');
  if(pageLayout==='duplex-2-3'&&questions.length!==5)throw new RangeError('Duplex layout requires five questions');
  if (!['math','japanese'].includes(subject) || !['student','teacher'].includes(mode)) throw new TypeError('subject / mode');
@@ -46,7 +46,7 @@ export function renderWordProblemPrintV2({title='文章問題', subject='math', 
  });
  const crop=villager?.faceCrop??[0,0,1254];
  const portrait=villager?`<span class="wpp2-quest-face"><img class="wpp2-quest-portrait" src="${esc(villager.image)}" alt="${esc(villager.name)}" title="${esc(villager.name)}" style="width:${1254/crop[2]*100}%;height:${1254/crop[2]*100}%;left:${-crop[0]/crop[2]*100}%;top:${-crop[1]/crop[2]*100}%"></span>`:'';
- const metadata=writingMode==='vertical-rl'?japanesePrintMetadata({grade}):`<p>${showGrade?grade+'年 ':''}${subject==='math'?'算数':'国語'}　${mode==='student'?'なまえ：________________　日付：____________':'児童用とは別に印刷してください'}</p>`;
+ const metadata=writingMode==='vertical-rl'?japanesePrintMetadata({grade,name:playerName,number:printNumber}):`<p>${showGrade?grade+'年 ':''}${subject==='math'?'算数':'国語'}　${mode==='student'?`番号：${esc(printNumber)||'________'}　なまえ：${esc(playerName)||'________________'}　日付：____________`:'児童用とは別に印刷してください'}</p>`;
  const reward=rewardText||rewardEntries.length?`<div class="wpp2-reward">${rewardText?`<span class="wpp2-reward-caption">${esc(rewardText)}</span>`:''}${renderPrintRewardIcons(rewardEntries)}</div>`:'';
  const titleMarkup=`${portrait}${esc(title)}${mode==='teacher'?'【指導者用解答】':''}`;
  const printHeader=writingMode==='vertical-rl'?`<style>${japanesePrintHeaderCss}</style>${japanesePrintHeader(titleMarkup,metadata,reward)}`:`<header><h1>${titleMarkup}</h1>${metadata}${reward}</header>`;

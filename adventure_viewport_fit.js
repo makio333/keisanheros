@@ -7,10 +7,13 @@ function fitAdventure(){
   pendingFrame=0;
   const screen=document.querySelector('#screen-battle.active');
   if(!screen)return;
-  const board=screen.querySelector('#kanji-challenge'),problem=screen.querySelector('#kanji-problem-center');
+  const raid=screen.classList.contains('raid-battle-screen');
+  const board=screen.querySelector('#kanji-challenge'),problem=screen.querySelector(raid?'#battle-challenge':'#kanji-problem-center');
+  const old=screen.querySelector('#christmas-answer-stack[data-generic-fit]');
+  if(old && !originalPositions.has(problem)){for(const [node,anchor] of originalPositions){if(anchor.isConnected)anchor.replaceWith(node);}originalPositions.clear();old.remove();}
   const christmas=screen.classList.contains('christmas-battle-screen');
   const choice=!problem?.classList.contains('hidden') && screen.querySelector('#kana-choice-display:not(.hidden)');
-  if(!christmas && !choice && (!board || board.classList.contains('hidden') || problem?.classList.contains('hidden'))){
+  if(!raid && !christmas && !choice && (!board || board.classList.contains('hidden') || problem?.classList.contains('hidden'))){
     delete screen.dataset.adventureFit;screen.classList.remove('fitted-kana-battle');
     const previous=screen.querySelector('#christmas-answer-stack[data-generic-fit]');
     if(previous){for(const [node,anchor] of originalPositions){if(anchor.isConnected)anchor.replaceWith(node);}originalPositions.clear();previous.remove();}
@@ -31,7 +34,7 @@ function fitAdventure(){
   set('--fit-width',width+'px');set('--fit-height',height+'px');
   // Reserve the fixed controls and one line of battle feedback.
   const top=wide?78:88,bottom=22,gap=6,available=Math.max(100,height-top-bottom-gap*2);
-  const hasBoard=!board.classList.contains('hidden')&&!board.querySelector('#software-keyboard')?.classList.contains('hidden');
+  const hasBoard=!raid&&!board.classList.contains('hidden')&&!board.querySelector('#software-keyboard')?.classList.contains('hidden');
   const minimized=!!board.querySelector('.is-minimized');
   const boardWidth=minimized?168:264;set('--fit-board-width',boardWidth+'px');
   const boardHeight=Math.max(1,board.offsetHeight);
@@ -40,7 +43,7 @@ function fitAdventure(){
   const boardScale=minimized?Math.min(1,(width-16)/boardWidth):Math.min(maxBoardScale,preferredBoardScale??Math.min(1,boardBudget/boardHeight));
   const visibleBoardWidth=hasBoard?boardWidth*boardScale:0;
   const visibleBoardHeight=hasBoard?boardHeight*boardScale:0;
-  const answerBudget=wide?available*(choice ? .70 : .51):available*(hasBoard && !minimized ? .35 : .66);
+  const answerBudget=wide?available*(choice ? .70 : raid ? .65 : .51):available*(hasBoard && !minimized ? .35 : .66);
   let answerScale=1,answerWidth=560,answerHeight=1;
   const physicalWidth=wide?Math.min(560,Math.max(160,width-2*(visibleBoardWidth+26))):Math.min(560,width-16);
   // Wrapping may change the panel height; converge using the actual rendered content.

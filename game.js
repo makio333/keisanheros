@@ -2026,6 +2026,7 @@ const ENEMIES_PER_STAGE = 5;
    { stageMode:true, areaId, stageIndex(0〜6・ボスはnull), isBoss, bossPhase(ボスのみ),
      stageKillCount(いまの ステージで たおした 数、0〜ENEMIES_PER_STAGE-1) } */
 function enterAreaStage(areaId, stageIndex, dailyChallenge = null){
+  if(!dailyChallenge){const subject=AREA_STAGES[areaId]?.bossKey?.startsWith('kanji')?'japanese':'math';const recommended=challengePrintSource(G,subject);if(recommended?.areaId===areaId&&recommended.stageIndex===stageIndex)dailyChallenge=subject+'-challenge';}
   explore = { stageMode:true, areaId, stageIndex, dailyChallenge, isBoss:false, stageKillCount:0, sessionDrops: [], sessionGold: 0, stageDrops: [], stageGold: 0, stageExp: 0, usedProblems: new Set() };
   startBattle(false);
 }
@@ -2043,7 +2044,7 @@ function rareStageForm(areaId, stageIndex){
   const score = Math.max(1, (AREA_STAGES[areaId]?.recLv || 1) + Math.max(0, stageIndex || 0));
   const form = score >= 20 ? RARE_STAGE_FORMS[2] : score >= 9 ? RARE_STAGE_FORMS[1] : RARE_STAGE_FORMS[0];
   // むずかしいステージほどボーナスを上げ、序盤ステージ周回では高経験値を得にくくする。
-  const expMultiplier = Math.min(4, 1.5 + (score - 1) * 0.07);
+  const expMultiplier = Math.min(6, 3 + (score - 1) * 0.1);
   return { form, expMultiplier };
 }
 function battleEnemyDisplayName(enemy){
@@ -4942,13 +4943,15 @@ function prepareChristmasBattleLayout(){
     if(!stack){stack=document.createElement('div');stack.id='christmas-answer-stack';$('battle-field').after(stack);}
     stack.append(status,problem,sub);
   }else if(stack){
-    document.querySelector('#screen-battle .battle-top').append(status);
+    $('battle-question-window').prepend(status);
     $('kanji-challenge').before(sub,problem);stack.remove();
   }
 }
 function startBattle(animateFloor){
   if(explore?.stageMode && !explore.isBoss && !explore.isRaid && !explore.readingQuest && !explore.isHalloween && !explore.isChristmas && AREA_STAGES[explore.areaId]?.stages[explore.stageIndex]){if(beginStageAttempt(G,explore.areaId,explore.stageIndex))save(true);}
   prepareChristmasBattleLayout();
+  $('battle-player-window')?.classList.remove('player-damage-hit','shake');
+  document.querySelectorAll('.damage-flash-overlay').forEach(node=>node.remove());
   const isStageMode = !!explore.stageMode;
   const enemy = isStageMode
     ? generateStageEnemy(explore.areaId, explore.stageIndex, explore.isBoss)
@@ -7661,7 +7664,7 @@ function rewardTooltipHtml(kind, id, rarity = 1, count = 1){
     return `<b>背景「${bg.name}」</b><p>プレイヤーの 背景スキン。${bg.rewardSource === 'quest' ? 'サブクエストでしか 手に入らないよ！' : ''}</p>`;
   }
   if (id === 'equip-ten-ticket') return '<b>装備ガチャ10連チケット</b><p>装備ガチャを 10回まとめて 引けるチケット。</p>';
-  if (id === 'raid-ticket') return '<b>レイドチケット</b><p>レイドボスに 1回 挑戦できるチケット。<br>ボスの レベルが あがると 1まい もらえるよ。</p>';
+  if (id === 'raid-ticket') return '<b>レイドチケット</b><p>レイドボスに 1回 挑戦できるチケット。<br>デイリーミッション4個達成で 1まい もらえるよ。</p>';
   return '<b>背景スキンガチャチケット</b><p>背景スキンガチャを 1回 引けるチケット。</p>';
 }
 
@@ -9738,7 +9741,8 @@ function openAncientPrintReview(prepared,{onFirstOpen=null,reprint=false}={}){
 }
 
 function openMaterialPrintChoices(subject,record,mode='student',previewWindow=null){
-  const html=subject==='math'?(Array.isArray(record)?renderMathWordSetPrintV2(record,{mode}):renderMathWordPrintV2(record,{mode})):renderJapaneseReadingPrintV2(record,{mode});
+  const printOptions={mode,playerName:G?.playerName||'',printNumber:(Array.isArray(record)?record[0]?.id:record?.id)||''};
+  const html=subject==='math'?(Array.isArray(record)?renderMathWordSetPrintV2(record,printOptions):renderMathWordPrintV2(record,printOptions)):renderJapaneseReadingPrintV2(record,printOptions);
   const pw=openLayoutPrintWindow(html,{previewWindow});if(!pw)return null;
   const label=pw.document.createElement('label');label.textContent='プリントの種類：';
   const select=pw.document.createElement('select');select.setAttribute('aria-label','プリントの種類');select.disabled=true;
@@ -13302,8 +13306,11 @@ function startChristmasChallenge(source = christmasChallengeSource(),random=Math
   if (!G || !isChristmasActive() || !AREA_STAGES[source.areaId]?.stages[source.stageIndex]) return;
   const state=christmasEventState(G);
   state.baseSource ||= {areaId:source.areaId,stageIndex:source.stageIndex};
+  const strengthStep=Math.max(0,Math.floor(Number(state.attempts)||0));
+  state.attempts=strengthStep+1;
+  save(true);
   explore = {
-    christmasMonsters:createChristmasEncounters(CHRISTMAS_MONSTERS,random),christmasLevel:source.level || 0,
+    christmasMonsters:createChristmasEncounters(CHRISTMAS_MONSTERS,random),christmasLevel:source.level || 0,christmasStrengthStep:strengthStep,
     stageMode:true, isChristmas:true, christmasIndex:0, christmasRecovered:0, christmasReplay:source.level < (state.clears || 0),
     areaId:source.areaId, stageIndex:source.stageIndex,
     isBoss:false, sessionDrops:[], sessionGold:0, stageDrops:[], stageGold:0, stageExp:0,
@@ -13327,12 +13334,12 @@ function generateChristmasEnemy(run) {
   const monster=monsters[index];
   const grade = getDefaultAreaDifficultyMultiplier(run.areaId);
   const isBoss = !!monster.isBoss;
-  const scaling=Math.pow(1.1,Math.max(0,run.christmasLevel || 0));
+  const scaling=Math.pow(1.5,Math.max(0,run.christmasStrengthStep || 0));
   const hp = Math.round((isBoss ? 36 + grade * 14 : 10 + grade * 4)*scaling);
   return {
     name:monster.name, emoji:`assets/christmas/${monster.id}.png`,
     maxHp:hp, hp, atk:Math.max(1, Math.round((isBoss ? 4 + grade * 2 : grade * 2)*scaling)),
-    def:isBoss ? Math.max(1, Math.round(grade)) : 0, spd:5,
+    def:isBoss ? Math.max(1, Math.round(grade*scaling)) : 0, spd:5*scaling,
     goldMin:2, goldMax:isBoss ? 12 : 5, exp:isBoss ? 12 : 5, isBoss
   };
 }
@@ -15665,9 +15672,7 @@ function grantPrintRewards(cur, correct, total, rate) {
   
   let rewards = [];
   
-  // Every correctly graded print question earns one medal, independent of challenge multipliers.
-  const printMedals=Math.max(0,Math.min(Number(total)||0,Math.floor(Number(correct)||0)));
-  if(printMedals){G.questMedals=(Number(G.questMedals)||0)+printMedals;rewards.push({kind:'medal',id:'quest-medal',name:`クエストメダル ×${printMedals}`,icon:'🏅',count:printMedals});}
+  // Quest medals are earned only by playing subquests, never by grading prints.
   // Base rewards
   const rewardMult = meta.challengePrint ? 3 : 1;
   const baseExp = correct * 20 * rewardMult;
@@ -16213,7 +16218,9 @@ function openDailyStagePrint(areaId, html, bg, landscape, challengePrint = false
 }
 
 function printAreaStage(areaId, idx, challengePrint = false, blueprint = null, onPrinted = null, autoSelect = false) {
- const openStagePrint=(html,bg=null,landscape=false)=>openDailyStagePrint(areaId,html,bg,landscape,challengePrint);
+ const subject=AREA_STAGES[areaId]?.bossKey?.startsWith('kanji')?'japanese':'math',recommended=challengePrintSource(G,subject);
+ const dailyPrint=challengePrint||(recommended?.areaId===areaId&&recommended.stageIndex===idx);
+ const openStagePrint=(html,bg=null,landscape=false)=>openDailyStagePrint(areaId,html,bg,landscape,dailyPrint);
 
   const area = AREA_STAGES[areaId];
   const stage = area.stages[idx];
@@ -16964,7 +16971,7 @@ async function sendRaidCheer(targetSlotKey, targetPlayerName, btnElement) {
   }
   if (G !== game) return;
 
-  const cheerReward = 50; // 送信者・受信者ともに50G
+  const cheerReward = 100; // エールを送った勇者への報酬
   G.player.gold = (G.player.gold || 0) + cheerReward;
   G.cheerHistory.targets.push(targetSlotKey);
   save();
@@ -17236,7 +17243,7 @@ function renderRaidRankingList(listEl, rankings, historical = false, metric = 'd
           } else {
             cheerActionHtml = `
               <button class="btn-cheer-action" data-slot="${r.slotKey || ''}" data-name="${encodeURIComponent(r.playerName || '')}" style="background:linear-gradient(135deg, #f39c12 0%, #e67e22 100%); border:1px solid #f1c40f; border-radius:12px; padding:2px 9px; font-size:11px; color:#fff; font-weight:bold; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.4); white-space:nowrap;">
-                👏 エール (+50G)
+                👏 エール (+100G)
               </button>
             `;
           }
@@ -17405,7 +17412,7 @@ function renderRaidBossMenu() {
       btn.disabled = !availability.enabled;
       btn.textContent = availability.reason === 'busy' || availability.reason === 'sync-unavailable' && raidSyncStatus !== 'offline' && raidSyncStatus !== 'denied' ? '討伐状況を確認中…'
         : availability.reason === 'sync-unavailable' ? '共有状況を確認できません'
-        : isFinalPushRaid ? '🔥 最終決戦に挑む' : '⚔ レイドボスに挑戦する';
+        : availability.reason === 'no-ticket' ? 'レイドチケットが必要です' : isFinalPushRaid ? '🔥 最終決戦に挑む' : '⚔ レイドボスに挑戦する';
       btn.style.background = availability.enabled ? 'linear-gradient(to bottom, #d35400, #c0392b)' : '#555';
       btn.onclick = availability.enabled ? confirmRaidStart : null;
     } else {
@@ -17443,19 +17450,19 @@ function renderRaidTicketCount(){
   if($('btn-raid-exchange'))$('btn-raid-exchange').textContent=`🪙 コイン交換所（${Number(G?.raidCoins)||0}枚）`;
   const el = $('raid-ticket-count');
   if (!el || !G) return;
-  el.textContent = '参加費なし・何度でも挑戦できます';
+  el.textContent = `🎟 レイドチケット ${Number(G.raidTickets)||0}枚・1回の参加で1枚消費`;
   bindStageRewardTooltips(el);
 }
 
 /* ボスの レベルが あがったあと、はじめて 拠点に入ったときに レイドチケットを 1まい わたす（真ん中に おしらせ） */
 let raidTicketChecking = false;
 let raidTicketCheckedAt = 0;
-async function checkRaidLevelTicket(){ /* Ticket system retired. */ }
+async function checkRaidLevelTicket(){ /* Tickets are distributed through daily mission rewards. */ }
 
 function confirmRaidStart(){
   if (!raidFeatureOpen()) { showRaidClosedNotice(); return; }
   if (!G || raidChallengeStartGate.busy) return;
-  showConfirmModal('レイドボスに挑戦！','参加費なしで挑戦できます。',()=>startRaidBattle());
+  showConfirmModal('レイドボスに挑戦！','🎟 レイドチケットを1枚使って参加します。',()=>startRaidBattle());
 }
 
 /* 戦闘中の「わからない」：負けずに レイドを おえる（ここまでのダメージは きろくされる） */
@@ -17507,6 +17514,7 @@ async function startRaidBattle() {
         return false;
       }
 
+      if(!game.isTestMode){game.raidTickets=Math.max(0,game.raidTickets-1);save(true);}
       grantRaidParticipationBackground();
       syncRaidState();
       hideBattleMenus();
@@ -17555,7 +17563,9 @@ async function startRaidBattle() {
     raidMonsterId: appearance.id
   };
 
+  prepareChristmasBattleLayout();
   showScreen('screen-battle');
+  $('screen-battle').classList.remove('christmas-battle-screen','halloween-battle-screen','event-raid-battle','event-raid-kanji','halloween-party-battle');
   $('screen-battle').classList.add('raid-battle-screen');
   document.getElementById('screen-battle').style.backgroundImage = `url("${av(appearance.battleBackground)}")`;
   document.getElementById('battle-floor-title').innerHTML = appearance.id === 'darkBahamutFinal'

@@ -4,7 +4,7 @@ import {canReuseRaidChallengeSnapshot,createRaidChallengeStartGate,raidChallenge
 assert.deepEqual(raidChallengeAvailability({syncStatus:'ready',hasTicket:true}),{enabled:true,reason:null});
 assert.equal(raidChallengeAvailability({syncStatus:'idle',hasTicket:true}).reason,'sync-unavailable');
 assert.equal(raidChallengeAvailability({syncStatus:'offline',hasTicket:true}).enabled,false,'offline shared state cannot be bypassed');
-assert.equal(raidChallengeAvailability({syncStatus:'ready',hasTicket:false}).enabled,true);
+assert.equal(raidChallengeAvailability({syncStatus:'ready',hasTicket:false}).reason,'no-ticket');
 assert.equal(raidChallengeAvailability({syncStatus:'ready',hasTicket:true,bossActive:false}).reason,'boss-defeated');
 assert.equal(raidChallengeAvailability({isTestMode:true,syncStatus:'offline',hasTicket:false}).enabled,true,'test mode keeps its existing sync/ticket exemptions');
 assert.equal(raidChallengeAvailability({isTestMode:true,bossActive:false}).enabled,false,'test mode cannot challenge a defeated boss');

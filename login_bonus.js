@@ -5,7 +5,7 @@ export const DAILY_CHALLENGES=Object.freeze([
  ['math-print','算数のチャレンジ問題を印刷する'],['japanese-print','国語のチャレンジ問題を印刷する'],
  ['math-subquest','算数のサブクエストをクリア'],['japanese-subquest','国語のサブクエストをクリア']
 ].map(([id,name])=>({id,name})));
-export const DAILY_MILESTONES=Object.freeze([{id:'milestone-2',count:2,gold:0,items:[{kind:'item',id:'cost_seed',count:1}]},{id:'milestone-4',count:4,gold:1000,items:[]},{id:'milestone-6',count:6,gold:0,items:[{kind:'ticket',id:'equip-ten-ticket',count:1}]},{id:'all',count:8,gold:0,items:[{kind:'ticket',id:'skin-ticket',count:1}]}]);
+export const DAILY_MILESTONES=Object.freeze([{id:'milestone-2',count:2,gold:0,items:[{kind:'item',id:'cost_seed',count:1}]},{id:'milestone-4',count:4,gold:1000,items:[{kind:'ticket',id:'raid-ticket',count:1}]},{id:'milestone-6',count:6,gold:0,items:[{kind:'ticket',id:'equip-ten-ticket',count:1}]},{id:'all',count:8,gold:0,items:[{kind:'ticket',id:'skin-ticket',count:1}]}]);
 let serverOffset=0;
 export function syncChallengeClock(now){if(Number.isFinite(now))serverOffset=now-Date.now();}
 export function loginBonusDay(now=Date.now()+serverOffset){return new Date(now+9*3600000).toISOString().slice(0,10);}

@@ -24,6 +24,8 @@ let currentChallengeAnswer = null;
 let currentAcceptedAnswers = null;   // おくりがな ありでも なしでも せいかいに する
 let onAnswerCallback = null;
 let resultOverlayHideTimer = 0;
+let answerTimer=0;
+let challengeGeneration=0;
 
 /* ひらがな・カタカナ（おくりがな）かどうか */
 function isKanaChar(ch){ return /[\u3041-\u309F\u30A0-\u30FF\u30FCー]/.test(ch); }
@@ -165,6 +167,7 @@ function toggleInputMode(){toggleKanaBoard();}
  * @param {Object} problemData - generateKanjiProblem() の戻り値
  */
 function setupKanjiChallenge(problemData) {
+  clearTimeout(answerTimer);challengeGeneration++;
   currentChallengeAnswer = problemData.answer;
   currentAcceptedAnswers = kanjiAcceptedAnswers(problemData.text, problemData.answer, problemData.acceptedAnswers || []);
   currentKanjiAnswerMode=/[\p{Script=Han}]/u.test(problemData.text || '');
@@ -283,14 +286,13 @@ function submitKanjiAnswer(forceResult) {
     ? currentAcceptedAnswers.has(userAnswer)
     : (userAnswer === currentChallengeAnswer);
   
+  currentChallengeAnswer=null;
+  const generation=challengeGeneration,callback=onAnswerCallback;
   showResultOverlay(isCorrect);
   
   // 演出を見せるために少し待ってからコールバックを呼ぶ
-  setTimeout(() => {
-
-    if (onAnswerCallback) {
-      onAnswerCallback(isCorrect);
-    }
+  answerTimer=setTimeout(() => {
+    if(generation===challengeGeneration)callback?.(isCorrect);
   }, 500);
 }
 

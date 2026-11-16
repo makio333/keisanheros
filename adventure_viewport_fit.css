@@ -95,3 +95,25 @@ body:has(#screen-battle.active[data-adventure-fit=stacked]) #volume-control-cont
 /* Fitted battles move the menu button to the top; open its contents below it. */
 body:has(#screen-battle.active[data-adventure-fit]) #menu-dropdown{top:44px;bottom:auto;right:0;left:auto;width:min(270px,calc(100vw - 86px));min-width:0;max-height:calc(100dvh - 64px);overflow:auto;box-sizing:border-box;white-space:normal}
 body:has(#screen-battle.active[data-adventure-fit=stacked]) #menu-dropdown{left:0;right:auto}
+
+/* Shared raid answer stack: keep status and answers together after kana/event transitions. */
+#screen-battle.raid-battle-screen[data-adventure-fit] #battle-question-window{display:none!important}
+#screen-battle.raid-battle-screen[data-adventure-fit] #christmas-answer-stack{display:flex!important;flex-direction:column!important}
+#screen-battle.raid-battle-screen[data-adventure-fit] #battle-challenge:not(.hidden){position:static!important;inset:auto!important;width:100%!important;max-width:none!important;height:auto!important;max-height:none!important;min-height:0!important;margin:0!important;padding:10px 12px!important;box-sizing:border-box!important}
+#screen-battle.raid-battle-screen[data-adventure-fit] .challenge-body{display:block!important}
+#screen-battle.raid-battle-screen[data-adventure-fit] .challenge-main{padding:0!important}
+#screen-battle.raid-battle-screen[data-adventure-fit] .challenge-problem{font-size:28px!important;line-height:1.4!important;margin:4px 0!important}
+#screen-battle.raid-battle-screen[data-adventure-fit] .challenge-prompt{font-size:13px!important;line-height:1.4!important;margin:0!important}
+#screen-battle.raid-battle-screen[data-adventure-fit] #ch-form{display:flex!important;gap:6px!important;margin:6px 0!important}
+#screen-battle.raid-battle-screen[data-adventure-fit] #ch-input{flex:1!important;min-width:0!important;width:0!important;height:42px!important;font-size:22px!important}
+#screen-battle.raid-battle-screen[data-adventure-fit] #ch-submit{width:auto!important;height:42px!important;min-height:0!important;padding:4px 12px!important}
+#screen-battle.raid-battle-screen[data-adventure-fit] .battle-inline-commands{display:flex!important;gap:6px!important;margin:6px 0 0!important}
+#screen-battle.raid-battle-screen[data-adventure-fit] .battle-inline-commands .btn{flex:1!important;min-width:0!important;min-height:32px!important;width:auto!important;margin:0!important;padding:4px!important;font-size:12px!important}
+#screen-battle[data-adventure-fit] #battle-sub-menu:not(.hidden){max-height:340px!important;overflow-y:auto!important;overscroll-behavior:contain}
+#screen-battle[data-adventure-fit] .battle-skill-option{flex:none!important}
+
+/* Skill choices remain reachable when the answer keyboard is hidden. */
+#screen-battle.active:not([data-adventure-fit]) #battle-sub-menu:not(.hidden):not(.battle-item-menu){position:fixed!important;top:90px!important;bottom:22px!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;width:min(560px,calc(100vw - 24px))!important;max-height:calc(100dvh - 112px)!important;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain;box-sizing:border-box;z-index:55;display:flex;flex-direction:column}
+#screen-battle.active #battle-sub-menu .battle-skill-option{flex-shrink:0}
+
+#screen-battle.raid-battle-screen[data-adventure-fit] .result-text:empty{display:none!important}

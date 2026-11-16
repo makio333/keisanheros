@@ -3,10 +3,10 @@ import {questPrintRewards} from './print_reward_icons.js';
 import {REVIEW_SETTINGS} from './gameplay_review_settings.js';
 import {JAPANESE_READING_QUESTS_V2} from './japanese_reading_quests_v2.js';
 import {renderWordProblemPrintV2} from './word_problem_print_layout_v2.js';
-export function japaneseReadingPrintConfigV2(recordOrId,{mode='student',scale=1,writingMode='vertical-rl'}={}){
+export function japaneseReadingPrintConfigV2(recordOrId,{mode='student',scale=1,writingMode='vertical-rl',playerName='',printNumber=''}={}){
  const p=typeof recordOrId==='string'?JAPANESE_READING_QUESTS_V2.find(p=>p.id===recordOrId):recordOrId;
  if(!p?.passage||p.questions?.length!==5)throw new TypeError('Final reading record required');
- return {villager:printQuestVillager(JAPANESE_READING_QUESTS_V2.filter(q=>q.grade===p.grade).findIndex(q=>q.id===p.id)),title:p.title,subject:'japanese',grade:p.grade,story:p.passage,mode,scale,writingMode,pageLayout:REVIEW_SETTINGS.wordPrintLayout,rewardText:'クエスト報酬（G・EXPは5問クリア時、メダルは1問ごと）',rewardEntries:questPrintRewards({gold:900,exp:60,medals:1,medalPerQuestion:true}),
+ return {villager:printQuestVillager(JAPANESE_READING_QUESTS_V2.filter(q=>q.grade===p.grade).findIndex(q=>q.id===p.id)),title:p.title,subject:'japanese',playerName,printNumber,grade:p.grade,story:p.passage,mode,scale,writingMode,pageLayout:REVIEW_SETTINGS.wordPrintLayout,rewardText:'クエスト報酬（G・EXPは5問クリア時、メダルは1問ごと）',rewardEntries:questPrintRewards({gold:900,exp:60,medals:1,medalPerQuestion:true}),
  storyAnnotations:{paragraphIndent:true,ruby:p.ruby.overrides,references:p.references,segments:p.segments},
  questions:p.questions.map(q=>({question:q.prompt,sourceId:q.id,options:q.input.type==='single-choice'?q.input.options.map((o,i)=>({label:q.print.optionLabels[i],text:o.text})):null,
  answer:q.scoring.mode==='human-rubric'?'人による確認（唯一の正解なし）':q.input.type==='single-choice'?`${q.print.optionLabels[q.input.options.findIndex(o=>o.id===q.correct)]}：${q.answerText}`:q.answerText,

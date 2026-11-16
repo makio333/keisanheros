@@ -2,6 +2,7 @@ export function raidChallengeAvailability({syncStatus='idle',isTestMode=false,ha
   if(busy)return{enabled:false,reason:'busy'};
   if(!bossActive)return{enabled:false,reason:'boss-defeated'};
   if(!isTestMode&&syncStatus!=='ready')return{enabled:false,reason:'sync-unavailable'};
+  if(!isTestMode&&!hasTicket)return{enabled:false,reason:'no-ticket'};
   return{enabled:true,reason:null};
 }
 
