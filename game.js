@@ -1,3 +1,5 @@
+import {bindInputComposition} from './input_composition_guard.js';
+import './equipment_summary.css';
 import {showErrorBanner} from './error_banner.js';
 import {showLoginBonus} from './login_bonus_ui.js';
 import {claimChallengeBonus,recordChallengeClear,syncChallengeClock} from './login_bonus.js';
@@ -4797,8 +4799,9 @@ function startChallenge(container, opts, cb){
     }, 450);
   }
 
+  let inputComposition;
   function trySubmit(){
-    if (done) return;
+    if (done || inputComposition?.submissionBlocked()) return;
     if (input.value.length === 0){
       input.classList.remove('flash-ng'); void input.offsetWidth;
       input.classList.add('flash-ng');
@@ -4820,8 +4823,8 @@ function startChallenge(container, opts, cb){
   function remBack(){ if (slotted && slotStage === 1) switchSlot(0); }
 
   if (input) {
-    input.addEventListener('input', () => {
-      if (done) return;
+    const syncInput=event=>{
+      if (done || inputComposition?.blocked(event)) return;
       const before = input.value;
       const v = toHalfWidth(before);
       if (v !== before){
@@ -4830,11 +4833,13 @@ function startChallenge(container, opts, cb){
       if (v.length > lastLen) SM.playBeep('type');
       lastLen = v.length;
       renderTyped();
-    });
+    };
+    inputComposition=bindInputComposition(input,syncInput);
+    input.addEventListener('input',syncInput);
 
     input.addEventListener('calc-back', remBack);
     input.addEventListener('keydown', (e) => {
-      if (e.isComposing || e.keyCode === 229) return;
+      if (inputComposition.submissionBlocked(e)) return;
       if (e.key === 'Backspace' && input.value === '' && slotted && slotStage === 1) { e.preventDefault(); remBack(); return; }
       if (e.key === 'Enter' || e.keyCode === 13 || e.which === 13){
         e.preventDefault();
@@ -4861,6 +4866,7 @@ function startChallenge(container, opts, cb){
       done = true;
       cancelled = true;
       stopIceSound?.();
+      inputComposition?.cleanup();
       if (calcCenter) calcCenter.classList.add('hidden');
       container.innerHTML = '';
       container.classList.add('hidden');
@@ -6571,11 +6577,13 @@ function playItemRevealSequence(items, opts){
     clearTimeout(timer);
     if (opts.showSummary){
       const cardsHtml = items.map(r => `<div class="item-card${r.rarity ? ' rarity-' + r.rarity : ''}">${itemCardBodyHtml(r, 40)}</div>`).join('');
-      overlay.innerHTML = `<div class="panel gacha-reveal-summary">
-        <h2>${opts.title || 'けっか'}</h2>
+      const equipmentSummary=items.length>1&&items.every(item=>item.kind==='equip');
+      overlay.innerHTML = `<div class="panel gacha-reveal-summary${equipmentSummary?' equipment-gacha-summary':''}" style="--summary-count:${items.length}">
+        <h2>${opts.title || 'けっか'}${equipmentSummary?`（${items.length}個）`:''}</h2>
         <div class="item-card-grid">${cardsHtml}</div>
         <button class="btn btn-primary" id="btn-gacha-reveal-close">とじる</button>
       </div>`;
+      if(equipmentSummary){const panel=overlay.firstElementChild;const cols=()=>innerWidth<600?4:innerHeight<520?7:5;const fit=()=>panel.style.setProperty('--summary-rows',Math.ceil(items.length/cols()));fit();window.addEventListener('resize',fit);const observer=new MutationObserver(()=>{if(!overlay.isConnected){window.removeEventListener('resize',fit);observer.disconnect();}});observer.observe(document.body,{childList:true});}
       finalizeEquipmentCards(overlay);
       overlay.querySelectorAll('.item-card').forEach((element, index) => {
         const res = items[index];

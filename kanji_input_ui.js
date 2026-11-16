@@ -1,3 +1,4 @@
+import {bindInputComposition} from './input_composition_guard.js';
 import { getAcceptedKanjiReadings, normalizeReading } from './kanji_readings.js';
 // ==========================================
 // 漢字入力・判定UI & エフェクト (kanji_input_ui.js)
@@ -26,6 +27,7 @@ let onAnswerCallback = null;
 let resultOverlayHideTimer = 0;
 let answerTimer=0;
 let challengeGeneration=0;
+let kanjiComposition=null;
 
 /* ひらがな・カタカナ（おくりがな）かどうか */
 function isKanaChar(ch){ return /[\u3041-\u309F\u30A0-\u30FF\u30FCー]/.test(ch); }
@@ -91,12 +93,13 @@ function initKanjiInputUI(callback) {
   
   const inputEl = document.getElementById('challenge-input');
   if (inputEl) {
+    kanjiComposition=bindInputComposition(inputEl);
     inputEl.readOnly=false;
     inputEl.oninput = () => {
       spawnInputEffect();
     };
     inputEl.onkeydown = (e) => {
-      if (e.key === 'Enter' && !e.isComposing && e.keyCode!==229) {e.preventDefault();submitKanjiAnswer();}
+      if (e.key === 'Enter' && !kanjiComposition.submissionBlocked(e)) {e.preventDefault();submitKanjiAnswer();}
     };
   }
   
@@ -258,7 +261,8 @@ function setupKanjiChallenge(problemData) {
     const inputEl = document.getElementById('challenge-input');
     if(inputEl) {
       inputEl.value = '';
-      inputEl.readOnly=false;
+      kanjiComposition=bindInputComposition(inputEl);
+    inputEl.readOnly=false;
       if (tierStr.startsWith('kana_kata')) {
         inputEl.placeholder = 'カタカナで入力';
       } else if (tierStr.startsWith('kana_hira')) {
@@ -275,7 +279,7 @@ function setupKanjiChallenge(problemData) {
 
 function submitKanjiAnswer(forceResult) {
 
-  if (!currentChallengeAnswer) return;
+  if (!currentChallengeAnswer || kanjiComposition?.submissionBlocked(forceResult)) return;
   
   if (typeof forceResult === 'boolean') {
     currentChallengeAnswer = null;
