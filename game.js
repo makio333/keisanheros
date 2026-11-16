@@ -1,3 +1,4 @@
+import {showErrorBanner} from './error_banner.js';
 import {showLoginBonus} from './login_bonus_ui.js';
 import {claimChallengeBonus,recordChallengeClear,syncChallengeClock} from './login_bonus.js';
 import './home_notice_actions.css';
@@ -130,11 +131,7 @@ function storageSet(k, v) {
   _fallbackMemStore.set(k, String(v));
   _fallbackRemovedKeys.delete(k);
   if (typeof document !== 'undefined') {
-    const banner = document.getElementById('debug-error-banner');
-    if(banner){
-      banner.style.display = 'block';
-      banner.textContent = '端末への保存に失敗しました。変更はこの画面内に一時保持しています。画面を閉じずに、保存先の空き容量と共有セーブへの保存状況を確認してください。';
-    }
+    showErrorBanner('端末への保存に失敗しました。変更はこの画面内に一時保持しています。画面を閉じずに、保存先の空き容量と共有セーブへの保存状況を確認してください。');
   }
   return false;
 }
@@ -4525,6 +4522,7 @@ window.createKanaChoiceProblem = createKanaChoiceProblem;
 function startChallenge(container, opts, cb){
   destroyChallenge();
   const problem = opts.problem;
+  const timeLimit = Number.isFinite(opts.timeLimit) && opts.timeLimit > 0 ? opts.timeLimit : 15000;
 
   // --- 漢字問題の場合 ---
   if (isKanjiProblem(problem)) {
@@ -4577,7 +4575,7 @@ function startChallenge(container, opts, cb){
         done = true;
         const elapsed = Date.now() - start;
         opts.onAnswered?.(elapsed,isCorrect);
-        recordStudyAnswer(problem, isCorrect, elapsed, false, opts.timeLimit || 15000);
+        recordStudyAnswer(problem, isCorrect, elapsed, false, timeLimit);
         recordRaidLearningAnswer(problem, isCorrect);
         if (isCorrect) {
           SM.playCorrectAnswer();

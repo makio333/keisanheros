@@ -9,7 +9,8 @@ function fitAdventure(){
   if(!screen)return;
   const board=screen.querySelector('#kanji-challenge'),problem=screen.querySelector('#kanji-problem-center');
   const christmas=screen.classList.contains('christmas-battle-screen');
-  if(!christmas && (!board || board.classList.contains('hidden') || problem?.classList.contains('hidden'))){
+  const choice=!problem?.classList.contains('hidden') && screen.querySelector('#kana-choice-display:not(.hidden)');
+  if(!christmas && !choice && (!board || board.classList.contains('hidden') || problem?.classList.contains('hidden'))){
     delete screen.dataset.adventureFit;screen.classList.remove('fitted-kana-battle');
     const previous=screen.querySelector('#christmas-answer-stack[data-generic-fit]');
     if(previous){for(const [node,anchor] of originalPositions){if(anchor.isConnected)anchor.replaceWith(node);}originalPositions.clear();previous.remove();}
@@ -39,7 +40,7 @@ function fitAdventure(){
   const boardScale=minimized?Math.min(1,(width-16)/boardWidth):Math.min(maxBoardScale,preferredBoardScale??Math.min(1,boardBudget/boardHeight));
   const visibleBoardWidth=hasBoard?boardWidth*boardScale:0;
   const visibleBoardHeight=hasBoard?boardHeight*boardScale:0;
-  const answerBudget=wide?available*.51:available*(hasBoard && !minimized ? .35 : .66);
+  const answerBudget=wide?available*(choice ? .70 : .51):available*(hasBoard && !minimized ? .35 : .66);
   let answerScale=1,answerWidth=560,answerHeight=1;
   const physicalWidth=wide?Math.min(560,Math.max(160,width-2*(visibleBoardWidth+26))):Math.min(560,width-16);
   // Wrapping may change the panel height; converge using the actual rendered content.

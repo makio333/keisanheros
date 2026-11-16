@@ -1,3 +1,4 @@
+import {showErrorBanner} from './error_banner.js';
 import panelHtml from './save-migration.html?raw';
 import {collection,doc,getDocsFromServer,runTransaction} from 'firebase/firestore';
 import {signOut} from 'firebase/auth';
@@ -43,7 +44,7 @@ export async function initializeFirebaseGameClient(){
         transport=await createFirebaseGameTransport({uid:user.uid,isCurrentUser:uid=>migrationAuth.currentUser?.uid===uid,
           readSaves:async uid=>(await getDocsFromServer(collection(migrationDb,'privateGame',uid,'saves'))).docs.map(row=>({id:row.id,...row.data()})),
           reference:(uid,key)=>doc(migrationDb,'privateGame',uid,'saves',key),transaction:callback=>runTransaction(migrationDb,callback),
-          onFailure(error,save){try{localStorage.setItem(`legend-account-conflict::${user.uid}::${save.key}`,JSON.stringify(save.gameState));}catch{}const banner=document.getElementById('debug-error-banner');if(banner){banner.textContent=errorText(error);banner.style.display='block';}},
+          onFailure(error,save){try{localStorage.setItem(`legend-account-conflict::${user.uid}::${save.key}`,JSON.stringify(save.gameState));}catch{}showErrorBanner(errorText(error));},
         });
         installFirebaseRaidAPI({getIdToken:async()=>{
           const current=migrationAuth.currentUser;

@@ -1,3 +1,4 @@
+import {showErrorBanner,hideErrorBanner} from './error_banner.js';
 import {installAccountGameAPIs} from './account_game_client.js';
 import {mountLegacyFileImport} from './legacy_file_ui.js';
 
@@ -209,10 +210,9 @@ export async function initializeAccountClient({onLogout,onAuthenticationRequired
       try{
         const transport=await createAccountTransport({onFailure(error,save){
           try{localStorage.setItem(`legend-account-conflict::${transport.accountId}::${save.key}::${Date.now()}`,JSON.stringify(save.gameState));}catch{}
-          const warning=document.getElementById('debug-error-banner');if(warning){warning.style.display='block';warning.textContent=accountErrorMessage(error);}
+          showErrorBanner(accountErrorMessage(error));
         },onRecovery(){
-          const warning=document.getElementById('debug-error-banner');
-          if(warning){warning.style.display='none';warning.textContent='';}
+          hideErrorBanner();
         }});
         if(onLogout){const logout=transport.logout;transport.logout=async()=>{await logout();await onLogout();};}
         if(!transport.summary.saveLimit){

@@ -1,3 +1,4 @@
+import {showErrorBanner} from './error_banner.js';
 // ==========================================================
 // iPad / iOS Safari file://環境向け localStorage 安全化ポリフィル
 // ==========================================================
@@ -52,10 +53,6 @@
   // 画面上でのグローバルエラーキャッチ（iPadで何が起きているか即座に確認可能にする）
   window.addEventListener('error', function(e) {
     console.error('Global Error Caught:', e.error || e.message);
-    const errBox = document.getElementById('debug-error-banner');
-    if (errBox) {
-      errBox.style.display = 'block';
-      errBox.textContent = 'エラー: ' + (e.message || (e.error && e.error.message) || 'スクリプト実行時エラー');
-    }
+    showErrorBanner('エラー: ' + (e.message || (e.error && e.error.message) || 'スクリプト実行時エラー'));
   });
 })();
