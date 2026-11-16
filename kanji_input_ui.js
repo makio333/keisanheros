@@ -51,6 +51,12 @@ function initKanjiInputUI(callback) {
   
   const container = document.getElementById('software-keyboard');
   if (container) {
+    // Enter confirms the answer instead of activating the last focused kana key.
+    container.onkeydown=event=>{
+      if(event.key!=='Enter'||event.isComposing||event.keyCode===229||!event.target.closest('.key-btn'))return;
+      event.preventDefault();event.stopPropagation();
+      if(!event.repeat)submitKanjiAnswer();
+    };
     container.innerHTML = '';
     container.dataset.kanaPage='0';
     container.classList.remove('hidden');

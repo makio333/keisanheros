@@ -4987,7 +4987,7 @@ function startBattle(animateFloor){
 
   if(explore.isChristmas){
     const source=christmasQuestionSource(explore,enemy.isBoss), area=AREA_STAGES[source.areaId];
-    $('battle-floor-title').textContent=`🎄 チャレンジ${(explore.christmasLevel || 0)+1} ${explore.christmasIndex+1}／${CHRISTMAS_ENCOUNTERS_PER_RUN}・漢字${area.displayNum} ${area.stages[source.stageIndex].name}${enemy.isBoss?'【強敵】':''}`;
+    $('battle-floor-title').textContent=`🎄 レベル${(explore.christmasStrengthStep || 0)+1}・チャレンジ${(explore.christmasLevel || 0)+1} ${explore.christmasIndex+1}／${CHRISTMAS_ENCOUNTERS_PER_RUN}・漢字${area.displayNum} ${area.stages[source.stageIndex].name}${enemy.isBoss?'【強敵】':''}`;
   }
   if (explore.halloweenSeason === 2) $('battle-floor-title').textContent = halloweenSeason2Title(explore);
   if (explore.isEventRaid) $('battle-floor-title').textContent = '🎃 イベント専用レイド・討伐数チャレンジ';
@@ -13271,7 +13271,7 @@ function showChristmasStageChoices(){
   const source=christmasChallengeSource(Math.max(0,choice.level)),area=AREA_STAGES[source.areaId],stage=area.stages[source.stageIndex],replay=choice.level<(state.clears||0);
   return `<article style="padding:16px;border:1px solid #beaa78;border-radius:12px;background:#192a38"><button class="btn ${replay?'':'btn-primary'}" data-stage-choice="${index}" ${choice.enabled?'':'disabled'}>${choice.label}<small>チャレンジ${Math.max(0,choice.level)+1}・漢字${escapeHtml(area.displayNum)} ${escapeHtml(stage.name)}</small></button><p style="display:flex;align-items:center;justify-content:center;gap:8px"><img src="${av(CHRISTMAS_PRESENT_ICON)}" alt="プレゼント" style="width:36px;height:36px;object-fit:contain"><b>${replay?'1体につき1個':'1体につき2〜4個'}</b></p><small>${replay?'通常の約3分の1・5体で5個':'通常報酬・5体で10〜20個'}</small><p>ブラックサンタ：${replay?'3〜5':'10〜15'}個</p><small>${stageRewardIcon('ticket','skin-ticket',1,28)} サンタ撃破時10％で1枚（確率は同じ）</small></article>`;
  }).join('');
- overlay.innerHTML=`<section class="panel" role="dialog" aria-modal="true" aria-label="クリスマスのステージ選択" style="width:min(1000px,94vw);max-height:90dvh;overflow:auto"><button class="btn" data-cancel>もどる</button><h2>挑戦するステージを選ぼう</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">${cards}</div><p>クリア済みのステージは、もらえるプレゼントが減ります。次のステージは通常報酬です。</p></section>`;
+ overlay.innerHTML=`<section class="panel" role="dialog" aria-modal="true" aria-label="クリスマスのステージ選択" style="width:min(1000px,94vw);max-height:90dvh;overflow:auto"><button class="btn" data-cancel>もどる</button><h2>挑戦するステージを選ぼう</h2><p><b>次の敵：レベル${Math.max(0,Math.floor(Number(state.attempts)||0))+1}</b>（挑戦するたびに1.5倍ずつ強くなります）</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">${cards}</div><p>クリア済みのステージは、もらえるプレゼントが減ります。次のステージは通常報酬です。</p></section>`;
  const close=()=>overlay.remove();overlay.querySelector('[data-cancel]').onclick=close;
  overlay.querySelectorAll('[data-stage-choice]').forEach(button=>button.onclick=()=>{const choice=choices[Number(button.dataset.stageChoice)];if(!choice.enabled)return;close();document.querySelector('.christmas-menu')?.remove();startChristmasChallenge(christmasChallengeSource(choice.level));});
  overlay.onkeydown=event=>{event.stopPropagation();if(event.key==='Escape'){event.preventDefault();close();}if(event.key==='Tab'){event.preventDefault();const buttons=[...overlay.querySelectorAll('button:not(:disabled)')],i=buttons.indexOf(document.activeElement);buttons[(i+(event.shiftKey?-1:1)+buttons.length)%buttons.length].focus();}};
