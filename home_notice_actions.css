@@ -1,7 +1,9 @@
-#screen-home .home-side-action{position:absolute;left:1.5%;top:25%;z-index:6;width:112px;max-width:18vw;min-width:68px;margin:0;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;border:2px solid #ffe39a;border-radius:16px;background:linear-gradient(#3a3155,#211d36);color:#fff0c3;box-shadow:0 4px 0 #111a;cursor:pointer;font:800 13px/1.2 sans-serif;text-align:center;transform:none;}
-#screen-home .home-side-action svg{display:block;width:54px;height:54px;max-width:90%;}
-#screen-home .home-side-action:focus-visible{outline:3px solid white;outline-offset:4px;}
-#screen-home #btn-home-announcements{top:calc(25% + 118px);width:150px;max-width:20vw;min-width:80px;padding:0;border:0;border-radius:10px;background:none;box-shadow:none;}
-#screen-home #btn-home-announcements img{display:block;width:100%;height:auto;max-height:110px;object-fit:contain;border-radius:8px;filter:drop-shadow(0 3px 3px #0009);}
-#screen-home .home-side-action[hidden]{display:none;}
-@media(max-width:600px){#screen-home .home-side-action{top:17%;left:8px;font-size:10px;width:76px;border-radius:12px;padding:5px 2px;}#screen-home .home-side-action svg{width:40px;height:40px;}#screen-home #btn-home-announcements{top:calc(17% + 90px);max-width:22vw;min-width:70px;}}
+#screen-home .home-side-action{position:absolute;left:16px;top:120px;z-index:9;width:78px;height:86px;min-width:0;max-width:none;box-sizing:border-box;margin:0;padding:7px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:2px solid #e4c887;border-radius:13px;background:linear-gradient(145deg,#352a50,#171b32);color:#fff1cd;box-shadow:0 3px 0 #080b19b3;cursor:pointer;font:800 12px/1.1 sans-serif;text-align:center;transform:none}
+#screen-home .home-side-action svg{display:block;width:46px;height:46px;max-width:90%;flex:none}
+#screen-home #btn-home-login-bonus svg circle{display:none}
+#screen-home .home-side-action:focus-visible{outline:3px solid white;outline-offset:3px}
+#screen-home #btn-home-announcements{top:218px}
+#screen-home .home-side-action[hidden],#screen-home .home-side-badge[hidden]{display:none}
+#screen-home .home-side-badge{position:absolute;right:-5px;top:-7px;display:grid;place-items:center;width:23px;height:23px;border:1px solid #ffe4ae;border-radius:50%;background:#df4652;color:#fff;font:800 13px/1 sans-serif;box-shadow:0 2px 4px #0007}
+@media(max-width:699px){#screen-home .home-side-action{left:8px;top:140px;width:62px;height:72px;padding:5px 3px;font-size:10px;border-radius:11px}#screen-home .home-side-action svg{width:38px;height:38px}#screen-home #btn-home-announcements{top:140px;left:78px}.home-side-badge{width:20px;height:20px}}
+@media(max-height:520px) and (min-width:700px){#screen-home .home-side-action{top:110px;width:64px;height:68px;font-size:10px}#screen-home .home-side-action svg{width:34px;height:34px}#screen-home #btn-home-announcements{top:186px}}

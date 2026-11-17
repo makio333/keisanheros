@@ -4049,6 +4049,13 @@ function updateHud(){
     if (mpEl) mpEl.style.width = (p.mp * mpScale) + 'px';
     if (mpGhostEl) mpGhostEl.style.width = (p.mp * mpScale) + 'px';
 
+    if(prefix==='home' && $('screen-home')?.classList.contains('home-layout-b')){
+      if(mpContainer)mpContainer.style.width='';
+      if(mpEl)mpEl.style.width=`${Math.min(100,Math.max(0,p.mp / totalMaxMp()*100))}%`;
+      if(mpGhostEl)mpGhostEl.style.width=mpEl?.style.width||'0%';
+      if(mpMaxEl)mpMaxEl.textContent=totalMaxMp();
+    }
+
     // けいけんち: 次のレベルまでに必要な量に対する割合（%）で表示
     const expNeed = expNext(p.lvl);
     if (expNumEl) expNumEl.textContent = p.exp;
@@ -7455,15 +7462,15 @@ async function checkLoginBonus(){
  const game=G,key=currentSlotKey;try{const result=await window.AnnouncementAPI.loginDay(),day=result.day;if(G!==game||key!==currentSlotKey||loginBonusCheckKey===key+day)return;loginBonusCheckKey=key+day;syncChallengeClock(result.now);}catch{}
 }
 function ensureAnnouncementButtons(){
- const home=$('screen-home');if(home&&!$('btn-home-login-bonus')){const button=document.createElement('button');button.id='btn-home-login-bonus';button.type='button';button.className='home-side-action';button.setAttribute('aria-label','デイリーミッション');button.innerHTML=`<svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="bonus-gold" x2="0" y2="1"><stop stop-color="#fff0a3"/><stop offset="1" stop-color="#df9f30"/></linearGradient></defs><circle cx="32" cy="32" r="28" fill="#27233f" stroke="url(#bonus-gold)" stroke-width="3"/><path d="m16 46 7-15 9 5 9-5 7 15-16 7z" fill="#bb3f54" stroke="#ffdc82" stroke-width="2"/><path d="M15 27h34v11H15zM20 38h24v12H20z" fill="url(#bonus-gold)" stroke="#795123" stroke-width="2"/><path d="M30 27h5v23h-5z" fill="#bc3b55"/><path d="M32 27c-17-2-15-16-7-10l7 10c17-2 15-16 7-10z" fill="#e26570" stroke="#ffd983" stroke-width="2"/><path d="m32 5 2 5 6 1-5 4 1 6-4-3-5 3 1-6-4-4 6-1z" fill="#fff0a0"/></svg><span>デイリー<br>ミッション</span>`;button.onclick=()=>showLoginBonus(loginBonusUI());home.append(button);}
- if(home&&!$('btn-home-announcements')){const button=document.createElement('button');button.id='btn-home-announcements';button.type='button';button.className='home-side-action';button.hidden=true;button.setAttribute('aria-label','最新のお知らせ');home.append(button);}
+ const home=$('screen-home');if(home&&!$('btn-home-login-bonus')){const button=document.createElement('button');button.id='btn-home-login-bonus';button.type='button';button.className='home-side-action';button.setAttribute('aria-label','デイリーミッション');button.innerHTML=`<svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="bonus-gold" x2="0" y2="1"><stop stop-color="#fff0a3"/><stop offset="1" stop-color="#df9f30"/></linearGradient></defs><circle cx="32" cy="32" r="28" fill="#27233f" stroke="url(#bonus-gold)" stroke-width="3"/><path d="m16 46 7-15 9 5 9-5 7 15-16 7z" fill="#bb3f54" stroke="#ffdc82" stroke-width="2"/><path d="M15 27h34v11H15zM20 38h24v12H20z" fill="url(#bonus-gold)" stroke="#795123" stroke-width="2"/><path d="M30 27h5v23h-5z" fill="#bc3b55"/><path d="M32 27c-17-2-15-16-7-10l7 10c17-2 15-16 7-10z" fill="#e26570" stroke="#ffd983" stroke-width="2"/><path d="m32 5 2 5 6 1-5 4 1 6-4-3-5 3 1-6-4-4 6-1z" fill="#fff0a0"/></svg><span class="home-side-label">デイリー</span>`;button.onclick=()=>showLoginBonus(loginBonusUI());home.append(button);}
+ if(home&&!$('btn-home-announcements')){const button=document.createElement('button');button.id='btn-home-announcements';button.type='button';button.className='home-side-action';button.setAttribute('aria-label','お知らせ');button.title='お知らせ';button.innerHTML='<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M28 9a4 4 0 0 1 8 0v3c10 2 15 10 15 21v9l5 7H8l5-7v-9c0-11 5-19 15-21z" fill="#efbc4b" stroke="#ffe9a3" stroke-width="2"/><path d="M25 53a7 7 0 0 0 14 0" fill="#fbd56b"/><path d="M22 21c-4 4-5 9-5 16" fill="none" stroke="#fff0b6" stroke-width="3" stroke-linecap="round"/></svg><span class="home-side-label">お知らせ</span><span class="home-side-badge" hidden>1</span>';button.onclick=()=>showAnnouncements(announcementUI());home.append(button);}
  const nav=document.querySelector('#screen-admin .admin-nav');if(nav&&!$('btn-admin-announcements')){const button=document.createElement('button');button.id='btn-admin-announcements';button.className='btn';button.type='button';button.textContent='全員へのお知らせ';button.onclick=()=>showAnnouncementAdmin(announcementUI());nav.append(button);}
 }
 let announcementCheckKey='';
 async function checkAnnouncementNews(){
  if(!window.AnnouncementAPI||!G||!currentSlotKey||announcementCheckKey===currentSlotKey)return;
  const game=G,key=currentSlotKey;announcementCheckKey=key;
- try{const notices=await window.AnnouncementAPI.list();if(G!==game||currentSlotKey!==key)return;const latest=notices.filter(n=>n.active!==false).sort((a,b)=>(Number(b.createdAt)||0)-(Number(a.createdAt)||0))[0];const button=$('btn-home-announcements');if(button){button.replaceChildren();button.hidden=!latest?.image;if(latest?.image){const image=document.createElement('img');image.src=av(latest.image);image.alt=latest.title;button.append(image);button.setAttribute('aria-label',latest.title);button.onclick=()=>showAnnouncement(latest,announcementUI());}}}catch{announcementCheckKey='';}
+ try{const notices=await window.AnnouncementAPI.list();if(G!==game||currentSlotKey!==key)return;const latest=notices.filter(n=>n.active!==false).sort((a,b)=>(Number(b.createdAt)||0)-(Number(a.createdAt)||0))[0];const button=$('btn-home-announcements');if(button){const badge=button.querySelector('.home-side-badge');if(badge)badge.hidden=!latest||!!G.readAnnouncementIds?.includes(latest.id);button.title=latest?.title||'お知らせ';button.onclick=()=>{if(latest){showAnnouncement(latest,announcementUI());if(badge)badge.hidden=true;}else showAnnouncements(announcementUI());};}}catch{announcementCheckKey='';}
 
 }
 

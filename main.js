@@ -1,3 +1,4 @@
+import './home_layout_b.js';
 import './home_snow.js';
 import './storage_polyfill.js';
 import './equipment_chest_intro.css';
