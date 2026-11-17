@@ -877,7 +877,7 @@
       <div class="panel" style="position: relative;">
         <button id="btn-skills-back" class="window-nav-btn window-back-btn">← もどる</button>
         <h2><span class="town-service-icon service-training" aria-hidden="true"></span> しゅぎょう</h2>
-        <button class="btn btn-primary" style="margin-bottom:12px; font-size:18px; padding:12px; width:100%;" onclick="openUnifiedCodeEntry()">🔑 プリントの あんごうを入力</button>
+        <button class="btn btn-primary" style="margin-bottom:12px; font-size:18px; padding:12px; width:100%;" onclick="openUnifiedCodeEntry()">🖨️ プリントの答え合わせ・報酬</button>
         <p class="flavor">しゅぎょうで けいさんに せいかいすると とくぎを マスター！<br>しゅぎょうの けいさんの しゅるいと せんとうでの はつどうは リンクしている。</p>
         <div id="skill-list" class="skill-list"></div>
       </div>
@@ -1401,7 +1401,7 @@
           </div>
           <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
             <label style="width:140px; text-align:right;">プリント番号：</label>
-            <input type="text" id="unified-print-id" class="challenge-input" style="flex:1; font-size: 24px; padding:8px;" inputmode="numeric">
+            <input type="text" id="unified-print-id" class="challenge-input" style="flex:1; font-size: 24px; padding:8px;" autocomplete="off" placeholder="4桁の番号、または以前の教材番号">
           </div>
           <button id="btn-unified-fetch" class="btn btn-primary" style="margin-top:12px; width:100%;" onclick="fetchUnifiedPrint()">問題を表示</button>
         </div>

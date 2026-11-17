@@ -1,0 +1,11 @@
+/* Paper subquest grading: retain full story and multiple answer fields. */
+#unified-problems-list:has(.subquest-print-answer){display:flex;flex-direction:column;gap:12px;overflow:auto;}
+.subquest-print-answer{border:1px solid #796d8c;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;}
+.subquest-print-answer>p{white-space:pre-wrap;margin:0;line-height:1.6;}
+.subquest-print-answer>label{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.subquest-print-answer .challenge-input{width:100%;box-sizing:border-box;min-width:0;font-size:18px;}
+.subquest-print-answer input:is([type=checkbox],[type=radio]){width:22px;height:22px;flex:none;}
+
+#unified-print-categories{display:flex;gap:8px;margin:0 0 12px;}
+#unified-print-categories button{flex:1;min-width:0;padding:10px 6px;}
+#unified-print-categories button[aria-pressed=true]{background:#f1cd64;color:#282037;border-color:#fff1bd;}

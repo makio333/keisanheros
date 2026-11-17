@@ -1,3 +1,5 @@
+import './subquest_results.css';
+import {subquestPrintMeta,legacySubquestPrint,mountSubquestPrintAnswers,readSubquestPrintAnswer} from './subquest_print.js';
 import {bindInputComposition} from './input_composition_guard.js';
 import './equipment_summary.css';
 import {showErrorBanner} from './error_banner.js';
@@ -21,7 +23,7 @@ let localArtEnemyRef = null;
 import {QUEST_MEDAL_SKIN,QUEST_MEDAL_BACKGROUND,QUEST_MEDAL_FRAME,QUEST_MEDAL_EQUIPMENT,QUEST_MEDAL_EXCLUSIVE_PRIZES,claimQuestMedalExclusive} from './quest_medal_exclusives.js';
 import {regularMathPrintCss} from './regular_math_print_layout.js';
 import {renderKanjiStagePrint} from './stage_print_layout.js';
-import {renderPrintRewardIcons} from './print_reward_icons.js';
+import {renderPrintRewardIcons,standardPrintRewards} from './print_reward_icons.js';
 import {REVIEW_SETTINGS} from './gameplay_review_settings.js';
 import {renderReadingSubquests} from './reading_subquests.js';
 import {renderMathWordSubquests} from './math_word_subquests.js';
@@ -9706,7 +9708,7 @@ function openPrintWindow(htmlContent, bgUrl, isLandscape, options = {}) {
   let prepared;const prepare=()=>prepared ||= Promise.resolve().then(async()=>{
     await pw.document.fonts?.ready;
     await options.prepare?.(pw);
-    await Promise.all([...pw.document.images || []].map(image=>image.decode?.().catch(()=>{})));
+    await Promise.all([...pw.document.images || []].map(image=>{image.loading='eager';return image.decode?.().catch(()=>{});}));
     const button=pw.document.getElementById?.('game-print-now');if(button){button.disabled=false;button.textContent='印刷する';}
   });
   const requestPrint=async(force=false)=>{if(pw.closed || (printRequested&&!force))return;try{await prepare();if(pw.closed || (printRequested&&!force))return;if(!printCommitted){await options.beforePrint?.();printCommitted=true;}printRequested=true;pw.print();}catch(error){const button=pw.document.getElementById?.('game-print-now');if(button){button.disabled=false;button.textContent='再試行する';button.onclick=()=>{prepared=null;requestPrint(true);};}console.error('Print preparation failed',error);}};
@@ -9755,16 +9757,22 @@ function openAncientPrintReview(prepared,{onFirstOpen=null,reprint=false}={}){
   return {close:()=>$('modal-print-choice').classList.add('hidden')};
 }
 
-function openMaterialPrintChoices(subject,record,mode='student',previewWindow=null){
-  const printOptions={mode,playerName:G?.playerName||'',printNumber:(Array.isArray(record)?record[0]?.id:record?.id)||''};
+function openMaterialPrintChoices(subject,record,mode='student',previewWindow=null,job=null){
+  job ||= {game:G,slot:currentSlotKey,printId:generatePrintId(),meta:subquestPrintMeta(subject,record),registered:false};
+  const printOptions={mode,playerName:job.game?.playerName||'',printNumber:job.printId,printRewardEntries:standardPrintRewards({count:job.meta.problems.length}).filter(entry=>entry.icon!=='🏅')};
   const html=subject==='math'?(Array.isArray(record)?renderMathWordSetPrintV2(record,printOptions):renderMathWordPrintV2(record,printOptions)):renderJapaneseReadingPrintV2(record,printOptions);
-  const pw=openLayoutPrintWindow(html,{previewWindow});if(!pw)return null;
+  const pw=openLayoutPrintWindow(html,{previewWindow,onOpened:()=>{
+    if(mode!=='student'||job.registered)return;
+    if(!G||G!==job.game||currentSlotKey!==job.slot)throw Error('印刷したプレイヤーのセーブデータに戻ってください');
+    if(addPrintCode(job.meta.sourceId,'',job.meta,job.printId)!==job.printId)throw Error('プリント番号を保存できませんでした');
+    job.registered=true;save();
+  }});if(!pw)return null;
   const label=pw.document.createElement('label');label.textContent='プリントの種類：';
   const select=pw.document.createElement('select');select.setAttribute('aria-label','プリントの種類');select.disabled=true;
   for(const [value,text] of [['student','児童用・問題'],['teacher','先生用・解答と解説']]){const option=pw.document.createElement('option');option.value=value;option.textContent=text;select.append(option);}
   select.value=mode;label.append(select);pw.document.querySelector('.game-print-controls').prepend(label);
   pw.printPreviewReady.then(()=>{select.disabled=false;}).catch(()=>{});
-  select.onchange=()=>openMaterialPrintChoices(subject,record,select.value,pw);
+  select.onchange=()=>openMaterialPrintChoices(subject,record,select.value,pw,job);
   return pw;
 }
 /* プリント選択モーダルを表示する（3バリアント選択→印刷・保存） 
@@ -15472,7 +15480,9 @@ if (document.readyState === 'loading') {
 
 
 
-function openUnifiedCodeEntry() {
+let unifiedPrintCategory='adventure';
+function openUnifiedCodeEntry(category=unifiedPrintCategory) {
+  unifiedPrintCategory=category==='subquest'?'subquest':'adventure';
   cleanupOldPrints();
   const modal = $('modal-unified-code');
   if (modal) {
@@ -15492,9 +15502,15 @@ function openUnifiedCodeEntry() {
       } catch(e){}
     }
     
-    const pIds = Object.keys(prints);
+    let tabs=$('unified-print-categories');
+    if(!tabs){tabs=document.createElement('div');tabs.id='unified-print-categories';tabs.setAttribute('role','group');tabs.setAttribute('aria-label','プリントの種類');listEl.before(tabs);}
+    tabs.replaceChildren();
+    for(const [key,label] of [['adventure','冒険プリント'],['subquest','サブクエストプリント']]){
+      const button=document.createElement('button');button.type='button';button.className='btn';button.textContent=label;button.setAttribute('aria-pressed',String(key===unifiedPrintCategory));button.onclick=()=>openUnifiedCodeEntry(key);tabs.append(button);
+    }
+    const pIds = Object.keys(prints).filter(id=>(prints[id].type==='subquest-print')===(unifiedPrintCategory==='subquest'));
     if (pIds.length === 0) {
-      listEl.innerHTML = '<div style="text-align:center; padding:12px; color:#aaa;">まだ 発行されたプリントが ありません。</div>';
+      listEl.textContent=unifiedPrintCategory==='subquest'?'発行済みのサブクエストプリントはありません。以前の教材番号は下の欄から入力できます。':'発行済みの冒険プリントはありません。';
     } else {
       pIds.forEach(pId => {
         const meta = prints[pId],row=document.createElement('div');
@@ -15535,6 +15551,13 @@ function fetchUnifiedPrint() {
     } catch(e){}
   }
   
+  if(G?.claimedSubquestPrintIds?.includes(pId)){
+    resEl.textContent='このプリントの報酬は受取済みです。';return;
+  }
+  if(G&&!prints[pId]){
+    const recovered=legacySubquestPrint(pId);
+    if(recovered){addPrintCode(recovered.sourceId,'',recovered,pId);save();prints=G.activePrints;}
+  }
   const meta = prints[pId];
   window.currentUnifiedMeta = meta;
   window.currentUnifiedPrintId = pId;
@@ -15558,7 +15581,8 @@ function fetchUnifiedPrint() {
   listEl.style.setProperty('--unified-count',meta.problems.length);
   listEl.style.setProperty('--unified-rows',Math.ceil(meta.problems.length/2));
   listEl.classList.toggle('unified-many-problems',meta.problems.length>10);
-  meta.problems.forEach((p, i) => {
+  if(meta.type==='subquest-print')mountSubquestPrintAnswers(listEl,meta.problems);
+  else meta.problems.forEach((p, i) => {
     const isKanji = typeof p.answer === 'string' && isNaN(parseInt(p.answer, 10)); // crude check for kanji string vs number
     const remainderInput=p.remainder != null;
     const answerInput=remainderInput ? `<div class="unified-rem-inputs"><input type="text" id="unified-ans-${i}" class="challenge-input" data-math-parts="remainder" aria-label="${i+1}問目の商" inputmode="numeric" autocomplete="off"><span>あまり</span><input type="text" id="unified-rem-${i}" class="challenge-input" aria-label="${i+1}問目の余り" inputmode="numeric" autocomplete="off"></div>` : `<input type="text" id="unified-ans-${i}" class="challenge-input" aria-label="${i+1}問目の答え" autocomplete="off" ${!isKanji ? (/^-?\d+$/.test(String(p.answer)) ? 'inputmode="numeric"' : 'inputmode="text"') : ''}>`;
@@ -15593,6 +15617,12 @@ function gradeUnifiedPrint() {
   cur.answerReview = [];
   
   probs.forEach((p, i) => {
+    if(meta.type==='subquest-print'){
+      const answer=readSubquestPrintAnswer($('unified-problems-list'),p,i);
+      if(answer.correct)correct++;
+      cur.answerReview.push({number:i+1,problem:p.text,...answer});
+      $(`unified-mark-${i}`).textContent=answer.correct?'〇':'❌';return;
+    }
     const field=$(`unified-ans-${i}`);
     const inp = field.dataset?.mathParts==='remainder' ? `${field.value.trim()}あまり${$(`unified-rem-${i}`).value.trim()}` : field.value.trim();
     const ok = isPrintAnswerCorrect(p,inp);
@@ -15671,6 +15701,10 @@ function grantPrintRewards(cur, correct, total, rate) {
   const meta = cur.meta;
   if(cur.rewardsGranted)return;
   if(meta.challengePrint && G?.claimedChallengePrintIds?.includes(cur.printId))return;
+  if(meta.type==='subquest-print'){
+    if(G?.claimedSubquestPrintIds?.includes(cur.printId))return;
+    G.claimedSubquestPrintIds ||= [];G.claimedSubquestPrintIds.push(cur.printId);
+  }
   cur.rewardsGranted = true;
   if(meta.challengePrint && G){G.claimedChallengePrintIds ||= [];G.claimedChallengePrintIds.push(cur.printId);}
   removeResolvedPrint({ printId: cur.printId });
@@ -15810,7 +15844,7 @@ window.selectUnifiedPrint = selectUnifiedPrint;
 
 function generatePrintId() {
   let id;
-  do { id = String(rnd(1000, 9999)); } while (G && G.activePrints && G.activePrints[id]);
+  do { id = String(rnd(1000, 9999)); } while (G && (G.activePrints?.[id] || G.claimedSubquestPrintIds?.includes(id)));
   return id;
 }
 
@@ -15998,6 +16032,13 @@ function openAdminGrade() {
     const problems = cur.meta.problems;
     
     // Change inputs to checkboxes for admin and show the answer
+    if(cur.meta.type==='subquest-print'){
+      listEl.querySelectorAll('.subquest-print-answer').forEach((row,i)=>{
+        row.replaceChildren();const prompt=document.createElement('p');prompt.textContent=`${i+1}問目　${problems[i].text}\n答え：${problems[i].answer}`;row.append(prompt);
+        const label=document.createElement('label'),check=document.createElement('input');check.type='checkbox';check.className='admin-grade-chk';check.dataset.idx=i;label.append(check,document.createTextNode('正解'));row.append(label);
+      });
+      $('unified-grade-btn-area').style.display='none';$('admin-grade-btn-area').style.display='grid';return;
+    }
     const inputs = listEl.querySelectorAll('input.challenge-input');
     inputs.forEach((input, i) => {
       const ans = formatPrintAnswer(problems[i]);
@@ -16029,6 +16070,7 @@ function submitAdminGrade() {
     if (chk.checked) correctCount++;
   });
   
+  if(meta.type==='subquest-print')cur.answerReview=meta.problems.map((p,i)=>({number:i+1,problem:p.text,input:'保護者が紙の答えを確認',expected:p.answer,correct:!![...chks].find(c=>Number(c.dataset.idx)===i)?.checked}));
   showPrintScoreResult(cur, correctCount, count);
 }
 
