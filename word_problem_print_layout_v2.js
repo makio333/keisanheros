@@ -1,4 +1,4 @@
-import {japanesePrintHeader,japanesePrintHeaderCss,japanesePrintMetadata} from './japanese_print_header.js';
+import {japanesePrintHeader,japanesePrintHeaderCss,japanesePrintMetadata,printNumberDisplay} from './japanese_print_header.js';
 import {renderPrintRewardIcons} from './print_reward_icons.js';
 /** Pure, escaped HTML renderer. Never derives or recalculates question/answer content. */
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -46,7 +46,8 @@ export function renderWordProblemPrintV2({title='文章問題', subject='math', 
  });
  const crop=villager?.faceCrop??[0,0,1254];
  const portrait=villager?`<span class="wpp2-quest-face"><img class="wpp2-quest-portrait" src="${esc(villager.image)}" alt="${esc(villager.name)}" title="${esc(villager.name)}" style="width:${1254/crop[2]*100}%;height:${1254/crop[2]*100}%;left:${-crop[0]/crop[2]*100}%;top:${-crop[1]/crop[2]*100}%"></span>`:'';
- const metadata=writingMode==='vertical-rl'?japanesePrintMetadata({grade,name:playerName,number:printNumber}):`<p>${showGrade?grade+'年 ':''}${subject==='math'?'算数':'国語'}　${mode==='student'?`番号：${esc(printNumber)||'________'}　なまえ：${esc(playerName)||'________________'}　日付：____________`:'児童用とは別に印刷してください'}</p>`;
+ const numberDisplay=printNumberDisplay(printNumber);
+ const metadata=writingMode==='vertical-rl'?japanesePrintMetadata({grade,name:playerName,number:printNumber}):`<p>${showGrade?grade+'年 ':''}${subject==='math'?'算数':'国語'}　${mode==='student'?`${esc(numberDisplay.label)}：${esc(numberDisplay.value)||'________'}　なまえ：${esc(playerName)||'________________'}　日付：____________`:'児童用とは別に印刷してください'}</p>`;
  const reward=rewardText||rewardEntries.length?`<div class="wpp2-reward">${rewardText?`<span class="wpp2-reward-caption">${esc(rewardText)}</span>`:''}${renderPrintRewardIcons(rewardEntries)}</div>`:'';
  const titleMarkup=`${portrait}${esc(title)}${mode==='teacher'?'【指導者用解答】':''}`;
  const printHeader=writingMode==='vertical-rl'?`<style>${japanesePrintHeaderCss}</style>${japanesePrintHeader(titleMarkup,metadata,reward)}`:`<header><h1>${titleMarkup}</h1>${metadata}${reward}</header>`;

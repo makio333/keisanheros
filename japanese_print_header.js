@@ -1,6 +1,11 @@
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+export function printNumberDisplay(number){
+ const match=String(number??'').match(/^(jr|mwq)-v2-g([1-6])-(\d+)$/);
+ return match?{label:'教材番号',value:`${match[1]==='jr'?'国語':'算数'}・${match[2]}年・${match[3]}`}:{label:'プリント番号',value:String(number??'')};
+}
 export function japanesePrintMetadata({grade,name='',number=''}={}){
- return `<div class="jp-student-meta"><div class="jp-grade">${esc(grade)}年 国語</div><div class="jp-date-row"><span><i></i>月</span><span><i></i>日</span></div><div class="jp-number">番号：${esc(number)||"______"}</div><div class="jp-name-label">名前</div><div class="jp-name-entry">${esc(name)}</div></div>`;
+ const display=printNumberDisplay(number);
+ return `<div class="jp-student-meta"><div class="jp-grade">${esc(grade)}年 国語</div><div class="jp-date-row"><span><i></i>月</span><span><i></i>日</span></div><div class="jp-number">${esc(display.label)}：${esc(display.value)||"______"}</div><div class="jp-name-label">名前</div><div class="jp-name-entry">${esc(name)}</div></div>`;
 }
 export function japanesePrintHeader(title,metadata,rewards='',extra=''){
  return `<header class="jp-print-header ${extra}"><div class="jp-title-stack"><h1>${title}</h1><div class="jp-print-meta">${metadata}</div></div>${rewards}</header>`;
