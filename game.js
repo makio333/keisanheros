@@ -1,5 +1,5 @@
 import './subquest_results.css';
-import {subquestPrintMeta,legacySubquestPrint,mountSubquestPrintAnswers,readSubquestPrintAnswer} from './subquest_print.js';
+import {subquestPrintMeta,legacySubquestPrint,normalizeSubquestPrintId,mountSubquestPrintAnswers,readSubquestPrintAnswer} from './subquest_print.js';
 import {bindInputComposition} from './input_composition_guard.js';
 import './equipment_summary.css';
 import {showErrorBanner} from './error_banner.js';
@@ -15537,7 +15537,7 @@ function selectUnifiedPrint(pId) {
 window.unifiedCurrentPrint = null;
 
 function fetchUnifiedPrint() {
-  const pId = $('unified-print-id').value.trim();
+  const pId = normalizeSubquestPrintId($('unified-print-id').value);
   const resEl = $('unified-result');
   if (!pId) {
     resEl.innerHTML = '<span style="color:#ff5c5c;">プリント番号を入力してね！</span>';

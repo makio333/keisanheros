@@ -7,7 +7,12 @@ export function subquestPrintMeta(subject,record){
  records.map(q=>({text:q.story+'\n'+q.question,answer:q.answerDisplay,subquestQuestion:q,subject}));
  return {type:'subquest-print',subject,sourceId:records[0].id,name:`${subject==='japanese'?'国語':'算数'}・${records[0].grade}年・${Array.isArray(record)?'文章問題':record.title}`,problems};
 }
+export function normalizeSubquestPrintId(value){
+ const id=String(value??'').normalize('NFKC').trim(),match=id.match(/^(国語|算数)[・\s]+([1-6])年[・\s]+(\d+)$/);
+ return match?`${match[1]==='国語'?'jr':'mwq'}-v2-g${match[2]}-${match[3].padStart(match[1]==='国語'?2:3,'0')}`:id;
+}
 export function legacySubquestPrint(id){
+ id=normalizeSubquestPrintId(id);
  const match=String(id).match(/^(jr|mwq)-v2-g([1-6])-\d+$/);if(!match)return null;
  if(match[1]==='jr'){const record=getJapaneseReadingQuestsV2(Number(match[2])).find(q=>q.id===id);return record?subquestPrintMeta('japanese',record):null;}
  const records=getMathWordQuestsV2(Number(match[2])),index=records.findIndex(q=>q.id===id);return index<0?null:subquestPrintMeta('math',records.slice(index,index+5));
