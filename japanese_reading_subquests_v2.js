@@ -1,3 +1,4 @@
+import {shuffleReviewChoices} from './reading_review_choices.js';
 import {confirmQuestLeave} from './quest_leave_confirm.js';
 import {questRewardFlight,revealQuestResults} from './quest_reward_flight.js';
 import {claimGradeClearRewards,gradeRewardSummary} from './subquest_grade_rewards.js';
@@ -13,6 +14,7 @@ import {installQuestAnswerPanelWheelScroll} from './quest_answer_panel_scroll.js
 import './reading_quest_letter.css';
 import {readingState,readingSession,storeReadingAnswer,finishReadingSession,readingResults,readingReviewTargets,confirmReadingReview,readingAnswerText,claimReadingAnswerReward,readingRewardProgress,READING_TOTAL_REWARD} from './japanese_reading_session_v2.js';
 
+const lastChoiceOrders=new WeakMap();
 const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined&&text!==null)el.textContent=text;if(cls)el.className=cls;return el;};
 function appendAnnotatedText(target,record,hints=[]){
  const chars=[...record.passage],ruby=new Map((record.ruby?.overrides||[]).map(span=>[span.start,span])),refs=record.references||[];
@@ -142,7 +144,11 @@ export function renderJapaneseReadingV2Subquests(root,grade,api){
   body.append(progress,node('p',review?'正解すると残りの10％を受け取れます。':'答え合わせは5問のあと。1問回答で10％、正解でさらに10％。','reading-v2-batch-note'),prompt,area,feedback);
   if(review){const tip=node('aside',null,'reading-v2-retry-hint');tip.append(node('b','✎ ヒントを見て、もう一度考えよう'),node('p',hint.text));body.insertBefore(tip,prompt);}
   if(question.input.type==='single-choice'){
-   const options=node('div',null,'reading-v2-options');question.input.options.forEach((option,i)=>{
+   const options=node('div',null,'reading-v2-options');
+   const previous=lastChoiceOrders.get(question)||question.input.options;
+   const displayed=review?shuffleReviewChoices(previous,question.accepted):question.input.options;
+   lastChoiceOrders.set(question,displayed);
+   displayed.forEach((option,i)=>{
     const choice=node('button',`${question.print.optionLabels[i]}　${option.text}`,'btn reading-v2-choice');choice.type='button';choice.setAttribute('aria-pressed',String(answer===option.id));
     choice.onclick=async()=>{choose(option.id);options.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===choice)));if(!review&&storeReadingAnswer(game,record,index,option.id)){saveReward(claimReadingAnswerReward(game,record,index));await questRewardFlight(choice);hud.update();}};options.append(choice);
    });area.append(options);
