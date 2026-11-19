@@ -6,3 +6,18 @@ test('old final ticket receipt stays claimed after gauge update',()=>{const g={p
 
 import {recordSubquestCompletion} from '../subquest_results.js';
 test('subquest completion feeds correct daily category without gift auto-claim',()=>{const g={player:{gold:0}};recordSubquestCompletion(g,'math','fixture-m',true);recordSubquestCompletion(g,'reading','fixture-j',false);assert.deepEqual(challengeBonusStatus(g).completed,['math-subquest','japanese-subquest']);assert.equal(g.player.gold,0);});
+
+import {claimAvailableChallengeBonuses} from '../login_bonus.js';
+test('claim all collects only eligible unclaimed milestones and preserves completed count',()=>{
+ const game={player:{gold:0}},day='2026-11-19';
+ assert.deepEqual(claimAvailableChallengeBonuses(game,day),[]);
+ DAILY_CHALLENGES.slice(0,3).forEach(q=>recordChallengeClear(game,q.id,day));
+ assert.equal(claimAvailableChallengeBonuses(game,day).length,1);
+ assert.equal(challengeBonusStatus(game,day).completed.length,3);
+ DAILY_CHALLENGES.forEach(q=>recordChallengeClear(game,q.id,day));
+ assert.equal(claimAvailableChallengeBonuses(game,day).length,3);
+ assert.equal(game.items.find(i=>i.id==='cost_seed').count,1);assert.equal(game.player.gold,1000);
+ assert.equal(game.skinGachaTickets,1);assert.equal(game.raidTickets,1);assert.equal(game.equipGachaTenPullTickets,1);
+ assert.deepEqual(claimAvailableChallengeBonuses(game,day),[]);
+ assert.deepEqual(claimAvailableChallengeBonuses(game,'2026-11-20'),[]);
+});

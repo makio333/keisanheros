@@ -4,7 +4,7 @@ import {bindInputComposition} from './input_composition_guard.js';
 import './equipment_summary.css';
 import {showErrorBanner} from './error_banner.js';
 import {showLoginBonus} from './login_bonus_ui.js';
-import {claimChallengeBonus,recordChallengeClear,syncChallengeClock} from './login_bonus.js';
+import {claimChallengeBonus,claimAvailableChallengeBonuses,challengeBonusStatus,DAILY_CHALLENGES,recordChallengeClear,syncChallengeClock} from './login_bonus.js';
 import './home_notice_actions.css';
 import {showAnnouncements,showAnnouncement,showAnnouncementAdmin,createRewardDialog} from './announcements.js';
 import {rewriteLegacyStory,LEGACY_STORY_VERSION,legacyStoryGrade} from './legacy_story_variants.js';
@@ -3999,6 +3999,7 @@ function bgmKeyForScreen(id){
 
 function updateHud(){
   if (!G) return;
+  updateDailyMissionBadge();
   if (G.isTestMode && typeof ensureTestModeSupplies === 'function') {
     ensureTestModeSupplies();
   }
@@ -7452,16 +7453,44 @@ function openDailyChallenge(id){
 
 }
 
+let dailyClaimInFlight=false;
+function updateDailyMissionBadge(){
+ const button=$('btn-home-login-bonus');if(!button||!G)return;
+ const count=challengeBonusStatus(G).completed.length;
+ let badge=button.querySelector('.home-side-badge');if(!badge){badge=document.createElement('span');badge.className='home-side-badge';badge.setAttribute('aria-hidden','true');button.append(badge);}
+ badge.textContent=String(count);badge.hidden=false;
+ button.title=`デイリーミッション ${count}／${DAILY_CHALLENGES.length}達成`;
+ button.setAttribute('aria-label',button.title);
+}
 function loginBonusUI(){
- const api=announcementUI();return {...api,navigate:openDailyChallenge,goldIcon:size=>`<span style="font-size:${size}px" aria-label="ゴールド">💰</span>`,day:async()=>{const result=await api.remote().loginDay();syncChallengeClock(result.now);return result.day;},
- async claim(id,expectedDay){const game=G,key=currentSlotKey;if(!game||!key||!window.CloudSave?.saveSlot)throw Error('save_unavailable');const day=(await api.remote().loginDay()).day;if(G!==game||currentSlotKey!==key)throw Error('save_changed');const next=JSON.parse(JSON.stringify(game));if(day!==expectedDay||!claimChallengeBonus(next,id,day))throw Error('bonus_unavailable');next.updatedAt=Date.now();await window.CloudSave.saveSlot(key,next,true);await window.CloudSave.flush?.();if(G===game&&currentSlotKey===key){Object.assign(game,next);storageSet(key,JSON.stringify(game));updateHud();}}
+ const api=announcementUI();
+ const claim=async(id,expectedDay)=>{
+  const game=G,key=currentSlotKey;
+  if(dailyClaimInFlight||!game||!key||!window.CloudSave?.saveSlot)throw Error('save_unavailable');
+  dailyClaimInFlight=true;
+  try{
+   const result=await api.remote().loginDay(),day=result.day;
+   if(G!==game||currentSlotKey!==key)throw Error('save_changed');
+   syncChallengeClock(result.now);
+   const next=JSON.parse(JSON.stringify(game));
+   if(day!==expectedDay)throw Error('bonus_unavailable');
+   const gifts=id?[claimChallengeBonus(next,id,day)].filter(Boolean):claimAvailableChallengeBonuses(next,day);
+   if(!gifts.length)throw Error('bonus_unavailable');
+   next.updatedAt=Date.now();await window.CloudSave.saveSlot(key,next,true);await window.CloudSave.flush?.();
+   if(G!==game||currentSlotKey!==key)throw Error('save_changed');
+   Object.assign(game,next);storageSet(key,JSON.stringify(game));updateHud();return gifts;
+  }finally{dailyClaimInFlight=false;}
+ };
+ return {...api,navigate:openDailyChallenge,goldIcon:size=>`<span style="font-size:${size}px" aria-label="ゴールド">💰</span>`,day:async()=>{const result=await api.remote().loginDay();syncChallengeClock(result.now);updateDailyMissionBadge();return result.day;},
+  claim,claimAll:day=>claim(null,day),
+  showRewards:gifts=>{showAdminGiftNotice(gifts);const notice=document.querySelector('.admin-gift-notice-overlay');if(notice){notice.querySelector('h2').textContent='デイリー報酬を受け取った！';notice.querySelector('.admin-gift-notice-sub').textContent='達成したミッションの報酬を受け取りました。';notice.querySelector('#btn-admin-gift-notice-ok').textContent='とじる';}}
  };
 }
 let loginBonusCheckKey='';
 async function checkLoginBonus(){
  if(!G||!window.AnnouncementAPI||!currentSlotKey)return;
  if(document.querySelector('.announcements-overlay,.admin-gift-notice-overlay'))return;
- const game=G,key=currentSlotKey;try{const result=await window.AnnouncementAPI.loginDay(),day=result.day;if(G!==game||key!==currentSlotKey||loginBonusCheckKey===key+day)return;loginBonusCheckKey=key+day;syncChallengeClock(result.now);}catch{}
+ const game=G,key=currentSlotKey;try{const result=await window.AnnouncementAPI.loginDay(),day=result.day;if(G!==game||key!==currentSlotKey||loginBonusCheckKey===key+day)return;loginBonusCheckKey=key+day;syncChallengeClock(result.now);updateDailyMissionBadge();}catch{}
 }
 function ensureAnnouncementButtons(){
  const home=$('screen-home');if(home&&!$('btn-home-login-bonus')){const button=document.createElement('button');button.id='btn-home-login-bonus';button.type='button';button.className='home-side-action';button.setAttribute('aria-label','デイリーミッション');button.innerHTML=`<svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="bonus-gold" x2="0" y2="1"><stop stop-color="#fff0a3"/><stop offset="1" stop-color="#df9f30"/></linearGradient></defs><circle cx="32" cy="32" r="28" fill="#27233f" stroke="url(#bonus-gold)" stroke-width="3"/><path d="m16 46 7-15 9 5 9-5 7 15-16 7z" fill="#bb3f54" stroke="#ffdc82" stroke-width="2"/><path d="M15 27h34v11H15zM20 38h24v12H20z" fill="url(#bonus-gold)" stroke="#795123" stroke-width="2"/><path d="M30 27h5v23h-5z" fill="#bc3b55"/><path d="M32 27c-17-2-15-16-7-10l7 10c17-2 15-16 7-10z" fill="#e26570" stroke="#ffd983" stroke-width="2"/><path d="m32 5 2 5 6 1-5 4 1 6-4-3-5 3 1-6-4-4 6-1z" fill="#fff0a0"/></svg><span class="home-side-label">デイリー</span>`;button.onclick=()=>showLoginBonus(loginBonusUI());home.append(button);}

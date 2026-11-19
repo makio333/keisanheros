@@ -27,3 +27,9 @@ export function claimChallengeBonus(game,id,day=loginBonusDay()){
  if(!applyGiftPayload(game,gift))return null;
  game.challengeBonus={day,completed:s.completed,claimed:[...s.claimed,id]};return gift;
 }
+
+export function claimAvailableChallengeBonuses(game,day=loginBonusDay()){
+ const gifts=[];
+ for(const milestone of DAILY_MILESTONES){const gift=claimChallengeBonus(game,milestone.id,day);if(gift)gifts.push(gift);}
+ return gifts;
+}
