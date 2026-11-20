@@ -9,3 +9,16 @@ export function storeMathAnswer(game,group,p,values,ms){const r=mathRun(game,gro
 export function mathResults(game,group){const r=mathRun(game,group);return group.map(p=>({problem:p,correct:!!r.mastered[p.id],answer:r.initialAnswers?.[p.id]||r.answers[p.id],reviewAnswer:r.answers[p.id]}));}
 export function finishMathRun(game,group){const r=mathRun(game,group);if(r.phase!=='answering'||group.some(p=>!r.answers[p.id]))return null;r.phase='results';r.initialAnswers=JSON.parse(JSON.stringify(r.answers));let exp=0;for(const p of group){const correct=score(p,r.answers[p.id]).correct;r.mastered[p.id]=correct;recordSubquestAttempt(game,{subject:p.subject||'math',questId:group[0].id,questionId:p.id,grade:p.grade,skill:p.topic,correct,timeMs:r.times[p.id]});if(correct){exp+=pay(game,group,p,2).exp;game.mathWordQuestsV2.completed[p.id]=true;}}if(group.every(p=>r.mastered[p.id]))recordSubquestCompletion(game,group[0].subject||'math',group[0].id,true);return {exp};}
 export function retryMathAnswer(game,group,p,values,ms){const r=mathRun(game,group);if(r.phase!=='results'||r.mastered[p.id])return {correct:!!r.mastered[p.id],reward:null};const correct=score(p,values).correct;r.reviewCounts[p.id]=(r.reviewCounts[p.id]||0)+1;recordSubquestAttempt(game,{subject:p.subject||'math',questId:group[0].id,questionId:p.id,grade:p.grade,skill:p.topic,correct,timeMs:ms,retry:true});if(!correct)return {correct,reward:null};r.mastered[p.id]=true;r.answers[p.id]={...values};const reward=pay(game,group,p,2);game.mathWordQuestsV2.completed[p.id]=true;if(group.every(p=>r.mastered[p.id]))recordSubquestCompletion(game,group[0].subject||'math',group[0].id,false);return {correct,reward};}
+
+// Paper grading shares each question's payout cap with play on screen.
+export function claimMathPrintReward(game,group,correctFlags,answeredFlags=group.map(()=>true)){
+ const reward={gold:0,exp:0,medals:0};
+ for(const [i,p] of group.entries()){
+  if(!answeredFlags[i]&&!correctFlags[i])continue;
+  const delta=pay(game,group,p,correctFlags[i]?2:1);
+  for(const key of Object.keys(reward))reward[key]+=delta[key];
+  if(correctFlags[i])game.mathWordQuestsV2.completed[p.id]=true;
+ }
+ if(group.every(p=>game.mathWordQuestsV2?.completed?.[p.id]))recordSubquestCompletion(game,'math',group[0].id,correctFlags.every(Boolean));
+ return reward;
+}

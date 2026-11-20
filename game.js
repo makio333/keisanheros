@@ -1,5 +1,5 @@
 import './subquest_results.css';
-import {subquestPrintMeta,legacySubquestPrint,normalizeSubquestPrintId,mountSubquestPrintAnswers,readSubquestPrintAnswer} from './subquest_print.js';
+import {subquestPrintMeta,claimSubquestPrintReward,subquestPrintRewardEntries,legacySubquestPrint,normalizeSubquestPrintId,mountSubquestPrintAnswers,readSubquestPrintAnswer} from './subquest_print.js';
 import {bindInputComposition} from './input_composition_guard.js';
 import './equipment_summary.css';
 import {showErrorBanner} from './error_banner.js';
@@ -23,7 +23,7 @@ let localArtEnemyRef = null;
 import {QUEST_MEDAL_SKIN,QUEST_MEDAL_BACKGROUND,QUEST_MEDAL_FRAME,QUEST_MEDAL_EQUIPMENT,QUEST_MEDAL_EXCLUSIVE_PRIZES,claimQuestMedalExclusive} from './quest_medal_exclusives.js';
 import {regularMathPrintCss} from './regular_math_print_layout.js';
 import {renderKanjiStagePrint} from './stage_print_layout.js';
-import {renderPrintRewardIcons,standardPrintRewards} from './print_reward_icons.js';
+import {renderPrintRewardIcons} from './print_reward_icons.js';
 import {REVIEW_SETTINGS} from './gameplay_review_settings.js';
 import {renderReadingSubquests} from './reading_subquests.js';
 import {renderMathWordSubquests} from './math_word_subquests.js';
@@ -5003,7 +5003,7 @@ function startBattle(animateFloor){
 
   if(explore.isChristmas){
     const source=christmasQuestionSource(explore,enemy.isBoss), area=AREA_STAGES[source.areaId];
-    $('battle-floor-title').textContent=`🎄 レベル${(explore.christmasStrengthStep || 0)+1}・チャレンジ${(explore.christmasLevel || 0)+1} ${explore.christmasIndex+1}／${CHRISTMAS_ENCOUNTERS_PER_RUN}・漢字${area.displayNum} ${area.stages[source.stageIndex].name}${enemy.isBoss?'【強敵】':''}`;
+    $('battle-floor-title').textContent=`🎄 チャレンジ${(explore.christmasLevel || 0)+1} ${explore.christmasIndex+1}／${CHRISTMAS_ENCOUNTERS_PER_RUN}・漢字${area.displayNum} ${area.stages[source.stageIndex].name}${enemy.isBoss?'【強敵】':''}`;
   }
   if (explore.halloweenSeason === 2) $('battle-floor-title').textContent = halloweenSeason2Title(explore);
   if (explore.isEventRaid) $('battle-floor-title').textContent = '🎃 イベント専用レイド・討伐数チャレンジ';
@@ -9788,7 +9788,7 @@ function openAncientPrintReview(prepared,{onFirstOpen=null,reprint=false}={}){
 
 function openMaterialPrintChoices(subject,record,mode='student',previewWindow=null,job=null){
   job ||= {game:G,slot:currentSlotKey,printId:generatePrintId(),meta:subquestPrintMeta(subject,record),registered:false};
-  const printOptions={mode,playerName:job.game?.playerName||'',printNumber:job.printId,printRewardEntries:standardPrintRewards({count:job.meta.problems.length}).filter(entry=>entry.icon!=='🏅')};
+  const printOptions={mode,playerName:job.game?.playerName||'',printNumber:job.printId,printRewardEntries:subquestPrintRewardEntries()};
   const html=subject==='math'?(Array.isArray(record)?renderMathWordSetPrintV2(record,printOptions):renderMathWordPrintV2(record,printOptions)):renderJapaneseReadingPrintV2(record,printOptions);
   const pw=openLayoutPrintWindow(html,{previewWindow,onOpened:()=>{
     if(mode!=='student'||job.registered)return;
@@ -13323,7 +13323,7 @@ function showChristmasStageChoices(){
   const source=christmasChallengeSource(Math.max(0,choice.level)),area=AREA_STAGES[source.areaId],stage=area.stages[source.stageIndex],replay=choice.level<(state.clears||0);
   return `<article style="padding:16px;border:1px solid #beaa78;border-radius:12px;background:#192a38"><button class="btn ${replay?'':'btn-primary'}" data-stage-choice="${index}" ${choice.enabled?'':'disabled'}>${choice.label}<small>チャレンジ${Math.max(0,choice.level)+1}・漢字${escapeHtml(area.displayNum)} ${escapeHtml(stage.name)}</small></button><p style="display:flex;align-items:center;justify-content:center;gap:8px"><img src="${av(CHRISTMAS_PRESENT_ICON)}" alt="プレゼント" style="width:36px;height:36px;object-fit:contain"><b>${replay?'1体につき1個':'1体につき2〜4個'}</b></p><small>${replay?'通常の約3分の1・5体で5個':'通常報酬・5体で10〜20個'}</small><p>ブラックサンタ：${replay?'3〜5':'10〜15'}個</p><small>${stageRewardIcon('ticket','skin-ticket',1,28)} サンタ撃破時10％で1枚（確率は同じ）</small></article>`;
  }).join('');
- overlay.innerHTML=`<section class="panel" role="dialog" aria-modal="true" aria-label="クリスマスのステージ選択" style="width:min(1000px,94vw);max-height:90dvh;overflow:auto"><button class="btn" data-cancel>もどる</button><h2>挑戦するステージを選ぼう</h2><p><b>次の敵：レベル${Math.max(0,Math.floor(Number(state.attempts)||0))+1}</b>（挑戦するたびに1.5倍ずつ強くなります）</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">${cards}</div><p>クリア済みのステージは、もらえるプレゼントが減ります。次のステージは通常報酬です。</p></section>`;
+ overlay.innerHTML=`<section class="panel" role="dialog" aria-modal="true" aria-label="クリスマスのステージ選択" style="width:min(1000px,94vw);max-height:90dvh;overflow:auto"><button class="btn" data-cancel>もどる</button><h2>挑戦するステージを選ぼう</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">${cards}</div><p>クリア済みのステージは、もらえるプレゼントが減ります。次のステージは通常報酬です。</p></section>`;
  const close=()=>overlay.remove();overlay.querySelector('[data-cancel]').onclick=close;
  overlay.querySelectorAll('[data-stage-choice]').forEach(button=>button.onclick=()=>{const choice=choices[Number(button.dataset.stageChoice)];if(!choice.enabled)return;close();document.querySelector('.christmas-menu')?.remove();startChristmasChallenge(christmasChallengeSource(choice.level));});
  overlay.onkeydown=event=>{event.stopPropagation();if(event.key==='Escape'){event.preventDefault();close();}if(event.key==='Tab'){event.preventDefault();const buttons=[...overlay.querySelectorAll('button:not(:disabled)')],i=buttons.indexOf(document.activeElement);buttons[(i+(event.shiftKey?-1:1)+buttons.length)%buttons.length].focus();}};
@@ -13358,11 +13358,9 @@ function startChristmasChallenge(source = christmasChallengeSource(),random=Math
   if (!G || !isChristmasActive() || !AREA_STAGES[source.areaId]?.stages[source.stageIndex]) return;
   const state=christmasEventState(G);
   state.baseSource ||= {areaId:source.areaId,stageIndex:source.stageIndex};
-  const strengthStep=Math.max(0,Math.floor(Number(state.attempts)||0));
-  state.attempts=strengthStep+1;
   save(true);
   explore = {
-    christmasMonsters:createChristmasEncounters(CHRISTMAS_MONSTERS,random),christmasLevel:source.level || 0,christmasStrengthStep:strengthStep,
+    christmasMonsters:createChristmasEncounters(CHRISTMAS_MONSTERS,random),christmasLevel:source.level || 0,
     stageMode:true, isChristmas:true, christmasIndex:0, christmasRecovered:0, christmasReplay:source.level < (state.clears || 0),
     areaId:source.areaId, stageIndex:source.stageIndex,
     isBoss:false, sessionDrops:[], sessionGold:0, stageDrops:[], stageGold:0, stageExp:0,
@@ -13386,7 +13384,7 @@ function generateChristmasEnemy(run) {
   const monster=monsters[index];
   const grade = getDefaultAreaDifficultyMultiplier(run.areaId);
   const isBoss = !!monster.isBoss;
-  const scaling=Math.pow(1.5,Math.max(0,run.christmasStrengthStep || 0));
+  const scaling=1; // Retry count does not increase enemy strength.
   const hp = Math.round((isBoss ? 36 + grade * 14 : 10 + grade * 4)*scaling);
   return {
     name:monster.name, emoji:`assets/christmas/${monster.id}.png`,
@@ -15749,8 +15747,17 @@ function grantPrintRewards(cur, correct, total, rate) {
   }
   
   let rewards = [];
-  
-  // Quest medals are earned only by playing subquests, never by grading prints.
+  if(meta.type==='subquest-print'){
+    const result=claimSubquestPrintReward(G,meta,meta.problems.map((_,i)=>!!cur.answerReview?.[i]?.correct),meta.problems.map((_,i)=>!!cur.answerReview?.[i]?.answered));
+    if(result.gold)rewards.push({kind:'item',name:`ゴールド ${result.gold.toLocaleString()} G`,icon:'💰'});
+    if(result.exp)rewards.push({kind:'item',name:`経験値 ${result.exp.toLocaleString()} EXP`,icon:'✨'});
+    if(result.medals)rewards.push({kind:'item',name:`クエストメダル ×${result.medals}`,icon:QUEST_MEDAL_IMAGE});
+    if(result.equip)rewards.push({kind:'equip-ticket',name:`学年クリア報酬 装備ガチャ10連チケット ×${result.equip}`,icon:EQUIPMENT_TEN_PULL_TICKET_ICON});
+    if(result.skin)rewards.push({kind:'item',name:`学年クリア報酬 スキンガチャチケット ×${result.skin}`,icon:'🎟️'});
+    if(!rewards.length)rewards.push({kind:'item',name:'この問題の報酬は受取済みです',icon:'✅'});
+    finishPrintRewardReveal(rewards,result.exp,'サブクエストの報酬');return;
+  }
+  // Ordinary adventure prints keep their own reward schedule.
   // Base rewards
   const rewardMult = meta.challengePrint ? 3 : 1;
   const baseExp = correct * 20 * rewardMult;
@@ -15841,6 +15848,10 @@ function grantPrintRewards(cur, correct, total, rate) {
       for (const note of bossState.notes) rewards.push({ kind:'item', name:note, icon:'💪' });
   }
   
+  finishPrintRewardReveal(rewards,baseExp,title);
+}
+
+function finishPrintRewardReveal(rewards,baseExp,title){
   const { leveledUp, lvlBefore, pointsGained, maxHpBefore, maxMpBefore } = grantExp(baseExp);
 
   save();
@@ -16099,7 +16110,7 @@ function submitAdminGrade() {
     if (chk.checked) correctCount++;
   });
   
-  if(meta.type==='subquest-print')cur.answerReview=meta.problems.map((p,i)=>({number:i+1,problem:p.text,input:'保護者が紙の答えを確認',expected:p.answer,correct:!![...chks].find(c=>Number(c.dataset.idx)===i)?.checked}));
+  if(meta.type==='subquest-print')cur.answerReview=meta.problems.map((p,i)=>({number:i+1,problem:p.text,input:'保護者が紙の答えを確認',answered:true,expected:p.answer,correct:!![...chks].find(c=>Number(c.dataset.idx)===i)?.checked}));
   showPrintScoreResult(cur, correctCount, count);
 }
 

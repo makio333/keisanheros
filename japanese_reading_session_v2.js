@@ -73,3 +73,15 @@ export function confirmReadingReview(game,record,index,answer,humanConfirmed=fal
  return {status:'correct',reward:pay(game,record)};
 }
 export function readingAnswerText(question,answer){return question.input.type==='single-choice'?question.input.options.find(o=>o.id===answer)?.text||'未回答':answer||'未回答';}
+
+// Preserve the same answered/mastered ledger for paper and screen answers.
+export function claimReadingPrintReward(game,record,correctFlags,answeredFlags=record.questions.map(()=>true)){
+ const s=readingState(game),l=ledger(game,record);
+ record.questions.forEach((_,i)=>{if(answeredFlags[i]||correctFlags[i])l.answered[i]=true;if(correctFlags[i])l.mastered[i]=true;});
+ s.claimed[record.id]=true;
+ s.progress[record.id]=Math.max(Number(s.progress[record.id])||0,l.mastered.filter(Boolean).length);
+ if(l.mastered.every(Boolean)){
+  s.reviewClaimed[record.id]=true;recordSubquestCompletion(game,'reading',record.id,correctFlags.every(Boolean));
+ }
+ return pay(game,record)||{gold:0,exp:0,medals:0};
+}

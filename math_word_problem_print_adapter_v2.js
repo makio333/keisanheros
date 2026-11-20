@@ -8,7 +8,7 @@ const mathPrintVillager=p=>printQuestVillager(groupQuestProblems(MATH_WORD_QUEST
 export function mathWordPrintConfigV2(problemOrId,{mode='student',scale=1,color=false,playerName='',printNumber='',printRewardEntries=null}={}){
  const p=typeof problemOrId==='string'?getMathWordQuestV2(problemOrId):problemOrId;
  if(!p||typeof p.story!=='string'||typeof p.question!=='string'||typeof p.answerDisplay!=='string')throw new TypeError('Final math record required');
- return {villager:mathPrintVillager(p),title:p.title,subject:'math',playerName,printNumber,grade:p.grade,story:p.story,mode,scale,color,rewardText:printRewardEntries?'修練場で答え合わせ・報酬受取（メダル対象外）':'クエスト初回報酬（ゲーム内でクリア）',rewardEntries:printRewardEntries||questPrintRewards({gold:480,exp:360,medals:2}),
+ return {villager:mathPrintVillager(p),title:p.title,subject:'math',playerName,printNumber,grade:p.grade,story:p.story,mode,scale,color,rewardText:printRewardEntries?'修練場で答え合わせ（回答で半分・正解で残り半分／ゲームと報酬上限共通）':'クエスト初回報酬（ゲーム内でクリア）',rewardEntries:printRewardEntries||questPrintRewards({gold:480,exp:360,medals:2}),
  questions:[{question:p.question,answer:p.answerDisplay,explanation:p.explanation,workMm:45,answerFields:p.input.fields.map(f=>({label:f.label,unit:f.unit??''}))}]};
 }
 export function renderMathWordPrintV2(problemOrId,options){return renderWordProblemPrintV2(mathWordPrintConfigV2(problemOrId,options));}
@@ -29,6 +29,6 @@ export function renderConfirmedReadingPrintV2(source,project){
 /** Five source records, with their own story and response fields preserved. */
 export function renderMathWordSetPrintV2(records,{mode='student',calculationSpace='standard',playerName='',printNumber='',printRewardEntries=null}={}){
  if(!Array.isArray(records)||!records.length)throw new TypeError('Math quest set required');
- return renderWordProblemPrintV2({villager:mathPrintVillager(records[0]),title:`村人からの文章問題（${records.length}問）`,subject:'math',playerName,printNumber,grade:records[0].grade,showGrade:records[0].showGrade!==false,mode,pageLayout:calculationSpace==='double'?'auto':records.length===5?REVIEW_SETTINGS.wordPrintLayout:'auto',rewardText:printRewardEntries?'修練場で答え合わせ・報酬受取（メダル対象外）':'1問ごとの報酬上限（回答・正解で段階獲得）',rewardEntries:printRewardEntries||questPrintRewards({gold:480,exp:360,medals:2}),
+ return renderWordProblemPrintV2({villager:mathPrintVillager(records[0]),title:`村人からの文章問題（${records.length}問）`,subject:'math',playerName,printNumber,grade:records[0].grade,showGrade:records[0].showGrade!==false,mode,pageLayout:calculationSpace==='double'?'auto':records.length===5?REVIEW_SETTINGS.wordPrintLayout:'auto',rewardText:printRewardEntries?'修練場で答え合わせ（回答で半分・正解で残り半分／ゲームと報酬上限共通）':'1問ごとの報酬上限（回答・正解で段階獲得）',rewardEntries:printRewardEntries||questPrintRewards({gold:480,exp:360,medals:2}),
   questions:records.map(p=>({sourceId:p.id,question:`${p.story}\n${p.question}`,answer:p.answerDisplay,explanation:p.explanation,workMm:52,answerFields:p.input.fields.map(f=>({label:f.label,unit:f.unit??''}))}))}).replace('wpp2-root ', 'wpp2-root wpp2-math-set ');
 }

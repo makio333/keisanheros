@@ -1,3 +1,6 @@
+import {claimMathPrintReward} from './math_word_session.js';
+import {claimReadingPrintReward} from './japanese_reading_session_v2.js';
+import {claimGradeClearRewards} from './subquest_grade_rewards.js';
 import {getJapaneseReadingQuestsV2,evaluateJapaneseReadingAnswerV2} from './japanese_reading_quests_v2.js';
 import {getMathWordQuestsV2,scoreMathWordAnswerV2} from './math_word_quests_v2.js';
 
@@ -38,5 +41,18 @@ export function readSubquestPrintAnswer(root,p,i){
  const row=root.querySelector(`[data-number="${i}"]`),values=Object.fromEntries([...row.querySelectorAll('[data-key]')].filter(el=>el.type!=='radio'||el.checked).map(el=>[el.dataset.key,el.type==='checkbox'?el.checked:el.value.trim()])),q=p.subquestQuestion;
  const input=p.subject==='math'?Object.values(values).join(' ・ '):q.input.type==='single-choice'?(q.input.options.find(o=>o.id===values.answer)?.text||''):values.answer;
  const correct=p.subject==='math'?scoreMathWordAnswerV2(q,values).correct:q.scoring.mode==='human-rubric'?!!values.answer&&q.scoring.criteria.every((_,n)=>values['criterion-'+n]):evaluateJapaneseReadingAnswerV2(q,values.answer).correct===true;
- return {correct,input,expected:p.answer};
+ const answered=p.subject==='math'?q.input.fields.every(f=>String(values[f.name]??'').trim()):!!String(values.answer??'').trim();
+ return {correct,input,answered,expected:p.answer};
+}
+
+export function claimSubquestPrintReward(game,meta,correctFlags,answeredFlags=meta.problems.map(()=>true)){
+ const questions=meta.problems.map(p=>p.subquestQuestion);
+ if(!questions.length||correctFlags.length!==questions.length)throw Error('invalid_subquest_print');
+ const before={gold:game.player.gold||0,medals:game.questMedals||0,equip:game.equipGachaTenPullTickets||0,skin:game.skinGachaTickets||0};
+ const reward=meta.subject==='japanese'?claimReadingPrintReward(game,{id:meta.sourceId,grade:questions[0].grade,questions},correctFlags,answeredFlags):claimMathPrintReward(game,questions,correctFlags,answeredFlags);
+ const bonus=claimGradeClearRewards(game);
+ return {gold:(game.player.gold||0)-before.gold,medals:(game.questMedals||0)-before.medals,exp:reward.exp+bonus.exp,equip:(game.equipGachaTenPullTickets||0)-before.equip,skin:(game.skinGachaTickets||0)-before.skin};
+}
+export function subquestPrintRewardEntries(){
+ return [{icon:'💰',label:'5問全問正解 2,400G'},{icon:'✨',label:'5問全問正解 1,800EXP'},{icon:'🏅',label:'5問全問正解 メダル10枚'}];
 }
