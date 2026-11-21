@@ -1355,6 +1355,11 @@
         <button id="btn-admin-cancel-delete-save" class="window-nav-btn window-close-btn">✕ とじる</button>
         <h2>🗂️ セーブデータの 管理</h2>
         <p class="flavor">アーカイブすると「つづきから」の一覧には出なくなります。必要になったらここから戻せます。完全に削除しても、アカウント・購入済みの保存枠・購入権は残ります。</p>
+        <div id="admin-save-count-summary" class="admin-save-count-summary" aria-live="polite" aria-label="セーブデータ数">
+          <div class="admin-save-count-item"><span>セーブデータ合計</span><strong id="admin-save-count-total">0</strong><small>件</small></div>
+          <div class="admin-save-count-item"><span>通常セーブ</span><strong id="admin-save-count-active">0</strong><small>件</small></div>
+          <div class="admin-save-count-item"><span>アーカイブ</span><strong id="admin-save-count-archived">0</strong><small>件</small></div>
+        </div>
         <div class="admin-save-tools">
           <label class="admin-save-search-label" for="admin-save-search">名前で検索</label>
           <input id="admin-save-search" type="search" placeholder="プレイヤー名を入力" autocomplete="off">

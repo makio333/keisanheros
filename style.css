@@ -8964,3 +8964,37 @@ body:has(#screen-gacha.active) :is(.volume-control-container,#analog-clock-widge
 .save-slot-card.save-slot-selectable{cursor:pointer;justify-content:flex-start;gap:6px;padding:8px;min-height:0}
 .save-slot-selectable:focus-visible{outline:3px solid #ffe387;outline-offset:3px}
 .save-slot-selectable .save-slot-avatar-frame{height:clamp(130px,22vh,200px);min-height:0}
+
+.admin-save-count-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0 8px;
+}
+
+.admin-save-count-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 8px 6px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: rgba(16, 12, 28, 0.75);
+  color: var(--text-light);
+  font-size: 13px;
+  text-align: center;
+}
+
+.admin-save-count-item strong {
+  color: #fff;
+  font-size: 18px;
+}
+
+.admin-save-count-item small {
+  font-size: 11px;
+}
+
+
+@media(max-width:600px){.admin-save-count-summary{gap:5px}.admin-save-count-item{flex-wrap:wrap;gap:3px;font-size:11px}}

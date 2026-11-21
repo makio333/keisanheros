@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function migrationOpen() { return true; }
+    function owner(uid) {
+      return request.auth != null && request.auth.uid == uid
+        && (request.auth.token.get('email_verified', false) == true
+          || request.auth.token.firebase.sign_in_provider == 'oidc.line');
+    }
+    match /privateMigration/{uid}/saves/{saveId} {
+      allow read: if owner(uid);
+      allow create: if migrationOpen() && owner(uid)
+        && request.resource.data.keys().hasOnly(['ownerUid', 'sourceProject', 'sourceDocumentId', 'gameData', 'importedAt'])
+        && request.resource.data.ownerUid == uid
+        && request.resource.data.sourceProject is string
+        && request.resource.data.sourceProject.size() <= 63
+        && request.resource.data.sourceDocumentId is string
+        && request.resource.data.sourceDocumentId.size() <= 1000
+        && request.resource.data.gameData is string
+        && request.resource.data.gameData.size() <= 850000
+        && request.resource.data.importedAt is number;
+      allow update, delete: if false;
+    }
+    match /privateGame/{uid}/settings/{settingId} {
+      allow read: if owner(uid) && settingId == 'saveLimit';
+      allow write: if false;
+    }
+    match /privateGame/{uid}/migrationState/{stateId} {
+      allow read: if owner(uid) && stateId == 'seeded';
+      allow create: if owner(uid) && stateId == 'seeded'
+        && request.resource.data.keys().hasOnly(['ownerUid', 'initializedAt'])
+        && request.resource.data.ownerUid == uid
+        && request.resource.data.initializedAt is int;
+      allow update, delete: if false;
+    }
+    match /privateGame/{uid}/saves/{saveId} {
+      function validSave() {
+        return request.resource.data.keys().hasOnly(['ownerUid', 'gameData', 'revision', 'createdAt', 'updatedAt', 'sourceMigrationId'])
+          && request.resource.data.ownerUid == uid
+          && request.resource.data.gameData is string
+          && request.resource.data.gameData.size() <= 850000
+          && request.resource.data.revision is int
+          && request.resource.data.createdAt is int
+          && request.resource.data.updatedAt is int
+          && (request.resource.data.sourceMigrationId == null || request.resource.data.sourceMigrationId is string);
+      }
+      allow read: if owner(uid);
+      allow create: if owner(uid) && validSave() && request.resource.data.revision == 1;
+      allow update: if owner(uid) && validSave()
+        && request.resource.data.revision == resource.data.revision + 1
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.sourceMigrationId == resource.data.sourceMigrationId;
+      allow delete: if owner(uid)
+        && resource.data.ownerUid == uid
+        && !exists(/databases/$(database)/documents/accountDeletionVisibility/$(uid));
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

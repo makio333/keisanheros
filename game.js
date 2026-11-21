@@ -11949,6 +11949,8 @@ function bindEvents(){
         if(result.cancelled){status.textContent='キャンセルしました。セーブは削除されていません。';return;}
         let currentDeleted=false;
         for(const key of result.deleted){if(key===currentSlotKey){currentDeleted=true;G=null;currentSlotKey=null;}}
+        const accountCount=$('account-save-count'),accountSummary=window.AccountSession?.summary;
+        if(accountCount&&accountSummary)accountCount.textContent=`プレイヤー ${accountSummary.used} / ${accountSummary.saveLimit}`;
         if(result.deleted.length){status.textContent=`${result.deleted.length}件のセーブを削除しました。アカウントと購入済みの保存枠は残っています。`;updateContinueButtonVisibility();}
         if(result.failed.length){status.textContent+=`${result.deleted.length?' ':''}${result.failed.length}件は通信に失敗したため削除していません。接続を確認して、もう一度お試しください。`;}
         if(currentDeleted)showScreen('screen-title');
@@ -12009,8 +12011,9 @@ function renderAdminSaveManageList() {
   const selectedKeys = new Set(Array.from(listEl.querySelectorAll('.admin-save-checkbox:checked'), input => input.value));
   const searchText = ($('admin-save-search')?.value || '').trim().toLocaleLowerCase('ja');
   const sortMode = $('admin-save-sort')?.value || 'recent';
-  let slots = listSaveSlots({ includeArchived: true })
-    .filter(slot => slot.name.toLocaleLowerCase('ja').includes(searchText));
+  const allSlots=listSaveSlots({includeArchived:true}),archivedCount=allSlots.filter(slot=>slot.archived).length;
+  for(const [id,count] of [['admin-save-count-total',allSlots.length],['admin-save-count-active',allSlots.length-archivedCount],['admin-save-count-archived',archivedCount]]){const el=$(id);if(el)el.textContent=String(count);}
+  let slots = allSlots.filter(slot => slot.name.toLocaleLowerCase('ja').includes(searchText));
   if (sortMode === 'name') {
     const collator = new Intl.Collator('ja', { numeric: true, sensitivity: 'base' });
     slots.sort((a, b) => collator.compare(a.name, b.name));

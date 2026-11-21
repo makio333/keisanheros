@@ -1,6 +1,6 @@
 import {showErrorBanner} from './error_banner.js';
 import panelHtml from './save-migration.html?raw';
-import {collection,doc,getDocsFromServer,runTransaction} from 'firebase/firestore';
+import {collection,doc,getDocFromServer,getDocsFromServer,runTransaction} from 'firebase/firestore';
 import {signOut} from 'firebase/auth';
 import {mountPrivateMigrationPanel,migrationAuth,migrationDb,getFreshCheckoutEmailToken} from './save_migration_client.js';
 import {createFirebaseGameTransport} from './firebase_game_transport.js';
@@ -41,8 +41,16 @@ export async function initializeFirebaseGameClient(){
       }
       if(!transport||transport.accountId!==user.uid){
         if(started){location.reload();return;}
+        let saveLimitGrant=0;
+        try{
+          const grant=await getDocFromServer(doc(migrationDb,'privateGame',user.uid,'settings','saveLimit'));
+          const value=grant.exists()?grant.data()?.saveLimit:0;
+          if(Number.isSafeInteger(value)&&value>=3&&value<=1000)saveLimitGrant=value;
+        }catch{}
         transport=await createFirebaseGameTransport({uid:user.uid,isCurrentUser:uid=>migrationAuth.currentUser?.uid===uid,
+          saveLimitGrant,
           readSaves:async uid=>(await getDocsFromServer(collection(migrationDb,'privateGame',uid,'saves'))).docs.map(row=>({id:row.id,...row.data()})),
+          migrationStateReference:uid=>doc(migrationDb,'privateGame',uid,'migrationState','seeded'),
           reference:(uid,key)=>doc(migrationDb,'privateGame',uid,'saves',key),transaction:callback=>runTransaction(migrationDb,callback),
           onFailure(error,save){try{localStorage.setItem(`legend-account-conflict::${user.uid}::${save.key}`,JSON.stringify(save.gameState));}catch{}showErrorBanner(errorText(error));},
         });

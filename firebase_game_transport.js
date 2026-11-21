@@ -6,21 +6,29 @@ const snapshot=value=>{
   return text;
 };
 
-export async function createFirebaseGameTransport({uid,isCurrentUser,readSaves,reference,transaction,onFailure=()=>{},now=Date.now}){
+export async function createFirebaseGameTransport({uid,isCurrentUser,readSaves,reference,migrationStateReference,saveLimitGrant=0,transaction,onFailure=()=>{},now=Date.now}){
   const rows=new Map(),blocked=new Set(),failures=new Map();let queue=Promise.resolve(),pending=0,importedCount=0,saveLimit=3;
   const prefix='typing_rpg_save_v3::firebase::'+encodeURIComponent(uid)+'::';
   const check=()=>{if(!uid||!isCurrentUser(uid))fail('authentication_required');};
   const serialize=callback=>{pending++;const result=queue.then(()=>{check();return callback();});queue=result.catch(()=>{}).finally(()=>pending--);return result;};
-  function refreshSummary(){saveLimit=Math.max(saveLimit,3,importedCount,rows.size);transport.summary={accountId:uid,used:rows.size,saveLimit,canCreate:rows.size<saveLimit};}
+  const grantedSaveLimit=Number.isSafeInteger(saveLimitGrant)&&saveLimitGrant>=3&&saveLimitGrant<=1000?saveLimitGrant:0;
+  function refreshSummary(){saveLimit=Math.max(saveLimit,3,importedCount,rows.size,grantedSaveLimit);transport.summary={accountId:uid,used:rows.size,saveLimit,canCreate:rows.size<saveLimit};}
   const slots=()=>[...rows].map(([key,row])=>({slotKey:key,gameState:JSON.parse(row.gameData),updatedAt:row.updatedAt,revision:row.revision}));
   const transport={accountId:uid,summary:{},initialSlots:[],owns:key=>rows.has(key),get pending(){return pending;},
     async seedMigration(records){
       check();importedCount=records.length;
       if(records.length>200)fail('migration_file_too_large');
+      if(!records.length)return transport.fetchAllSlots();
       await serialize(()=>transaction(async tx=>{
+        const stateRef=typeof migrationStateReference==='function'?migrationStateReference(uid):null;
+        if(stateRef&&(await tx.get(stateRef)).exists())return;
         const refs=records.map(row=>{if(!/^[a-f0-9]{64}$/.test(row.id))fail('invalid_migration_file');snapshot(JSON.parse(row.gameData));return reference(uid,row.id);});
         const prior=await Promise.all(refs.map(ref=>tx.get(ref)));
-        check();for(let i=0;i<records.length;i++)if(!prior[i].exists())tx.set(refs[i],{ownerUid:uid,gameData:records[i].gameData,revision:1,createdAt:now(),updatedAt:now(),sourceMigrationId:records[i].id});
+        check();
+        // Mark migration as initialized once. Existing accounts may have deleted
+        // some imported saves already; never recreate those missing rows.
+        if(!stateRef||!prior.some(row=>row.exists()))for(let i=0;i<records.length;i++)if(!prior[i].exists())tx.set(refs[i],{ownerUid:uid,gameData:records[i].gameData,revision:1,createdAt:now(),updatedAt:now(),sourceMigrationId:records[i].id});
+        if(stateRef)tx.set(stateRef,{ownerUid:uid,initializedAt:now()});
       }));
       return transport.fetchAllSlots();
     },
