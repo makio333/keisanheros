@@ -1,3 +1,4 @@
+import {showSaveNameDialog} from './save_name_dialog.js';
 import './subquest_results.css';
 import {subquestPrintMeta,claimSubquestPrintReward,subquestPrintRewardEntries,legacySubquestPrint,normalizeSubquestPrintId,mountSubquestPrintAnswers,readSubquestPrintAnswer} from './subquest_print.js';
 import {bindInputComposition} from './input_composition_guard.js';
@@ -7180,6 +7181,27 @@ function nextFloor(){
    セーブデータ せんたく画面
    ========================================================== */
 let loadSaveSelectCallback = null;
+async function renameSaveSlot(key,name){
+ const owner=window.AccountSession,cloud=window.CloudSave;
+ if(!key?.startsWith(SAVE_PREFIX)||(owner&&!owner.owns(key)))throw Error('save_not_found');
+ const normalized=String(name??'').trim();if(!normalized||normalized.length>12)throw Error('invalid_name');
+ const active=key===currentSlotKey&&G,source=active?G:JSON.parse(storageGet(key)||'null');
+ if(!source?.player)throw Error('save_not_found');
+ if(source.playerName===normalized)return;
+ const next=JSON.parse(JSON.stringify(source));next.playerName=normalized;next.updatedAt=Date.now();
+ if(owner&&!cloud?.saveSlot)throw Error('save_unavailable');
+ if(cloud?.saveSlot)await cloud.saveSlot(key,next,true);
+ if(window.AccountSession!==owner||(owner&&!owner.owns(key)))throw Error('authentication_required');
+ storageSet(key,JSON.stringify(next));
+ if(key===currentSlotKey&&G){G.playerName=normalized;G.updatedAt=next.updatedAt;updateHud();}
+}
+function editSaveSlotName(key,name){
+ showSaveNameDialog({name,onSave:value=>renameSaveSlot(key,value),onSaved:()=>{
+   renderLoadSaveSlots(loadSaveSelectCallback);renderAdminSaveManageList();
+   const buttons=[...document.querySelectorAll('.save-slot-rename,.admin-save-rename')];buttons.find(button=>button.dataset.saveKey===key)?.focus({preventScroll:true});
+ }});
+}
+
 
 function renderLoadSaveSlots(onSelectCb){
   const list = $('save-slot-list');
@@ -7273,7 +7295,7 @@ function renderLoadSaveSlots(onSelectCb){
       <!-- 1段目: プレイヤー名 ＆ レベル ＆ 所持金 -->
       <div class="save-slot-card-header">
         <div class="save-slot-name-row">
-          <span class="save-slot-player-name">${slot.name}</span>
+          <span class="save-slot-player-name">${escapeHtml(slot.name)}</span>
           <span class="save-slot-lv-badge">Lv.${slot.lvl}</span>
         </div>
         <div class="save-slot-gold-badge">
@@ -7342,6 +7364,9 @@ function renderLoadSaveSlots(onSelectCb){
 
     `;
 
+    const rename=document.createElement('button');rename.type='button';rename.className='btn save-slot-rename';rename.textContent='✎ 名前を変更';rename.dataset.saveKey=slot.key;rename.setAttribute('aria-label',`${slot.name}の名前を変更`);
+    rename.onclick=event=>{event.preventDefault();event.stopPropagation();editSaveSlotName(slot.key,slot.name);};
+    card.querySelector('.save-slot-card-header').append(rename);
     applyAvatarComposition(card.querySelector('.save-slot-avatar-frame'),card.querySelector('.save-slot-avatar-img'),slot);
     card.setAttribute('role','button');
     card.tabIndex=0;
@@ -7359,7 +7384,7 @@ function renderLoadSaveSlots(onSelectCb){
           }
         }
       };
-    card.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();card.click();}};
+    card.onkeydown=event=>{if(event.target!==card)return;if(event.key==='Enter'||event.key===' '){event.preventDefault();card.click();}};
 
     list.appendChild(card);
   }
@@ -12038,8 +12063,9 @@ function renderAdminSaveManageList() {
       <label style="display:flex; align-items:center; background:${s.archived ? 'rgba(255,209,102,0.12)' : 'rgba(0,0,0,0.2)'}; border:${s.archived ? '1px solid rgba(255,209,102,0.45)' : '1px solid transparent'}; padding:8px; border-radius:4px; margin-bottom:6px; cursor:pointer;">
         <input type="checkbox" class="admin-save-checkbox" value="${s.key}" ${selectedKeys.has(s.key) ? 'checked' : ''} style="margin-right:12px; transform:scale(1.3);">
         <div>
-          <strong style="color:var(--accent); font-size:16px;">${name}</strong> (Lv ${lv}) ${currentMark}${archiveMark}<br>
+          <strong style="color:var(--accent); font-size:16px;">${escapeHtml(name)}</strong> (Lv ${lv}) ${currentMark}${archiveMark}<br>
           <span style="font-size:12px; color:#aaa;">さいごにプレイ: ${playedAt}</span>
+          <button type="button" class="btn admin-save-rename" data-save-key="${escapeHtml(s.key)}" aria-label="${escapeHtml(name)}の名前を変更">✎ 名前を変更</button>
           <div class="admin-save-challenge-decision"><b>チャレンジ候補:</b> ${escapeHtml(challengeDecision.label)}<br><small>${escapeHtml(challengeDecision.reason)}</small></div>
           ${s.archivedAt ? `<span style="font-size:12px; color:#ffd166; margin-left:8px;">アーカイブ: ${new Date(s.archivedAt).toLocaleString()}</span>` : ''}
         </div>
@@ -12047,6 +12073,7 @@ function renderAdminSaveManageList() {
     `;
   });
   listEl.innerHTML = html;
+  listEl.querySelectorAll('.admin-save-rename').forEach(button=>button.onclick=event=>{event.preventDefault();event.stopPropagation();const slot=slots.find(s=>s.key===button.dataset.saveKey);if(slot)editSaveSlotName(slot.key,slot.name);});
 }
 
 function renderAdminChallengeStageList(){

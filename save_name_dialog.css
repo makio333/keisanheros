@@ -1,0 +1,9 @@
+.save-name-overlay{position:fixed;inset:0;z-index:10000002;display:flex;align-items:center;justify-content:center;padding:12px;background:#000b;box-sizing:border-box;}
+.save-name-panel{box-sizing:border-box;width:min(440px,100%);max-height:calc(100dvh - 24px);overflow:auto;padding:22px;border:2px solid #e5d69b;border-radius:14px;background:#211b32;color:#fff1cc;}
+.save-name-panel h2{margin:0 0 18px;text-align:center;}
+.save-name-panel>label{display:flex;flex-direction:column;gap:8px;}
+.save-name-panel .challenge-input{box-sizing:border-box;width:100%;max-width:none;min-width:0;font-size:22px;}
+.save-name-message{min-height:1.4em;margin:8px 0;color:#ffcf8a;font-size:13px;overflow-wrap:anywhere;}
+.save-name-actions{display:flex;gap:10px;}.save-name-actions .btn{flex:1;min-width:0;margin:0;padding:12px 6px;}
+.save-slot-card .save-slot-rename,.admin-save-rename{align-self:flex-end;margin:5px 0 0;padding:5px 9px;min-height:30px;min-width:0;border:1px solid #99875b;border-radius:6px;background:#342840;color:#ffe3a0;font-size:12px;line-height:1.3;box-shadow:none;cursor:pointer;}
+.admin-save-rename{margin-left:8px;}.save-slot-rename:focus-visible,.admin-save-rename:focus-visible{outline:2px solid #ffdc71;outline-offset:2px;}
