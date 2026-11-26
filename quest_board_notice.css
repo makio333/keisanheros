@@ -151,3 +151,19 @@
 #screen-quest-board .quest-board-wood .quest-card.quest-card[data-notice-variant]::before{border-image-slice:var(--quest-paper-slice) fill}
 /* Keep the action row above the visible paper fold whenever the tile has room. */
 #screen-quest-board .quest-board-wood .quest-fitted-grid.has-fold-room .quest-card.quest-card{padding-bottom:28px}
+/* Reserve reward and action rows independently, even on short notices. */
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .quest-card.quest-card{grid-template-columns:minmax(0,1fr);grid-template-rows:14px minmax(0,1fr) 28px 18px 48px 28px;max-height:none;padding:8px 7px 12px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .quest-card-ribbon{grid-column:1;grid-row:1}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .quest-card-art{grid-column:1;grid-row:2;width:100%;min-height:0;overflow:hidden}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .quest-card-title{grid-column:1;grid-row:3;align-self:center}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .quest-card-tag{grid-column:1;grid-row:4}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .quest-card-rewards{grid-column:1;grid-row:5;overflow:hidden}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-short .reading-quest-card-actions{grid-column:1;grid-row:6;align-self:end}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-tiny .quest-card.quest-card{grid-template-rows:12px 0 26px 14px 48px 28px;padding:5px 7px 8px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-tiny .quest-card-art{visibility:hidden}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-tiny .quest-card-stars span{font-size:12px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.has-fold-room.is-short .quest-card.quest-card{padding-bottom:12px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-tiny .quest-card.quest-card{grid-template-rows:12px 0 26px 0 44px 28px;padding:4px 7px 6px}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-tiny .quest-card-tag{display:none}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-tiny .quest-card-rewards{padding:0}
+#screen-quest-board .quest-board-wood .quest-fitted-grid.is-tiny .qc-gold{line-height:11px;font-size:10px}

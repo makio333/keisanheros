@@ -634,10 +634,10 @@
       <div class="modal-panel raid-menu-panel">
         <header class="raid-menu-header">
           <button class="window-nav-btn window-close-btn" onclick="document.getElementById('screen-raid-boss').classList.add('hidden')">✕ とじる</button>
-          <h2 class="raid-menu-title">ワールド・レイドボス</h2>
-          <button id="btn-raid-rules" class="btn" aria-expanded="false" aria-controls="raid-rules">レイドのルールは？</button>
+          <h2 class="raid-menu-title">レイド</h2>
+          <button id="btn-raid-rules" class="btn" aria-expanded="false" aria-controls="raid-rules">ルール</button>
           <button id="btn-raid-exchange" class="btn">🪙 コイン交換所</button>
-          <button id="btn-raid-history" class="btn" style="margin-left:8px;">討伐履歴</button>
+          <button id="btn-raid-history" class="btn" style="margin-left:8px;">履歴</button>
         </header>
         <div id="raid-final-push-announcement" class="raid-final-push-announcement hidden" role="status" aria-live="polite">
           <strong>🔥 最後の力を振り絞れ！</strong>
@@ -650,7 +650,7 @@
             <li><b>力を出しきろう</b><span id="raid-rule-progression">1問ごとに次のステージの問題へ。まちがえると反撃されるよ。自分のHPが0になっても、あたえたダメージは記録されるよ。</span></li>
             <li><b>レイドコイン</b><span>10ダメージごとに1枚を獲得。討伐時の順位報酬は1位20枚・2位15枚・3位10枚・4〜10位5枚。コイン交換所で限定装備・スキン・背景・フレームと交換できるよ。</span></li>
             <li><b>チケットで参加</b><span>参加1回につきレイドチケットを1枚使います。デイリーミッション4個達成の報酬で1枚もらえます。戦闘中に「わからない」を押すと終了でき、ここまでのダメージは記録されます。</span></li>
-            <li><b>ランキングに挑戦</b><span>開催中は何回でも挑戦して、合計ダメージをのばそう！ ボス討伐後1分で最終順位を集計し、集計が終わると次のレベルがすぐ始まるよ。最後の一撃を与えた人（同時なら複数）には、撃破ボーナスチケットもプレゼント！参加するだけでマグマの背景ももらえるよ。</span></li>
+            <li><b>ランキングに挑戦</b><span>月間ランキングは毎月1日0時（日本時間）に切り替わります。ボスの強さと残りHPはそのまま。月末7日間はレイド攻撃力が2倍！討伐順位の報酬は月間順位とは別です。 ボス討伐後1分で最終順位を集計し、集計が終わると次のレベルがすぐ始まるよ。最後の一撃を与えた人（同時なら複数）には、撃破ボーナスチケットもプレゼント！</span></li>
           </ol>
           <p>ランキングとボスのHPは、ほかの端末とも共有されるよ。通信できないときの記録は、再接続すると送られるよ。</p>
         </section>
@@ -1487,11 +1487,11 @@
 
   <div id="raid-history-modal" class="modal-overlay hidden">
     <div class="modal-panel raid-history-panel">
-      <h2>レイド討伐履歴</h2>
+      <h2>レイドランキングの履歴</h2>
       <nav class="raid-history-nav" aria-label="討伐履歴の切り替え">
-        <button type="button" id="btn-raid-history-older" class="btn" aria-label="古い討伐のランキング" disabled>◀ 前の討伐</button>
+        <button type="button" id="btn-raid-history-older" class="btn" aria-label="古い討伐のランキング" disabled>◀ 前の記録</button>
         <span id="raid-history-position" aria-live="polite"></span>
-        <button type="button" id="btn-raid-history-newer" class="btn" aria-label="新しい討伐のランキング" disabled>次の討伐 ▶</button>
+        <button type="button" id="btn-raid-history-newer" class="btn" aria-label="新しい討伐のランキング" disabled>次の記録 ▶</button>
       </nav>
       <div id="raid-history-summary" class="raid-history-summary" aria-live="polite"></div>
       <h3>🏆 ダメージランキング</h3>

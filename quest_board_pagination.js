@@ -64,14 +64,15 @@ export function mountFittedQuestPages(grid,nav,cards,{page=0,onPage=()=>{},bind=
   frame=0;if(!grid.isConnected)return cleanup();
   if(!board){size=6;draw();return;}
   const rect=grid.getBoundingClientRect(),style=getComputedStyle(grid);const width=rect.width-(parseFloat(style.paddingLeft)||0)-(parseFloat(style.paddingRight)||0),height=rect.height-(parseFloat(style.paddingTop)||0)-(parseFloat(style.paddingBottom)||0);if(width<1||height<1)return;
-  const gap=10,minWidth=width<320?126:width<600?142:172;
+  const gap=10,minWidth=width<320?150:width<600?158:172;
   const columns=Math.max(1,Math.min(8,Math.floor((width+gap)/(minWidth+gap))));
-  const rows=Math.max(1,Math.floor((height+gap)/190));
+  const rows=Math.max(1,Math.floor((height+gap)/210));
   const cardHeight=Math.floor((height-(rows-1)*gap)/rows);
   const layout=`${columns}/${rows}/${cardHeight}/${Math.floor(width)}`;
   if(layout===lastLayout)return;lastLayout=layout;
   const first=current*(size||columns*rows);size=columns*rows;current=Math.floor(first/size);
   grid.style.setProperty('--quest-columns',columns);grid.style.setProperty('--quest-rows',rows);
+  grid.classList.toggle('is-tiny',cardHeight<185);
   grid.classList.toggle('is-compact',cardHeight<220);grid.classList.toggle('is-short',cardHeight<230);grid.classList.toggle('has-fold-room',cardHeight>=174);
   grid.dataset.pageCapacity=String(size);draw();
  }

@@ -32,6 +32,7 @@ function appendAnnotatedText(target,record,hints=[]){
 }
 
 export function renderJapaneseReadingV2Subquests(root,grade,api){
+ const help=node('details',null,'subquest-rules');help.append(node('summary','あそびかた・報酬について'),node('p','5問に答えてから答え合わせ。1問の回答で10％、正解でさらに10％の報酬。途中で戻っても受取分は残り、復習で残りを受け取れます。'));
  const game=api.game(),state=readingState(game),visualRewards=new Map();
  const heading=node('h3',`${grade}年・村人と読む文章問題`,'reading-v2-section-heading');
  const progressSummary=node('div',null,'quest-board-progress-summary');progressSummary.setAttribute('role','status');
@@ -59,7 +60,7 @@ export function renderJapaneseReadingV2Subquests(root,grade,api){
  const suggested=passages.find(r=>state.sessions[r.id]&&state.sessions[r.id].phase!=='answering'&&readingReviewTargets(r,state.sessions[r.id]).length>0&&!readingRewardProgress(game,r).complete);
  const suggestion=node('section',null,'reading-v2-reward-card reading-v2-suggestion');suggestion.hidden=!suggested;
  if(suggested){suggestion.append(node('b','🎁 今のおすすめ：'+suggested.title+' の解き直し'),rewardLine(readingRewardProgress(game,suggested).remaining),node('span','まだ受け取っていない報酬です。解き直して正解すると100％まで受け取れます。'));const go=node('button','✎ ヒント付き再挑戦を再開','btn btn-primary');go.type='button';go.onclick=()=>showReview(suggested,READING_VILLAGERS[passages.indexOf(suggested)%READING_VILLAGERS.length]);suggestion.append(go);}
- progressSummary.append(node('small',gradeRewardSummary(grade),'subquest-grade-reward-note'));root.replaceChildren(heading,progressSummary,suggestion,grid,pager);
+ progressSummary.append(node('small',gradeRewardSummary(grade),'subquest-grade-reward-note'));root.replaceChildren(help,heading,progressSummary,suggestion,grid,pager);
  mountFittedQuestPages(grid,pager,[...cards,...(api.extraCards||[])],{page:api.pageForGrade?.(grade)||0,onPage:page=>api.setPageForGrade?.(grade,page),bind:api.bindRewards});
 
  function createScene(record,villager,hint=null){
@@ -141,7 +142,7 @@ export function renderJapaneseReadingV2Subquests(root,grade,api){
    if(index<4)showQuestion(record,villager,index+1);
    else{saveReward(finishReadingSession(game,record));showResults(record,villager);}
   };
-  body.append(progress,node('p',review?'正解すると残りの10％を受け取れます。':'答え合わせは5問のあと。1問回答で10％、正解でさらに10％。','reading-v2-batch-note'),prompt,area,feedback);
+  body.append(progress,prompt,area,feedback);
   if(review){const tip=node('aside',null,'reading-v2-retry-hint');tip.append(node('b','✎ ヒントを見て、もう一度考えよう'),node('p',hint.text));body.insertBefore(tip,prompt);}
   if(question.input.type==='single-choice'){
    const options=node('div',null,'reading-v2-options');

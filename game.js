@@ -3,6 +3,8 @@ import './subquest_results.css';
 import {subquestPrintMeta,claimSubquestPrintReward,subquestPrintRewardEntries,legacySubquestPrint,normalizeSubquestPrintId,mountSubquestPrintAnswers,readSubquestPrintAnswer} from './subquest_print.js';
 import {bindInputComposition} from './input_composition_guard.js';
 import './equipment_summary.css';
+import './equipment_comparison.css';
+import './raid_menu_simple.css';
 import {showErrorBanner} from './error_banner.js';
 import {showLoginBonus} from './login_bonus_ui.js';
 import {claimChallengeBonus,claimAvailableChallengeBonuses,challengeBonusStatus,DAILY_CHALLENGES,recordChallengeClear,syncChallengeClock} from './login_bonus.js';
@@ -56,7 +58,7 @@ import './ghost_boss_motion.css';
 import './print_answer_review.css';
 import {GHOST_RAID_BACKGROUND,GHOST_RAID_SKIN,GHOST_RAID_FRAME,GHOST_RAID_DEFEAT_DECORATION,GHOST_RAID_EQUIPMENT,GHOST_RAID_PRIZES,ownsRaidPrize,purchaseRaidPrize} from './ghost_raid_content.js';
 import {grantRaidRun,validRaidDamage,raidInitialHp,raidConfiguredHp} from './raid_run_rules.js';
-import {raidJstMonthKey} from './raid_monthly_rules.js';
+import {raidJstMonthKey,raidActiveGlobalDocId,raidGlobalDocIdForBossId,raidRankingSeason,raidMonthEndBoost} from './raid_monthly_rules.js';
 import { awakeningState, awakeningScale, isAncientEquipment, equippedAncients, grantAwakeningExp, masterExistingAncients } from './ancient_awakening.js';
 import {CHRISTMAS_EQUIPMENT_PICKUP_RATE,pickChristmasPrize,isChristmasPickup,weightedPrizeRates} from './christmas_gacha.js';
 import {CHRISTMAS_PRESENT_ICON,CHRISTMAS_STORY_BANNER,CHRISTMAS_ENCOUNTERS_PER_RUN,createChristmasEncounters,christmasStageAt,CHRISTMAS_EXCHANGE_PRIZES,christmasPresentBalance,christmasEventState,christmasExchangeOnly,christmasPrizeOwned,rollChristmasSantaSkinTicket,recoverChristmasPresents,exchangeChristmasPrize} from './christmas_presents.js';
@@ -168,7 +170,7 @@ function $(id){ return document.getElementById(id); }
 const damageFloatsV2=createDamageFloatQueueV2();
 const raidBossIntro=createRaidBossIntro();
 let raidIntroAbort=null;
-const ancientToastV2=createAncientExpToast({root:$('ancient-exp-toast-v2'),nameOf:id=>getEquipTemplate(id)?.name||'古代装備'});
+const ancientToastV2=createAncientExpToast({root:$('ancient-exp-toast-v2'),nameOf:id=>getEquipTemplate(id)?.name||'古代装備',iconOf:id=>{const icon=getEquipTemplate(id)?.emoji;return typeof icon==='string'&&icon.includes('/')?av(icon):null;}});
 function cancelRaidBossIntro(){raidIntroAbort?.abort();raidBossIntro.cancel();raidIntroAbort=null;}
 
 /* 画像アセットの キャッシュたいさく。ブラウザが 古い画像を キャッシュしつづけて
@@ -3870,12 +3872,12 @@ function migrateLegacySaveIfNeeded(){
 }
 
 /* 装備込みの実効ステータス */
-function equipBonus(){
+function equipBonus(game=G){
   const b = { atk:0, def:0, spd:0, mp:0, hp:0 };
   for (const slot of EQUIP_SLOTS){
-    const eq = G.equipment[slot];
+    const eq = game.equipment[slot];
     if (!eq) continue;
-    const owned = G.ownedEquips.find(o => o.uid === eq.uid);
+    const owned = game.ownedEquips.find(o => o.uid === eq.uid);
     if (!owned) continue;
     const db = getEquipTemplate(owned.id);
     if (!db) continue;
@@ -4533,7 +4535,30 @@ window.createKanaChoiceProblem = createKanaChoiceProblem;
 
 
 
+let raidPressureTick=null;
+function stopRaidPressure(){clearInterval(raidPressureTick);raidPressureTick=null;$('raid-pressure-gauge')?.remove();}
+function startRaidPressure(){
+ if(!explore?.isRaid||battle?.raidMonsterId!=='moonWraith'||!raidMonthEndBoost(raidNow()).active)return;
+ const owner=battle;if(!owner.raidPressureDeadline)owner.raidPressureDeadline=performance.now()+10000;
+ if(raidPressureTick)return;
+ const tick=()=>{
+  if(battle!==owner||owner.over||!explore?.isRaid||!raidMonthEndBoost(raidNow()).active){stopRaidPressure();return;}
+  let gauge=$('raid-pressure-gauge');if(!gauge){gauge=document.createElement('div');gauge.id='raid-pressure-gauge';gauge.setAttribute('role','meter');gauge.setAttribute('aria-label','弱攻撃までの残り秒数');gauge.setAttribute('aria-valuemin','0');gauge.setAttribute('aria-valuemax','10');gauge.innerHTML='<span></span><small></small>';$('screen-battle')?.append(gauge);}
+  let remaining=owner.raidPressureDeadline-performance.now();
+  if(remaining<=0){
+   owner.raidPressureDeadline=performance.now()+10000;remaining=10000;
+   const damage=Math.max(1,Math.ceil(totalMaxHp()*.05));G.player.hp=Math.max(0,G.player.hp-damage);
+   blog(`<span class="bad">幽霊王の弱攻撃！ ${damage}ダメージ！ 同じ問題で続けよう！</span>`);
+   SM.playBeep('damage');spawnFloatingDamage($('battle-player-hp'),damage,'player-dmg');updateBattleBars();
+   if(G.player.hp<=0){endBattleLoop();showPlayerDownOverlay();setTimeout(loseBattle,1400);return;}
+  }
+  gauge.style.setProperty('--raid-time-left',String(remaining/10000));gauge.querySelector('span').style.width=`${remaining/100}%`;gauge.classList.toggle('is-urgent',remaining<=3000);gauge.querySelector('small').textContent=`${Math.ceil(remaining/1000)}`;gauge.setAttribute('aria-valuenow',String(Math.ceil(remaining/1000)));
+ };
+ tick();raidPressureTick=setInterval(tick,100);
+}
 function startChallenge(container, opts, cb){
+  startRaidPressure();
+  const answerCallback=cb;cb=res=>{if(res.success&&battle?.raidPressureDeadline)battle.raidPressureDeadline=performance.now()+10000;answerCallback(res);};
   destroyChallenge();
   const problem = opts.problem;
   const timeLimit = Number.isFinite(opts.timeLimit) && opts.timeLimit > 0 ? opts.timeLimit : 15000;
@@ -5111,6 +5136,7 @@ function selectHalloweenTarget(partyId) {
 function blog(html){ logTo('battle-log', html); }
 
 function updateBattleBars(){
+  renderRaidBattleBoost();
   const p = G.player, e = battle.enemy;
   $('battle-player-mp').style.width = `${Math.max(0, p.mp / totalMaxMp() * 100)}%`;
   $('battle-player-atb').style.width = `${battle.pGauge}%`;
@@ -5159,9 +5185,26 @@ function resumeBattle(actor){
 
 /* --- 戦う：即けいさん --- */
 /* そうびの特殊能力「ちからのかご」ぶんの こうげき力ブースト込みATK */
-function effectiveAtk(){
+function renderRaidBattleBoost(){
+ const screen=$('screen-battle');
+ let backdrop=$('raid-boss-fullscreen-art');
+ if(explore?.isRaid&&battle?.raidMonsterId){
+   const appearance=getRaidBossAppearance(battle.raidMonsterId);
+   if(!backdrop){backdrop=document.createElement('img');backdrop.id='raid-boss-fullscreen-art';backdrop.alt='';backdrop.setAttribute('aria-hidden','true');screen?.prepend(backdrop);}
+   if(backdrop.dataset.art!==appearance.image){backdrop.src=av(appearance.image);backdrop.dataset.art=appearance.image;}
+ }else backdrop?.remove();
+ const active=explore?.isRaid&&raidMonthEndBoost(raidNow()).active,badge=document.querySelector('.raid-battle-boost');
+ if(explore?.isRaid&&battle?.raidMonsterId==='moonWraith'){
+   const appearance=getRaidBossAppearance('moonWraith'),img=$('battle-enemy-emoji')?.querySelector('img');
+   if(battle.enemy.emoji!==appearance.image){battle.enemy.emoji=appearance.image;if(img){img.src=av(appearance.image);img.alt=appearance.alt;}}
+ }
+ if(active&&!badge)$('battle-floor-title')?.insertAdjacentHTML('beforeend','<span class="raid-battle-boost" style="display:inline-block;margin-left:8px;color:#ffda79">🔥 ターボモード｜攻撃力2倍</span>');
+ if(!active&&badge)badge.remove();
+}
+function effectiveAtk({raidBoost=true}={}){
   const mult = equippedAbilities().has('power') ? 1.15 : 1;
-  return Math.round(totalStat('atk') * mult);
+  const boost=raidBoost&&explore?.isRaid?raidMonthEndBoost(raidNow()).multiplier:1;
+  return Math.round(Math.round(totalStat('atk')*mult)*boost);
 }
 /* そうびの特殊能力「せつやくの心得」ぶん MPしょうひを1へらす（最低1） */
 function skillMpCost(s){
@@ -5554,7 +5597,7 @@ function useSkill(s){
       destroyChallenge();
       if (s.healPct){
         if (!res.success){
-          const selfDamage = Math.max(1, Math.round(effectiveAtk() * BALANCE.missDamageRatio));
+          const selfDamage = Math.max(1, Math.round(effectiveAtk({raidBoost:false}) * BALANCE.missDamageRatio));
           G.player.hp = Math.max(0, G.player.hp - selfDamage);
           blog(`<span class="bad">${s.name}は はつどうしなかった！ ゆうしゃは ${selfDamage}ダメージ！（MP${cost}）</span>`);
           applyMissPenalty();
@@ -6227,6 +6270,7 @@ function enemyAct(){
 }
 
 function endBattleLoop(){
+  stopRaidPressure();
   damageFloatsV2.clear();
   stopEnemyIceBreath?.();
   stopEnemyIceBreath = null;
@@ -8000,7 +8044,7 @@ function ensureQuestBoard(){
     const family=String(q.tier).replace(/[0-9]/g,''),arc=STORY_ARCS[family]?.find(arc=>arc.title===q.title);
     if(arc)while(q.parts.length<REVIEW_SETTINGS.legacyMathQuestQuestions){const tpl=arc.parts[q.parts.length%arc.parts.length],p=generateProblem(q.tier);q.parts.push({...p,text:tpl(p.a,p.b),isWordProblem:true});}
   }
-  G.questBoard=G.questBoard.map((q,index)=>q.storyVersion===LEGACY_STORY_VERSION?q:rewriteLegacyStory(q,index));
+  G.questBoard=G.questBoard.map((q,index)=>q.storyVersion===LEGACY_STORY_VERSION?q:rewriteLegacyStory(q,q.storyVariant??index));
   // いまの 進み具合に 合わない かんたんすぎる クエスト（まだ 手をつけていないもの）は 入れかえる
   G.questBoard = G.questBoard.map(q => (q.partIndex > 0 || questTierAllowed(q.tier)) ? q : generateStoryQuest(q.uid));
   while (G.questBoard.length < QUEST_BOARD_SIZE) G.questBoard.push(generateStoryQuest());
@@ -8763,7 +8807,7 @@ function confirmStatusAllocation(){
 
 /* はい／いいえの かくにんダイアログ（きょうつう部品）。とりけしできない
    そうさの まえに つかう（例：スキルポイントの わりふり かくてい） */
-function showConfirmModal(title, message, onYes){
+function showConfirmModal(title, message, onYes, options={}){
   document.querySelector('.confirm-overlay:not(.raid-exchange-overlay)')?.remove();
   const overlay = document.createElement('div');
   overlay.className = 'confirm-overlay';
@@ -8773,11 +8817,12 @@ function showConfirmModal(title, message, onYes){
       <div class="confirm-message">${message}</div>
       <div class="confirm-actions">
         <button class="btn" id="btn-confirm-no">${onYes ? 'いいえ' : 'とじる'}</button>
-        ${onYes ? '<button class="btn btn-primary" id="btn-confirm-yes">はい</button>' : ''}
+        ${onYes ? `<button class="btn btn-primary" id="btn-confirm-yes">${escapeHtml(options.yesLabel||'はい')}</button>` : ''}
       </div>
     </div>
   `;
   document.body.appendChild(overlay);
+  if(overlay.querySelector('.equip-comparison-a'))finalizeEquipmentCards(overlay);
   $('btn-confirm-no').onclick = () => overlay.remove();
   if(onYes)$('btn-confirm-yes').onclick = () => { overlay.remove(); onYes(); };
 }
@@ -8949,6 +8994,48 @@ function bindEquipDetailTooltip(element, db, options = {}) {
   element.onfocus = () => { const rect = element.getBoundingClientRect(); showTooltip({ clientX: rect.left, clientY: rect.bottom }, detail()); };
   element.onblur = hideTooltip;
   element.onkeydown = event => { if (event.key === 'Escape') hideTooltip(); };
+}
+
+function equipComparisonStats(owned, db){
+  const beforeBonus=equipBonus();
+  const afterBonus=equipBonus({...G,equipment:{...G.equipment,[db.slot]:{uid:owned.uid}}});
+  const base={atk:G.player.atk||0,def:G.player.def||0,spd:G.player.spd||0,hp:G.player.maxHp,mp:G.player.maxMp};
+  return Object.fromEntries(Object.keys(base).map(key=>[key,{before:base[key]+beforeBonus[key],after:base[key]+afterBonus[key]}]));
+}
+
+function equipConfirmationHtml(owned, db, nextUsed){
+  const currentOwned=G.ownedEquips.find(item=>item.uid===G.equipment[db.slot]?.uid);
+  const currentDb=currentOwned&&getEquipTemplate(currentOwned.id);
+  const stats=equipComparisonStats(owned,db);
+  const labels={atk:['⚔','攻撃力'],def:['♜','守備力'],spd:['➤','すばやさ'],hp:['♥','最大HP'],mp:['◆','最大MP']};
+  const keys=['atk','def','spd',...['hp','mp'].filter(key=>stats[key].before!==stats[key].after)];
+  function weaponCard(item,definition,isNew){
+    const rarity=item?.rarity||1;
+    const ability=definition&&manaEquipmentAbility(definition,rarity,item.ability||definition.ability||eventEquipmentAbility(definition.id));
+    const effect=ability?getAbility(ability)?.name:Number(item?.rarity)===6&&definition?.id.startsWith('anc_')?'古代の固有效果':'特殊効果なし';
+    return `<section class="equip-compare-weapon ${isNew?'is-new':'is-current'}" aria-label="${isNew?'新しい装備':'いまの装備'}">
+      <h4>${isNew?'新しい装備':'いまの装備'}</h4>
+      <div class="equip-compare-art equipment-card-icon ${definition?'rarity-'+rarity:'is-empty'}">${definition?equipmentCardLayers(definition,rarity,88):'<span aria-hidden="true">⚔</span>'}</div>
+      <b class="equip-compare-name">${escapeHtml(definition?.name||'未装備')}</b>
+      <small class="equip-compare-effect">${escapeHtml(effect||'特殊効果なし')}</small>
+    </section>`;
+  }
+  const rows=keys.map(key=>{const {before,after}=stats[key],diff=after-before,sign=diff>0?'+':diff<0?'−':'±',delta=sign+Math.abs(diff),tone=diff>0?'is-up':diff<0?'is-down':'is-same';
+    return `<div class="equip-compare-stat" data-stat="${key}" data-before="${before}" data-after="${after}" data-delta="${diff}" role="group" aria-label="${labels[key][1]} ${before}から${after}、変化 ${delta}">
+      <div class="equip-compare-old"><span class="equip-compare-label"><i aria-hidden="true">${labels[key][0]}</i>${labels[key][1]}</span><b>${before}</b></div>
+      <div class="equip-compare-change ${tone}"><b>${delta}</b><span aria-hidden="true">→</span></div>
+      <div class="equip-compare-new ${tone}"><b>${after}</b></div>
+    </div>`;
+  }).join('');
+  return `<div class="equip-confirm-body equip-comparison-a">
+    <div class="equip-compare-grid">${weaponCard(currentOwned,currentDb,false)}${weaponCard(owned,db,true)}${rows}</div>
+    <div class="equip-compare-cost">コスト <b>${usedCost()}</b> → <b>${nextUsed}</b> ／ ${costCap()}</div>
+  </div>`;
+}
+
+function confirmEquipChange(owned,db){
+  const nextUsed=usedCost(db.slot)+equipCost(db,owned.rarity);
+  showConfirmModal('そうびを かえますか？',equipConfirmationHtml(owned,db,nextUsed),()=>startEquipFlow(owned,db),{yesLabel:'そうびする'});
 }
 
 function generateEquipDetailHtml(db, options = {}){
@@ -9534,12 +9621,7 @@ function renderEquipList(){
         SM.playBeep('error');
         setEquipListMsg(`コストが たりないよ！（${usedCost(db.slot) + cost} ／ ${costCap()}）`);
       } else {
-        const nextUsed = usedCost(db.slot) + cost;
-        showConfirmModal('そうびしますか？',
-          `<div class="equip-confirm-body">${iconHtml(db.emoji, 56)}<b class="rarity-${o.rarity}">${db.name}</b>
-            <div>コスト ${usedCost()} → <b>${nextUsed}</b> ／ ${costCap()}</div>
-            <small>※ けいさん（${OP_LABELS[db.opTier]}）に せいかいすると そうびできるよ</small></div>`,
-          () => startEquipFlow(o, db));
+        confirmEquipChange(o,db);
       }
     };
     grid.appendChild(cell);
@@ -9599,7 +9681,7 @@ function openEquipSelectModal(targetSlot) {
         openEquipSelectModal(targetSlot);
       } else {
         closeEquipSelectModal();
-        startEquipFlow(owned, db);
+        confirmEquipChange(owned, db);
       }
     };
     row.appendChild(btn);
@@ -16688,19 +16770,23 @@ const RAID_BOSS_APPEARANCES = Object.freeze({
   })
 });
 function getRaidBossAppearance(id = activeRaidBossAppearanceId()) {
-  return RAID_BOSS_APPEARANCES[id] || RAID_BOSS_APPEARANCES[activeRaidBossAppearanceId()] || RAID_BOSS_APPEARANCES.darkBahamut;
+  const appearance=RAID_BOSS_APPEARANCES[id] || RAID_BOSS_APPEARANCES[activeRaidBossAppearanceId()] || RAID_BOSS_APPEARANCES.darkBahamut;
+  return appearance.id==='moonWraith'&&raidMonthEndBoost(raidNow()).active
+    ? {...appearance,image:'assets/raid/raid_boss_moon_wraith_boost_red_pixel.png',alt:'赤い月と炎をまとった、月末ブースト中の幽霊王'}
+    : appearance;
 }
 function getRaidBossAppearanceForHistory(entry) {
   return getRaidBossAppearance(entry?.monsterId || 'darkBahamut');
 }
 function isCurrentMonthlyRaidData(data=getRaidData()) {
-  const period = raidJstMonthKey(Date.now());
-  return data.periodKey === period && String(data.bossId || '').startsWith(`boss_m${period}_`);
+  return raidGlobalDocIdForBossId(data.bossId)===raidActiveGlobalDocId(raidNow())&&String(data.bossId||'').startsWith('boss_m');
 }
 function getRaidMaxHp() {
   if (activeRaidBossAppearanceId() === 'moonWraith' && !isCurrentMonthlyRaidData()) return raidInitialHp('moonWraith');
   return raidConfiguredHp(getRaidData(),activeRaidBossAppearanceId());
 }
+let raidServerClock=null;
+function raidNow(){return raidServerClock?raidServerClock.at+(performance.now()-raidServerClock.monotonic):Date.now();}
 let raidSyncStatus = 'idle';
 let raidSyncPromise = null;
 let raidSyncSlotKey = null;
@@ -16789,6 +16875,7 @@ async function syncRaidState() {
       // Participation-count rewards have ended; keep all previously owned items.
       const cheerGold = await window.RaidBossAPI.receiveCheers(slotKey, game);
       let global = await window.RaidBossAPI.getGlobalBoss();
+      if(Number.isFinite(global.serverNow))raidServerClock={at:global.serverNow,monotonic:performance.now()};
       if (G !== game || currentSlotKey !== slotKey) return false;
       const rankingBossId = global.bossId || result.bossId || progress.bossId;
       const fetchedRankings = await window.RaidBossAPI.getRankings(rankingBossId);
@@ -16805,7 +16892,7 @@ async function syncRaidState() {
       if (G !== game || currentSlotKey !== slotKey) return false;
       const rankingSnapshotMatches = !latestGlobal.bossId || latestGlobal.bossId === rankingBossId;
       global = latestGlobal;
-      if (!rankingSnapshotMatches) raidRefreshRequested = true;
+      if (!rankingSnapshotMatches||latestGlobal.periodKey!==rankingPeriod) raidRefreshRequested = true;
       const rankings = rankingSnapshotMatches ? fetchedRankings : [];
       if (payout?.eligible) {
         const rewardState=payout.state;
@@ -16883,6 +16970,7 @@ async function syncRaidState() {
 
 function renderRaidSyncStatus() {
   const label = $('raid-sync-status');
+  if(label?.closest('.raid-sync-line'))label.closest('.raid-sync-line').hidden=raidSyncStatus==='ready';
   if (label) label.textContent = raidSyncStatus === 'ready' ? (window.RaidBossAPI?.mode==='browser-test'?'テスト用レイド：記録・ランキングはこのブラウザ内のみ':'クラウド共有') : raidSyncStatus === 'denied' ? '共有へのアクセスが許可されていません。記録はこの端末に保存済み' : raidSyncStatus === 'offline' ? '通信できません。記録は保存済み・再接続時に同期' : 'ランキングを同期中…';
 }
 
@@ -17033,7 +17121,7 @@ function getRaidRankings() {
 
 function getRaidMonthlyRankings() {
   const data = getRaidData();
-  const currentPeriod = raidJstMonthKey(Date.now());
+  const currentPeriod = raidJstMonthKey(raidNow());
   if (data.periodKey !== currentPeriod) return [];
   const rows = Object.values(data.monthlyRankings || {}).filter(row => !row.excludedFromRanking).map(row => ({ ...row }));
   const progress = G?.raidProgress;
@@ -17230,22 +17318,23 @@ async function renderRaidHistory() {
   $('btn-raid-history-newer').disabled = raidHistoryIndex === 0;
   $('btn-raid-history-retry').classList.add('hidden');
   $('raid-history-position').textContent = `${raidHistoryIndex + 1} / ${raidHistoryEntries.length}`;
+  const season=entry.kind==='ranking-season';
   const date = entry.defeatedAt ? new Date(entry.defeatedAt).toLocaleString('ja-JP') : '記録なし';
   const finishers = (entry.finalHitters || []).map(row => row.playerName || '勇者').join('、') || '記録なし';
   const appearance = getRaidBossAppearanceForHistory(entry);
-  $('raid-history-summary').textContent = `${appearance.menuName} Lv.${entry.bossLevel || 50} ｜ 討伐：${date} ｜ 最大HP：${(entry.maxHp || 1000).toLocaleString()} ｜ 🔥 最後の一撃：${finishers}`;
+  $('raid-history-summary').textContent = season?`${entry.label||raidRankingSeason(entry.periodKey).label} ｜ ${new Date(entry.startsAt).toLocaleDateString('ja-JP')}〜${new Date(entry.endsAt-1).toLocaleDateString('ja-JP')}`:`${appearance.menuName} Lv.${entry.bossLevel || 50} ｜ 討伐：${date} ｜ 最大HP：${(entry.maxHp || 1000).toLocaleString()} ｜ 🔥 最後の一撃：${finishers}`;
   list.innerHTML = '<div class="raid-empty-ranking">ランキングをよみこみ中…</div>';
   list.setAttribute('aria-busy', 'true');
   try {
     let rankings = raidHistoryRankingCache.get(entry.bossId);
     if (!rankings) {
       const complete = entry.finalRankings?.length && entry.finalRankings.every(row => row.playerName !== undefined);
-      const details = complete ? [] : await window.RaidBossAPI.getRankings(entry.bossId);
+      const details = season?await window.RaidBossAPI.getMonthlyRankings(entry.periodKey):complete?[]:await window.RaidBossAPI.getRankings(entry.bossId);
       rankings = mergeRaidHistoryRankings(entry, details);
       raidHistoryRankingCache.set(entry.bossId, rankings);
     }
     if (request !== raidHistoryRequest) return;
-    renderRaidRankingList(list, rankings, true);
+    renderRaidRankingList(list, rankings, true,season?'bossDamage':'damage');
     list.scrollTop = 0;
   } catch (error) {
     if (request !== raidHistoryRequest) return;
@@ -17437,6 +17526,24 @@ function renderRaidRankingList(listEl, rankings, historical = false, metric = 'd
 
 }
 
+let raidSeasonRefreshTimer=null;
+function renderRaidSeasonInfo(){
+  clearTimeout(raidSeasonRefreshTimer);
+  const season=raidRankingSeason(raidJstMonthKey(raidNow()));
+  let info=$('raid-season-info');
+  if(!info){info=document.createElement('p');info.id='raid-season-info';document.querySelector('#screen-raid-boss .raid-ranking-section > h3')?.after(info);}
+  info.style.cssText='';
+  const boost=raidMonthEndBoost(raidNow());
+  info.textContent=`あと${Math.max(0,Math.ceil((season.endsAt-raidNow())/86400000))}日`;
+  info.title='毎月1日0時に切替（日本時間）';
+  let banner=$('raid-month-end-boost');if(!banner){banner=document.createElement('p');banner.id='raid-month-end-boost';$('raid-boss-name')?.after(banner);}
+  banner.style.cssText='';banner.hidden=!boost.active;
+  const start=new Date(season.boostStartsAt).toLocaleDateString('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric'});
+  banner.textContent='🔥 ターボモード｜攻撃力2倍';
+  banner.classList.toggle('is-active',boost.active);
+  raidSeasonRefreshTimer=setTimeout(()=>{if(document.querySelector('#screen-raid-boss:not(.hidden)')){renderRaidBossMenu();if(getRaidData().periodKey!==raidJstMonthKey(raidNow()))void syncRaidState();}},Math.min(60000,Math.max(100,season.endsAt-raidNow())));
+}
+
 function renderRaidBossMenu() {
   const modal = document.getElementById('screen-raid-boss');
   if (!raidFeatureOpen()) { modal?.classList.add('hidden'); return; }
@@ -17457,12 +17564,12 @@ function renderRaidBossMenu() {
   const raidData = getRaidData();
   const appearance = getRaidBossAppearance();
   const isFinalPushRaid = appearance.id === 'darkBahamutFinal';
-  const rankingPeriod = raidJstMonthKey(Date.now());
+  const rankingPeriod = raidJstMonthKey(raidNow());
   const raidRankingTitle = modal.querySelector('.raid-ranking-section h3');
   if (raidRankingTitle) {
-    const label = rankingPeriod && /^\d{6}$/.test(rankingPeriod) ? `${Number(rankingPeriod.slice(4))}月` : '今月';
-    raidRankingTitle.textContent = appearance.id === 'moonWraith' ? 'このボスへの累計ダメージランキング' : 'ダメージランキング';
-    listEl?.setAttribute('aria-label', appearance.id === 'moonWraith' ? `${label}のこのボスへの累計ダメージ順ランキング` : '合計ダメージ順のランキング');
+    const label=raidRankingSeason(rankingPeriod).label;
+    raidRankingTitle.textContent = appearance.id === 'moonWraith' ? label : 'ダメージランキング';
+    listEl?.setAttribute('aria-label', appearance.id === 'moonWraith' ? `${label}の累計ダメージ順ランキング` : '合計ダメージ順のランキング');
   }
   const bossLevel = Math.max(50, Number(appearance.id === 'moonWraith' && !isCurrentMonthlyRaidData(raidData) ? 50 : raidData.bossLevel) || 50);
   if (bossName) bossName.textContent = `${appearance.menuName} Lv.${bossLevel}${isFinalPushRaid ? ' MAX' : ''}`;
@@ -17515,18 +17622,20 @@ function renderRaidBossMenu() {
 
   // HPバー更新
   if (dmgText) {
-    dmgText.parentElement.firstElementChild.textContent = '残りHP';
+    dmgText.parentElement.firstElementChild.textContent = 'HP';
+    dmgText.title=`${remainHp.toLocaleString()} / ${maxHp.toLocaleString()}`;
     if (defeated) {
       dmgText.textContent = '🎊 討伐完了！';
       dmgText.style.color = '#feca57';
     } else {
-      dmgText.textContent = `${remainHp.toLocaleString()} / ${maxHp.toLocaleString()}`;
+      dmgText.textContent = `残り${Math.ceil(remainHp/maxHp*100)}%`;
       dmgText.style.color = '#ff7675';
     }
   }
   if (hpBar) hpBar.style.width = `${Math.max(0, Math.min(100, (remainHp / maxHp) * 100))}%`;
 
-  renderRaidRankingList(listEl, getRaidRankings(), false, appearance.id === 'moonWraith' ? 'bossDamage' : 'damage');
+  renderRaidRankingList(listEl, appearance.id==='moonWraith'?getRaidMonthlyRankings():getRaidRankings(), false, appearance.id === 'moonWraith' ? 'bossDamage' : 'damage');
+  renderRaidSeasonInfo();
 
   renderRaidLearningRecommendation();
   renderRaidFinalResult();
@@ -17539,7 +17648,7 @@ function renderRaidBossMenu() {
       btn.disabled = !availability.enabled;
       btn.textContent = availability.reason === 'busy' || availability.reason === 'sync-unavailable' && raidSyncStatus !== 'offline' && raidSyncStatus !== 'denied' ? '討伐状況を確認中…'
         : availability.reason === 'sync-unavailable' ? '共有状況を確認できません'
-        : availability.reason === 'no-ticket' ? 'レイドチケットが必要です' : isFinalPushRaid ? '🔥 最終決戦に挑む' : '⚔ レイドボスに挑戦する';
+        : availability.reason === 'no-ticket' ? 'レイドチケットが必要です' : isFinalPushRaid ? '🔥 最終決戦に挑む' : '⚔ 挑戦する';
       btn.style.background = availability.enabled ? 'linear-gradient(to bottom, #d35400, #c0392b)' : '#555';
       btn.onclick = availability.enabled ? confirmRaidStart : null;
     } else {
@@ -17574,10 +17683,10 @@ async function claimRaidReward() {
 
 /* レイドチケットの数を、レイド画面の ボタンの上に 見せる */
 function renderRaidTicketCount(){
-  if($('btn-raid-exchange'))$('btn-raid-exchange').textContent=`🪙 コイン交換所（${Number(G?.raidCoins)||0}枚）`;
+  if($('btn-raid-exchange'))$('btn-raid-exchange').textContent=`🪙 交換所 ${Number(G?.raidCoins)||0}`;
   const el = $('raid-ticket-count');
   if (!el || !G) return;
-  el.textContent = `🎟 レイドチケット ${Number(G.raidTickets)||0}枚・1回の参加で1枚消費`;
+  el.textContent = `🎟 1枚消費・所持${Number(G.raidTickets)||0}枚`;
   bindStageRewardTooltips(el);
 }
 
@@ -17698,6 +17807,8 @@ async function startRaidBattle() {
   document.getElementById('battle-floor-title').innerHTML = appearance.id === 'darkBahamutFinal'
     ? '🔥 最後の力を振り絞れ！ レイド最終決戦！'
     : '👿 レイドボス挑戦！ 全力でダメージを与えろ！';
+  renderRaidBattleBoost();
+
   renderBattleProgressStars();
 
   updateBattleBars();

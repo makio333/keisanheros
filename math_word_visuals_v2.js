@@ -17,7 +17,7 @@ const VISUALS = {
   'mwq-v2-g1-012': { alt: '12人の列の8番目にいるクク', sequence: { count: 12, icon: 'adventurer', marks: [{ position: 8, label: 'クク' }] } },
   'mwq-v2-g1-013': { alt: 'ついている明かり9こに4こを足し、5こを消す', groups: [v('lantern', 9, 'こ'), v('lantern', 4, 'こ', { operator: '+', tone: 'yellow' }), v('lantern', 5, 'こ', { operator: '消す', marked: 5, tone: 'gray' })] },
   'mwq-v2-g1-014': { alt: '朝4こ、昼6こ、夕方3このどんぐり', groups: [v('berries', 4, 'こ'), v('berries', 6, 'こ', { operator: '+' }), v('berries', 3, 'こ', { operator: '+' })] },
-  'mwq-v2-g1-015': { alt: 'パン18こから、朝7こと昼4こを配る', groups: [v('bread', 18, 'こ', { marked: 7 }), v('bread', 4, 'こ', { operator: '昼に配る', marked: 4, tone: 'blue' })] },
+  'mwq-v2-g1-015': { alt: 'パン18こから、朝7こと昼4こを配る。18この中で朝に配る7こと昼に配る4こを区別し、7こが残る', groups: [v('bread', 18, 'こ', { removals: [{ count: 7, label: '朝に配る', kind: 'morning' }, { count: 4, label: '昼に配る', kind: 'noon' }] })] },
   'mwq-v2-g1-016': { alt: '赤い枝12本と白い枝8本', groups: [v('branch', 12, '本', { tone: 'red' }), v('branch', 8, '本', { operator: '比べる', tone: 'gray' })] },
   'mwq-v2-g1-017': { alt: 'はがき10まいから3まいを渡し、3まいを受け取る', groups: [v('postcard', 10, 'まい', { marked: 3 }), v('postcard', 3, 'まい', { operator: '受け取る', tone: 'blue' })] },
   'mwq-v2-g1-018': { alt: 'ランプに入れる星5こ', groups: [v('star', 5, 'こ', { label: 'ランプへ' })] },
@@ -28,15 +28,15 @@ const VISUALS = {
   'mwq-v2-g1-023': { alt: '赤いひも6こ分と白いひも5こ分をつなぐ', groups: [v('rope_spool', 6, 'こ分'), v('rope_spool', 5, 'こ分', { operator: '+' })] },
   'mwq-v2-g1-024': { alt: '10人の列で前から3番目のタタ', sequence: { count: 10, icon: 'adventurer', marks: [{ position: 3, label: 'タタ' }] } },
   'mwq-v2-g1-025': { alt: '前から7番目、後ろから6番目のルカがいる列', sequence: { count: 12, icon: 'adventurer', marks: [{ position: 7, label: 'ルカ' }] } },
-  'mwq-v2-g1-026': { alt: '長い針が12、短い針が8を指す時計', groups: [v('clock', 1, '8:00')] },
-  'mwq-v2-g1-027': { alt: '4時と5時のちょうど間を指す時計', groups: [v('clock', 1, '4:30')] },
+  'mwq-v2-g1-026': { alt: '長い針が12、短い針が8を指す時計', groups: [v('clock', 1, '', { displayValue: '8:00' })] },
+  'mwq-v2-g1-027': { alt: '4時と5時のちょうど間を指す時計', groups: [v('clock', 1, '', { displayValue: '4:30' })] },
   'mwq-v2-g1-028': { alt: 'はと8わから2わが飛び、7わが戻る', groups: [v('pigeon', 8, 'わ', { marked: 2 }), v('pigeon', 7, 'わ', { operator: '戻る', tone: 'blue' })] },
   'mwq-v2-g1-029': { alt: 'ミナの薬6ことケンの薬6こ', groups: [v('medicine_bottle', 6, 'こ'), v('medicine_bottle', 6, 'こ', { operator: '+' })] },
   'mwq-v2-g1-030': { alt: '小さな竜9ひきと、ほのおのくつ13こ', groups: [v('dragon', 9, 'ひき'), v('boot', 13, 'こ', { operator: 'くつ', tone: 'blue' })] },
 
   'mwq-v2-g2-001': { alt: '柱6本にランタンを4こずつ', sets: { contextIcon: 'pillar', itemIcon: 'lantern', count: 6, each: 4, unit: 'こ' } },
   'mwq-v2-g2-002': { alt: '石7こずつを3回運ぶ', sets: { contextIcon: 'sack', itemIcon: 'crystal', count: 3, each: 7, unit: 'こ' } },
-  'mwq-v2-g2-003': { alt: '青い実5こと値段8円', groups: [v('berries', 5, 'こ'), v('coin', 1, '8円', { operator: '1こ', tone: 'yellow' })] },
+  'mwq-v2-g2-003': { alt: '青い実5こと値段8円', groups: [v('berries', 5, 'こ'), v('coin', 1, '', { displayValue: '8円', operator: '1こ', tone: 'yellow' })] },
   'mwq-v2-g2-004': { alt: '花だん8つに種を7こずつまく', sets: { contextIcon: 'flowerbed', itemIcon: 'seed_pod', count: 8, each: 7, unit: 'こ' } },
   'mwq-v2-g2-005': { alt: '荷車4台に車輪を3こずつ', sets: { contextIcon: 'handcart', itemIcon: 'wheel', count: 4, each: 3, unit: 'こ' } },
   'mwq-v2-g2-006': { alt: '袋6つに星を9こずつ入れる', sets: { contextIcon: 'sack', itemIcon: 'star', count: 6, each: 9, unit: 'こ' } },
@@ -48,24 +48,97 @@ const VISUALS = {
   'mwq-v2-g2-012': { alt: 'パン36こを渡した後、28こ残る', groups: [v('bread', 36, 'こ', { operator: '渡す' }), v('bread', 28, 'こ', { operator: '残り', tone: 'blue' })] },
   'mwq-v2-g2-013': { alt: '北の水晶84こと、南より多い17こ分', groups: [v('crystal', 84, 'こ', { tone: 'red' }), v('crystal', 17, 'こ', { operator: '多い分', tone: 'yellow' })] },
   'mwq-v2-g2-014': { alt: '赤いリボン56cmと、赤より19cm長い青いリボン', groups: [v('ribbon', 56, 'cm', { tone: 'red' }), v('ribbon', 19, 'cm', { operator: '長い分', tone: 'blue' })] },
-  'mwq-v2-g2-015': { alt: '500円から地図180円と水筒230円を買う', groups: [v('coin', 1, '500円'), v('map', 1, '180円', { operator: '買う' }), v('canteen', 1, '230円', { operator: '+' })] },
-  'mwq-v2-g2-016': { alt: '百の位6、十の位0、一の位4', groups: [v('signpost', 1, '600'), v('signpost', 1, '0'), v('signpost', 1, '4')] },
+  'mwq-v2-g2-015': { alt: '500円から地図180円と水筒230円を買う', groups: [v('coin', 1, '', { displayValue: '500円' }), v('map', 1, '', { displayValue: '180円', operator: '買う' }), v('canteen', 1, '', { displayValue: '230円', operator: '+' })] },
+  'mwq-v2-g2-016': { alt: '百の位6、十の位0、一の位4', groups: [v('signpost', 1, '', { displayValue: '600' }), v('signpost', 1, '', { displayValue: '0' }), v('signpost', 1, '', { displayValue: '4' })] },
   'mwq-v2-g2-017': { alt: '星の砂780こから1000こまで集める', groups: [v('star_sand', 780, 'こ'), v('star_sand', 1000, 'こ', { operator: '目標' })] },
   'mwq-v2-g2-018': { alt: '100こ札3まい、10こ札4まい、1こ札8まい', groups: [v('crystal', 3, '×100'), v('crystal', 4, '×10', { operator: '+' }), v('crystal', 8, '×1', { operator: '+' })] },
-  'mwq-v2-g2-019': { alt: '470の道しるべから10ずつ2回進む', groups: [v('signpost', 1, '470'), v('signpost', 1, '＋10', { operator: '→' }), v('signpost', 1, '＋10', { operator: '→' })] },
-  'mwq-v2-g2-020': { alt: '長さ1m35cmの板', groups: [v('plank', 1, '1m35cm')] },
-  'mwq-v2-g2-021': { alt: '長さ8cm7mmのねじ', groups: [v('screw', 1, '8cm7mm')] },
-  'mwq-v2-g2-022': { alt: '木の長さ1m25cmから杖78cmを切り出す', groups: [v('plank', 1, '1m25cm'), v('staff', 1, '78cm', { operator: '切り出す', tone: 'blue' })] },
-  'mwq-v2-g2-023': { alt: '青い泉の水2L6dL', groups: [v('jug', 1, '2L6dL')] },
-  'mwq-v2-g2-024': { alt: 'ランプの油1Lから7dLを使う', groups: [v('lantern', 1, '1L'), v('vial', 1, '7dL', { operator: '使う', tone: 'blue' })] },
-  'mwq-v2-g2-025': { alt: 'つぼ3L、かめ4L、たる2Lの雨水', groups: [v('jug', 1, '3L'), v('jug', 1, '4L', { operator: '+' }), v('barrel', 1, '2L', { operator: '+' })] },
-  'mwq-v2-g2-026': { alt: '午前7時40分から20分後に門を開ける', groups: [v('clock', 1, '7:40'), v('clock', 1, '+20分', { operator: '→' })] },
-  'mwq-v2-g2-027': { alt: '午前9時15分から9時50分まで薬を冷ます', groups: [v('clock', 1, '9:15'), v('clock', 1, '9:50', { operator: '→' })] },
-  'mwq-v2-g2-028': { alt: '服のしたく1時間とかばんのしたく20分', groups: [v('clothing', 1, '1時間'), v('sack', 1, '20分', { operator: '+' })] },
+  'mwq-v2-g2-019': { alt: '470の道しるべから10ずつ2回進む', groups: [v('signpost', 1, '', { displayValue: '470' }), v('signpost', 1, '', { displayValue: '＋10', operator: '→' }), v('signpost', 1, '', { displayValue: '＋10', operator: '→' })] },
+  'mwq-v2-g2-020': { alt: '長さ1m35cmの板', groups: [v('plank', 1, '', { displayValue: '1m35cm' })] },
+  'mwq-v2-g2-021': { alt: '長さ8cm7mmのねじ', groups: [v('screw', 1, '', { displayValue: '8cm7mm' })] },
+  'mwq-v2-g2-022': { alt: '木の長さ1m25cmから杖78cmを切り出す', groups: [v('plank', 1, '', { displayValue: '1m25cm' }), v('staff', 1, '', { displayValue: '78cm', operator: '切り出す', tone: 'blue' })] },
+  'mwq-v2-g2-023': { alt: '青い泉の水2L6dL', groups: [v('jug', 1, '', { displayValue: '2L6dL' })] },
+  'mwq-v2-g2-024': { alt: 'ランプの油1Lから7dLを使う', groups: [v('lantern', 1, '', { displayValue: '1L' }), v('vial', 1, '', { displayValue: '7dL', operator: '使う', tone: 'blue' })] },
+  'mwq-v2-g2-025': { alt: 'つぼ3L、かめ4L、たる2Lの雨水', groups: [v('jug', 1, '', { displayValue: '3L' }), v('jug', 1, '', { displayValue: '4L', operator: '+' }), v('barrel', 1, '', { displayValue: '2L', operator: '+' })] },
+  'mwq-v2-g2-026': { alt: '午前7時40分から20分後に門を開ける', groups: [v('clock', 1, '', { displayValue: '7:40' }), v('clock', 1, '', { displayValue: '+20分', operator: '→' })] },
+  'mwq-v2-g2-027': { alt: '午前9時15分から9時50分まで薬を冷ます', groups: [v('clock', 1, '', { displayValue: '9:15' }), v('clock', 1, '', { displayValue: '9:50', operator: '→' })] },
+  'mwq-v2-g2-028': { alt: '服のしたく1時間とかばんのしたく20分', groups: [v('clothing', 1, '', { displayValue: '1時間' }), v('sack', 1, '', { displayValue: '20分', operator: '+' })] },
   'mwq-v2-g2-029': { alt: 'コマドリ14わ、フクロウ8わ、カラス11わ', groups: [v('robin', 14, 'わ'), v('owl', 8, 'わ', { operator: '+' }), v('crow', 11, 'わ', { operator: '+' })] },
   'mwq-v2-g2-030': { alt: '葉を6まいずつ入れた箱が4箱と、残り5まい', sets: { contextIcon: 'wooden_box', itemIcon: 'herbs', count: 4, each: 6, unit: 'まい', extra: 5, extraIcon: 'herbs' } }
 };
 
 export function getMathWordQuestionVisualV2(problemId) {
   return VISUALS[problemId] || null;
+}
+
+export function mathWordGroupRenderPlanV2(group) {
+  const count = Math.max(0, Number(group.count) || 0);
+  const countLabel = group.displayValue ?? `${group.count}${group.unit || ''}`;
+  if (count <= 20) {
+    const removalGroups = [];
+    let removedCount = 0;
+    for (const removal of Array.isArray(group.removals) ? group.removals : []) {
+      const removalCount = Math.min(count - removedCount, Math.max(0, Number(removal.count) || 0));
+      if (!removalCount) continue;
+      removalGroups.push({
+        ...removal,
+        start: removedCount,
+        end: removedCount + removalCount,
+        count: removalCount,
+      });
+      removedCount += removalCount;
+    }
+    const legacyRemovedCount = Math.min(count, Math.max(0, Number(group.marked) || 0));
+    const actualRemovedCount = removalGroups.length ? removedCount : legacyRemovedCount;
+    return {
+      mode: 'items',
+      count,
+      countLabel,
+      iconCount: count,
+      removedCount: actualRemovedCount,
+      remainingCount: count - actualRemovedCount,
+      removalGroups,
+      highlightedCount: Math.min(count, Math.max(0, Number(group.highlighted) || 0)),
+    };
+  }
+
+  let remainder = count;
+  const bundles = [];
+  for (let place = 10 ** Math.floor(Math.log10(count)); place >= 1; place /= 10) {
+    const digit = Math.floor(remainder / place);
+    remainder %= place;
+    if (digit) bundles.push({
+      place,
+      count: digit,
+      label: `${place}${group.unit || ''}ずつ × ${digit}`,
+    });
+  }
+  return {
+    mode: 'bundles',
+    count,
+    countLabel,
+    bundles,
+    iconCount: bundles.reduce((sum, bundle) => sum + bundle.count, 0),
+    removedCount: 0,
+    remainingCount: count,
+    removalGroups: [],
+    highlightedCount: 0,
+  };
+}
+
+export function mathWordSetsRenderPlanV2(sets) {
+  const setCount = Math.max(0, Number(sets.count) || 0);
+  const eachCount = Math.max(0, Number(sets.each) || 0);
+  return {
+    groups: Array.from({ length: setCount }, () => ({
+      contextIcon: sets.contextIcon,
+      itemIcon: sets.itemIcon,
+      itemCount: eachCount,
+      label: `${eachCount}${sets.unit || ''}ずつ`,
+    })),
+    extra: sets.extra ? {
+      icon: sets.extraIcon || sets.itemIcon,
+      itemCount: Math.max(0, Number(sets.extra) || 0),
+      countLabel: `${sets.extra}${sets.unit || ''}`,
+    } : null,
+  };
 }

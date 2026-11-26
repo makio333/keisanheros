@@ -1,7 +1,16 @@
 // Presentation only. Pass the result of grantAwakeningExp, never saved snapshots.
-export function createAncientExpToast({ root, nameOf = id => id, duration = 3600,
+export function createAncientExpToast({ root, nameOf = id => id, iconOf = () => null, duration = 3600,
   schedule = setTimeout, unschedule = clearTimeout } = {}) {
   if (!root) throw new TypeError('A dedicated toast root is required');
+  const spacer=root.ownerDocument.createElement('div');spacer.className='ancient-exp-toast-reserved';spacer.setAttribute('aria-hidden','true');root.before(spacer);
+  let positionFrame=null;
+  function position(){
+    if(root.hidden)return;
+    const win=root.ownerDocument.defaultView,anchor=root.ownerDocument.getElementById('battle-player-window');
+    if(anchor){const rect=anchor.getBoundingClientRect();root.style.left=`${Math.max(8,rect.left)}px`;root.style.width=`${Math.min(rect.width,win.innerWidth-16)}px`;root.style.top=`${Math.max(8,rect.top-root.getBoundingClientRect().height-8)}px`;}
+    positionFrame=win?.requestAnimationFrame(position);
+  }
+  function stopPosition(){root.ownerDocument.defaultView?.cancelAnimationFrame(positionFrame);}
   let queue = [], active = null, timer, revision = 0, destroyed = false;
   root.classList.add('ancient-exp-toast-v2');
   root.setAttribute('role', 'status'); root.setAttribute('aria-live', 'polite');
@@ -10,9 +19,10 @@ export function createAncientExpToast({ root, nameOf = id => id, duration = 3600
     before:{...c.before}, after:{...c.after} });
   function clearTimer() { revision++; unschedule(timer); }
   function paint() {
-    root.replaceChildren();
+    stopPosition();root.replaceChildren();
     if (!active) { root.hidden = true; return; }
     const doc = root.ownerDocument;
+    const icon=iconOf(active.id);if(icon){const image=doc.createElement('img');image.className='ancient-exp-toast-icon';image.src=icon;image.alt='';root.append(image);}
     const title = doc.createElement('strong'); title.textContent = '古代装備に経験値！'; root.append(title);
     const row = doc.createElement('div'); row.className = 'ancient-exp-toast-v2__row';
     const c = active;
@@ -24,7 +34,7 @@ export function createAncientExpToast({ root, nameOf = id => id, duration = 3600
     if (c.after.level > c.before.level) state.textContent += `（Lv${c.before.level} → ${c.after.level}）`;
     const bar = doc.createElement('progress'); bar.max = c.after.next || 1; bar.value = c.after.next ? c.after.exp : 1;
     bar.setAttribute('aria-label', '古代装備の蓄積経験値');
-    row.append(name, gain, state, bar); root.append(row); root.hidden = false;
+    row.append(name, gain, state, bar); root.append(row); root.hidden = false;position();
     clearTimer(); const token = revision;
     timer = schedule(() => { if (token !== revision || destroyed) return; active = queue.shift() || null; paint(); }, Math.max(3200, duration));
   }
@@ -44,9 +54,9 @@ export function createAncientExpToast({ root, nameOf = id => id, duration = 3600
       }
       if (changed) paint();
     },
-    cancel() { clearTimer(); queue = []; active = null; root.replaceChildren(); root.hidden = true; },
+    cancel() { stopPosition(); clearTimer(); queue = []; active = null; root.replaceChildren(); root.hidden = true; },
     sceneChanged() { this.cancel(); },
-    destroy() { this.cancel(); destroyed = true; },
+    destroy() { this.cancel(); destroyed = true;spacer.remove(); },
     snapshot() { return { active:active && copy(active), queue:queue.map(copy) }; }
   };
 }

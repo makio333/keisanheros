@@ -6,6 +6,7 @@ export function installAccountGameAPIs(transport,{target=window,pollMs=1000}={})
     async settleReward(key,boss,state){await preserve(key,state);return call('RaidBossAPI','settleReward',[key,boss]);},
     getRankings:boss=>call('RaidBossAPI','getRankings',[boss]),
     getHistory:()=>call('RaidBossAPI','getHistory',[]),
+    getMonthlyRankings:period=>call('RaidBossAPI','getMonthlyRankings',[period]),
     getGlobalBoss:()=>call('RaidBossAPI','getGlobalBoss',[]),
     receiveCheers:key=>call('RaidBossAPI','receiveCheers',[key]),
     sendCheer:(key,other,day)=>call('RaidBossAPI','sendCheer',[key,other,day]),

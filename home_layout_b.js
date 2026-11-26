@@ -14,9 +14,17 @@ function initializeHomeLayout(){
  more.onclick=()=>{overlay.hidden=false;more.setAttribute('aria-expanded','true');close.focus({preventScroll:true});};close.onclick=dismiss;
  overlay.onclick=event=>{if(event.target===overlay)dismiss();};grid.onclick=event=>{if(event.target.closest('button'))dismiss();};
  overlay.onkeydown=event=>{if(event.key==='Escape'){event.preventDefault();dismiss();}if(event.key==='Tab'){const buttons=[...overlay.querySelectorAll('button')];const i=buttons.indexOf(document.activeElement);event.preventDefault();buttons[(i+(event.shiftKey?-1:1)+buttons.length)%buttons.length].focus();}};
- const mobile=matchMedia('(max-width: 699px)');
+ const mobile=matchMedia('(max-width: 699px) and (orientation: portrait)');
  function arrange(){
   if(!overlay.hidden)dismiss();
+  home.classList.add('home-layout-b');
+  nav.hidden=!mobile.matches;shortcuts.hidden=!mobile.matches;resources.hidden=false;
+  for(const id of ['home-equip-icons','home-tickets'])resources.append(document.getElementById(id));
+  if(!mobile.matches){
+   for(const id of ['hotspot-status','hotspot-item-shop','hotspot-weapon-shop','hotspot-gacha','hotspot-synthesis','hotspot-quest-board','hotspot-training','hotspot-christmas','hotspot-halloween','hotspot-raid-boss'])map.append(document.getElementById(id));
+   return;
+  }
+  for(const id of ['home-equip-icons','home-tickets'])resources.append(document.getElementById(id));
   for(const id of ['hotspot-status','hotspot-item-shop','hotspot-weapon-shop','hotspot-gacha','hotspot-synthesis','hotspot-quest-board'])nav.append(document.getElementById(id));
   nav.append(more);
   for(const id of ['hotspot-training','hotspot-christmas','hotspot-halloween','hotspot-raid-boss'])shortcuts.append(document.getElementById(id));

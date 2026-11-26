@@ -170,10 +170,26 @@ assert.equal((await api.getMonthlyRankings('202611')).find(row=>row.slotKey==='g
 
 now=Date.parse('2026-11-30T15:00:00.000Z'); // JST: December 1, 00:00
 const firstDecember=await api.syncPlayer('ghost',profile,{monsterId:'moonWraith',bossId:currentGhost,events:[{id:'nov-valid',bossId:currentGhost,damage:19}]});
-assert.equal(firstDecember.periodKey,'202612');assert.equal(firstDecember.bossId,'boss_m202612_50');
-assert.equal(documents.get('raidGlobal/month_202612').totalDamageDealt,0,'a retry across the month boundary cannot enter December');
+assert.equal(firstDecember.periodKey,'202612');assert.equal(firstDecember.bossId,ghost60.bossId,'month rollover preserves the active boss identity');
+assert.equal(documents.has('raidGlobal/month_202612'),false,'ranking month does not create another boss');
+assert.equal(documents.get('raidGlobal/month_202611').totalDamageDealt,123,'boss HP progress carries over unchanged');
+assert.equal((await api.getGlobalBoss()).periodKey,'202612');
+assert.equal((await api.getGlobalBoss()).bossLevel,60);
 assert.equal((await api.getMonthlyRankings('202612')).length,0);
 assert.equal((await api.getMonthlyRankings('202611'))[0].totalDamage,50093,'November aggregate remains in its own month across boss instances');
+
+// Later seasons start clean while the same boss continues and old seasons remain readable.
+now=Date.parse('2027-01-01T00:00:00+09:00');
+const january=await api.syncPlayer('ghost',profile,{monsterId:'moonWraith',bossId:ghost60.bossId,events:[{id:'jan-new',bossId:ghost60.bossId,damage:7}]});
+assert.equal(january.bossId,ghost60.bossId);
+assert.equal(documents.get('raidGlobal/month_202611').totalDamageDealt,130);
+assert.equal((await api.getMonthlyRankings('202701'))[0].totalDamage,7);
+assert.equal((await api.getMonthlyRankings('202611'))[0].totalDamage,50093);
+const history=await api.getHistory();
+assert.ok(history.some(row=>row.kind==='ranking-season'&&row.label==='初代ランキング'&&row.periodKey==='202611'));
+assert.ok(history.some(row=>row.kind==='ranking-season'&&row.periodKey==='202612'));
+assert.ok(history.some(row=>row.bossId===currentGhost),'boss defeat history is also retained');
+await assert.rejects(()=>api.getMonthlyRankings('202702'));
 
 // Synthetic defeated-Ghost payout: all positive-damage participants get the frame, not only the last hitter.
 now=Date.parse('2026-12-01T00:01:00+09:00');

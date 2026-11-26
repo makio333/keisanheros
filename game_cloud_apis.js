@@ -1,5 +1,5 @@
 import {validRaidDamage,raidInitialHp,raidConfiguredHp} from './raid_run_rules.js';
-import {raidGlobalDocIdForBossId,raidJstMonthKey,raidMonthlyBossId,raidMonthlyGlobalDocId,parseRaidMonthlyBossId} from './raid_monthly_rules.js';
+import {raidGlobalDocIdForBossId,raidJstMonthKey,raidMonthlyBossId,raidMonthlyGlobalDocId,parseRaidMonthlyBossId,raidActiveGlobalDocId,raidRankingSeason,raidRankingPeriodAllowed,RAID_FOUNDER_PERIOD,RAID_SEASONS_START_AT} from './raid_monthly_rules.js';
 import {applyGiftPayload,raidRankCoins} from './economy.js';
 import {GHOST_RAID_DEFEAT_DECORATION} from './ghost_raid_content.js';
 import {eventRaidRewardEntitlements,eventRaidBonusEntitlements,EVENT_RAID_FINAL_AT,eventRaidFinalGift} from './event_raid.js';
@@ -65,7 +65,7 @@ const RaidBossAPI = {
     const requestedMonsterHint = typeof progress.monsterId === 'string' && progress.monsterId ? progress.monsterId : '';
     const monthlyGhost = requestedMonsterHint === 'moonWraith' || now >= Date.parse('2026-11-01T00:00:00+09:00');
     const periodKey = monthlyGhost ? raidJstMonthKey(now) : null;
-    const globalDocId = monthlyGhost ? raidMonthlyGlobalDocId(periodKey) : 'currentBoss';
+    const globalDocId = monthlyGhost ? raidActiveGlobalDocId(now) : 'currentBoss';
     const globalRef = doc(db, 'raidGlobal', globalDocId);
     return runTransaction(db, async transaction => {
       const globalSnap = await transaction.get(globalRef);
@@ -82,7 +82,7 @@ const RaidBossAPI = {
          // 11月1日以降に幽霊王へ切り替わった後は従来どおり10レベル上がる。
          const nextLevel = requestedMonsterId === 'darkBahamutFinal' ? Math.max(50, currentLevel) : currentLevel + 10;
          const nextBossId = monthlyGhost
-           ? raidMonthlyBossId(periodKey, nextLevel)
+           ? raidMonthlyBossId(globalDocId.slice(6), nextLevel)
            : requestedMonsterId === 'darkBahamutFinal' && nextLevel === currentLevel
              ? `boss_${nextLevel}_final_${now}`
              : 'boss_' + nextLevel;
@@ -105,7 +105,7 @@ const RaidBossAPI = {
       }
 
       const bossLevel = global.bossLevel || 50;
-      const bossId = global.bossId || (monthlyGhost ? raidMonthlyBossId(periodKey, bossLevel) : 'boss_' + bossLevel);
+      const bossId = global.bossId || (monthlyGhost ? raidMonthlyBossId(globalDocId.slice(6), bossLevel) : 'boss_' + bossLevel);
       const maxHp = raidConfiguredHp(global,requestedMonsterId);
       if (!global.bossId) {
           global.bossLevel = bossLevel;
@@ -115,6 +115,10 @@ const RaidBossAPI = {
           if (periodKey) global.periodKey = periodKey;
       }
 
+      const seasonRef=periodKey?doc(db,'raidRankingSeasons',periodKey):null;
+      const seasonSnap=seasonRef?await transaction.get(seasonRef):null;
+      const founderRef=periodKey&&now>=RAID_SEASONS_START_AT?doc(db,'raidRankingSeasons',RAID_FOUNDER_PERIOD):null;
+      const founderSnap=founderRef?await transaction.get(founderRef):null;
       const rankRef = doc(db, 'raidRankings_' + bossId, slotKeyToDocId(slotKey));
       const claimRef = doc(db, 'raidClaims', slotKeyToDocId(slotKey) + '_' + bossId);
       const challengeCounterRef = doc(db, 'raidClaims', slotKeyToDocId(slotKey) + '_challenge_count');
@@ -245,6 +249,8 @@ const RaidBossAPI = {
 
       const nextStartsAt = finalize ? now : global.startsAt;
 
+      if(seasonRef&&!seasonSnap.exists())transaction.set(seasonRef,{...raidRankingSeason(periodKey),kind:'ranking-season',monsterId:requestedMonsterId,createdAt:now});
+      if(founderRef&&!founderSnap.exists())transaction.set(founderRef,{...raidRankingSeason(RAID_FOUNDER_PERIOD),kind:'ranking-season',monsterId:requestedMonsterId,createdAt:now});
       if (archivedBoss) transaction.set(doc(db, 'raidHistory', settledBossId), archivedBoss);
 
       if (archivedBoss || addedDamage > 0 || startsSettlement || finalize || !globalSnap.exists() || global.monsterId !== requestedMonsterId) {
@@ -293,7 +299,7 @@ const RaidBossAPI = {
 
   watchBoss(onChange, onError) {
     const now = clock();
-    const docId = now >= Date.parse('2026-11-01T00:00:00+09:00') ? raidMonthlyGlobalDocId(raidJstMonthKey(now)) : 'currentBoss';
+    const docId = raidActiveGlobalDocId(now);
     return onSnapshot(doc(db, 'raidGlobal', docId), { includeMetadataChanges: true }, snapshot => {
       if (!snapshot.metadata.fromCache) onChange();
     }, onError);
@@ -380,7 +386,7 @@ const RaidBossAPI = {
 
   async getMonthlyRankings(periodKey = raidJstMonthKey(clock())) {
     const month = String(periodKey || '');
-    if (!/^\d{6}$/.test(month)) throw new Error('Invalid raid ranking period');
+    if (!raidRankingPeriodAllowed(month,clock())) throw new Error('Invalid raid ranking period');
     const snap = await getDocs(query(collection(db, 'raidMonthlyRankings_' + month), orderBy('totalDamage', 'desc'), limit(100)));
     return snap.docs.map(entry => { const { processedRuns, ...publicRow } = entry.data(); return { ...publicRow, slotKey: publicRow.slotKey || entry.id }; })
       .filter(row => !row.excludedFromRanking && (Number(row.totalDamage) || 0) > 0)
@@ -390,7 +396,7 @@ const RaidBossAPI = {
   async getHistory() {
     // bossLevel が無い古い記録（Lv.50）も含めるため、orderBy は使わず 取得後に並べ替える
     const snap = await getDocs(query(collection(db, 'raidHistory'), limit(100)));
-    return snap.docs
+    const bosses=snap.docs
       .map(doc => {
         const monthly = parseRaidMonthlyBossId(doc.id);
         const level = Number(monthly?.bossLevel || String(doc.id).match(/^boss_(\d+)/)?.[1]) || 50;
@@ -398,15 +404,20 @@ const RaidBossAPI = {
       })
       .sort((a, b) => (b.bossLevel || 0) - (a.bossLevel || 0))
       .slice(0, 50);
+    const seasons=await getDocs(collection(db,'raidRankingSeasons'));
+    const current=raidJstMonthKey(clock());
+    const closed=seasons.docs.map(d=>({...d.data(),periodKey:d.id,kind:'ranking-season',bossId:'season_'+d.id})).filter(s=>raidRankingPeriodAllowed(s.periodKey,clock())&&s.periodKey<current);
+    if(clock()>=RAID_SEASONS_START_AT&&!closed.some(s=>s.periodKey===RAID_FOUNDER_PERIOD))closed.push({...raidRankingSeason(RAID_FOUNDER_PERIOD),kind:'ranking-season',bossId:'season_'+RAID_FOUNDER_PERIOD});
+    return [...closed.sort((a,b)=>b.periodKey.localeCompare(a.periodKey)),...bosses];
   },
 
   async getGlobalBoss() {
     try {
       const now = clock();
-      const docId = now >= Date.parse('2026-11-01T00:00:00+09:00') ? raidMonthlyGlobalDocId(raidJstMonthKey(now)) : 'currentBoss';
+      const docId = raidActiveGlobalDocId(now);
       const docRef = doc(db, 'raidGlobal', docId);
       const snap = await getDoc(docRef);
-      if (snap.exists()) return snap.data();
+      if (snap.exists()) return {...snap.data(),serverNow:now,...(now>=Date.parse('2026-11-01T00:00:00+09:00')?{periodKey:raidJstMonthKey(now)}:{})};
       return { totalDamageDealt: 0 };
     } catch (e) {
       console.error(e);

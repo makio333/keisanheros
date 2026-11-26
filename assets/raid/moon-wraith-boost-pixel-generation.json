@@ -1,0 +1,7 @@
+{
+  "tool": "built-in image_gen",
+  "reference": "assets/raid/raid_boss_halloween_moon_wraith.png",
+  "prompt": "元の幽霊王の顔・冠・白銀髪・ポーズ・ピクセル輪郭・陰影段数を維持。幽炎を赤橙、宝石と三日月を赤橙、衣の一部を深紅と金縁に変更。滑らかな塗り・ぼかしなし。全身1体、透明背景。",
+  "user_direction": "元々のピクセル調で",
+  "file": "raid_boss_moon_wraith_boost_red_pixel.png"
+}

@@ -1,3 +1,4 @@
+import {LEGACY_READING_PRINT_QUESTIONS} from './reading_quest_legacy_questions.js';
 import {claimMathPrintReward} from './math_word_session.js';
 import {claimReadingPrintReward} from './japanese_reading_session_v2.js';
 import {claimGradeClearRewards} from './subquest_grade_rewards.js';
@@ -17,7 +18,7 @@ export function normalizeSubquestPrintId(value){
 export function legacySubquestPrint(id){
  id=normalizeSubquestPrintId(id);
  const match=String(id).match(/^(jr|mwq)-v2-g([1-6])-\d+$/);if(!match)return null;
- if(match[1]==='jr'){const record=getJapaneseReadingQuestsV2(Number(match[2])).find(q=>q.id===id);return record?subquestPrintMeta('japanese',record):null;}
+ if(match[1]==='jr'){const record=getJapaneseReadingQuestsV2(Number(match[2])).find(q=>q.id===id);return record?subquestPrintMeta('japanese',{...record,questions:record.questions.map((q,i)=>LEGACY_READING_PRINT_QUESTIONS[record.id]?.[i]||q)}):null;}
  const records=getMathWordQuestsV2(Number(match[2])),index=records.findIndex(q=>q.id===id);return index<0?null:subquestPrintMeta('math',records.slice(index,index+5));
 }
 export function mountSubquestPrintAnswers(root,problems){

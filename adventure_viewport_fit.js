@@ -3,26 +3,34 @@ let pendingFrame=0;
 let preferredBoardScale=null;
 let preferredBoardPosition=null;
 const originalPositions=new Map();
+let viewportBaseline={width:0,height:0};
 function fitAdventure(){
   pendingFrame=0;
   const screen=document.querySelector('#screen-battle.active');
   if(!screen)return;
   const raid=screen.classList.contains('raid-battle-screen');
-  const board=screen.querySelector('#kanji-challenge'),problem=screen.querySelector(raid?'#battle-challenge':'#kanji-problem-center');
+  const board=screen.querySelector('#kanji-challenge');
+  const math=!raid&&!screen.classList.contains('christmas-battle-screen')&&!screen.querySelector('#battle-challenge').classList.contains('hidden');
+  const problem=screen.querySelector(raid||math?'#battle-challenge':'#kanji-problem-center');
+  const sub=screen.querySelector('#battle-sub-menu');
+  // Fixed dialogs must not inherit the answer stack's transform.
+  if(sub.parentElement!==screen)screen.append(sub);
+  if(!sub.classList.contains('hidden'))return;
   const old=screen.querySelector('#christmas-answer-stack[data-generic-fit]');
   if(old && !originalPositions.has(problem)){for(const [node,anchor] of originalPositions){if(anchor.isConnected)anchor.replaceWith(node);}originalPositions.clear();old.remove();}
   const christmas=screen.classList.contains('christmas-battle-screen');
   const choice=!problem?.classList.contains('hidden') && screen.querySelector('#kana-choice-display:not(.hidden)');
-  if(!raid && !christmas && !choice && (!board || board.classList.contains('hidden') || problem?.classList.contains('hidden'))){
+  if(!raid && !christmas && !math && !choice && (!board || board.classList.contains('hidden') || problem?.classList.contains('hidden'))){
     delete screen.dataset.adventureFit;screen.classList.remove('fitted-kana-battle');
     const previous=screen.querySelector('#christmas-answer-stack[data-generic-fit]');
     if(previous){for(const [node,anchor] of originalPositions){if(anchor.isConnected)anchor.replaceWith(node);}originalPositions.clear();previous.remove();}
     return;
   }
-  screen.classList.toggle('fitted-kana-battle',!christmas);
+  screen.classList.toggle('fitted-kana-battle',!christmas&&!math);
+  screen.classList.toggle('fitted-math-battle',math);
   let stack=screen.querySelector('#christmas-answer-stack');
   if(!stack){stack=document.createElement('div');stack.id='christmas-answer-stack';stack.dataset.genericFit='1';
-    for(const node of [screen.querySelector('#battle-player-window'),problem,screen.querySelector('#battle-sub-menu')]){const anchor=document.createComment('adventure-panel-position');node.before(anchor);originalPositions.set(node,anchor);stack.append(node);}
+    for(const node of [screen.querySelector('#battle-player-window'),problem]){const anchor=document.createComment('adventure-panel-position');node.before(anchor);originalPositions.set(node,anchor);stack.append(node);}
     screen.querySelector('.battle-wrap').append(stack);
   }
   if(!board)return;
@@ -33,8 +41,14 @@ function fitAdventure(){
   const set=(name,value)=>screen.style.setProperty(name,String(value));
   set('--fit-width',width+'px');set('--fit-height',height+'px');
   // Reserve the fixed controls and one line of battle feedback.
-  const top=wide?78:88,bottom=22,gap=6,available=Math.max(100,height-top-bottom-gap*2);
-  const hasBoard=!raid&&!board.classList.contains('hidden')&&!board.querySelector('#software-keyboard')?.classList.contains('hidden');
+  if(Math.abs(width-viewportBaseline.width)>80)viewportBaseline={width,height};
+  else viewportBaseline.height=Math.max(viewportBaseline.height,height);
+  const compact=height<viewportBaseline.height*.78&&screen.contains(document.activeElement)&&document.activeElement.matches('input,textarea');
+  screen.classList.toggle('battle-input-compact',compact);
+  const top=compact?102:wide?88:112,bottom=22,gap=6,available=Math.max(100,height-top-bottom-gap*2);
+  set('--fit-offset-top',(viewport?.offsetTop||0)+'px');
+  set('--fit-offset-left',(viewport?.offsetLeft||0)+'px');
+  const hasBoard=!compact&&!raid&&!math&&!board.classList.contains('hidden')&&!board.querySelector('#software-keyboard')?.classList.contains('hidden');
   const minimized=!!board.querySelector('.is-minimized');
   const boardWidth=minimized?168:264;set('--fit-board-width',boardWidth+'px');
   const boardHeight=Math.max(1,board.offsetHeight);
@@ -43,9 +57,9 @@ function fitAdventure(){
   const boardScale=minimized?Math.min(1,(width-16)/boardWidth):Math.min(maxBoardScale,preferredBoardScale??Math.min(1,boardBudget/boardHeight));
   const visibleBoardWidth=hasBoard?boardWidth*boardScale:0;
   const visibleBoardHeight=hasBoard?boardHeight*boardScale:0;
-  const answerBudget=wide?available*(choice ? .70 : raid ? .65 : .51):available*(hasBoard && !minimized ? .35 : .66);
+  const answerBudget=compact||wide&&math?available:wide?available*(choice ? .70 : raid ? .65 : .51):available*(hasBoard && !minimized ? .35 : .66);
   let answerScale=1,answerWidth=560,answerHeight=1;
-  const physicalWidth=wide?Math.min(560,Math.max(160,width-2*(visibleBoardWidth+26))):Math.min(560,width-16);
+  const physicalWidth=wide&&math?Math.min(560,width*.60):wide?Math.min(560,Math.max(160,width-2*(visibleBoardWidth+26))):Math.min(560,width-16);
   // Wrapping may change the panel height; converge using the actual rendered content.
   for(let pass=0;pass<3;pass++){
     answerWidth=Math.min(560,physicalWidth/Math.max(.1,answerScale));
@@ -55,8 +69,10 @@ function fitAdventure(){
   }
   const visibleAnswerHeight=answerHeight*answerScale;
   const boardTop=wide?Math.max(top,(height-visibleBoardHeight)/2):height-bottom-visibleBoardHeight;
-  const answerTop=wide?height-bottom-visibleAnswerHeight:height-bottom-visibleBoardHeight-(hasBoard?gap:0)-visibleAnswerHeight;
-  const fieldHeight=Math.max(12,answerTop-top-gap);
+  const answerTop=wide&&math?Math.max(top,(height-visibleAnswerHeight)/2):wide?height-bottom-visibleAnswerHeight:height-bottom-visibleBoardHeight-(hasBoard?gap:0)-visibleAnswerHeight;
+  const fieldHeight=wide&&math?available:Math.max(0,answerTop-top-gap);
+  set('--fit-answer-left',(wide&&math?width-12-physicalWidth/2:width/2)+'px');
+  set('--fit-field-width',(wide&&math?width-physicalWidth-24:width)+'px');
   set('--fit-answer-scale',answerScale.toFixed(5));set('--fit-answer-top',answerTop+'px');
   const boardLeft=wide?width-12-visibleBoardWidth:(width-visibleBoardWidth)/2;
   const clamp=(value,max,min=6)=>Math.max(min,Math.min(Math.max(min,max),value));
@@ -64,7 +80,7 @@ function fitAdventure(){
   set('--fit-board-top',clamp(preferredBoardPosition?.y??boardTop,height-visibleBoardHeight-6,top)+'px');
   set('--fit-board-left',clamp(preferredBoardPosition?.x??boardLeft,width-visibleBoardWidth-6)+'px');
   set('--fit-field-top',top+'px');set('--fit-field-height',fieldHeight+'px');
-  set('--fit-enemy-image',Math.max(20,Math.min(220,fieldHeight-60))+'px');
+  set('--fit-enemy-image',Math.max(12,Math.min(220,fieldHeight-92))+'px');
   set('--fit-enemy-font',Math.max(9,Math.min(16,fieldHeight/10))+'px');
 }
 function scheduleFit(){if(!pendingFrame)pendingFrame=requestAnimationFrame(fitAdventure);}
@@ -97,6 +113,8 @@ function observeAdventure(){
  new ResizeObserver(scheduleFit).observe(document.documentElement);
  window.addEventListener('resize',scheduleFit);
  window.visualViewport?.addEventListener('resize',scheduleFit);
+ window.visualViewport?.addEventListener('scroll',scheduleFit);
+ screen.addEventListener('focusin',scheduleFit);screen.addEventListener('focusout',scheduleFit);
  document.fonts?.ready.then(scheduleFit);
  scheduleFit();
 }

@@ -22,6 +22,7 @@ const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undef
 
 
 export function renderMathWordSubquests(root,api){
+ const help=node('details',null,'subquest-rules');help.append(node('summary','あそびかた・報酬について'),node('p','5問に答えてから答え合わせ。1問の回答で10％、正解でさらに10％の報酬。途中で戻っても受取分は残り、復習で残りを受け取れます。'));
  const game=api.game();
  const state=game.mathWordQuestsV2 ||= {completed:{}};
  state.completed ||= {};
@@ -29,7 +30,7 @@ export function renderMathWordSubquests(root,api){
  const progressSummary=node('div',null,'quest-board-progress-summary');progressSummary.setAttribute('role','status');
  const grid=node('div',null,'reading-quest-grid math-word-quest-grid');
  const pager=node('nav',null,'quest-board-pager');
- root.replaceChildren(node('h3','学年別・文章問題','math-word-quest-heading'),tabs,progressSummary,grid,pager);
+ root.replaceChildren(help,node('h3','学年別・文章問題','math-word-quest-heading'),tabs,progressSummary,grid,pager);
  for(let grade=1;grade<=6;grade++){
   const button=node('button',`${grade}年`,'btn');button.type='button';button.setAttribute('aria-pressed',String(grade===selectedGrade));
   button.onclick=()=>{selectedGrade=grade;pageByGrade.set(grade,0);render();};tabs.append(button);
@@ -107,7 +108,7 @@ export function renderMathWordSubquests(root,api){
 
   };
   const scenePortrait=node('img',null,'reading-v2-scene-villager');scenePortrait.src=api.asset(villager.image);scenePortrait.alt=villager.name;
-  const foreground=node('section',null,'reading-v2-answer-foreground');foreground.append(node('h3',`${group.indexOf(problem)+1}／${group.length}問め`,'reading-story-progress'),node('p',review?(problem.hint||'ヒント：本文にある数字と、何を求めるかを確かめよう。'):'答え合わせは全問回答のあと。回答と正解で報酬が半分ずつ積み上がります。','reading-v2-batch-note'),form,feedback);
+  const foreground=node('section',null,'reading-v2-answer-foreground');foreground.append(node('h3',`${group.indexOf(problem)+1}／${group.length}問め`,'reading-story-progress'),form,feedback);if(review)foreground.prepend(node('p',problem.hint||'本文の数字と、何を求めるかを確かめよう。','reading-v2-retry-hint'));
   answerCenter.append(scenePortrait,foreground);content.classList.add('reading-v2-answer-content');context.classList.add('reading-v2-question-context');answerCenter.classList.add('reading-v2-answer-center');
   const header=node('header',null,'reading-v2-scene-header');const rewardSummary=rewardHud(group);header.append(back,rewardSummary);content.append(context,answerCenter);panel.append(header,content);overlay.append(panel);document.body.append(overlay);installQuestAnswerPanelWheelScroll(panel);inputs[problem.input.fields[0].name]?.focus({preventScroll:true});
  }

@@ -91,10 +91,10 @@ export async function startAssetBoot({screen,resolve,assetMap,criticalPaths=[],o
  function showError(error){
   state.failed=Math.max(1,state.failed);const storage=error?.name==='QuotaExceededError';
   phase('error',storage?'素材を保存できませんでした':'素材の準備が完了していません',storage?'端末の空き容量を確認して、もう一度お試しください。':'通信状況を確認して再試行してください。取得済みの素材から再開します。');
-  text('boot-status-text',`残り ${urls.length-completed.size} ファイル`);el('boot-download-retry').classList.remove('hidden');
+  text('boot-status-text',`残り ${urls.length-completed.size} ファイル`);el('boot-download-retry')?.classList.remove('hidden');
  }
  async function update(){
-  if(running)return;running=true;el('boot-download-retry').classList.add('hidden');state.failed=0;state.failedUrls=[];state.downloadedBytes=0;state.done=0;
+  if(running)return;running=true;el('boot-download-retry')?.classList.add('hidden');state.failed=0;state.failedUrls=[];state.downloadedBytes=0;state.done=0;
   try{
    phase('checking','アップデートを確認中','保存した素材と今回必要な素材を照合しています。');
    cache=await caches.open(BOOT_MEDIA_CACHE);await checkCache();

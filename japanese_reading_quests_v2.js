@@ -569,6 +569,28 @@ export const JAPANESE_READING_QUESTS_V2 = authored.map((entry,index)=>{
   questions[3]=asChoice({...questions[3],skill:'内容の確認'},choicePrompt,choiceAnswer,[wrong1,wrong2],[evidence],3);
   const extraction=questions[4],prompt=extraction.prompt.replace(/、(?:に|さん|よん) もじで/g,'').replace(/[一二三四五六七八九十]+文字で/g,'').replace(/ぬきだしましょう/g,'えらびましょう').replace(/抜き出しましょう/g,'選びましょう');
   questions[4]={...asChoice({...extraction,skill:'言葉の確認'},prompt,extraction.answerText,[wordWrong1,wordWrong2],extraction.evidence,4),legacyAcceptedAnswers:extraction.accepted};
+  const replacements={
+   'jr-v2-g1-07':['さいごに、みせの ひとは ノノに どう しましたか。','うなずいた','てを ふった','いすを かくした','みせの ひとは、ノノに うなずきました'],
+   'jr-v2-g1-09':['みずうみへ いく ときに さがす えは、どれですか。','さかな','いえ','すず','みずうみへ いく ひとは、さかなの えを さがします'],
+   'jr-v2-g2-03':['風車の羽を回す力は、何ですか。','風の力','人がおす力','流れる水の力','風の力で羽を回します'],
+   'jr-v2-g2-04':['帰り道でコウが見つけた目印は、何ですか。','遠くの大きな木','足元の石','あなの中の草','コウは遠くの大きな木を見つけ'],
+   'jr-v2-g2-05':['かざりを作る前に、係の人に何を知らせますか。','自分の名前','家までの道','好きな歌','かざりを作る前には、係の人に名前を知らせてください'],
+   'jr-v2-g2-06':['外でろうそくを使う時に、何がひつようですか。','風をよける入れ物','ぬれたふくろ','昼の光をためる石','風をよける入れ物に入れます'],
+   'jr-v2-g2-09':['見はり台のつつは、どことどこで話す道具ですか。','見はり台の上と下','港と丘','店と家','上と下で話すための道具'],
+   'jr-v2-g3-06':['工事の間、水運び当番が水を運ぶのは、どの井戸からですか。','東の井戸','西の井戸','どちらの井戸でもよい','東の井戸から水を運び'],
+   'jr-v2-g3-08':['二か所で水を集める調査は、それぞれ何回行いましたか。','三回','一回','五回','入口の近くと奥の二か所で、三回ずつ調べた'],
+   'jr-v2-g3-09':['薬の箱を運ぶ時、どのような道を選びますか。','日かげを通る道','日なたばかりの道','川の中を通る道','日かげを通る道を選び'],
+   'jr-v2-g1-02':['やすむ ところの はたは、なにいろですか。','あかい','あおい','しろい','あかい はたの ところで やすみます'],
+   'jr-v2-g1-10':['おとうさんが きた あと、ふたりは どう しましたか。','いっしょに いえへ かえった','みせへ いった','もんで まちつづけた','ふたりは いっしょに いえへ かえりました']
+  };
+  if(replacements[id]){
+   const [prompt,answer,wrong1,wrong2,quote]=replacements[id];
+   const evidence={id:`${id}-q5-e1`,...literalSpan(passage,quote)};
+   evidence.segmentId=segments.find(s=>evidence.start>=s.start&&evidence.end<=s.end)?.id;
+   questions[4]=asChoice({...questions[4],skill:'内容の確認'},prompt,answer,[wrong1,wrong2],[evidence],4);
+   delete questions[4].legacyAcceptedAnswers;
+  }
+
  }
  return {id,grade,title,genre,topic,passage,segments,references,questions,
   characterCount:countReadingCharacters(passage),characterCountBasis:'unicode-codepoints; punctuation included; whitespace excluded; passage only',

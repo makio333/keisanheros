@@ -1,0 +1,396 @@
+--- a/game_cloud_apis.js
++++ b/game_cloud_apis.js
+@@ -1,5 +1,5 @@
+ import {validRaidDamage,raidInitialHp,raidConfiguredHp} from './raid_run_rules.js';
+-import {raidGlobalDocIdForBossId,raidJstMonthKey,raidMonthlyBossId,raidMonthlyGlobalDocId,parseRaidMonthlyBossId} from './raid_monthly_rules.js';
++import {raidGlobalDocIdForBossId,raidJstMonthKey,raidMonthlyBossId,raidMonthlyGlobalDocId,parseRaidMonthlyBossId,raidActiveGlobalDocId,raidRankingSeason,raidRankingPeriodAllowed,RAID_FOUNDER_PERIOD,RAID_SEASONS_START_AT} from './raid_monthly_rules.js';
+ import {applyGiftPayload,raidRankCoins} from './economy.js';
+ import {GHOST_RAID_DEFEAT_DECORATION} from './ghost_raid_content.js';
+ import {eventRaidRewardEntitlements,eventRaidBonusEntitlements,EVENT_RAID_FINAL_AT,eventRaidFinalGift} from './event_raid.js';
+@@ -65,7 +65,7 @@
+     const requestedMonsterHint = typeof progress.monsterId === 'string' && progress.monsterId ? progress.monsterId : '';
+     const monthlyGhost = requestedMonsterHint === 'moonWraith' || now >= Date.parse('2026-11-01T00:00:00+09:00');
+     const periodKey = monthlyGhost ? raidJstMonthKey(now) : null;
+-    const globalDocId = monthlyGhost ? raidMonthlyGlobalDocId(periodKey) : 'currentBoss';
++    const globalDocId = monthlyGhost ? raidActiveGlobalDocId(now) : 'currentBoss';
+     const globalRef = doc(db, 'raidGlobal', globalDocId);
+     return runTransaction(db, async transaction => {
+       const globalSnap = await transaction.get(globalRef);
+@@ -82,7 +82,7 @@
+          // 11月1日以降に幽霊王へ切り替わった後は従来どおり10レベル上がる。
+          const nextLevel = requestedMonsterId === 'darkBahamutFinal' ? Math.max(50, currentLevel) : currentLevel + 10;
+          const nextBossId = monthlyGhost
+-           ? raidMonthlyBossId(periodKey, nextLevel)
++           ? raidMonthlyBossId(globalDocId.slice(6), nextLevel)
+            : requestedMonsterId === 'darkBahamutFinal' && nextLevel === currentLevel
+              ? `boss_${nextLevel}_final_${now}`
+              : 'boss_' + nextLevel;
+@@ -105,7 +105,7 @@
+       }
+ 
+       const bossLevel = global.bossLevel || 50;
+-      const bossId = global.bossId || (monthlyGhost ? raidMonthlyBossId(periodKey, bossLevel) : 'boss_' + bossLevel);
++      const bossId = global.bossId || (monthlyGhost ? raidMonthlyBossId(globalDocId.slice(6), bossLevel) : 'boss_' + bossLevel);
+       const maxHp = raidConfiguredHp(global,requestedMonsterId);
+       if (!global.bossId) {
+           global.bossLevel = bossLevel;
+@@ -115,6 +115,10 @@
+           if (periodKey) global.periodKey = periodKey;
+       }
+ 
++      const seasonRef=periodKey?doc(db,'raidRankingSeasons',periodKey):null;
++      const seasonSnap=seasonRef?await transaction.get(seasonRef):null;
++      const founderRef=periodKey&&now>=RAID_SEASONS_START_AT?doc(db,'raidRankingSeasons',RAID_FOUNDER_PERIOD):null;
++      const founderSnap=founderRef?await transaction.get(founderRef):null;
+       const rankRef = doc(db, 'raidRankings_' + bossId, slotKeyToDocId(slotKey));
+       const claimRef = doc(db, 'raidClaims', slotKeyToDocId(slotKey) + '_' + bossId);
+       const challengeCounterRef = doc(db, 'raidClaims', slotKeyToDocId(slotKey) + '_challenge_count');
+@@ -245,6 +249,8 @@
+ 
+       const nextStartsAt = finalize ? now : global.startsAt;
+ 
++      if(seasonRef&&!seasonSnap.exists())transaction.set(seasonRef,{...raidRankingSeason(periodKey),kind:'ranking-season',monsterId:requestedMonsterId,createdAt:now});
++      if(founderRef&&!founderSnap.exists())transaction.set(founderRef,{...raidRankingSeason(RAID_FOUNDER_PERIOD),kind:'ranking-season',monsterId:requestedMonsterId,createdAt:now});
+       if (archivedBoss) transaction.set(doc(db, 'raidHistory', settledBossId), archivedBoss);
+ 
+       if (archivedBoss || addedDamage > 0 || startsSettlement || finalize || !globalSnap.exists() || global.monsterId !== requestedMonsterId) {
+@@ -293,7 +299,7 @@
+ 
+   watchBoss(onChange, onError) {
+     const now = clock();
+-    const docId = now >= Date.parse('2026-11-01T00:00:00+09:00') ? raidMonthlyGlobalDocId(raidJstMonthKey(now)) : 'currentBoss';
++    const docId = raidActiveGlobalDocId(now);
+     return onSnapshot(doc(db, 'raidGlobal', docId), { includeMetadataChanges: true }, snapshot => {
+       if (!snapshot.metadata.fromCache) onChange();
+     }, onError);
+@@ -380,7 +386,7 @@
+ 
+   async getMonthlyRankings(periodKey = raidJstMonthKey(clock())) {
+     const month = String(periodKey || '');
+-    if (!/^\d{6}$/.test(month)) throw new Error('Invalid raid ranking period');
++    if (!raidRankingPeriodAllowed(month,clock())) throw new Error('Invalid raid ranking period');
+     const snap = await getDocs(query(collection(db, 'raidMonthlyRankings_' + month), orderBy('totalDamage', 'desc'), limit(100)));
+     return snap.docs.map(entry => { const { processedRuns, ...publicRow } = entry.data(); return { ...publicRow, slotKey: publicRow.slotKey || entry.id }; })
+       .filter(row => !row.excludedFromRanking && (Number(row.totalDamage) || 0) > 0)
+@@ -390,7 +396,7 @@
+   async getHistory() {
+     // bossLevel が無い古い記録（Lv.50）も含めるため、orderBy は使わず 取得後に並べ替える
+     const snap = await getDocs(query(collection(db, 'raidHistory'), limit(100)));
+-    return snap.docs
++    const bosses=snap.docs
+       .map(doc => {
+         const monthly = parseRaidMonthlyBossId(doc.id);
+         const level = Number(monthly?.bossLevel || String(doc.id).match(/^boss_(\d+)/)?.[1]) || 50;
+@@ -398,15 +404,20 @@
+       })
+       .sort((a, b) => (b.bossLevel || 0) - (a.bossLevel || 0))
+       .slice(0, 50);
++    const seasons=await getDocs(collection(db,'raidRankingSeasons'));
++    const current=raidJstMonthKey(clock());
++    const closed=seasons.docs.map(d=>({...d.data(),periodKey:d.id,kind:'ranking-season',bossId:'season_'+d.id})).filter(s=>raidRankingPeriodAllowed(s.periodKey,clock())&&s.periodKey<current);
++    if(clock()>=RAID_SEASONS_START_AT&&!closed.some(s=>s.periodKey===RAID_FOUNDER_PERIOD))closed.push({...raidRankingSeason(RAID_FOUNDER_PERIOD),kind:'ranking-season',bossId:'season_'+RAID_FOUNDER_PERIOD});
++    return [...closed.sort((a,b)=>b.periodKey.localeCompare(a.periodKey)),...bosses];
+   },
+ 
+   async getGlobalBoss() {
+     try {
+       const now = clock();
+-      const docId = now >= Date.parse('2026-11-01T00:00:00+09:00') ? raidMonthlyGlobalDocId(raidJstMonthKey(now)) : 'currentBoss';
++      const docId = raidActiveGlobalDocId(now);
+       const docRef = doc(db, 'raidGlobal', docId);
+       const snap = await getDoc(docRef);
+-      if (snap.exists()) return snap.data();
++      if (snap.exists()) return {...snap.data(),serverNow:now,...(now>=Date.parse('2026-11-01T00:00:00+09:00')?{periodKey:raidJstMonthKey(now)}:{})};
+       return { totalDamageDealt: 0 };
+     } catch (e) {
+       console.error(e);
+--- a/raid_monthly_rules.js
++++ b/raid_monthly_rules.js
+@@ -42,3 +42,26 @@
+ export function isValidRaidBossId(bossId) {
+   return bossId === 'boss1' || /^boss_\d{1,8}(?:_final_\d{10,16})?$/.test(String(bossId || '')) || !!parseRaidMonthlyBossId(bossId);
+ }
++
++// Ranking seasons change independently of the continuing November boss campaign.
++export const RAID_SEASONS_START_AT=Date.parse('2026-12-01T00:00:00+09:00');
++export const RAID_FOUNDER_PERIOD='202611';
++export function raidActiveGlobalDocId(timestamp=Date.now()){
++ return timestamp>=Date.parse('2026-11-01T00:00:00+09:00')?raidMonthlyGlobalDocId(timestamp>=RAID_SEASONS_START_AT?RAID_FOUNDER_PERIOD:raidJstMonthKey(timestamp)):'currentBoss';
++}
++export function raidRankingPeriodAllowed(period,timestamp=Date.now()){
++ return isMonthKey(period)&&period>=RAID_FOUNDER_PERIOD&&period<=raidJstMonthKey(timestamp);
++}
++export function raidRankingSeason(period=raidJstMonthKey(Date.now())){
++ if(!isMonthKey(period))throw new TypeError('Invalid ranking season');
++ const year=Number(period.slice(0,4)),month=Number(period.slice(4));
++ const startsAt=Date.UTC(year,month-1,1)-9*3600000,endsAt=Date.UTC(year,month,1)-9*3600000;
++ return {periodKey:period,label:period===RAID_FOUNDER_PERIOD?'初代ランキング':`${year}年${month}月ランキング`,startsAt,endsAt,boostStartsAt:endsAt-7*86400000};
++}
++
++export const RAID_MONTH_END_ATTACK_MULTIPLIER=2;
++export function raidMonthEndBoost(timestamp=Date.now()){
++ const season=raidRankingSeason(raidJstMonthKey(timestamp));
++ const active=timestamp>=Date.parse('2026-11-24T00:00:00+09:00')&&timestamp>=season.boostStartsAt&&timestamp<season.endsAt;
++ return {...season,active,multiplier:active?RAID_MONTH_END_ATTACK_MULTIPLIER:1};
++}
+--- a/account_game_client.js
++++ b/account_game_client.js
+@@ -6,6 +6,7 @@
+     async settleReward(key,boss,state){await preserve(key,state);return call('RaidBossAPI','settleReward',[key,boss]);},
+     getRankings:boss=>call('RaidBossAPI','getRankings',[boss]),
+     getHistory:()=>call('RaidBossAPI','getHistory',[]),
++    getMonthlyRankings:period=>call('RaidBossAPI','getMonthlyRankings',[period]),
+     getGlobalBoss:()=>call('RaidBossAPI','getGlobalBoss',[]),
+     receiveCheers:key=>call('RaidBossAPI','receiveCheers',[key]),
+     sendCheer:(key,other,day)=>call('RaidBossAPI','sendCheer',[key,other,day]),
+--- a/server/account-game-service.mjs
++++ b/server/account-game-service.mjs
+@@ -1,7 +1,7 @@
+ import {createGameCloudAPIs} from '../game_cloud_apis.js';
+ import {createGameDocumentAdapter} from './game-document-adapter.mjs';
+ import {accountSaveLimit} from './account-access.mjs';
+-import {isValidRaidBossId,raidJstMonthKey,raidMonthlyGlobalDocId} from '../raid_monthly_rules.js';
++import {isValidRaidBossId,raidJstMonthKey,raidMonthlyGlobalDocId,raidActiveGlobalDocId,raidRankingPeriodAllowed} from '../raid_monthly_rules.js';
+ 
+ const allowed={RaidBossAPI:['syncPlayer','settleReward','getRankings','getMonthlyRankings','getHistory','getGlobalBoss','receiveCheers','sendCheer'],EventRaidAPI:['recordBest','getRankings','finalizeRankings','claimFinalReward'],AdminGiftAPI:['send','fetchPending','claim','claimToSave','listRecent','listTargets','permissions']};
+ const fail=code=>{throw Error(code);};
+@@ -38,7 +38,7 @@
+       }
+       const storage=createGameDocumentAdapter(tx,{accountId:account.id,now});
+       const apis=createGameCloudAPIs({...storage,now});let callArgs=args,result;
+-      const activeGlobalDocId=now()>=Date.parse('2026-11-01T00:00:00+09:00')?raidMonthlyGlobalDocId(raidJstMonthKey(now())):'currentBoss';
++      const activeGlobalDocId=raidActiveGlobalDocId(now());
+       if(api==='RaidBossAPI' && method==='getGlobalBoss' && !await tx.getGameDocument(`raidGlobal/${activeGlobalDocId}`)){
+         const first=(await tx.listSaves(account.id))[0];
+         if(first)await apis.RaidBossAPI.syncPlayer(first.key,profile(first.gameState),{});
+@@ -59,7 +59,7 @@
+         else if(method==='sendCheer'){await own(args[0]);if(!string(args[1]) || !await tx.getSave(args[1]))fail('save_not_found');}
+         else if(method==='getRankings')callArgs=[bossId(args[0])];
+         else if(method==='getMonthlyRankings'){
+-          const period=args[0];if(period!==raidJstMonthKey(now()))fail('invalid_game_request');
++          const period=args[0];if(!raidRankingPeriodAllowed(period,now()))fail('invalid_game_request');
+           callArgs=[period];
+         }
+       }else if(api==='EventRaidAPI'){
+--- a/server/internal-raid-api.mjs
++++ b/server/internal-raid-api.mjs
+@@ -4,7 +4,7 @@
+ import {getFirestore} from 'firebase-admin/firestore';
+ import {getAuth} from 'firebase-admin/auth';
+ import {createGameCloudAPIs} from '../game_cloud_apis.js';
+-import {isValidRaidBossId,raidJstMonthKey} from '../raid_monthly_rules.js';
++import {isValidRaidBossId,raidJstMonthKey,raidRankingPeriodAllowed} from '../raid_monthly_rules.js';
+ import {createInternalRaidAccountGuard,createInternalRaidDeletionGuard,createInternalRaidTokenAuthenticator,mapInternalRaidError,resolveOwnedSaveIdentity} from './internal-raid-deletion-guard.mjs';
+ 
+ const authProjectId=process.env.AUTH_FIREBASE_PROJECT_ID||'ailandgames';
+@@ -128,7 +128,7 @@
+       const key=args[1]||args[0];if(typeof key==='string'&&key){const owned=resolveOwnedSaveIdentity(claims.uid,key);ownKey=owned.key;ownPublicKey=owned.publicKey;}
+       if(body.method==='getRankings')args.length=1;else args.length=0;
+     }else if(body.method==='getMonthlyRankings'){
+-      if(args[0]!==raidJstMonthKey(Date.now()))fail('invalid_game_request');
++      if(!raidRankingPeriodAllowed(args[0],Date.now()))fail('invalid_game_request');
+       args.length=1;
+     }else if(body.method==='sendCheer')return reply(res,200,{result:true});
+     if(body.method==='receiveCheers')return reply(res,200,{result:0});
+--- a/.local-previews/latest-game/game.js
++++ b/.local-previews/latest-game/game.js
+@@ -57,7 +57,7 @@
+ import './print_answer_review.css';
+ import {GHOST_RAID_BACKGROUND,GHOST_RAID_SKIN,GHOST_RAID_FRAME,GHOST_RAID_DEFEAT_DECORATION,GHOST_RAID_EQUIPMENT,GHOST_RAID_PRIZES,ownsRaidPrize,purchaseRaidPrize} from './ghost_raid_content.js';
+ import {grantRaidRun,validRaidDamage,raidInitialHp,raidConfiguredHp} from './raid_run_rules.js';
+-import {raidJstMonthKey} from './raid_monthly_rules.js';
++import {raidJstMonthKey,raidActiveGlobalDocId,raidGlobalDocIdForBossId,raidRankingSeason,raidMonthEndBoost} from './raid_monthly_rules.js';
+ import { awakeningState, awakeningScale, isAncientEquipment, equippedAncients, grantAwakeningExp, masterExistingAncients } from './ancient_awakening.js';
+ import {CHRISTMAS_EQUIPMENT_PICKUP_RATE,pickChristmasPrize,isChristmasPickup,weightedPrizeRates} from './christmas_gacha.js';
+ import {CHRISTMAS_PRESENT_ICON,CHRISTMAS_STORY_BANNER,CHRISTMAS_ENCOUNTERS_PER_RUN,createChristmasEncounters,christmasStageAt,CHRISTMAS_EXCHANGE_PRIZES,christmasPresentBalance,christmasEventState,christmasExchangeOnly,christmasPrizeOwned,rollChristmasSantaSkinTicket,recoverChristmasPresents,exchangeChristmasPrize} from './christmas_presents.js';
+@@ -5112,6 +5112,7 @@
+ function blog(html){ logTo('battle-log', html); }
+ 
+ function updateBattleBars(){
++  renderRaidBattleBoost();
+   const p = G.player, e = battle.enemy;
+   $('battle-player-mp').style.width = `${Math.max(0, p.mp / totalMaxMp() * 100)}%`;
+   $('battle-player-atb').style.width = `${battle.pGauge}%`;
+@@ -5160,9 +5161,15 @@
+ 
+ /* --- 戦う：即けいさん --- */
+ /* そうびの特殊能力「ちからのかご」ぶんの こうげき力ブースト込みATK */
+-function effectiveAtk(){
++function renderRaidBattleBoost(){
++ const active=explore?.isRaid&&raidMonthEndBoost(raidNow()).active,badge=document.querySelector('.raid-battle-boost');
++ if(active&&!badge)$('battle-floor-title')?.insertAdjacentHTML('beforeend','<span class="raid-battle-boost" style="display:inline-block;margin-left:8px;color:#ffda79">🔥 攻撃力2倍</span>');
++ if(!active&&badge)badge.remove();
++}
++function effectiveAtk({raidBoost=true}={}){
+   const mult = equippedAbilities().has('power') ? 1.15 : 1;
+-  return Math.round(totalStat('atk') * mult);
++  const boost=raidBoost&&explore?.isRaid?raidMonthEndBoost(raidNow()).multiplier:1;
++  return Math.round(Math.round(totalStat('atk')*mult)*boost);
+ }
+ /* そうびの特殊能力「せつやくの心得」ぶん MPしょうひを1へらす（最低1） */
+ function skillMpCost(s){
+@@ -5555,7 +5562,7 @@
+       destroyChallenge();
+       if (s.healPct){
+         if (!res.success){
+-          const selfDamage = Math.max(1, Math.round(effectiveAtk() * BALANCE.missDamageRatio));
++          const selfDamage = Math.max(1, Math.round(effectiveAtk({raidBoost:false}) * BALANCE.missDamageRatio));
+           G.player.hp = Math.max(0, G.player.hp - selfDamage);
+           blog(`<span class="bad">${s.name}は はつどうしなかった！ ゆうしゃは ${selfDamage}ダメージ！（MP${cost}）</span>`);
+           applyMissPenalty();
+@@ -16733,13 +16740,14 @@
+   return getRaidBossAppearance(entry?.monsterId || 'darkBahamut');
+ }
+ function isCurrentMonthlyRaidData(data=getRaidData()) {
+-  const period = raidJstMonthKey(Date.now());
+-  return data.periodKey === period && String(data.bossId || '').startsWith(`boss_m${period}_`);
++  return raidGlobalDocIdForBossId(data.bossId)===raidActiveGlobalDocId(raidNow())&&String(data.bossId||'').startsWith('boss_m');
+ }
+ function getRaidMaxHp() {
+   if (activeRaidBossAppearanceId() === 'moonWraith' && !isCurrentMonthlyRaidData()) return raidInitialHp('moonWraith');
+   return raidConfiguredHp(getRaidData(),activeRaidBossAppearanceId());
+ }
++let raidServerClock=null;
++function raidNow(){return raidServerClock?raidServerClock.at+(performance.now()-raidServerClock.monotonic):Date.now();}
+ let raidSyncStatus = 'idle';
+ let raidSyncPromise = null;
+ let raidSyncSlotKey = null;
+@@ -16828,6 +16836,7 @@
+       // Participation-count rewards have ended; keep all previously owned items.
+       const cheerGold = await window.RaidBossAPI.receiveCheers(slotKey, game);
+       let global = await window.RaidBossAPI.getGlobalBoss();
++      if(Number.isFinite(global.serverNow))raidServerClock={at:global.serverNow,monotonic:performance.now()};
+       if (G !== game || currentSlotKey !== slotKey) return false;
+       const rankingBossId = global.bossId || result.bossId || progress.bossId;
+       const fetchedRankings = await window.RaidBossAPI.getRankings(rankingBossId);
+@@ -16844,7 +16853,7 @@
+       if (G !== game || currentSlotKey !== slotKey) return false;
+       const rankingSnapshotMatches = !latestGlobal.bossId || latestGlobal.bossId === rankingBossId;
+       global = latestGlobal;
+-      if (!rankingSnapshotMatches) raidRefreshRequested = true;
++      if (!rankingSnapshotMatches||latestGlobal.periodKey!==rankingPeriod) raidRefreshRequested = true;
+       const rankings = rankingSnapshotMatches ? fetchedRankings : [];
+       if (payout?.eligible) {
+         const rewardState=payout.state;
+@@ -17072,7 +17081,7 @@
+ 
+ function getRaidMonthlyRankings() {
+   const data = getRaidData();
+-  const currentPeriod = raidJstMonthKey(Date.now());
++  const currentPeriod = raidJstMonthKey(raidNow());
+   if (data.periodKey !== currentPeriod) return [];
+   const rows = Object.values(data.monthlyRankings || {}).filter(row => !row.excludedFromRanking).map(row => ({ ...row }));
+   const progress = G?.raidProgress;
+@@ -17269,22 +17278,23 @@
+   $('btn-raid-history-newer').disabled = raidHistoryIndex === 0;
+   $('btn-raid-history-retry').classList.add('hidden');
+   $('raid-history-position').textContent = `${raidHistoryIndex + 1} / ${raidHistoryEntries.length}`;
++  const season=entry.kind==='ranking-season';
+   const date = entry.defeatedAt ? new Date(entry.defeatedAt).toLocaleString('ja-JP') : '記録なし';
+   const finishers = (entry.finalHitters || []).map(row => row.playerName || '勇者').join('、') || '記録なし';
+   const appearance = getRaidBossAppearanceForHistory(entry);
+-  $('raid-history-summary').textContent = `${appearance.menuName} Lv.${entry.bossLevel || 50} ｜ 討伐：${date} ｜ 最大HP：${(entry.maxHp || 1000).toLocaleString()} ｜ 🔥 最後の一撃：${finishers}`;
++  $('raid-history-summary').textContent = season?`${entry.label||raidRankingSeason(entry.periodKey).label} ｜ ${new Date(entry.startsAt).toLocaleDateString('ja-JP')}〜${new Date(entry.endsAt-1).toLocaleDateString('ja-JP')}`:`${appearance.menuName} Lv.${entry.bossLevel || 50} ｜ 討伐：${date} ｜ 最大HP：${(entry.maxHp || 1000).toLocaleString()} ｜ 🔥 最後の一撃：${finishers}`;
+   list.innerHTML = '<div class="raid-empty-ranking">ランキングをよみこみ中…</div>';
+   list.setAttribute('aria-busy', 'true');
+   try {
+     let rankings = raidHistoryRankingCache.get(entry.bossId);
+     if (!rankings) {
+       const complete = entry.finalRankings?.length && entry.finalRankings.every(row => row.playerName !== undefined);
+-      const details = complete ? [] : await window.RaidBossAPI.getRankings(entry.bossId);
++      const details = season?await window.RaidBossAPI.getMonthlyRankings(entry.periodKey):complete?[]:await window.RaidBossAPI.getRankings(entry.bossId);
+       rankings = mergeRaidHistoryRankings(entry, details);
+       raidHistoryRankingCache.set(entry.bossId, rankings);
+     }
+     if (request !== raidHistoryRequest) return;
+-    renderRaidRankingList(list, rankings, true);
++    renderRaidRankingList(list, rankings, true,season?'bossDamage':'damage');
+     list.scrollTop = 0;
+   } catch (error) {
+     if (request !== raidHistoryRequest) return;
+@@ -17476,6 +17486,23 @@
+ 
+ }
+ 
++let raidSeasonRefreshTimer=null;
++function renderRaidSeasonInfo(){
++  clearTimeout(raidSeasonRefreshTimer);
++  const season=raidRankingSeason(raidJstMonthKey(raidNow()));
++  let info=$('raid-season-info');
++  if(!info){info=document.createElement('p');info.id='raid-season-info';$('raid-boss-name')?.after(info);}
++  info.style.cssText='font-size:13px;line-height:1.6;margin:8px 0;color:#ffde89';
++  const boost=raidMonthEndBoost(raidNow());
++  info.textContent=`${season.label}・残り${Math.max(0,Math.ceil((season.endsAt-raidNow())/86400000))}日 ｜ 毎月1日0時に切替（日本時間）`;
++  let banner=$('raid-month-end-boost');if(!banner){banner=document.createElement('p');banner.id='raid-month-end-boost';info.after(banner);}
++  banner.style.cssText='font-size:14px;line-height:1.5;margin:8px 0;padding:8px 12px;border:1px solid #d7a748;border-radius:8px;background:#4b2c25;color:#ffe398';
++  const start=new Date(season.boostStartsAt).toLocaleDateString('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric'});
++  banner.textContent=boost.active?'🔥 月末ブースト中！ レイド攻撃力2倍（今月末まで）':`🔥 ${start}から月末ブースト！ レイド攻撃力2倍`;
++  banner.classList.toggle('is-active',boost.active);
++  raidSeasonRefreshTimer=setTimeout(()=>{if(document.querySelector('#screen-raid-boss:not(.hidden)')){renderRaidBossMenu();if(getRaidData().periodKey!==raidJstMonthKey(raidNow()))void syncRaidState();}},Math.min(60000,Math.max(100,season.endsAt-raidNow())));
++}
++
+ function renderRaidBossMenu() {
+   const modal = document.getElementById('screen-raid-boss');
+   if (!raidFeatureOpen()) { modal?.classList.add('hidden'); return; }
+@@ -17496,12 +17523,12 @@
+   const raidData = getRaidData();
+   const appearance = getRaidBossAppearance();
+   const isFinalPushRaid = appearance.id === 'darkBahamutFinal';
+-  const rankingPeriod = raidJstMonthKey(Date.now());
++  const rankingPeriod = raidJstMonthKey(raidNow());
+   const raidRankingTitle = modal.querySelector('.raid-ranking-section h3');
+   if (raidRankingTitle) {
+-    const label = rankingPeriod && /^\d{6}$/.test(rankingPeriod) ? `${Number(rankingPeriod.slice(4))}月` : '今月';
+-    raidRankingTitle.textContent = appearance.id === 'moonWraith' ? 'このボスへの累計ダメージランキング' : 'ダメージランキング';
+-    listEl?.setAttribute('aria-label', appearance.id === 'moonWraith' ? `${label}のこのボスへの累計ダメージ順ランキング` : '合計ダメージ順のランキング');
++    const label=raidRankingSeason(rankingPeriod).label;
++    raidRankingTitle.textContent = appearance.id === 'moonWraith' ? label : 'ダメージランキング';
++    listEl?.setAttribute('aria-label', appearance.id === 'moonWraith' ? `${label}の累計ダメージ順ランキング` : '合計ダメージ順のランキング');
+   }
+   const bossLevel = Math.max(50, Number(appearance.id === 'moonWraith' && !isCurrentMonthlyRaidData(raidData) ? 50 : raidData.bossLevel) || 50);
+   if (bossName) bossName.textContent = `${appearance.menuName} Lv.${bossLevel}${isFinalPushRaid ? ' MAX' : ''}`;
+@@ -17565,7 +17592,8 @@
+   }
+   if (hpBar) hpBar.style.width = `${Math.max(0, Math.min(100, (remainHp / maxHp) * 100))}%`;
+ 
+-  renderRaidRankingList(listEl, getRaidRankings(), false, appearance.id === 'moonWraith' ? 'bossDamage' : 'damage');
++  renderRaidRankingList(listEl, appearance.id==='moonWraith'?getRaidMonthlyRankings():getRaidRankings(), false, appearance.id === 'moonWraith' ? 'bossDamage' : 'damage');
++  renderRaidSeasonInfo();
+ 
+   renderRaidLearningRecommendation();
+   renderRaidFinalResult();
+@@ -17737,6 +17765,8 @@
+   document.getElementById('battle-floor-title').innerHTML = appearance.id === 'darkBahamutFinal'
+     ? '🔥 最後の力を振り絞れ！ レイド最終決戦！'
+     : '👿 レイドボス挑戦！ 全力でダメージを与えろ！';
++  renderRaidBattleBoost();
++
+   renderBattleProgressStars();
+ 
+   updateBattleBars();
+--- a/.local-previews/latest-game/index.html
++++ b/.local-previews/latest-game/index.html
+@@ -637,7 +637,7 @@
+           <h2 class="raid-menu-title">ワールド・レイドボス</h2>
+           <button id="btn-raid-rules" class="btn" aria-expanded="false" aria-controls="raid-rules">レイドのルールは？</button>
+           <button id="btn-raid-exchange" class="btn">🪙 コイン交換所</button>
+-          <button id="btn-raid-history" class="btn" style="margin-left:8px;">討伐履歴</button>
++          <button id="btn-raid-history" class="btn" style="margin-left:8px;">ランキング履歴</button>
+         </header>
+         <div id="raid-final-push-announcement" class="raid-final-push-announcement hidden" role="status" aria-live="polite">
+           <strong>🔥 最後の力を振り絞れ！</strong>
+@@ -1487,11 +1487,11 @@
+ 
+   <div id="raid-history-modal" class="modal-overlay hidden">
+     <div class="modal-panel raid-history-panel">
+-      <h2>レイド討伐履歴</h2>
++      <h2>レイドランキングの履歴</h2>
+       <nav class="raid-history-nav" aria-label="討伐履歴の切り替え">
+-        <button type="button" id="btn-raid-history-older" class="btn" aria-label="古い討伐のランキング" disabled>◀ 前の討伐</button>
++        <button type="button" id="btn-raid-history-older" class="btn" aria-label="古い討伐のランキング" disabled>◀ 前の記録</button>
+         <span id="raid-history-position" aria-live="polite"></span>
+-        <button type="button" id="btn-raid-history-newer" class="btn" aria-label="新しい討伐のランキング" disabled>次の討伐 ▶</button>
++        <button type="button" id="btn-raid-history-newer" class="btn" aria-label="新しい討伐のランキング" disabled>次の記録 ▶</button>
+       </nav>
+       <div id="raid-history-summary" class="raid-history-summary" aria-live="polite"></div>
+       <h3>🏆 ダメージランキング</h3>

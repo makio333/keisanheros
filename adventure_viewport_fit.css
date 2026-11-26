@@ -117,3 +117,56 @@ body:has(#screen-battle.active[data-adventure-fit=stacked]) #menu-dropdown{left:
 #screen-battle.active #battle-sub-menu .battle-skill-option{flex-shrink:0}
 
 #screen-battle.raid-battle-screen[data-adventure-fit] .result-text:empty{display:none!important}
+
+/* QA fixes: keep every battle dialog outside the transformed answer stack. */
+#screen-battle.active #battle-sub-menu#battle-sub-menu:not(.hidden),
+#screen-battle.active[data-adventure-fit] #battle-sub-menu:not(.hidden),
+#screen-battle.active:not([data-adventure-fit]) #battle-sub-menu:not(.hidden){position:fixed!important;left:50%!important;top:50%!important;right:auto!important;bottom:auto!important;transform:translate(-50%,-50%)!important;width:min(560px,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;height:auto!important;min-height:0!important;max-height:calc(100dvh - 140px)!important;margin:0!important;overflow-y:auto!important;z-index:220!important;box-sizing:border-box}
+#screen-battle.active #battle-sub-menu h3{margin:0 0 8px!important}
+#screen-battle.active #battle-sub-menu .flavor{line-height:1.6;font-size:14px}
+#screen-battle.active[data-adventure-fit]{inset:auto!important;top:var(--fit-offset-top,0px)!important;left:var(--fit-offset-left,0px)!important}
+#screen-battle.active .battle-top{z-index:40!important}
+#screen-battle.active[data-adventure-fit] .battle-top{width:calc(100% - 230px)!important;max-width:850px!important}
+#screen-battle.active[data-adventure-fit=stacked] .battle-top{width:calc(100% - 84px)!important;max-width:none!important}
+#screen-battle.active .battle-top>.floor-window{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere;line-height:1.4!important;max-height:none!important}
+#screen-battle.active #battle-player-window.status-window{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-template-areas:"identity identity" "hp mp" "exp exp"!important;grid-template-rows:auto 22px 18px!important;gap:4px 8px!important;min-height:0!important}
+#screen-battle.active #battle-player-window>.status-header-row{grid-area:identity!important;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start;gap:8px!important;width:100%!important;height:auto!important;min-height:30px!important;overflow:visible!important}
+#screen-battle.active #battle-player-window .status-line{display:flex!important;flex:1;align-items:center;justify-content:flex-start!important;flex-wrap:wrap!important;width:auto!important;min-width:0;gap:4px 8px!important;line-height:1.4!important}
+#screen-battle.active #battle-player-window #battle-player-name{font-size:13px!important;white-space:normal!important;text-overflow:clip!important;overflow:visible!important;overflow-wrap:anywhere}
+#screen-battle.active #battle-player-window #battle-player-lv{font-size:12px!important;white-space:nowrap}
+#screen-battle.active #battle-player-window .battle-status-avatar{order:-1!important;flex:none!important;width:32px!important;height:32px!important;min-width:32px!important;max-width:32px!important;min-height:32px!important;max-height:32px!important;margin:0!important}
+#screen-battle.active.battle-input-compact .battle-field,
+#screen-battle.active.battle-input-compact #kanji-challenge{visibility:hidden!important;pointer-events:none!important}
+#screen-battle.active.battle-input-compact #christmas-answer-stack{z-index:180!important}
+#screen-battle.active.battle-input-compact #battle-player-window{display:none!important}
+#screen-battle.active[data-adventure-fit] #battle-enemy-progress{position:static!important;margin:0 auto 4px!important;transform:none!important;flex:none}
+/* Equipment stats and their slot comparison stay scrollable above the actions. */
+.confirm-card:has(.equip-confirm-body){width:min(620px,calc(100vw - 24px));max-height:calc(100dvh - 24px);display:flex;flex-direction:column;box-sizing:border-box;padding:18px;gap:10px}
+.confirm-card:has(.equip-confirm-body)>h3{flex:none;margin:0}
+.confirm-card:has(.equip-confirm-body) .confirm-message{overflow-y:auto;min-height:0;width:100%;margin:0}
+.confirm-card:has(.equip-confirm-body) .confirm-actions{flex:none;margin:0}
+.equip-confirm-body{width:100%;gap:12px}
+.equip-confirm-body .equip-unified-card{width:100%;box-sizing:border-box}
+.equip-confirm-comparison{width:100%;text-align:left;font-size:14px}
+.equip-confirm-comparison p{margin:4px 0}
+.equip-confirm-comparison table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.equip-confirm-comparison th,.equip-confirm-comparison td{padding:5px;border-bottom:1px solid #b9a97366;font-size:13px;text-align:right}
+.equip-confirm-comparison th:first-child{text-align:left}
+@media(max-width:600px){.confirm-card:has(.equip-confirm-body){padding:12px}.equip-confirm-body .equip-unified-main{gap:8px}.equip-confirm-body .equip-unified-name{font-size:17px}}
+
+#screen-battle.active #battle-player-window #battle-player-name{max-width:none!important;flex:1;min-width:100px!important}
+#screen-battle.active[data-adventure-fit] #battle-enemy-progress .progress-stars{font-size:20px!important;line-height:22px!important;height:22px!important}
+#screen-battle.active[data-adventure-fit] #battle-enemy-progress .progress-stars span{font-size:20px!important;line-height:22px!important}
+/* Calculation answers use the same compact controls as the fitted raid panel. */
+#screen-battle.active.fitted-math-battle #battle-challenge:not(.hidden){position:static!important;inset:auto!important;width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;max-height:none!important;padding:10px 12px!important;margin:0!important;box-sizing:border-box;overflow:auto}
+#screen-battle.active.fitted-math-battle .challenge-body{display:block!important;min-height:0!important;gap:0!important}
+#screen-battle.active.fitted-math-battle .challenge-main{padding:0!important;min-height:0!important}
+#screen-battle.active.fitted-math-battle .challenge-prompt{font-size:13px!important;line-height:1.4!important;margin:0 0 6px!important}
+#screen-battle.active.fitted-math-battle .challenge-problem{font-size:28px!important;line-height:1.4!important;margin:4px 0!important;min-height:0!important}
+#screen-battle.active.fitted-math-battle #ch-form{display:flex!important;gap:6px!important;margin:6px 0!important;width:100%}
+#screen-battle.active.fitted-math-battle #ch-input{flex:1!important;min-width:0!important;width:0!important;height:44px!important;box-sizing:border-box;font-size:22px!important}
+#screen-battle.active.fitted-math-battle #ch-submit{width:auto!important;height:44px!important;min-height:0!important;padding:4px 14px!important;font-size:14px!important}
+#screen-battle.active.fitted-math-battle .battle-inline-commands{position:static!important;display:flex!important;gap:6px!important;margin:6px 0 0!important;padding:0!important;border:0!important;background:none!important}
+#screen-battle.active.fitted-math-battle .battle-inline-commands .btn{flex:1!important;min-width:0!important;min-height:36px!important;width:auto!important;margin:0!important;padding:4px!important;font-size:13px!important}
+#screen-battle.active[data-adventure-fit] #christmas-answer-stack{left:var(--fit-answer-left,50%)!important}
+#screen-battle.active[data-adventure-fit] .battle-field{right:auto!important;width:var(--fit-field-width,100%)!important}
